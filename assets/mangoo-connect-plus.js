@@ -1178,13 +1178,32 @@
     el.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#fff;animation:mgt-live-dot 1.6s infinite;"></span>En direct · Rejoindre';
     document.body.appendChild(el);
 
+    function myVendorId() {
+      try {
+        if (global.MangooVendor && typeof global.MangooVendor.connectedVendorId === 'function') {
+          return String(global.MangooVendor.connectedVendorId() || '');
+        }
+      } catch (e) { /* ignore */ }
+      return '';
+    }
+    function myName() {
+      try {
+        var v = global.MangooVendor ? global.MangooVendor.current() : null;
+        return v ? (v.name || '') : '';
+      } catch (e) { return ''; }
+    }
+
     function apply(st) {
       var active = !!(st && st.active);
-      el.style.display = active ? 'inline-flex' : 'none';
-      if (active) {
+      var liveVendorId = String((st && st.vendorId) || '');
+      var mine = !!(liveVendorId && myVendorId() && liveVendorId === myVendorId());
+      el.style.display = (active && !mine) ? 'inline-flex' : 'none';
+      if (active && !mine) {
         var c = readStoredClient();
         if (c && c.id) {
           el.href = pagesBase + 'live-client.html?id=' + encodeURIComponent(c.id) + '&name=' + encodeURIComponent(c.name || '');
+        } else if (myVendorId()) {
+          el.href = pagesBase + 'live-client.html?id=' + encodeURIComponent(myVendorId()) + '&name=' + encodeURIComponent(myName() || '');
         }
       }
     }
