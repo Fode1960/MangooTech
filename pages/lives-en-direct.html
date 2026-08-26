@@ -662,10 +662,17 @@ html.dark {
   }
 
   function join(live) {
-    // Le bouton ouvre la salle du client. Sans serveur actif, le live est
-    // simulé ; la redirection reste cohérente avec le modèle multi-salles.
-    try { window.location.href = './live-client.html?room=' + encodeURIComponent(live.roomId); }
-    catch (e) { /* no-op */ }
+    // Ouvre la salle du client en ciblant PRÉCISÉMENT le vendeur choisi :
+    // on transmet vendorId (clé de salle serveur), roomId et le nom pour
+    // l'affichage. Le client rejoint ainsi la bonne salle, pas la première
+    // active par défaut.
+    try {
+      var params = new URLSearchParams();
+      if (live.vendorId) params.set('vendorId', live.vendorId);
+      if (live.roomId) params.set('room', live.roomId);
+      if (live.name) params.set('vendorName', live.name);
+      window.location.href = './live-client.html?' + params.toString();
+    } catch (e) { /* no-op */ }
   }
 
   function normalize(s) {
