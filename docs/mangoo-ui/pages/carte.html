@@ -1492,17 +1492,28 @@ html.dark {
 
   function renderList() {
     // vendors est deja trie par pertinence (badges payants en tete).
-    // La liste respecte le scope Local+ : seuls les commerces de la ville
-    // (ou du pays, en mode country) sont affichés. Une recherche active rend
-    // le filtrage global (toutes villes), cohérent avec la vue carte.
+    // La liste respecte EXACTEMENT les mêmes critères que la carte : scope
+    // Local+ (même ville / pays) + recherche + catégorie + type + note + prix
+    // + live. Sans cela, un filtre actif (ex. « Prestataires ») vidait la carte
+    // (applyFilters) tout en laissant la liste afficher les commerces filtrés,
+    // d'où l'incohérence « visible en liste, absent de la carte ».
     var searchTerm = (searchInput && searchInput.value ? searchInput.value.toLowerCase().trim() : '');
+    var catValue = filterCategory.value;
+    var typeValue = filterType.value;
+    var ratingValue = filterRating.value;
+    var priceValue = filterPrice.value;
     var scoped = vendors.filter(function(v) {
       var inScope = matchesScopeFor(v);
       var matchesSearch = !searchTerm || v.name.toLowerCase().includes(searchTerm) || v.city.toLowerCase().includes(searchTerm);
-      return (searchTerm ? true : inScope) && matchesSearch;
+      var matchesCategory = !catValue || v.category === catValue;
+      var matchesType = !typeValue || v.type === typeValue;
+      var matchesLive = !liveOnly || v.live === true;
+      var matchesRating = !ratingValue || v.rating >= parseInt(ratingValue);
+      var matchesPrice = !priceValue || v.price === priceValue;
+      return (searchTerm ? true : inScope) && matchesSearch && matchesCategory && matchesType && matchesLive && matchesRating && matchesPrice;
     });
     if (!scoped.length) {
-      listContent.innerHTML = '<div class="text-center py-10 text-sm" style="color:rgb(var(--mgt-muted-foreground));font-family:var(--mgt-font-sans);">Aucun commerce dans cette zone.</div>';
+      listContent.innerHTML = '<div class="text-center py-10 text-sm" style="color:rgb(var(--mgt-muted-foreground));font-family:var(--mgt-font-sans);">Aucun commerce ne correspond a vos criteres.</div>';
       return;
     }
     var html = '';
@@ -2056,16 +2067,16 @@ html.dark {
 
   // Initialise la carte une fois les profils réels chargés depuis /api/carte.
   function initCarte(data) {
-    // Migration unique v2 : purge l'ancienne ville mémorisée (lp_user_city) si
-    // elle a pu être écrite par la géolocalisation automatique (bug de
-    // persistance corrigé plus haut). Sans cela, un utilisateur déjà bloqué sur
-    // une ancienne ville (ex. Dakar mémorisé alors qu'il est désormais à Paris)
-    // resterait bloqué malgré le correctif. On ne purge qu'UNE fois, pour ne
-    // jamais effacer les choix manuels ultérieurs de l'utilisateur.
+    // Migration unique v3 : purge une dernière fois l'ancienne ville mémorisée
+    // (lp_user_city) pour les utilisateurs restés bloqués sur une ville périmée
+    // après le correctif v2 (ex. Dakar mémorisé alors qu'ils sont désormais à
+    // Paris, ou une ville sans commerce qui laissait carte ET liste vides). On ne
+    // purge qu'UNE fois, pour ne jamais effacer les choix manuels ultérieurs.
     try {
-      if (!localStorage.getItem('lp_scope_v2')) {
+      if (!localStorage.getItem('lp_scope_v3')) {
         localStorage.removeItem('lp_user_city');
-        localStorage.setItem('lp_scope_v2', '1');
+        localStorage.removeItem('lp_scope_v2');
+        localStorage.setItem('lp_scope_v3', '1');
       }
     } catch (e) {}
 
