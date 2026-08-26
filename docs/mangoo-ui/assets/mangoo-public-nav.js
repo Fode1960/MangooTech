@@ -32,7 +32,8 @@
     '.mgt-nav-link:hover{background:rgb(var(--mgt-muted));}',
     '.mgt-nav-link.cta{margin-top:8px;background:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground));justify-content:center;font-weight:600;}',
     '.mgt-nav-link.cta:hover{background:rgb(var(--mgt-accent));filter:brightness(1.05);}',
-    '.mgt-nav-foot{padding:12px;border-top:1px solid rgb(var(--mgt-border));}'
+    '.mgt-nav-foot{padding:12px;border-top:1px solid rgb(var(--mgt-border));}',
+    '.mgt-live-dot-nav{position:relative;display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef4444;margin-left:6px;vertical-align:middle;box-shadow:0 0 0 2px rgb(var(--mgt-primary));}'
   ].join('\n');
 
   function injectStyle() {
@@ -67,6 +68,53 @@
       if (cls.indexOf('hidden') !== -1 || cls.indexOf('md:flex') !== -1) return navs[i];
     }
     return header.querySelector('nav');
+  }
+
+  // Ajoute un accès rapide « Lives en direct » dans le header public quand il
+  // est absent (certaines pages — fiche, checkout, comparatif — n'ont pas ce
+  // lien). Idempotent : n'injecte rien si le lien existe déjà.
+  function ensureLivesLink() {
+    var header = findHeader();
+    if (!header) return;
+    var nav = findDesktopNav(header);
+    if (!nav) return;
+    var links = nav.querySelectorAll('a');
+    for (var i = 0; i < links.length; i++) {
+      if ((links[i].getAttribute('href') || '').indexOf('lives-en-direct.html') >= 0) return;
+    }
+    var anchor = null;
+    for (var j = 0; j < links.length; j++) {
+      if ((links[j].getAttribute('href') || '').indexOf('carte.html') >= 0) { anchor = links[j]; break; }
+    }
+    var a = document.createElement('a');
+    a.href = './lives-en-direct.html';
+    a.className = 'text-sm font-medium transition-opacity hover:opacity-80';
+    a.style.cssText = 'color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);';
+    a.innerHTML = 'Lives en direct<span class="mgt-live-dot-nav" style="display:none;"></span>';
+    if (anchor && anchor.parentNode) {
+      anchor.parentNode.insertBefore(a, anchor.nextSibling);
+    } else {
+      nav.appendChild(a);
+    }
+  }
+
+  // Affiche/masque la pastille rouge des liens « Lives en direct » selon l'état
+  // réel des lives (sondage /live-status, filet de sécurité léger).
+  function refreshLiveDots() {
+    function poll() {
+      fetch('/live-status', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var active = !!(d && d.active);
+          document.querySelectorAll('.mgt-live-dot-nav').forEach(function (el) {
+            el.style.display = active ? 'inline-block' : 'none';
+          });
+        })
+        .catch(function () { /* ignore */ });
+    }
+    poll();
+    setInterval(poll, 5000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) poll(); });
   }
 
   function init() {
@@ -121,11 +169,17 @@
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
+  function boot() {
+    ensureLivesLink();
     init();
+    refreshLiveDots();
   }
 
-  global.MangooPublicNav = { __ready: true, init: init };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+
+  global.MangooPublicNav = { __ready: true, init: init, ensureLivesLink: ensureLivesLink };
 })(window);
