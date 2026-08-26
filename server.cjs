@@ -148,15 +148,6 @@ function isOnline(id) {
   return onlineSockets(id).length > 0;
 }
 
-// Socket de live réelle du spectateur (parmi les ws de liveViewers).
-function liveViewerWs(viewerId) {
-  let found = null;
-  liveViewers.forEach((vws) => {
-    if (!found && vws.meta && vws.meta.id === viewerId) found = vws;
-  });
-  return found;
-}
-
 // Résout la meilleure socket pour un flux 1:1 (appel / fichier) : la socket
 // de live du vendeur ou du spectateur quand un live est actif, sinon la
 // connexion la plus récente.
@@ -164,14 +155,15 @@ function resolvePeer(id) {
   if (!id) return null;
   const list = onlineSockets(id);
   if (list.length === 0) return null;
-  if (live.active && live.vendorId === id) {
-    const vws = vendorWs();
+  const room = roomById(id);
+  if (room && room.active) {
+    const vws = vendorWsOf(room);
     if (vws) {
       const found = list.find((c) => c.ws === vws);
       if (found) return found;
     }
   }
-  if (live.active) {
+  if (activeRooms().length > 0) {
     const lws = liveViewerWs(id);
     if (lws) {
       const found = list.find((c) => c.ws === lws);
@@ -200,27 +192,73 @@ function peersList() {
   return peers;
 }
 
-/* --- État Live Shopping (vendeur -> spectateurs) --- */
-const live = {
-  active: false,
-  vendorId: null,
-  vendorName: null,
-  title: 'Live Shopping',
-  startedAt: null,
-  viewers: 0,          // nombre de spectateurs réellement connectés
-  likes: 0,
-  orders: 0,
-  pinnedProduct: null, // { name, price, image }
-  chat: []             // derniers messages publics
-};
-const liveViewers = new Set();  // ws des spectateurs connectés
-const liveOrdersLog = [];        // commandes passées pendant un live (persistées pour le module Commandes)
+/* --- État Live Shopping multi-salles (N vendeurs -> M spectateurs) --- */
+// Chaque vendeur actif possède SA propre salle, identifiée par vendorId. Les
+// salles sont indépendantes : chacune a son flux WebRTC, son chat, ses compteurs
+// et sa liste de spectateurs. Plusieurs lives peuvent donc diffuser en parallèle.
+const liveRooms = new Map(); // vendorId -> Room
+const liveOrdersLog = [];    // commandes passées pendant un live (persistées pour le module Commandes)
 
-/* Annuaire multi-salles : identité + métadonnées de chaque vendeur en direct.
- * Le flux vidéo WebRTC reste porté par la variable "live" (une salle à la fois) ;
- * cet annuaire permet de savoir QUI anime chaque live quand plusieurs sont actifs,
- * et alimente l'endpoint public GET /api/lives (page « Lives en direct »). */
-const liveRooms = new Map(); // roomId -> { roomId, vendorId, vendorName, title, category, sellerType, rating, thumb, startedAt, viewers, likes, orders, active }
+function roomKey(vendorId) { return String(vendorId || ''); }
+
+function createRoom(vendorId, vendorName, vendorWs) {
+  return {
+    roomId: 'room-' + vendorId,
+    vendorId: String(vendorId),
+    vendorName: vendorName || 'Vendeur',
+    vendorWs: vendorWs,
+    title: 'Live Shopping',
+    category: 'boutique',
+    sellerType: 'boutique',
+    rating: null,
+    thumb: '',
+    startedAt: Date.now(),
+    viewers: new Set(),   // ws des spectateurs de CETTE salle
+    likes: 0,
+    orders: 0,
+    pinnedProduct: null,  // { name, price, image }
+    chat: [],             // derniers messages publics de cette salle
+    active: true
+  };
+}
+
+function roomById(vendorId) { return liveRooms.get(roomKey(vendorId)) || null; }
+
+// Salle dont l'utilisateur (socket) est le vendeur.
+function vendorRoom(ws) {
+  return (ws && ws.meta && ws.meta.id) ? roomById(ws.meta.id) : null;
+}
+
+function vendorWsOf(room) {
+  return (room && room.vendorWs && room.vendorWs.readyState === 1) ? room.vendorWs : null;
+}
+
+function roomViewerWs(room, viewerId) {
+  let found = null;
+  if (!room) return null;
+  room.viewers.forEach(function (vws) {
+    if (!found && vws.meta && vws.meta.id === viewerId) found = vws;
+  });
+  return found;
+}
+
+// Socket de live d'un spectateur, cherchée dans toutes les salles actives.
+function liveViewerWs(viewerId) {
+  let found = null;
+  activeRooms().forEach(function (r) {
+    if (found) return;
+    found = roomViewerWs(r, viewerId);
+  });
+  return found;
+}
+
+// Liste des salles actives, triées de la plus récente à la plus ancienne.
+function activeRooms() {
+  const list = [];
+  liveRooms.forEach(function (r) { if (r.active) list.push(r); });
+  list.sort(function (a, b) { return (b.startedAt || 0) - (a.startedAt || 0); });
+  return list;
+}
 
 /* ------------------------------------------------------------------ *
  *  État Prestations (services proposés par les prestataires)
@@ -2556,22 +2594,29 @@ function userFromReq(req) {
 
 function isSeller(u) { return !!u && (u.role === 'vendeur' || u.role === 'prestataire'); }
 
-function liveSnapshot() {
+function liveSnapshot(room) {
+  const r = room || activeRooms()[0] || null;
+  if (!r) {
+    return { type: 'live-state', active: false, rooms: [] };
+  }
   return {
     type: 'live-state',
-    active: live.active,
-    vendorId: live.vendorId,
-    vendorName: live.vendorName,
-    title: live.title,
-    viewers: live.viewers,
-    likes: live.likes,
-    orders: live.orders,
-    pinnedProduct: live.pinnedProduct,
-    chat: live.chat
+    active: true,
+    roomId: r.roomId,
+    vendorId: r.vendorId,
+    vendorName: r.vendorName,
+    title: r.title,
+    viewers: r.viewers.size,
+    likes: r.likes,
+    orders: r.orders,
+    pinnedProduct: r.pinnedProduct,
+    chat: r.chat,
+    rooms: activeRooms().map(roomSnapshot)
   };
 }
 
-function liveRoomSnapshot(room) {
+// Vue publique d'une salle (consommée par /api/lives et la liste `rooms`).
+function roomSnapshot(room) {
   return {
     roomId: room.roomId,
     vendorId: room.vendorId,
@@ -2582,30 +2627,10 @@ function liveRoomSnapshot(room) {
     rating: (room.rating != null) ? room.rating : null,
     thumb: room.thumb || null,
     startedAt: room.startedAt || null,
-    viewers: room.viewers || 0,
-    likes: room.likes || 0,
-    orders: room.orders || 0
+    viewers: room.viewers.size,
+    likes: room.likes,
+    orders: room.orders
   };
-}
-
-// Liste publique des salles actives (consommée par GET /api/lives).
-function activeLivesList() {
-  const list = [];
-  liveRooms.forEach(function (room) {
-    if (room.active) list.push(liveRoomSnapshot(room));
-  });
-  if (live.active && live.vendorId) {
-    const id = 'room-' + live.vendorId;
-    if (!liveRooms.has(id)) {
-      list.push({
-        roomId: id, vendorId: live.vendorId, vendorName: live.vendorName,
-        title: live.title, category: 'boutique', sellerType: 'boutique',
-        rating: null, thumb: null, startedAt: live.startedAt,
-        viewers: live.viewers, likes: live.likes, orders: live.orders
-      });
-    }
-  }
-  return list;
 }
 
 function broadcastLive(obj, exceptWs) {
@@ -2614,6 +2639,25 @@ function broadcastLive(obj, exceptWs) {
       if (c.ws && c.ws !== exceptWs) send(c.ws, obj);
     });
   });
+}
+
+// Diffuse un message à tous les membres d'une salle (vendeur + spectateurs).
+function broadcastToRoom(room, obj, exceptWs) {
+  const vws = vendorWsOf(room);
+  if (vws && vws !== exceptWs) send(vws, obj);
+  room.viewers.forEach((vws) => {
+    if (vws && vws !== exceptWs) send(vws, obj);
+  });
+}
+
+// Spectateurs d'une salle (id + nom), pour l'appel privé vendeur -> client.
+function roomViewersList(room) {
+  const list = [];
+  room.viewers.forEach((vws) => {
+    if (!vws.meta) return;
+    list.push({ id: vws.meta.id, name: vws.meta.name || 'Spectateur' });
+  });
+  return list;
 }
 
 function convKey(a, b) { return [a, b].sort().join('|'); }
@@ -2657,7 +2701,7 @@ function handleMessage(ws, msg) {
     case 'live-order': handleLiveOrder(ws, msg); break;
     case 'live-like': handleLiveLike(ws, msg); break;
     case 'live-state-request': handleLiveStateRequest(ws, msg); break;
-    case 'live-video-join': handleLiveVideoJoin(ws); break;
+    case 'live-video-join': handleLiveVideoJoin(ws, msg); break;
     case 'live-video-offer': handleLiveVideoOffer(ws, msg); break;
     case 'live-video-answer': handleLiveVideoAnswer(ws, msg); break;
     case 'live-video-ice': handleLiveVideoIce(ws, msg); break;
@@ -2795,144 +2839,152 @@ function handleApptReply(ws, msg) {
   });
 }
 
-/* --- Live Shopping --- */
-function handleLiveStart(ws, msg) {
-  if (live.active) { send(ws, { type: 'live-error', reason: 'already-live' }); return; }
-  live.active = true;
-  live.vendorId = ws.meta.id;
-  live.vendorName = ws.meta.name || 'Vendeur';
-  live.vendorWs = ws;
-  live.title = String(msg.title || 'Live Shopping').slice(0, 120);
-  live.startedAt = Date.now();
-  live.viewers = 0;
-  live.likes = 0;
-  live.orders = 0;
-  live.pinnedProduct = null;
-  live.chat = [];
-  const roomId = 'room-' + ws.meta.id;
-  liveRooms.set(roomId, {
-    roomId: roomId,
-    vendorId: ws.meta.id,
-    vendorName: live.vendorName,
-    title: live.title,
-    category: String(msg.category || 'boutique'),
-    sellerType: String(msg.sellerType || msg.type || 'boutique'),
-    rating: (msg.rating != null) ? msg.rating : null,
-    thumb: String(msg.thumb || ''),
-    startedAt: live.startedAt,
-    viewers: 0, likes: 0, orders: 0,
-    active: true
+/* --- Live Shopping (multi-salles) --- */
+// Récupère la salle à laquelle une socket est rattachée : sa propre salle si
+// elle est vendeur, sinon la salle qu'elle a rejointe (ws.liveRoomId).
+function roomForWs(ws) {
+  if (!ws) return null;
+  const own = vendorRoom(ws);
+  if (own && own.active) return own;
+  const joined = (ws.liveRoomId) ? roomById(ws.liveRoomId) : null;
+  if (joined && joined.active) return joined;
+  return null;
+}
+
+// Retire proprement une socket de toute salle où elle est spectatrice.
+function leaveAllRooms(ws) {
+  liveRooms.forEach(function (room) {
+    if (room.viewers.has(ws)) {
+      room.viewers.delete(ws);
+      const vws = vendorWsOf(room);
+      if (vws) send(vws, { type: 'live-video-viewer-left', viewerId: ws.meta && ws.meta.id });
+      if (vws) send(vws, { type: 'live-viewers-list', viewers: roomViewersList(room) });
+      broadcastToRoom(room, { type: 'live-viewers', viewers: room.viewers.size }, ws);
+    }
   });
+  if (ws.liveRoomId) delete ws.liveRoomId;
+}
+
+function handleLiveStart(ws, msg) {
+  if (!ws.meta || !ws.meta.id) { send(ws, { type: 'live-error', reason: 'id manquant' }); return; }
+  const vid = ws.meta.id;
+  const existing = roomById(vid);
+  if (existing && existing.active) {
+    // Le même vendeur redémarre : on met à jour sa salle plutôt que d'en créer une seconde.
+    existing.title = String(msg.title || existing.title || 'Live Shopping').slice(0, 120);
+    existing.vendorName = ws.meta.name || existing.vendorName;
+    existing.vendorWs = ws;
+    existing.category = String(msg.category || existing.category);
+    existing.sellerType = String(msg.sellerType || msg.type || existing.sellerType);
+    existing.rating = (msg.rating != null) ? msg.rating : existing.rating;
+    existing.thumb = String(msg.thumb || existing.thumb || '');
+    broadcastLive({
+      type: 'live-started',
+      roomId: existing.roomId,
+      vendorId: existing.vendorId,
+      vendorName: existing.vendorName,
+      title: existing.title,
+      viewers: existing.viewers.size, likes: existing.likes, orders: existing.orders,
+      startedAt: existing.startedAt
+    });
+    return;
+  }
+  const room = createRoom(vid, ws.meta.name || 'Vendeur', ws);
+  room.title = String(msg.title || 'Live Shopping').slice(0, 120);
+  room.category = String(msg.category || 'boutique');
+  room.sellerType = String(msg.sellerType || msg.type || 'boutique');
+  room.rating = (msg.rating != null) ? msg.rating : null;
+  room.thumb = String(msg.thumb || '');
+  liveRooms.set(roomKey(vid), room);
   broadcastLive({
     type: 'live-started',
-    vendorId: live.vendorId,
-    vendorName: live.vendorName,
-    title: live.title,
+    roomId: room.roomId,
+    vendorId: room.vendorId,
+    vendorName: room.vendorName,
+    title: room.title,
     viewers: 0, likes: 0, orders: 0,
-    startedAt: live.startedAt
+    startedAt: room.startedAt
   });
 }
 
 function handleLiveStop(ws) {
-  if (!live.active) return;
-  if (ws.meta.id !== live.vendorId) return;
-  live.active = false;
-  broadcastLive({ type: 'live-ended' });
-  const endedRoomId = 'room-' + live.vendorId;
-  const endedRoom = liveRooms.get(endedRoomId);
-  if (endedRoom) endedRoom.active = false;
-  live.vendorId = null;
-  live.vendorName = null;
-  live.vendorWs = null;
-  live.pinnedProduct = null;
-  live.chat = [];
-  liveViewers.clear();
-  live.viewers = 0;
+  const room = vendorRoom(ws);
+  if (!room || !room.active) return;
+  stopRoom(room);
 }
 
-function handleLiveJoin(ws) {
-  console.log('[LIVE] join', { id: ws.meta && ws.meta.id, active: live.active, time: new Date().toLocaleTimeString() });
-  if (!live.active) { send(ws, liveSnapshot()); return; }
-  if (!liveViewers.has(ws)) {
-    liveViewers.add(ws);
-    live.viewers = liveViewers.size;
-  }
-  send(ws, liveSnapshot());
-  broadcastLive({ type: 'live-viewers', viewers: live.viewers }, ws);
-  const vws = vendorWs();
-  if (vws) send(vws, { type: 'live-viewers-list', viewers: liveViewersList() });
+function stopRoom(room) {
+  room.active = false;
+  room.viewers.forEach(function (vws) { if (vws.liveRoomId === room.vendorId) delete vws.liveRoomId; });
+  room.viewers.clear();
+  room.vendorWs = null;
+  liveRooms.delete(roomKey(room.vendorId));
+  broadcastLive({ type: 'live-ended', roomId: room.roomId, vendorId: room.vendorId });
+}
+
+function handleLiveJoin(ws, msg) {
+  const requested = String((msg && (msg.vendorId || msg.roomId)) || '').trim();
+  let room = requested ? roomById(requested) : null;
+  if (!room || !room.active) room = activeRooms()[0] || null;
+  console.log('[LIVE] join', { id: ws.meta && ws.meta.id, roomId: room ? room.roomId : null, time: new Date().toLocaleTimeString() });
+  if (!room) { send(ws, liveSnapshot()); return; }
+  // Quitte toute autre salle avant de rejoindre celle-ci.
+  leaveAllRooms(ws);
+  ws.liveRoomId = room.vendorId;
+  room.viewers.add(ws);
+  send(ws, liveSnapshot(room));
+  broadcastToRoom(room, { type: 'live-viewers', viewers: room.viewers.size }, ws);
+  const vws = vendorWsOf(room);
+  if (vws) send(vws, { type: 'live-viewers-list', viewers: roomViewersList(room) });
 }
 
 function handleLiveLeave(ws) {
-  if (!liveViewers.has(ws)) return;
-  liveViewers.delete(ws);
-  live.viewers = liveViewers.size;
-  broadcastLive({ type: 'live-viewers', viewers: live.viewers });
-  // Prévenir le vendeur de libérer la connexion vidéo de ce spectateur.
-  const vws = vendorWs();
+  if (!ws.liveRoomId) return;
+  const room = roomById(ws.liveRoomId);
+  if (!room || !room.viewers.has(ws)) { delete ws.liveRoomId; return; }
+  room.viewers.delete(ws);
+  delete ws.liveRoomId;
+  broadcastToRoom(room, { type: 'live-viewers', viewers: room.viewers.size });
+  const vws = vendorWsOf(room);
   if (vws) send(vws, { type: 'live-video-viewer-left', viewerId: ws.meta && ws.meta.id });
-  if (vws) send(vws, { type: 'live-viewers-list', viewers: liveViewersList() });
+  if (vws) send(vws, { type: 'live-viewers-list', viewers: roomViewersList(room) });
 }
 
 // Si le vendeur se déconnecte (crash, coupure réseau, fermeture) sans « Arrêter le live »,
-// on arrête proprement le live pour que les spectateurs ne restent pas bloqués sur « EN DIRECT ».
+// on arrête proprement sa salle pour que ses spectateurs ne restent pas bloqués sur « EN DIRECT ».
 function handleLiveVendorClose(ws) {
-  if (!ws.meta || ws.meta.id !== live.vendorId) return;
-  if (!live.active) return;
-  if (live.vendorWs !== ws) return; // seule la socket du live arrête le live
-  live.active = false;
-  broadcastLive({ type: 'live-ended' });
-  const endedRoomId = 'room-' + live.vendorId;
-  const endedRoom = liveRooms.get(endedRoomId);
-  if (endedRoom) endedRoom.active = false;
-  live.vendorId = null;
-  live.vendorName = null;
-  live.vendorWs = null;
-  live.pinnedProduct = null;
-  live.chat = [];
-  liveViewers.clear();
-  live.viewers = 0;
-}
-
-function vendorWs() {
-  const ws = live.vendorWs;
-  return (ws && ws.readyState === 1) ? ws : null;
-}
-
-// Liste des spectateurs actuellement connectés au live (id + nom), pour que
-// le vendeur puisse appeler un client en privé.
-function liveViewersList() {
-  const list = [];
-  liveViewers.forEach((vws) => {
-    if (!vws.meta) return;
-    list.push({ id: vws.meta.id, name: vws.meta.name || 'Spectateur' });
-  });
-  return list;
+  const room = vendorRoom(ws);
+  if (!room || !room.active) return;
+  if (room.vendorWs !== ws) return; // seule la socket du live arrête le live
+  stopRoom(room);
 }
 
 function handleLiveChat(ws, msg) {
-  if (!live.active) return;
+  const room = roomForWs(ws);
+  if (!room) return;
   const text = String(msg.text || '').slice(0, 1000);
   if (!text) return;
   const entry = { from: ws.meta.id, fromName: ws.meta.name || 'Spectateur', text, sentAt: nowIso() };
-  live.chat.push(entry);
-  if (live.chat.length > 200) live.chat.shift();
-  broadcastLive({ type: 'live-chat', from: entry.from, fromName: entry.fromName, text, sentAt: entry.sentAt }, ws);
+  room.chat.push(entry);
+  if (room.chat.length > 200) room.chat.shift();
+  broadcastToRoom(room, { type: 'live-chat', from: entry.from, fromName: entry.fromName, text, sentAt: entry.sentAt }, ws);
 }
 
 function handleLivePin(ws, msg) {
-  if (!live.active || ws.meta.id !== live.vendorId) return;
-  live.pinnedProduct = {
+  const room = vendorRoom(ws);
+  if (!room || !room.active) return;
+  room.pinnedProduct = {
     name: String(msg.name || '').slice(0, 120),
     price: String(msg.price || '').slice(0, 40),
     image: String(msg.image || '')
   };
-  broadcastLive({ type: 'live-pinned', name: live.pinnedProduct.name, price: live.pinnedProduct.price, image: live.pinnedProduct.image }, ws);
+  broadcastToRoom(room, { type: 'live-pinned', name: room.pinnedProduct.name, price: room.pinnedProduct.price, image: room.pinnedProduct.image }, ws);
 }
 
 function handleLiveOrder(ws, msg) {
-  if (!live.active) return;
-  live.orders += 1;
+  const room = roomForWs(ws);
+  if (!room) return;
+  room.orders += 1;
   const fromId = ws.meta.id;
   const fromName = ws.meta.name || 'Client';
   const product = String(msg.product || 'Produit').slice(0, 120);
@@ -2940,7 +2992,8 @@ function handleLiveOrder(ws, msg) {
   const quantity = Math.max(1, Math.min(99, parseInt(msg.quantity, 10) || 1));
   const delivery = String(msg.delivery || 'Livraison').slice(0, 40);
   const order = {
-    orderId: 'LIVE-' + String(live.orders).padStart(3, '0'),
+    orderId: 'LIVE-' + String(room.orders).padStart(3, '0'),
+    vendorId: room.vendorId,
     clientId: fromId,
     clientName: fromName,
     product,
@@ -2952,57 +3005,64 @@ function handleLiveOrder(ws, msg) {
     createdAt: nowIso()
   };
   liveOrdersLog.push(order);
-  broadcastLive({
+  broadcastToRoom(room, {
     type: 'live-order',
     fromName, product, price, quantity, delivery,
-    orders: live.orders,
+    orders: room.orders,
     liveOrder: order
   });
 }
 
-function handleLiveLike() {
-  if (!live.active) return;
-  live.likes += 1;
-  broadcastLive({ type: 'live-like', likes: live.likes });
+function handleLiveLike(ws) {
+  const room = roomForWs(ws);
+  if (!room) return;
+  room.likes += 1;
+  broadcastToRoom(room, { type: 'live-like', likes: room.likes });
 }
 
 function handleLiveStateRequest(ws) {
-  send(ws, liveSnapshot());
+  send(ws, liveSnapshot(roomForWs(ws)));
 }
 
 /* --- Live Shopping : diffusion vidéo (WebRTC, un vendeur -> N spectateurs) --- */
-function handleLiveVideoJoin(ws) {
-  if (!live.active) return;
-  if (!ws.meta || ws.meta.id === live.vendorId) return; // le vendeur ne regarde pas son propre flux
-  const vws = vendorWs();
+function handleLiveVideoJoin(ws, msg) {
+  const room = (msg && msg.vendorId) ? roomById(String(msg.vendorId)) : roomForWs(ws);
+  if (!room || !room.active) { send(ws, { type: 'live-video-unavailable' }); return; }
+  if (!ws.meta || ws.meta.id === room.vendorId) return; // le vendeur ne regarde pas son propre flux
+  const vws = vendorWsOf(room);
   if (!vws) { send(ws, { type: 'live-video-unavailable' }); return; }
   send(vws, { type: 'live-viewer-joined', viewerId: ws.meta.id, viewerName: ws.meta.name || 'Spectateur' });
 }
 
 function handleLiveVideoOffer(ws, msg) {
-  if (!live.active || !ws.meta || ws.meta.id !== live.vendorId) return;
+  const room = vendorRoom(ws);
+  if (!room || !room.active) return;
   const viewerId = String(msg.viewerId || '').trim();
-  const target = liveViewerWs(viewerId);
+  const target = roomViewerWs(room, viewerId);
   if (!target) return;
-  send(target, { type: 'live-video-offer', from: live.vendorId, sdp: msg.sdp });
+  send(target, { type: 'live-video-offer', from: room.vendorId, sdp: msg.sdp });
 }
 
 function handleLiveVideoAnswer(ws, msg) {
-  if (!live.active) return;
-  const vws = vendorWs();
+  const room = roomForWs(ws);
+  if (!room) return;
+  const vws = vendorWsOf(room);
   if (!vws) return;
   send(vws, { type: 'live-video-answer', viewerId: ws.meta && ws.meta.id, sdp: msg.sdp });
 }
 
 function handleLiveVideoIce(ws, msg) {
-  if (!live.active || !ws.meta) return;
-  if (ws.meta.id === live.vendorId) {
-    const target = liveViewerWs(String(msg.viewerId || '').trim());
+  if (!ws.meta) return;
+  const own = vendorRoom(ws);
+  if (own && own.active) {
+    const target = roomViewerWs(own, String(msg.viewerId || '').trim());
     if (target) {
-      send(target, { type: 'live-video-ice', from: live.vendorId, candidate: msg.candidate });
+      send(target, { type: 'live-video-ice', from: own.vendorId, candidate: msg.candidate });
     }
   } else {
-    const vws = vendorWs();
+    const room = roomForWs(ws);
+    if (!room) return;
+    const vws = vendorWsOf(room);
     if (vws) send(vws, { type: 'live-video-ice', viewerId: ws.meta.id, candidate: msg.candidate });
   }
 }
@@ -3267,22 +3327,30 @@ function handleHttp(req, res) {
   if (urlPath === '/live-status') {
     // État du Live Shopping, consommé par la carte Local+ pour afficher
     // les badges « En direct » en temps réel et le bouton « Rejoindre le live ».
+    // Renvoie désormais l'ensemble des salles actives (plusieurs flux simultanés)
+    // + les champs plats de la première salle pour la rétrocompatibilité des clients.
+    const firstRoom = activeRooms()[0] || null;
+    const rooms = activeRooms().map(roomSnapshot);
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({
-      active: live.active,
-      vendorId: live.vendorId,
-      vendorName: live.vendorName,
-      title: live.title,
-      viewers: live.viewers,
-      likes: live.likes,
-      orders: live.orders,
-      pinnedProduct: live.pinnedProduct
+      active: !!firstRoom,
+      vendorId: firstRoom ? firstRoom.vendorId : null,
+      vendorName: firstRoom ? firstRoom.vendorName : null,
+      title: firstRoom ? firstRoom.title : null,
+      viewers: firstRoom ? firstRoom.viewers.size : 0,
+      likes: firstRoom ? firstRoom.likes : 0,
+      orders: firstRoom ? firstRoom.orders : 0,
+      pinnedProduct: firstRoom ? firstRoom.pinnedProduct : null,
+      rooms: rooms
     }));
     return;
   }
   if (urlPath === '/api/lives') {
+    // Annuaire des lives actifs (grille de cartes multi-salles) : renvoie la
+    // liste complète des salles avec métadonnées vendeur (catégorie, type,
+    // note, vignette, démarrée à) et compteurs temps réel.
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ rooms: activeLivesList() }));
+    res.end(JSON.stringify({ rooms: activeRooms().map(roomSnapshot) }));
     return;
   }
   if (urlPath === '/api/contacts') {
