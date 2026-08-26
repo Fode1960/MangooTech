@@ -704,7 +704,7 @@ html.dark {
         var fsImg = $('product-fullscreen-image');
         if (fsImg) {
           if (p.image) {
-            fsImg.src = p.image + (p.image.indexOf('?') >= 0 ? '&' : '?') + '_v=' + Date.now();
+            fsImg.src = (p.image.indexOf('data:') === 0) ? p.image : p.image + (p.image.indexOf('?') >= 0 ? '&' : '?') + '_v=' + Date.now();
             fsImg.style.display = '';
           } else {
             fsImg.removeAttribute('src');
@@ -1067,8 +1067,10 @@ html.dark {
         if (img) {
           var src = currentPinned.image || '';
           if (src) {
-            // Anti-cache : force le rechargement à chaque produit.
-            img.src = src + (src.indexOf('?') >= 0 ? '&' : '?') + '_v=' + Date.now();
+            // Les vraies photos sont des data URL base64 : on ne doit PAS y
+            // ajouter de paramètre (cela corromprait le base64 → écran noir).
+            // L'anti-cache ne vaut que pour les URLs http(s).
+            img.src = (src.indexOf('data:') === 0) ? src : src + (src.indexOf('?') >= 0 ? '&' : '?') + '_v=' + Date.now();
             img.style.display = '';
           } else {
             img.removeAttribute('src');
