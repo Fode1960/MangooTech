@@ -553,10 +553,25 @@ html.dark {
     // coordonnées obsolètes (cache, données non migrées, etc.).
     vendors.forEach(function(v) {
       var canon = (v.city && CITIES[v.city]) ? CITIES[v.city] : null;
-      if (canon && typeof canon.lat === 'number' && typeof canon.lng === 'number') {
+      if (canon && typeof canon.lat === 'number' && typeof canon.lng === 'number' &&
+          isFinite(canon.lat) && isFinite(canon.lng)) {
         v.lat = canon.lat;
         v.lng = canon.lng;
         if (canon.country) v.country = canon.country;
+      }
+    });
+
+    // Filet ultime : garantit des coordonnées numériques FINIES pour tout vendeur,
+    // afin que la carte et la liste restent strictement cohérentes. Sans ce
+    // garde-fou, un commerce sans coordonnées exploitables serait affiché en liste
+    // (même ville) mais ignoré par renderMarkers() -> « visible en liste, absent
+    // de la carte ». On l'ancre sur Dakar (centre par défaut de l'app).
+    var _anchor = FALLBACK_CITIES['Dakar'];
+    vendors.forEach(function(v) {
+      if (typeof v.lat !== 'number' || typeof v.lng !== 'number' || !isFinite(v.lat) || !isFinite(v.lng)) {
+        v.lat = _anchor.lat;
+        v.lng = _anchor.lng;
+        if (!v.country) v.country = _anchor.country;
       }
     });
 
@@ -717,7 +732,8 @@ html.dark {
 
     if (knownCity) {
       if (citySelect) citySelect.value = knownCity;
-      setCity(knownCity);
+      // Détection GPS automatique : ne pas mémoriser comme choix manuel de ville.
+      setCity(knownCity, { persist: false });
       return;
     }
 
@@ -1996,7 +2012,15 @@ html.dark {
     }).addTo(map).bindPopup('<strong style="font-family:var(--mgt-font-sans);">Vous etes ici</strong>');
   }
 
-  function setCity(city) {
+  function setCity(city, opts) {
+    opts = opts || {};
+    // Un changement de ville est par défaut une action EXPLICITE de l'utilisateur
+    // et doit être mémorisé. La géolocalisation automatique (detectCity /
+    // reverse-geocode) passe { persist: false } pour ne PAS écraser lp_user_city :
+    // sinon la ville détectée au chargement précédent serait restaurée comme choix
+    // manuel et le GPS réel ne serait plus jamais refait (carte/liste bloquées sur
+    // l'ancienne ville, d'où « tout est vide » après un déplacement).
+    var shouldPersist = opts.persist !== false;
     radiusNoticeDismissed = false;
     if (!city) {
       // « Ma position » -> GPS réel, pas de scope ville forcé.
@@ -2004,6 +2028,7 @@ html.dark {
       userCountry = null;
       locateUser({ silent: false });
       updateCityToggleLabel();
+      if (shouldPersist) persistScope(); // efface lp_user_city pour repartir en GPS
       return;
     }
     var c = CITIES[city];
@@ -2018,7 +2043,7 @@ html.dark {
     updateRadiusChips();
     updateRadiusCircle();
     applyFilters();
-    persistScope();
+    if (shouldPersist) persistScope();
     updateCityToggleLabel();
   }
 
