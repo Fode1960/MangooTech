@@ -1,6 +1,17 @@
 /* ===== MangooTech Brand Design Tokens ===== */
 /* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
 
+/* Anti-débordement horizontal : évite le « balayage gauche/droite » instable
+   sur iOS causé par les tiroirs/navigations déplacés hors écran (translateX(-100%)).
+   `overflow-x: clip` ne crée pas de conteneur de scroll, donc préserve les
+   en-têtes `position: sticky` des pages dashboard. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden; /* repli universel */
+  overflow-x: clip;   /* surcharge moderne : préserve les en-têtes sticky */
+}
+
 :root {
   /* --- Radius Scale (root-level for preflight) --- */
   --mgt-radius-sm: 4px;

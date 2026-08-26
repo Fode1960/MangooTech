@@ -1191,6 +1191,33 @@ html.dark {
 
     vendors.sort(function(a, b) { return relevanceScore(b) - relevanceScore(a); });
 
+    // Plusieurs vendeurs partagent parfois exactement les mêmes coordonnées
+    // (souvent le centre-ville par défaut, ex. deux boutiques de Paris ou de
+    // Dakar). Sans correction, leurs marqueurs se superposent : un seul reste
+    // visible, et l'empilement pouvait afficher « deux cercles » (l'un au-dessus
+    // de l'autre) de façon incohérente selon l'appareil.
+    function round6(n) { return Math.round(n * 1e6) / 1e6; }
+    var byCoord = {};
+    vendors.forEach(function(v) {
+      if (!v.name || typeof v.lat !== 'number' || typeof v.lng !== 'number' ||
+          !isFinite(v.lat) || !isFinite(v.lng)) return;
+      var key = round6(v.lat) + ',' + round6(v.lng);
+      (byCoord[key] = byCoord[key] || []).push(v);
+    });
+
+    // Position d'affichage : si un vendeur partage son point avec d'autres, on
+    // l'écarte selon un angle régulier (décalage déterministe, stable entre
+    // rendus) pour séparer visuellement les marqueurs sans toucher aux données.
+    function displayPosition(v) {
+      var key = round6(v.lat) + ',' + round6(v.lng);
+      var group = byCoord[key] || [];
+      if (group.length <= 1) return [v.lat, v.lng];
+      var idx = group.indexOf(v);
+      var angle = (idx / group.length) * Math.PI * 2;
+      var radius = 0.0008; // ~90 m, assez pour séparer les épingles en ville
+      return [v.lat + Math.cos(angle) * radius, v.lng + Math.sin(angle) * radius];
+    }
+
     vendors.forEach(function(vendor) {
       // Un vendeur défectueux (nom absent ou coordonnées invalides) ne doit pas
       // faire disparaître tous les autres marqueurs : on l'ignore proprement.
@@ -1200,7 +1227,7 @@ html.dark {
       }
       try {
         var zOffset = boostRank(vendor) * 100 + (vendor.live ? 50 : 0);
-        var marker = L.marker([vendor.lat, vendor.lng], { icon: buildMarkerIcon(vendor), zIndexOffset: zOffset })
+        var marker = L.marker(displayPosition(vendor), { icon: buildMarkerIcon(vendor), zIndexOffset: zOffset })
           .addTo(map);
 
         // Le clic ouvre uniquement le panneau latéral (pas de popup Leaflet),

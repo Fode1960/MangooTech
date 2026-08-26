@@ -704,6 +704,7 @@ html.dark {
     return '<div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden shadow-[var(--mgt-shadow-sm)] hover:shadow-[var(--mgt-shadow-md)] transition-shadow" data-id="' + esc(p.id) + '">'
       + '<div class="relative h-36 overflow-hidden">'
       + '<div style="position:absolute;inset:0;background:' + grad + ';"></div>'
+      + (p.image ? '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">' : '')
       + '<i data-lucide="' + esc(cat.icon) + '" style="position:absolute;right:12px;bottom:12px;width:40px;height:40px;color:rgba(255,255,255,.5);"></i>'
       + '<span style="position:absolute;top:8px;left:8px;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:600;background:rgba(0,0,0,.4);color:#fff;backdrop-filter:blur(4px);">' + esc(cat.label) + '</span>'
       + '<span style="position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:600;background:' + st.bg + ';color:' + st.fg + ';">' + st.label + '</span>'
@@ -816,8 +817,39 @@ html.dark {
 
   function closeOverlay(overlay){ if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); }
 
+  // Lit un fichier image, le redimensionne (max 800 px) et le renvoie en base64
+  // (data URL) — cohérent avec le stockage des visuels déjà utilisé (avatars
+  // vendeurs en base64). Évite d'envoyer des photos de plusieurs Mo au serveur.
+  function readImageAsDataUrl(file, cb) {
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { showToast('Veuillez choisir une image (JPG, PNG, WebP…).'); return; }
+    if (file.size > 6 * 1024 * 1024) { showToast('Image trop lourde (maximum 6 Mo).'); return; }
+    var reader = new FileReader();
+    reader.onerror = function () { showToast('Impossible de lire ce fichier.'); };
+    reader.onload = function () {
+      var img = new Image();
+      img.onerror = function () { showToast('Format d\'image non reconnu.'); };
+      img.onload = function () {
+        var max = 800;
+        var w = img.width, h = img.height;
+        if (w > max || h > max) {
+          var ratio = Math.min(max / w, max / h);
+          w = Math.max(1, Math.round(w * ratio));
+          h = Math.max(1, Math.round(h * ratio));
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        cb(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
   function openForm(product){
     var data = product || { name: '', price: '', stock: 0, unit: '', category: (DOMAIN_CATEGORIES[0] && DOMAIN_CATEGORIES[0].id) || 'cheveux' };
+    var imageDataUrl = (product && product.image) || '';
     var overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.5);';
     var catOptions = DOMAIN_CATEGORIES.map(function(c){ return '<option value="' + c.id + '"' + (data.category === c.id ? ' selected' : '') + '>' + c.label + '</option>'; }).join('');
@@ -837,6 +869,10 @@ html.dark {
         '<input data-field="unit" type="text" value="' + esc(data.unit) + '" placeholder="ex. 250 ml, lot de 6…" style="width:100%;box-sizing:border-box;padding:9px 12px;margin-top:6px;border:1px solid rgb(var(--mgt-border));border-radius:8px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;">' +
         '<label style="display:block;margin-top:14px;font-size:13px;font-weight:500;color:rgb(var(--mgt-foreground));">Catégorie</label>' +
         '<select data-field="category" style="width:100%;box-sizing:border-box;padding:9px 12px;margin-top:6px;border:1px solid rgb(var(--mgt-border));border-radius:8px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;">' + catOptions + '</select>' +
+        '<label style="display:block;margin-top:14px;font-size:13px;font-weight:500;color:rgb(var(--mgt-foreground));">Photo du produit</label>' +
+        '<div data-image-preview style="margin-top:6px;' + (imageDataUrl ? '' : 'display:none;') + 'overflow:hidden;border-radius:8px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-muted));"><img src="' + (imageDataUrl || '') + '" alt="" style="display:block;width:100%;height:160px;object-fit:cover;"></div>' +
+        '<input data-field="image" type="file" accept="image/*" style="display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:8px;border:1px dashed rgb(var(--mgt-border));border-radius:8px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-muted-foreground));font-size:13px;">' +
+        '<button type="button" data-image-clear style="display:' + (imageDataUrl ? 'inline-block' : 'none') + ';margin-top:6px;padding:4px 10px;border-radius:8px;border:1px solid rgb(var(--mgt-border));background:transparent;color:rgb(var(--mgt-error));font-size:12px;font-weight:500;cursor:pointer;">Supprimer la photo</button>' +
         '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">' +
           '<button type="button" data-cancel style="padding:9px 16px;border-radius:8px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:rgb(var(--mgt-muted-foreground));font-size:14px;font-weight:500;cursor:pointer;">Annuler</button>' +
           '<button type="button" data-save style="padding:9px 16px;border-radius:8px;border:none;background:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground));font-size:14px;font-weight:600;cursor:pointer;">Enregistrer</button>' +
@@ -849,6 +885,38 @@ html.dark {
     overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
     overlay.querySelector('[data-close]').addEventListener('click', close);
     overlay.querySelector('[data-cancel]').addEventListener('click', close);
+
+    // Upload de la photo : redimensionnée en base64 puis prévisualisée.
+    var imageInput = overlay.querySelector('[data-field="image"]');
+    var imagePreview = overlay.querySelector('[data-image-preview]');
+    var imageClear = overlay.querySelector('[data-image-clear]');
+    function updateImagePreview() {
+      var img = imagePreview.querySelector('img');
+      if (imageDataUrl) {
+        img.src = imageDataUrl;
+        imagePreview.style.display = '';
+        imageClear.style.display = 'inline-block';
+      } else {
+        img.src = '';
+        imagePreview.style.display = 'none';
+        imageClear.style.display = 'none';
+      }
+    }
+    imageInput.addEventListener('change', function () {
+      var file = imageInput.files && imageInput.files[0];
+      if (!file) return;
+      readImageAsDataUrl(file, function (url) {
+        imageDataUrl = url;
+        imageInput.value = '';
+        updateImagePreview();
+      });
+    });
+    imageClear.addEventListener('click', function () {
+      imageDataUrl = '';
+      imageInput.value = '';
+      updateImagePreview();
+    });
+
     overlay.querySelector('[data-save]').addEventListener('click', function(){
       var name = overlay.querySelector('[data-field="name"]').value.trim();
       var price = parseInt(overlay.querySelector('[data-field="price"]').value, 10);
@@ -858,7 +926,7 @@ html.dark {
       if (!name){ showToast('Veuillez saisir un nom de produit.'); return; }
       if (isNaN(price) || price < 0){ showToast('Veuillez saisir un prix valide.'); return; }
       if (isNaN(stock) || stock < 0){ showToast('Veuillez saisir un stock valide.'); return; }
-      var payload = { name: name, description: (product && product.description) || '', price: price, stock: stock, unit: unit || 'unité', category: category, available: true, image: (product && product.image) || '', vendorId: vendorId(), vendorName: vendorName() };
+      var payload = { name: name, description: (product && product.description) || '', price: price, stock: stock, unit: unit || 'unité', category: category, available: true, image: imageDataUrl, vendorId: vendorId(), vendorName: vendorName() };
       if (product && product.id) payload.id = product.id;
       var saveBtn = overlay.querySelector('[data-save]');
       saveBtn.disabled = true; saveBtn.textContent = 'Enregistrement…';
