@@ -1139,4 +1139,73 @@
         'Mangoo Express+ · ' + t.label + ' · ' + t.vehicle + '</span>';
     }
   };
+
+  /* ------------------------------------------------------------------ *
+   *  Bandeau « Live en cours » (pages publiques / client)
+   * ------------------------------------------------------------------ *
+   *  Affiche une pastille flottante « En direct · Rejoindre » sur les pages
+   *  clients (accueil, carte, fiche, boutique…) dès qu'un Live Shopping est
+   *  actif, pour qu'un client sache qu'un direct est en cours sans passer par
+   *  le Dashboard. Réagit aux événements WS (onLive, instantané) et se
+   *  ré-appuie sur un sondage /live-status toutes les 15 s en filet de
+   *  sécurité (pages sans WebSocket déjà ouvert).
+   */
+  function injectLiveBanner() {
+    var filename = (location.pathname.split('/').pop() || '').toLowerCase();
+    if (!filename) return;
+    if (filename.indexOf('dashboard') === 0) return;             // espace pro
+    if (filename === 'live-client.html' || filename === 'live-shopping.html') return;
+
+    var pagesBase = location.pathname.indexOf('/pages/') >= 0 ? './' : 'pages/';
+
+    var style = document.createElement('style');
+    style.textContent =
+      '@keyframes mgt-live-dot{0%,100%{opacity:1}50%{opacity:.25}}' +
+      '@keyframes mgt-live-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}';
+    document.head.appendChild(style);
+
+    var el = document.createElement('a');
+    el.id = 'mgt-live-banner';
+    el.href = pagesBase + 'live-client.html';
+    el.setAttribute('aria-label', 'Rejoindre le live en cours');
+    el.style.cssText =
+      'position:fixed;right:16px;bottom:16px;z-index:9999;display:none;' +
+      'align-items:center;gap:8px;padding:11px 18px;border-radius:9999px;' +
+      'background:#ef4444;color:#fff;font-weight:700;font-size:14px;line-height:1;' +
+      'box-shadow:0 8px 24px rgba(239,68,68,.42);text-decoration:none;' +
+      'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;' +
+      'animation:mgt-live-float 1.6s ease-in-out infinite;';
+    el.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#fff;animation:mgt-live-dot 1.6s infinite;"></span>En direct · Rejoindre';
+    document.body.appendChild(el);
+
+    function apply(st) {
+      var active = !!(st && st.active);
+      el.style.display = active ? 'inline-flex' : 'none';
+      if (active) {
+        var c = readStoredClient();
+        if (c && c.id) {
+          el.href = pagesBase + 'live-client.html?id=' + encodeURIComponent(c.id) + '&name=' + encodeURIComponent(c.name || '');
+        }
+      }
+    }
+
+    // 1) Instantané via le WebSocket (pages déjà connectées via MangooConnect).
+    api.onLive(apply);
+
+    // 2) Filet de sécurité : sondage /live-status.
+    function poll() {
+      fetch('/live-status', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { apply({ active: !!(d && d.active), vendorId: (d && d.vendorId) || '' }); })
+        .catch(function () { /* ignore */ });
+    }
+    poll();
+    setInterval(poll, 15000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectLiveBanner);
+  } else {
+    injectLiveBanner();
+  }
 })(window);
