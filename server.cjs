@@ -216,6 +216,12 @@ const live = {
 const liveViewers = new Set();  // ws des spectateurs connectés
 const liveOrdersLog = [];        // commandes passées pendant un live (persistées pour le module Commandes)
 
+/* Annuaire multi-salles : identité + métadonnées de chaque vendeur en direct.
+ * Le flux vidéo WebRTC reste porté par la variable "live" (une salle à la fois) ;
+ * cet annuaire permet de savoir QUI anime chaque live quand plusieurs sont actifs,
+ * et alimente l'endpoint public GET /api/lives (page « Lives en direct »). */
+const liveRooms = new Map(); // roomId -> { roomId, vendorId, vendorName, title, category, sellerType, rating, thumb, startedAt, viewers, likes, orders, active }
+
 /* ------------------------------------------------------------------ *
  *  État Prestations (services proposés par les prestataires)
  *  Persistance simple : fichier JSON (data/prestations.json).
@@ -2565,6 +2571,43 @@ function liveSnapshot() {
   };
 }
 
+function liveRoomSnapshot(room) {
+  return {
+    roomId: room.roomId,
+    vendorId: room.vendorId,
+    vendorName: room.vendorName,
+    title: room.title,
+    category: room.category || 'boutique',
+    sellerType: room.sellerType || 'boutique',
+    rating: (room.rating != null) ? room.rating : null,
+    thumb: room.thumb || null,
+    startedAt: room.startedAt || null,
+    viewers: room.viewers || 0,
+    likes: room.likes || 0,
+    orders: room.orders || 0
+  };
+}
+
+// Liste publique des salles actives (consommée par GET /api/lives).
+function activeLivesList() {
+  const list = [];
+  liveRooms.forEach(function (room) {
+    if (room.active) list.push(liveRoomSnapshot(room));
+  });
+  if (live.active && live.vendorId) {
+    const id = 'room-' + live.vendorId;
+    if (!liveRooms.has(id)) {
+      list.push({
+        roomId: id, vendorId: live.vendorId, vendorName: live.vendorName,
+        title: live.title, category: 'boutique', sellerType: 'boutique',
+        rating: null, thumb: null, startedAt: live.startedAt,
+        viewers: live.viewers, likes: live.likes, orders: live.orders
+      });
+    }
+  }
+  return list;
+}
+
 function broadcastLive(obj, exceptWs) {
   clients.forEach((list) => {
     list.forEach((c) => {
@@ -2766,6 +2809,20 @@ function handleLiveStart(ws, msg) {
   live.orders = 0;
   live.pinnedProduct = null;
   live.chat = [];
+  const roomId = 'room-' + ws.meta.id;
+  liveRooms.set(roomId, {
+    roomId: roomId,
+    vendorId: ws.meta.id,
+    vendorName: live.vendorName,
+    title: live.title,
+    category: String(msg.category || 'boutique'),
+    sellerType: String(msg.sellerType || msg.type || 'boutique'),
+    rating: (msg.rating != null) ? msg.rating : null,
+    thumb: String(msg.thumb || ''),
+    startedAt: live.startedAt,
+    viewers: 0, likes: 0, orders: 0,
+    active: true
+  });
   broadcastLive({
     type: 'live-started',
     vendorId: live.vendorId,
@@ -2781,6 +2838,9 @@ function handleLiveStop(ws) {
   if (ws.meta.id !== live.vendorId) return;
   live.active = false;
   broadcastLive({ type: 'live-ended' });
+  const endedRoomId = 'room-' + live.vendorId;
+  const endedRoom = liveRooms.get(endedRoomId);
+  if (endedRoom) endedRoom.active = false;
   live.vendorId = null;
   live.vendorName = null;
   live.vendorWs = null;
@@ -2822,6 +2882,9 @@ function handleLiveVendorClose(ws) {
   if (live.vendorWs !== ws) return; // seule la socket du live arrête le live
   live.active = false;
   broadcastLive({ type: 'live-ended' });
+  const endedRoomId = 'room-' + live.vendorId;
+  const endedRoom = liveRooms.get(endedRoomId);
+  if (endedRoom) endedRoom.active = false;
   live.vendorId = null;
   live.vendorName = null;
   live.vendorWs = null;
@@ -3215,6 +3278,11 @@ function handleHttp(req, res) {
       orders: live.orders,
       pinnedProduct: live.pinnedProduct
     }));
+    return;
+  }
+  if (urlPath === '/api/lives') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ rooms: activeLivesList() }));
     return;
   }
   if (urlPath === '/api/contacts') {
