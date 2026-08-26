@@ -784,9 +784,15 @@
     if (global.MangooConnect && typeof global.MangooConnect.onLive === 'function') {
       global.MangooConnect.onLive(function (st) { setLiveState(st); });
     }
-    // 2) Filet de sécurité : sondage /live-status toutes les 15 s.
+    // 2) Filet de sécurité : sondage /live-status rapproché (2 s) + re-sondage
+    //    immédiat quand l'onglet redevient visible. Garantit une détection
+    //    quasi instantanée même si la connexion WebSocket n'est pas établie.
     poll();
-    setInterval(poll, 15000);
+    setInterval(poll, 2000);
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) poll();
+    });
+    window.addEventListener('focus', poll);
   }
 
   function init() {
