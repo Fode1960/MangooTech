@@ -1060,12 +1060,18 @@ html.dark {
       if (editBtn) {
         editBtn.addEventListener('click', function () {
           var fields = document.querySelectorAll('[data-profile]');
+          // Le champ « Ville » reste toujours éditable (déverrouillé d'emblée)
+          // pour éviter toute confusion : on l'exclut du basculement
+          // Modifier/Terminé qui ne concerne que les autres champs.
+          var toggleFields = Array.prototype.filter.call(fields, function (f) {
+            return f.getAttribute('data-profile') !== 'city';
+          });
           var isEditing = false;
-          fields.forEach(function (f) { if (!f.readOnly) isEditing = true; });
+          toggleFields.forEach(function (f) { if (!f.readOnly) isEditing = true; });
           var next = !isEditing;
-          fields.forEach(function (f) { f.readOnly = !next; });
+          toggleFields.forEach(function (f) { f.readOnly = !next; });
           if (editLabel) editLabel.textContent = next ? 'Terminé' : 'Modifier';
-          if (next && fields.length) fields[0].focus();
+          if (next && toggleFields.length) toggleFields[0].focus();
         });
       }
 
