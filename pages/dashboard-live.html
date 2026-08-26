@@ -834,6 +834,60 @@ html.dark {
       let callPc = null, callStream = null, callId = null, callState = 'idle'; // idle | ringing | connected
       let callOfferSdp = null;
 
+      /* --- Sonnerie d'appel entrant (WebAudio + vibration) --- */
+      let _ringNodes = [];
+      let _ringTimer = null;
+      function _ensureRingCtx() {
+        if (!window._mgtAudioCtx) {
+          var AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) window._mgtAudioCtx = new AC();
+        }
+        return window._mgtAudioCtx;
+      }
+      function _stopRingNodes() {
+        _ringNodes.forEach(function (n) { try { if (n.stop) n.stop(); } catch (e) {} try { if (n.disconnect) n.disconnect(); } catch (e) {} });
+        _ringNodes = [];
+      }
+      function _ringPulse(ctx, start) {
+        var o1 = ctx.createOscillator();
+        var o2 = ctx.createOscillator();
+        var g = ctx.createGain();
+        var out = ctx.createGain();
+        o1.type = 'sine'; o1.frequency.value = 440;
+        o2.type = 'sine'; o2.frequency.value = 480;
+        g.gain.setValueAtTime(0, start);
+        g.gain.linearRampToValueAtTime(0.06, start + 0.03);
+        g.gain.setValueAtTime(0.06, start + 0.97);
+        g.gain.linearRampToValueAtTime(0, start + 1.0);
+        o1.connect(g); o2.connect(g); g.connect(out); out.connect(ctx.destination);
+        o1.start(start); o2.start(start); o1.stop(start + 1.05); o2.stop(start + 1.05);
+        _ringNodes.push(o1, o2, g, out);
+      }
+      function startIncomingRing() {
+        stopIncomingRing();
+        var ctx = _ensureRingCtx();
+        if (ctx) {
+          if (ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
+          var now = ctx.currentTime;
+          for (var i = 0; i < 4; i++) _ringPulse(ctx, now + i * 3);
+        }
+        try { if (navigator.vibrate) navigator.vibrate([600, 250, 600, 250, 600]); } catch (e) {}
+        _ringTimer = setInterval(function () {
+          if (callState !== 'ringing') { stopIncomingRing(); return; }
+          var c2 = _ensureRingCtx();
+          if (c2) {
+            if (c2.state === 'suspended') { try { c2.resume(); } catch (e) {} }
+            for (var j = 0; j < 4; j++) _ringPulse(c2, c2.currentTime + j * 3);
+          }
+          try { if (navigator.vibrate) navigator.vibrate([600, 250, 600, 250, 600]); } catch (e) {}
+        }, 3000);
+      }
+      function stopIncomingRing() {
+        if (_ringTimer) { clearInterval(_ringTimer); _ringTimer = null; }
+        _stopRingNodes();
+        try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) {}
+      }
+
       function toast(msg) {
         var t = document.getElementById('live-toast');
         if (!t) {
@@ -1338,6 +1392,7 @@ html.dark {
         document.getElementById('call-avatar').textContent = name.charAt(0).toUpperCase();
         document.getElementById('call-status').textContent = 'vous appelle · négociation privée';
         showCallOverlay('ringing');
+        startIncomingRing();
         toast('Appel entrant de ' + name);
       }
       function acceptCall() {
@@ -1358,6 +1413,7 @@ html.dark {
               .then(function (ans) { return callPc.setLocalDescription(ans); })
               .then(function () {
                 callState = 'connected';
+                stopIncomingRing();
                 document.getElementById('call-status').textContent = 'Appel privé en cours';
                 showCallOverlay('connected');
                 setBroadcastMicMuted(true);
@@ -1425,6 +1481,7 @@ html.dark {
         resetCall();
       }
       function resetCall() {
+        stopIncomingRing();
         callState = 'idle';
         callOfferSdp = null;
         if (callStream) { callStream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} }); callStream = null; }
