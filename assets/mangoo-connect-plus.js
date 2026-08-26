@@ -1192,7 +1192,8 @@
     // 1) Instantané via le WebSocket (pages déjà connectées via MangooConnect).
     api.onLive(apply);
 
-    // 2) Filet de sécurité : sondage /live-status.
+    // 2) Filet de sécurité : sondage /live-status rapproché (2 s) + re-sondage
+    //    immédiat quand l'onglet redevient visible.
     function poll() {
       fetch('/live-status', { cache: 'no-store' })
         .then(function (r) { return r.json(); })
@@ -1200,7 +1201,11 @@
         .catch(function () { /* ignore */ });
     }
     poll();
-    setInterval(poll, 15000);
+    setInterval(poll, 2000);
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) poll();
+    });
+    window.addEventListener('focus', poll);
   }
 
   if (document.readyState === 'loading') {
