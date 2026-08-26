@@ -617,7 +617,14 @@ html.dark {
       // Comparaison insensible à la casse/aux accents pour éviter tout faux
       // négatif (ex. « Yaoundé » vs « yaounde »).
       var matchesCity = cityKnown ? (cityKey === normalizeText(userCity)) : true;
-      return matchesCity && vendorDistanceKm(v) <= maxDistanceKm;
+      if (matchesCity) {
+        // Même ville : toujours affiché. La ville est la référence fiable, alors
+        // que les coordonnées GPS peuvent être obsolètes/erronées après un
+        // changement de ville. Ce garde-fou empêche qu'un commerce présent dans
+        // la liste disparaisse de la carte à cause d'une distance mal calculée.
+        return true;
+      }
+      return vendorDistanceKm(v) <= maxDistanceKm;
     }
     return vendorDistanceKm(v) <= maxDistanceKm;
   }
