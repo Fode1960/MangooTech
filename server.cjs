@@ -2631,6 +2631,10 @@ function handleRegister(ws, msg) {
   addClient(id, ws, role, name);
   console.log('[WS] register', { id, role, name, time: new Date().toLocaleTimeString() });
   send(ws, { type: 'registered', id, role, name });
+  // État du live immédiat : permet à tout client qui se connecte (ou se
+  // reconnecte) de connaître l'état courant du Live Shopping instantanément,
+  // sans attendre le prochain sondage /live-status côté navigateur.
+  send(ws, liveSnapshot());
   broadcastPresence();
 }
 
