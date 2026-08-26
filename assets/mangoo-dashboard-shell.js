@@ -112,6 +112,7 @@
     '.mgt-pop-footer a{font-size:12.5px;font-weight:600;color:rgb(var(--mgt-muted-foreground));}',
     '.mgt-pop-footer a:hover{color:rgb(var(--mgt-foreground));}',
     '.mgt-pop-item.danger{color:rgb(var(--mgt-error));font-weight:600;}',
+    '@keyframes mgt-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.45);}50%{box-shadow:0 0 0 6px rgba(239,68,68,0);}}',
     'aside nav a.mgt-nav-match{background:rgba(255,255,255,.22) !important;color:#fff !important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);}',
     // — Scrollbars (menu latéral + contenu principal + tableaux) ——————————————
     // Charte unifiée : rail toujours transparent (aucun pavé blanc ne « croque »
@@ -665,12 +666,80 @@
     }
   }
 
+  // ---- Accès « Carte Local+ » + indicateur « En direct » dans la sidebar ----
+  // Injecte un lien vers la carte Local+ (carte.html) et un badge « En direct »
+  // pulsant sur le lien Live, rafraîchi depuis /live-status. Permet à un
+  // vendeur/prestataire de savoir qu'un live est lancé et de rejoindre la carte
+  // sans quitter son espace.
+  function buildLiveNav() {
+    var sidebar = document.getElementById('app-sidebar') || document.querySelector('aside.fixed.inset-y-0.left-0') || document.querySelector('aside');
+    if (!sidebar) return;
+    var nav = sidebar.querySelector('nav');
+    if (!nav) return;
+    var links = nav.querySelectorAll('a');
+
+    // 1) Lien « Carte Local+ » injecté après « Annuaire des pros ».
+    var hasCarte = false;
+    for (var i = 0; i < links.length; i++) {
+      if ((links[i].getAttribute('href') || '').indexOf('carte.html') >= 0) hasCarte = true;
+    }
+    if (!hasCarte) {
+      var anchor = null;
+      for (var j = 0; j < links.length; j++) {
+        if ((links[j].getAttribute('href') || '').indexOf('annuaire-prestataires.html') >= 0) { anchor = links[j]; break; }
+      }
+      var a = document.createElement('a');
+      a.href = './carte.html';
+      a.className = NAV_LINK_CLASS;
+      a.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg><span>Carte Local+</span>';
+      if (anchor && anchor.parentNode) {
+        anchor.parentNode.insertBefore(a, anchor.nextSibling);
+      } else {
+        nav.appendChild(a);
+      }
+      links = nav.querySelectorAll('a');
+    }
+
+    // 2) Badge « En direct » sur le lien Live.
+    var liveLink = null;
+    for (var k = 0; k < links.length; k++) {
+      if ((links[k].getAttribute('href') || '').indexOf('dashboard-live.html') >= 0) { liveLink = links[k]; break; }
+    }
+    var badge = null;
+    if (liveLink) {
+      badge = liveLink.querySelector('.mgt-live-badge');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'mgt-live-badge';
+        badge.style.cssText = 'display:none;margin-left:auto;align-items:center;gap:4px;font-size:10px;font-weight:700;line-height:1;padding:2px 7px;border-radius:9999px;background:#ef4444;color:#fff;';
+        badge.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#fff;animation:mgt-pulse 1.6s infinite;"></span>En direct';
+        liveLink.appendChild(badge);
+      }
+    }
+
+    function poll() {
+      fetch('/live-status', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var active = !!(d && d.active);
+          if (badge) {
+            badge.style.display = active ? 'inline-flex' : 'none';
+            if (liveLink && active) liveLink.style.color = '#fff';
+          }
+        })
+        .catch(function () { /* ignore */ });
+    }
+    poll();
+    setInterval(poll, 15000);
+  }
+
   function init() {
     injectStyle();
     prepHeader();
     hydrateIdentity();
     applyVerificationRole();
     applyRoleNav();
+    buildLiveNav();
     if (global.MangooVendor) global.MangooVendor.registerRT();
 
     var bell = document.getElementById('btn-notifications');
