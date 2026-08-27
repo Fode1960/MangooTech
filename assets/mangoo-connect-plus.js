@@ -1303,6 +1303,22 @@
     window.addEventListener('focus', poll);
   }
 
+  // Auto-enregistrement du client connecté sur toutes les pages qui chargent ce
+  // module. Sans cela, un client (Dida) naviguant hors de chat.html n'est pas
+  // inscrit côté WebSocket et le professionnel (DAN) ne peut pas le joindre en
+  // temps réel : le message ou l'appel tomberait en Web Push ou serait ignoré.
+  // Le prestataire est, lui, auto-enregistré par mangoo-dashboard-shell via
+  // MangooVendor.registerRT(). Ici on ne crée PAS de connexion « guest » pour les
+  // visiteurs anonymes : on n'enregistre que le client réellement connecté.
+  (function autoRegisterClient() {
+    var stored = readStoredClient();
+    if (!stored || !stored.id) return; // visiteur anonyme
+    if (identity && identity.id === stored.id) return; // déjà enregistré
+    try {
+      api.register('client', stored.id, stored.name);
+    } catch (e) { /* non bloquant */ }
+  })();
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', injectLiveBanner);
   } else {
