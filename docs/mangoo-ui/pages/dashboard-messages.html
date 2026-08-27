@@ -880,7 +880,11 @@ html.dark {
         }
         if (empty) empty.style.display = 'none';
         contacts.forEach(buildContactRow);
-        var first = list.querySelector('.msg-conv');
+        // Privilégie la conversation avec Dida DANSO (cli-66b551e17c29) afin que
+        // le dashboard du pro ouvre directement la bonne discussion au lieu de la
+        // première conversation de la liste.
+        var first = list.querySelector('.msg-conv[data-peer-id="cli-66b551e17c29"]')
+          || list.querySelector('.msg-conv');
         if (first) setActive(first);
         updateUnreadBadge();
         if (window.lucide) window.lucide.createIcons();
