@@ -419,7 +419,7 @@
 
     var touchIcon = document.createElement('link');
     touchIcon.rel = 'apple-touch-icon';
-    touchIcon.href = '/assets/favicon.png';
+    touchIcon.href = '/assets/apple-touch-icon.png';
 
     function meta(name, content) {
       var m = document.createElement('meta');
@@ -511,12 +511,81 @@
     document.body.appendChild(bar);
   }
 
+  // --- Bouton « Installer l'app » (Android / Desktop) ---
+  // Chrome/Edge (et Firefox sur Android) émettent `beforeinstallprompt` lorsque
+  // le site est installable. On capture cet événement pour pouvoir déclencher
+  // l'installation sur un geste utilisateur explicite (le prompt natif ne peut
+  // pas être appelé n'importe quand). iOS ne l'émet pas (géré par le bandeau).
+  var deferredInstallPrompt = null;
+  global.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    maybeShowInstallButton();
+  });
+  global.addEventListener('appinstalled', function () {
+    deferredInstallPrompt = null;
+    var btn = document.getElementById('mgt-install-button');
+    if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
+  });
+
+  function isInstallable() {
+    return !!deferredInstallPrompt;
+  }
+
+  function maybeShowInstallButton() {
+    if (!deferredInstallPrompt || isStandalone()) return;
+    try { if (localStorage.getItem('mgt_install_btn_dismissed') === '1') return; } catch (e) {}
+    if (document.getElementById('mgt-install-button')) return;
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = 'mgt-install-button';
+    btn.setAttribute('aria-label', 'Installer l\'application MangooTech');
+    btn.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483600;display:flex;align-items:center;gap:8px;' +
+      'background:#16a34a;color:#fff;border:0;border-radius:999px;padding:12px 16px;font-size:13.5px;font-weight:700;' +
+      'cursor:pointer;box-shadow:0 12px 36px rgba(0,0,0,.35);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;';
+
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>' +
+      '<span>Installer l\'app</span>';
+
+    btn.addEventListener('click', function () {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then(function (choice) {
+        deferredInstallPrompt = null;
+        if (btn.parentNode) btn.parentNode.removeChild(btn);
+        try { if (choice && choice.outcome === 'dismissed') localStorage.setItem('mgt_install_btn_dismissed', '1'); } catch (e) {}
+      });
+    });
+
+    document.body.appendChild(btn);
+  }
+
+  // Déclenche explicitement l'installation (utilisé par d'éventuels boutons).
+  function promptInstall() {
+    if (!deferredInstallPrompt) {
+      // Fallback : sur mobile Android, le raccourci menu est la seule autre voie.
+      return Promise.resolve(false);
+    }
+    deferredInstallPrompt.prompt();
+    return deferredInstallPrompt.userChoice.then(function (choice) {
+      deferredInstallPrompt = null;
+      var btn = document.getElementById('mgt-install-button');
+      if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
+      return !!(choice && choice.outcome === 'accepted');
+    });
+  }
+
   // Injection automatique des métadonnées PWA + bandeau iOS (une fois).
   injectPwaMeta();
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', maybeShowIosInstallBanner);
+    document.addEventListener('DOMContentLoaded', function () {
+      maybeShowIosInstallBanner();
+      maybeShowInstallButton();
+    });
   } else {
     maybeShowIosInstallBanner();
+    maybeShowInstallButton();
   }
 
   global.MangooPush = {
@@ -534,6 +603,9 @@
     bindBellRow: bindBellRow,
     isIOS: isIOS,
     isStandalone: isStandalone,
+    isInstallable: isInstallable,
+    promptInstall: promptInstall,
+    maybeShowInstallButton: maybeShowInstallButton,
     maybeShowIosInstallBanner: maybeShowIosInstallBanner,
     injectPwaMeta: injectPwaMeta
   };
