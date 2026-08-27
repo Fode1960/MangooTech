@@ -576,16 +576,99 @@
     });
   }
 
+  // Bandeau d'activation des notifications push. Le Web Push exige un geste
+  // utilisateur : on ne peut pas demander la permission automatiquement. Ce
+  // bandeau est affiché UNE fois (persisté) pour tout utilisateur CONNECTÉ qui
+  // n'a pas encore accordé la permission, avec un bouton « Activer » explicite.
+  // Sans lui, l'activation reste enfouie dans la cloche et l'utilisateur ne
+  // s'abonne jamais => subscriptionsTotal reste à 0 côté serveur.
+  function maybeShowEnableBanner() {
+    if (!supported()) return;
+    if (global.Notification.permission !== 'default') return;
+    if (!token() || !routingId()) return;
+    try { if (localStorage.getItem('mgt_push_enable_dismissed') === '1') return; } catch (e) {}
+    if (document.getElementById('mgt-push-enable-banner')) return;
+
+    var bar = document.createElement('div');
+    bar.id = 'mgt-push-enable-banner';
+    bar.setAttribute('role', 'dialog');
+    bar.setAttribute('aria-label', 'Activer les notifications');
+    bar.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483590;max-width:480px;margin:0 auto;' +
+      'background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:14px 14px 14px 16px;' +
+      'box-shadow:0 18px 60px rgba(0,0,0,.45);display:flex;gap:12px;align-items:center;' +
+      'font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;';
+
+    var icon = document.createElement('span');
+    icon.style.cssText = 'width:40px;height:40px;border-radius:12px;background:#16a34a;display:inline-flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;font-size:20px;';
+    icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+
+    var mid = document.createElement('div');
+    mid.style.cssText = 'flex:1;min-width:0;';
+    var title = document.createElement('div');
+    title.style.cssText = 'font-weight:700;font-size:14px;line-height:1.3;';
+    title.textContent = 'Activer les notifications';
+    var desc = document.createElement('div');
+    desc.style.cssText = 'font-size:12.5px;line-height:1.45;color:rgba(255,255,255,.78);margin-top:3px;';
+    desc.textContent = 'Recevez appels, messages et lives même quand votre espace est fermé.';
+    mid.appendChild(title);
+    mid.appendChild(desc);
+
+    var actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;align-items:center;gap:8px;flex-shrink:0;';
+
+    var actBtn = document.createElement('button');
+    actBtn.type = 'button';
+    actBtn.textContent = 'Activer';
+    actBtn.style.cssText = 'cursor:pointer;border:0;background:#16a34a;color:#fff;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:700;white-space:nowrap;';
+    actBtn.addEventListener('click', function () {
+      actBtn.disabled = true;
+      actBtn.textContent = '…';
+      enable().then(function (res) {
+        if (res && res.granted && !res.error) {
+          if (bar.parentNode) bar.parentNode.removeChild(bar);
+        } else {
+          actBtn.disabled = false;
+          actBtn.textContent = 'Réessayer';
+          if (res && res.reason === 'denied') {
+            desc.textContent = 'Notifications bloquées par le navigateur. Autorisez-les via le cadenas de la barre d'adresse.';
+          } else if (res && res.error) {
+            desc.textContent = 'Échec de l'abonnement. Réessayez ou rechargez la page.';
+          }
+        }
+      });
+    });
+
+    var closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label', 'Fermer');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = 'cursor:pointer;border:0;background:transparent;color:rgba(255,255,255,.6);font-size:20px;line-height:1;padding:2px 4px;';
+    closeBtn.addEventListener('click', function () {
+      try { localStorage.setItem('mgt_push_enable_dismissed', '1'); } catch (e) {}
+      if (bar.parentNode) bar.parentNode.removeChild(bar);
+    });
+
+    actions.appendChild(actBtn);
+    actions.appendChild(closeBtn);
+
+    bar.appendChild(icon);
+    bar.appendChild(mid);
+    bar.appendChild(actions);
+    document.body.appendChild(bar);
+  }
+
   // Injection automatique des métadonnées PWA + bandeau iOS (une fois).
   injectPwaMeta();
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       maybeShowIosInstallBanner();
       maybeShowInstallButton();
+      maybeShowEnableBanner();
     });
   } else {
     maybeShowIosInstallBanner();
     maybeShowInstallButton();
+    maybeShowEnableBanner();
   }
 
   global.MangooPush = {
