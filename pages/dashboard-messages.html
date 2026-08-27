@@ -1414,6 +1414,8 @@ html.dark {
 
       function appendIncomingBubble(text) {
         if (!thread) return;
+        var emptyEl = document.getElementById('msg-thread-empty');
+        if (emptyEl && emptyEl.parentNode) emptyEl.parentNode.removeChild(emptyEl);
         var name = currentConv ? currentConv.getAttribute('data-name') : 'Awa S.';
         var bubble = document.createElement('div');
         bubble.className = 'flex items-end gap-2 max-w-[70%]';
@@ -1590,9 +1592,33 @@ html.dark {
           if (list && conv.parentNode === list && list.firstElementChild !== conv) {
             list.insertBefore(conv, list.firstElementChild);
           }
-          var active = currentConv && currentConv === conv;
+          // Diagnostic temporaire (à retirer après stabilisation).
+          try {
+            console.log('[MSG] showIncoming', JSON.stringify({
+              from: from,
+              fromName: fromName,
+              name: name,
+              convPeer: conv && conv.getAttribute('data-peer-id'),
+              convName: conv && conv.getAttribute('data-name'),
+              currentPeer: currentConv && currentConv.getAttribute('data-peer-id'),
+              currentName: currentConv && currentConv.getAttribute('data-name'),
+              sameNode: !!(currentConv === conv)
+            }));
+          } catch (e) {}
+          // La conversation active est identifiée par l'identifiant pair ('from')
+          // plutôt que par l'identité exacte du nœud : 'ensureConversation' peut
+          // renvoyer un nœud équivalent sans être le même objet (conversation
+          // recréée ou réordonnée). On synchronise alors la référence avant
+          // d'afficher la bulle, comme le font déjà onFile/onAppointment.
+          var active = currentConv && (
+            currentConv === conv ||
+            (from && currentConv.getAttribute('data-peer-id') === from)
+          );
           if (active) {
+            if (currentConv !== conv) setActive(conv);
             appendIncomingBubble(text);
+            conv.setAttribute('data-unread', 'false');
+            updateUnreadBadge();
           } else {
             conv.setAttribute('data-unread', 'true');
             addUnreadBadge(conv);
