@@ -21,6 +21,27 @@ self.addEventListener('activate', function (event) {
   event.waitUntil(self.clients.claim());
 });
 
+// Gestionnaire fetch minimal — requis par Chrome pour rendre l'app installable
+// (déclenchement de `beforeinstallprompt`) et pour fournir un repli hors-ligne
+// basique. Stratégie « réseau d'abord » : aucun cache écrit, donc aucun asset
+// périmé ne peut être servi ; le comportement en ligne reste strictement
+// identique à l'absence de service worker.
+self.addEventListener('fetch', function (event) {
+  if (event.request.method !== 'GET') return;
+  event.respondWith(
+    fetch(event.request).catch(function () {
+      return caches.match(event.request).then(function (cached) {
+        if (cached) return cached;
+        return new Response('Hors ligne', {
+          status: 503,
+          statusText: 'Offline',
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+        });
+      });
+    })
+  );
+});
+
 // Normalise une URL cible : les chemins relatifs sont résolus sur l'origine.
 function resolveUrl(url) {
   if (!url) return '/';
