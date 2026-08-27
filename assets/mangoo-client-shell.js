@@ -21,15 +21,21 @@
     } catch (e) { return { token: null, user: null }; }
   }
   function homeForRole(role) {
-    if (role === 'admin') return 'admin.html';
-    if (role === 'client') return 'client-dashboard.html';
-    if (role === 'vendeur' || role === 'prestataire') return 'dashboard-overview.html';
+    var r = String(role || '').toLowerCase();
+    if (r === 'admin') return 'admin.html';
+    if (r === 'client' || r === 'cliente') return 'client-dashboard.html';
+    if (r === 'vendeur' || r === 'prestataire') return 'dashboard-overview.html';
     return 'auth.html';
   }
   function requireRole(role) {
     var s = readSession();
     if (!s.token || !s.user) { window.location.replace('./auth.html'); return false; }
-    if (s.user.role !== role) { window.location.replace('./' + homeForRole(s.user.role)); return false; }
+    var r = String(s.user.role || '').toLowerCase();
+    var target = String(role || '').toLowerCase();
+    // Accepte « client » et « cliente » comme rôles client valides : les
+    // anciens comptes pouvaient stocker l'un ou l'autre selon l'inscription.
+    var ok = (target === 'client' && (r === 'client' || r === 'cliente')) || (r === target);
+    if (!ok) { window.location.replace('./' + homeForRole(s.user.role)); return false; }
     return true;
   }
   if (!requireRole('client')) return;

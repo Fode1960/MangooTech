@@ -377,6 +377,11 @@
 
   function emit(list, arg) { list.forEach(function (cb) { try { cb(arg); } catch (e) {} }); }
 
+  // Notifie les abonnés `onCallEnded` quand un appel se termine. Appelé par
+  // `endCall()`. Était référencé mais jamais défini, ce qui levait une
+  // `ReferenceError` dès la fin d'un appel.
+  function emitCallEnded() { emit(callEndedCbs, {}); }
+
   function setConnState(s) {
     connState = s;
     emit(statusCbs, s);
@@ -730,9 +735,14 @@
    *  Conversation (chat)
    * ------------------------------------------------------------------ */
   var chatTarget = null;
+  // Certaines pages gèrent elles-mêmes l'affichage des messages (ex. chat.html
+  // avec son propre fil). Elles désactivent l'ouverture automatique de l'overlay
+  // pour éviter le double affichage (page de chat + mini-chat Connect+).
+  var suppressAutoOpen = false;
 
   function appendMsg(kind, text) {
     var body = q('[data-mcp="body"]', chatEl);
+    if (!body) return;
     var el = document.createElement('div');
     el.className = 'mcp-msg ' + kind;
     el.textContent = text;
@@ -741,6 +751,9 @@
   }
 
   function openChat(target) {
+    // Le mini-chat a pu être retiré du DOM (disableAutoOpenChat sur chat.html) :
+    // dans ce cas on ne fait rien, la page gère son propre fil.
+    if (!chatEl || !chatEl.parentNode) return;
     ensureGuest();
     chatTarget = target;
     q('[data-mcp="avatar"]', chatEl).textContent = initials(target && target.name);
@@ -788,6 +801,9 @@
       appendMsg('in', text);
       return;
     }
+    // Les pages qui affichent déjà leur propre fil (ex. chat.html) désactivent
+    // l'ouverture automatique de cet overlay pour éviter le double affichage.
+    if (suppressAutoOpen) return;
     // Messagerie pro↔pro : si un message arrive d'un pair alors que la
     // discussion n'est pas ouverte (ou pas sur ce pair), on l'ouvre pour
     // afficher le texte immédiatement au lieu de le laisser « invisible ».
@@ -980,6 +996,17 @@
     onStatus: function (cb) { statusCbs.push(cb); },
     onPresence: function (cb) { presenceCbs.push(cb); },
     onMessage: function (cb) { messageCbs.push(cb); },
+    // Désactive l'ouverture automatique de l'overlay de discussion lors de
+    // l'arrivée d'un message. À utiliser par les pages qui affichent déjà le
+    // fil elles-mêmes (ex. chat.html) pour éviter un double affichage.
+    disableAutoOpenChat: function () {
+      suppressAutoOpen = true;
+      // Les pages qui affichent déjà leur propre fil (ex. chat.html) appellent
+      // cette méthode : le mini-chat Connect+ est alors redondant. On le retire
+      // complètement du DOM (et pas seulement son auto-ouverture) pour qu'il ne
+      // s'affiche jamais en double à côté de la grande page de chat.
+      if (chatEl && chatEl.parentNode) { chatEl.parentNode.removeChild(chatEl); }
+    },
     onTyping: function (cb) { typingCbs.push(cb); },
     onLive: function (cb) { liveCbs.push(cb); },
     onIncomingCall: function (cb) { incomingCallCbs.push(cb); },
