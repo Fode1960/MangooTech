@@ -3044,6 +3044,14 @@ function handleChatMessage(ws, msg) {
   const from = ws.meta.id;
   const to = String(msg.to || '').trim();
   const text = String(msg.text || '').slice(0, 4000);
+  console.log('[WS] chat-message', {
+    from: from,
+    to: to,
+    text: text.slice(0, 40),
+    toOnline: isOnline(to),
+    toSockets: onlineSockets(to).length,
+    onlineIds: Array.from(clients.keys())
+  });
   if (!from || !to || !text) return;
   const entry = {
     msgId: msg.msgId || rand(),
