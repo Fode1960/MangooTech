@@ -394,6 +394,131 @@
     });
   }
 
+  // --- Installabilité PWA (manifest + méta iOS) ---
+  function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !global.MSStream;
+  }
+  function isStandalone() {
+    try {
+      if (global.navigator.standalone === true) return true;
+      if (global.matchMedia && global.matchMedia('(display-mode: standalone)').matches) return true;
+    } catch (e) { /* ignore */ }
+    return false;
+  }
+
+  // Injecte une seule fois les métadonnées PWA : manifest + icône Apple Touch +
+  // mode standalone iOS. Sans elles, « Ajouter à l'écran d'accueil » crée un
+  // simple raccourci web (pas de lancement plein écran, pas de vraie PWA).
+  function injectPwaMeta() {
+    if (document.querySelector('link[rel="manifest"]')) return;
+    var head = document.head || document.documentElement;
+
+    var manifest = document.createElement('link');
+    manifest.rel = 'manifest';
+    manifest.href = '/manifest.json';
+
+    var touchIcon = document.createElement('link');
+    touchIcon.rel = 'apple-touch-icon';
+    touchIcon.href = '/assets/favicon.png';
+
+    function meta(name, content) {
+      var m = document.createElement('meta');
+      m.name = name;
+      m.content = content;
+      head.appendChild(m);
+    }
+
+    head.appendChild(manifest);
+    head.appendChild(touchIcon);
+    meta('apple-mobile-web-app-capable', 'yes');
+    meta('apple-mobile-web-app-status-bar-style', 'black-translucent');
+    meta('apple-mobile-web-app-title', 'MangooTech');
+    meta('mobile-web-app-capable', 'yes');
+    meta('theme-color', '#1a5c2a');
+  }
+
+  // Bandeau d'activation iOS : sur iPhone/iPad (Safari), il n'y a pas de
+  // `beforeinstallprompt` ; l'utilisateur doit passer par la feuille de partage.
+  // On affiche donc un guide « Ajouter à l'écran d'accueil », affiché UNE fois
+  // (persisté en localStorage) et refermable.
+  function maybeShowIosInstallBanner() {
+    if (!isIOS() || isStandalone()) return;
+    try { if (localStorage.getItem('mgt_ios_install_dismissed') === '1') return; } catch (e) {}
+    if (document.getElementById('mgt-ios-install-banner')) return;
+
+    var bar = document.createElement('div');
+    bar.id = 'mgt-ios-install-banner';
+    bar.setAttribute('role', 'dialog');
+    bar.setAttribute('aria-label', 'Installer MangooTech');
+    bar.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483600;max-width:480px;margin:0 auto;' +
+      'background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:14px 14px 14px 16px;' +
+      'box-shadow:0 18px 60px rgba(0,0,0,.45);display:flex;gap:12px;align-items:flex-start;' +
+      'font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;';
+
+    var icon = document.createElement('img');
+    icon.src = '/assets/favicon.png';
+    icon.alt = '';
+    icon.style.cssText = 'width:40px;height:40px;border-radius:10px;flex-shrink:0;object-fit:cover;';
+
+    var mid = document.createElement('div');
+    mid.style.cssText = 'flex:1;min-width:0;';
+    var title = document.createElement('div');
+    title.style.cssText = 'font-weight:700;font-size:14px;line-height:1.3;';
+    title.textContent = 'Installer MangooTech';
+    var desc = document.createElement('div');
+    desc.style.cssText = 'font-size:12.5px;line-height:1.45;color:rgba(255,255,255,.78);margin-top:3px;';
+    desc.textContent = 'Ajoutez l\'app à votre écran d\'accueil pour recevoir appels, messages et lives, même espace fermé.';
+
+    var steps = document.createElement('div');
+    steps.style.cssText = 'display:none;margin-top:8px;padding:8px 10px;background:rgba(255,255,255,.08);border-radius:10px;font-size:12px;line-height:1.55;color:rgba(255,255,255,.85);';
+    steps.innerHTML = '1. Touchez <b>Partager</b> <span style="font-size:13px;">(⎋)</span> en bas du navigateur.<br>' +
+      '2. Faites défiler et touchez <b>« Ajouter à l\'écran d\'accueil »</b>.<br>' +
+      '3. Touchez <b>Ajouter</b>, puis ouvrez l\'app depuis votre écran.';
+
+    mid.appendChild(title);
+    mid.appendChild(desc);
+    mid.appendChild(steps);
+
+    var actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0;';
+
+    var howBtn = document.createElement('button');
+    howBtn.type = 'button';
+    howBtn.textContent = 'Comment faire';
+    howBtn.style.cssText = 'cursor:pointer;border:0;background:#16a34a;color:#fff;border-radius:9px;padding:8px 12px;font-size:12.5px;font-weight:600;white-space:nowrap;';
+    howBtn.addEventListener('click', function () {
+      var open = steps.style.display !== 'none';
+      steps.style.display = open ? 'none' : 'block';
+      howBtn.textContent = open ? 'Comment faire' : 'Masquer';
+    });
+
+    var closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label', 'Fermer');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = 'cursor:pointer;border:0;background:transparent;color:rgba(255,255,255,.6);font-size:20px;line-height:1;padding:2px 4px;';
+    closeBtn.addEventListener('click', function () {
+      try { localStorage.setItem('mgt_ios_install_dismissed', '1'); } catch (e) {}
+      if (bar.parentNode) bar.parentNode.removeChild(bar);
+    });
+
+    actions.appendChild(howBtn);
+    actions.appendChild(closeBtn);
+
+    bar.appendChild(icon);
+    bar.appendChild(mid);
+    bar.appendChild(actions);
+    document.body.appendChild(bar);
+  }
+
+  // Injection automatique des métadonnées PWA + bandeau iOS (une fois).
+  injectPwaMeta();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeShowIosInstallBanner);
+  } else {
+    maybeShowIosInstallBanner();
+  }
+
   global.MangooPush = {
     supported: supported,
     isGranted: function () { return supported() && global.Notification.permission === 'granted'; },
@@ -406,6 +531,10 @@
     savePreferences: savePreferences,
     openFollowSettings: openFollowSettings,
     bellRowHTML: bellRowHTML,
-    bindBellRow: bindBellRow
+    bindBellRow: bindBellRow,
+    isIOS: isIOS,
+    isStandalone: isStandalone,
+    maybeShowIosInstallBanner: maybeShowIosInstallBanner,
+    injectPwaMeta: injectPwaMeta
   };
 })(window);

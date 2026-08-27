@@ -586,6 +586,32 @@ html.dark {
           </div>
         </div>
 
+        <!-- ===== NOTIFICATIONS EN DIRECT (PUSH) ===== -->
+        <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center justify-between gap-4 mb-4">
+            <div class="flex items-center gap-3">
+              <span class="w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))] flex items-center justify-center text-[rgb(var(--mgt-accent))]"><i data-lucide="smartphone" class="w-5 h-5"></i></span>
+              <div>
+                <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Notifications en direct</h2>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Appels, messages et lives, même Dashboard fermé</p>
+              </div>
+            </div>
+            <button id="btn-follow-vendors" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">
+              <i data-lucide="user-plus" class="w-4 h-4"></i>
+              Suivi des vendeurs
+            </button>
+          </div>
+          <div class="flex items-center justify-between rounded-lg border border-[rgb(var(--mgt-border))] p-4">
+            <div>
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Activer les notifications push</p>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]" id="push-status-text">Chargement…</p>
+            </div>
+            <button id="btn-toggle-push" class="relative inline-flex items-center h-6 w-11 rounded-full transition-colors bg-[rgb(var(--mgt-border))]" role="switch" aria-checked="false" aria-label="Activer les notifications push">
+              <span id="push-toggle-knob" class="inline-block h-5 w-5 rounded-full bg-white shadow-sm transform translate-x-0.5 transition-transform"></span>
+            </button>
+          </div>
+        </div>
+
         <!-- ===== PREFERENCES ===== -->
         <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
           <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))] mb-4">Préférences de notification</h2>
@@ -767,5 +793,71 @@ html.dark {
 
 <script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
 <script src="../assets/mangoo-dashboard-shell.js"></script>
+<script>
+(function () {
+  // Raccourci « Suivi des vendeurs » + interrupteur push, branchés sur
+  // MangooPush (chargé par mangoo-dashboard-shell.js). Un court attente
+  // gère les cas où le module arrive après coup.
+  var PUSH_ON_BG = 'bg-[rgb(var(--mgt-primary))]';
+  var PUSH_OFF_BG = 'bg-[rgb(var(--mgt-border))]';
+
+  function refreshToggle() {
+    var st = window.MangooPush ? window.MangooPush.state() : { supported: false, granted: false, permission: 'unsupported' };
+    var btn = document.getElementById('btn-toggle-push');
+    var knob = document.getElementById('push-toggle-knob');
+    var txt = document.getElementById('push-status-text');
+    if (!st.supported) {
+      if (btn) { btn.className = btn.className.replace(PUSH_ON_BG, PUSH_OFF_BG); btn.setAttribute('aria-checked', 'false'); }
+      if (txt) txt.textContent = 'Non pris en charge sur ce navigateur';
+      if (knob) knob.className = 'inline-block h-5 w-5 rounded-full bg-white shadow-sm transform translate-x-0.5 transition-transform';
+      return;
+    }
+    var labels = { granted: 'Activées · vous serez prévenu(e) même espace fermé', denied: 'Bloquées par le navigateur', default: 'Désactivées' };
+    if (txt) txt.textContent = labels[st.permission] || 'Désactivées';
+    var on = st.granted;
+    if (btn) {
+      btn.className = 'relative inline-flex items-center h-6 w-11 rounded-full transition-colors ' + (on ? PUSH_ON_BG : PUSH_OFF_BG);
+      btn.setAttribute('aria-checked', on ? 'true' : 'false');
+    }
+    if (knob) {
+      knob.className = 'inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform ' + (on ? 'translate-x-5' : 'translate-x-0.5');
+    }
+  }
+
+  function wire() {
+    var follow = document.getElementById('btn-follow-vendors');
+    if (follow && !follow.__wired) {
+      follow.__wired = true;
+      follow.addEventListener('click', function () {
+        if (window.MangooPush && window.MangooPush.openFollowSettings) {
+          window.MangooPush.openFollowSettings();
+        }
+      });
+    }
+    var toggle = document.getElementById('btn-toggle-push');
+    if (toggle && !toggle.__wired) {
+      toggle.__wired = true;
+      toggle.addEventListener('click', function () {
+        if (!window.MangooPush) return;
+        var granted = window.MangooPush.isGranted();
+        var done = function () { refreshToggle(); };
+        if (granted) { window.MangooPush.disable().then(done); }
+        else { window.MangooPush.enable().then(done); }
+      });
+    }
+    refreshToggle();
+  }
+
+  var tries = 0;
+  var timer = setInterval(function () {
+    if (window.MangooPush || ++tries > 40) { clearInterval(timer); wire(); }
+  }, 100);
+
+  // Réaffiche l'état quand on revient sur l'onglet (permission éventuellement changée).
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) refreshToggle();
+  });
+})();
+</script>
 </body>
 </html>
