@@ -1503,6 +1503,10 @@ html.dark {
         return { id: '', name: '' };
       }
       var RT = window.MangooConnect;
+      // Désactive le mini-chat Connect+ sur cette page : elle affiche déjà son
+      // propre fil de messagerie. Sans cet appel, le mini-chat s'ouvrirait en
+      // double à côté du fil principal à chaque message reçu.
+      if (RT && typeof RT.disableAutoOpenChat === 'function') RT.disableAutoOpenChat();
       if (RT && typeof RT.register === 'function') {
         var cv = connectedVendorIdentity();
         if (cv.id) {
