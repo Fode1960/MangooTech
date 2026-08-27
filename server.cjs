@@ -556,6 +556,7 @@ function sendPushOne(sub, payload) {
 // au moins un abonnement existait (le serveur a donc été « réveillé »).
 function sendPush(routingId, payload) {
   const subs = pushListFor(routingId);
+  console.log('[Push] sendPush', { routingId, subs: subs.length, title: (payload && payload.title) || '' });
   if (subs.length === 0) return false;
   subs.forEach(function (sub) { sub.routingId = sub.routingId || routingId; sendPushOne(sub, payload); });
   return true;
@@ -6049,6 +6050,36 @@ function handleHttp(req, res) {
     }
     res.writeHead(405, JSON_HEADERS);
     res.end(JSON.stringify({ ok: false, error: 'méthode non autorisée' }));
+    return;
+  }
+
+  if (urlPath === '/push/debug') {
+    // Diagnostic Web Push (lecture seule). Aide à vérifier côté serveur que :
+    // web-push est chargé, les clés VAPID sont prêtes, et que des abonnements
+    // sont bien enregistrés sous le bon routingId (même id que le WebSocket).
+    ensureVapidKeys();
+    const byRole = { client: 0, prestataire: 0, livreur: 0, autre: 0 };
+    let total = 0;
+    const routingIds = Object.keys(pushSubscriptions);
+    routingIds.forEach(function (rid) {
+      const list = pushSubscriptions[rid] || [];
+      total += list.length;
+      const u = userByRoutingId(rid);
+      const role = u ? String(u.role || '').toLowerCase() : '';
+      if (role === 'client' || role === 'cliente') byRole.client += list.length;
+      else if (role === 'vendeur' || role === 'prestataire') byRole.prestataire += list.length;
+      else if (role === 'livreur') byRole.livreur += list.length;
+      else byRole.autre += list.length;
+    });
+    res.writeHead(200, JSON_HEADERS);
+    res.end(JSON.stringify({
+      ok: true,
+      webpushLoaded: !!webpush,
+      vapidConfigured: !!(pushVapid && pushVapid.publicKey && pushVapid.privateKey),
+      subscriptionsTotal: total,
+      subscriptionsByRole: byRole,
+      routingIds: routingIds
+    }));
     return;
   }
 
