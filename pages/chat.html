@@ -1030,6 +1030,10 @@ html.dark {
 
   // --- Événements temps réel ---
   if (RT){
+    // Désactive le mini-chat Connect+ sur cette page : elle affiche déjà son
+    // propre fil de discussion (grande page de chat). Sans cet appel, le
+    // mini-chat s'ouvrirait en double à côté du fil principal à chaque message.
+    if (typeof RT.disableAutoOpenChat === 'function') RT.disableAutoOpenChat();
     RT.onMessage(function(m){
       var from = m.from || '';
       if (!from) return;
