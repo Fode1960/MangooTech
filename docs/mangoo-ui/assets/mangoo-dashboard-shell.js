@@ -35,6 +35,28 @@
     } catch (e) { /* non bloquant */ }
   })();
 
+  // Charge le module Web Push (mangoo-push.js) pour le dashboard prestataire :
+  // gère le bouton « Notifications » de la cloche et l'abonnement qui permet de
+  // recevoir appels / messages / lives même quand ce dashboard est FERMÉ. Sans
+  // ce module, un professionnel (DAN) ne s'abonne jamais au push et ne reçoit
+  // rien une fois l'onglet fermé. Symétrique du ensurePush() côté client.
+  (function ensurePush() {
+    if (global.MangooPush) return;
+    var page = (location.pathname.split('/').pop() || '').toLowerCase();
+    if (page === 'dashboard-live.html') return;
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '../assets/mangoo-push.js', false);
+      xhr.send(null);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        (0, eval)(xhr.responseText);
+      }
+    } catch (e) { /* non bloquant */ }
+    if (global.MangooPush && global.MangooPush.autoSubscribe) {
+      global.MangooPush.autoSubscribe();
+    }
+  })();
+
   // ---- Garde d'accès par rôle (espace prestataire) ----
   function readSession() {
     try {
