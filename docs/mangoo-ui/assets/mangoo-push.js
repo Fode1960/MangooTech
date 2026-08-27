@@ -118,18 +118,28 @@
   }
 
   // S'assure qu'un abonnement valide existe (sans re-demander la permission).
+  // IMPORTANT : on enregistre EXPLICITEMENT le service worker avant d'attendre
+  // sa disponibilité. Sinon, quand la permission est déjà « granted » mais que
+  // le SW n'a jamais été installé, navigator.serviceWorker.ready ne se résout
+  // JAMAIS (aucun SW actif) => deadlock => subscriptionsTotal reste à 0.
   function ensureSubscribed() {
     if (!supported() || !token() || !routingId()) return Promise.resolve(false);
-    return navigator.serviceWorker.ready.then(function (reg) {
-      return reg.pushManager.getSubscription();
-    }).then(function (sub) {
-      if (sub) {
-        // Re-synchronise l'endpoint (utile après rotation VAPID ou purge).
-        return postSubscription(sub).then(function () { markSubscribed(); return true; })
-          .catch(function () { return true; });
-      }
-      return subscribeNow();
-    }).catch(function () { return false; });
+    return navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .then(function (reg) {
+        return reg.pushManager.getSubscription();
+      })
+      .then(function (sub) {
+        if (sub) {
+          // Re-synchronise l'endpoint (utile après rotation VAPID ou purge).
+          return postSubscription(sub).then(function () { markSubscribed(); return true; })
+            .catch(function () { return true; });
+        }
+        return subscribeNow();
+      })
+      .catch(function (e) {
+        console.warn('[Push] échec ensureSubscribed :', (e && e.message) || e);
+        return false;
+      });
   }
 
   // Abonnement silencieux : uniquement si la permission est déjà accordée.
