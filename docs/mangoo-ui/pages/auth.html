@@ -801,6 +801,20 @@ html.dark {
           window.location.href = next;
           return;
         }
+        // Rejoue l'atterrissage d'une notification push mémorisé avant la
+        // connexion (voir mangoo-dashboard-shell.js). Le contexte kind/from/
+        // fromName est conservé pour ouvrir la bonne conversation ou l'overlay
+        // d'appel une fois la session établie.
+        var pushLanding = null;
+        try { pushLanding = localStorage.getItem('mgt_push_landing_v1'); } catch (e) { pushLanding = null; }
+        if (pushLanding) {
+          try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
+          var isPro = role === 'prestataire' || role === 'vendeur' || role === 'livreur';
+          if (isPro && /^\/pages\/[A-Za-z0-9._-]+\.html(\?.*)?$/.test(pushLanding) && pushLanding.indexOf('//') < 0) {
+            window.location.href = pushLanding;
+            return;
+          }
+        }
         var target;
         if (role === 'admin') target = 'admin.html';
         else if (role === 'client') target = 'client-dashboard.html';
