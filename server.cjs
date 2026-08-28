@@ -131,25 +131,28 @@ const fileTransfers = new Map();  // fileId -> { fileId, from, to, name, size, m
  *  connexions par identité pour ne plus écraser la socket active.
  * ------------------------------------------------------------------ */
 function addClient(id, ws, role, name) {
-  const list = clients.get(id) || [];
+  const cid = canonicalRoutingId(id);
+  const list = clients.get(cid) || [];
   const idx = list.findIndex((c) => c.ws === ws);
   if (idx !== -1) list.splice(idx, 1);
   list.push({ ws, role, name, online: true, lastSeen: Date.now() });
-  clients.set(id, list);
+  clients.set(cid, list);
   return list;
 }
 
 function removeClient(id, ws) {
-  const list = clients.get(id);
+  const cid = canonicalRoutingId(id);
+  const list = clients.get(cid);
   if (!list) return;
   const idx = list.findIndex((c) => c.ws === ws);
   if (idx !== -1) list.splice(idx, 1);
-  if (list.length === 0) clients.delete(id);
+  if (list.length === 0) clients.delete(cid);
 }
 
 // Connexions encore ouvertes pour une identité donnée.
 function onlineSockets(id) {
-  const list = clients.get(id);
+  const cid = canonicalRoutingId(id);
+  const list = clients.get(cid);
   if (!list) return [];
   return list.filter((c) => c.online && c.ws && c.ws.readyState === 1);
 }
@@ -162,10 +165,11 @@ function isOnline(id) {
 // de live du vendeur ou du spectateur quand un live est actif, sinon la
 // connexion la plus récente.
 function resolvePeer(id) {
-  if (!id) return null;
-  const list = onlineSockets(id);
+  const cid = canonicalRoutingId(id);
+  if (!cid) return null;
+  const list = onlineSockets(cid);
   if (list.length === 0) return null;
-  const room = roomById(id);
+  const room = roomById(cid);
   if (room && room.active) {
     const vws = vendorWsOf(room);
     if (vws) {
@@ -174,7 +178,7 @@ function resolvePeer(id) {
     }
   }
   if (activeRooms().length > 0) {
-    const lws = liveViewerWs(id);
+    const lws = liveViewerWs(cid);
     if (lws) {
       const found = list.find((c) => c.ws === lws);
       if (found) return found;
@@ -400,14 +404,39 @@ let pushVapid = null;         // { publicKey, privateKey, subject }
 let pushSubscriptions = {};   // routingId -> Array<{ endpoint, keys, role, name, userAgent, createdAt }>
 let pushPrefs = {};           // routingId -> { followMode: 'all'|'selected', vendorIds: [] }
 
+// --- Réconciliation d'identités pro dupliquées ---
+// Certains comptes pro existent en double : un compte « seed » (référencé par le
+// catalogue, la galerie et l'app client — ex. DAN Boutique pro-41cafa4bcb31) et
+// un compte réel créé par inscription (ex. ven-e9e831ccf698, connecté au
+// dashboard). Sans réconciliation, un message/appel adressé au seed ne réveille
+// pas le compte réellement connecté (son abonnement push et sa socket sont
+// enregistrés sous l'autre id). Cette table fait correspondre chaque id dupliqué
+// vers un id CANONIQUE unique, utilisé partout pour le routage temps réel et les
+// notifications push. Ajouter ici une entrée à chaque nouveau doublon constaté.
+const ROUTING_ALIASES = {
+  'ven-e9e831ccf698': 'pro-41cafa4bcb31'
+};
+
+function canonicalRoutingId(rid) {
+  const id = String(rid == null ? '' : rid).trim();
+  if (!id) return '';
+  let cur = id;
+  let guard = 0;
+  while (ROUTING_ALIASES[cur] && guard < 16) {
+    cur = ROUTING_ALIASES[cur];
+    guard++;
+  }
+  return cur;
+}
+
 // Id de routage = même identifiant que le WebSocket :
 //   - pro (vendeur/prestataire/livreur) → vendorId (slug boutique)
 //   - client                             → id du compte
 function routingIdForUser(u) {
   if (!u) return '';
   const role = String(u.role || '').toLowerCase();
-  if (role === 'vendeur' || role === 'prestataire' || role === 'livreur') return u.vendorId || u.id || '';
-  return u.id || '';
+  if (role === 'vendeur' || role === 'prestataire' || role === 'livreur') return canonicalRoutingId(u.vendorId || u.id || '');
+  return canonicalRoutingId(u.id || '');
 }
 
 function displayNameForUser(u) {
@@ -417,7 +446,8 @@ function displayNameForUser(u) {
 
 function userByRoutingId(rid) {
   if (!rid) return null;
-  return users.find((u) => u && (u.id === rid || u.vendorId === rid)) || null;
+  const id = canonicalRoutingId(rid);
+  return users.find((u) => u && (u.id === id || u.vendorId === id)) || null;
 }
 
 function applyVapidDetails() {
@@ -457,6 +487,26 @@ function ensureVapidKeys() {
 function loadPushSubscriptions() {
   const stored = readJsonFile(PUSH_SUBSCRIPTIONS_FILE, {});
   pushSubscriptions = (stored && typeof stored === 'object' && !Array.isArray(stored)) ? stored : {};
+  // Migre les abonnements enregistrés sous un id alias vers l'id canonique
+  // (même logique que le routage temps réel). Ainsi, un compte pro dupliqué ne
+  // laisse pas d'abonnement orphelin jamais ciblé : les notifications arrivent
+  // immédiatement, sans exiger une ré-inscription du navigateur.
+  let changed = false;
+  Object.keys(ROUTING_ALIASES).forEach(function (alias) {
+    const canonical = canonicalRoutingId(alias);
+    if (canonical === alias) return;
+    const aliasList = pushSubscriptions[alias] || [];
+    if (!aliasList.length) return;
+    const target = pushSubscriptions[canonical] || (pushSubscriptions[canonical] = []);
+    aliasList.forEach(function (sub) {
+      if (sub && !target.some(function (t) { return t && t.endpoint === sub.endpoint; })) {
+        target.push(sub);
+      }
+    });
+    delete pushSubscriptions[alias];
+    changed = true;
+  });
+  if (changed) savePushSubscriptions();
 }
 
 function savePushSubscriptions() {
@@ -464,13 +514,15 @@ function savePushSubscriptions() {
 }
 
 function pushListFor(routingId) {
-  if (!routingId) return [];
-  const list = pushSubscriptions[String(routingId)] || [];
+  const rid = canonicalRoutingId(routingId);
+  if (!rid) return [];
+  const list = pushSubscriptions[String(rid)] || [];
   return Array.isArray(list) ? list : [];
 }
 
 function setPushSubscriptions(routingId, list) {
-  pushSubscriptions[String(routingId)] = list;
+  const rid = canonicalRoutingId(routingId);
+  pushSubscriptions[String(rid)] = list;
   savePushSubscriptions();
 }
 
@@ -491,7 +543,8 @@ function savePushPrefs() {
 }
 
 function getPushPrefs(routingId) {
-  const p = pushPrefs[String(routingId)];
+  const rid = canonicalRoutingId(routingId);
+  const p = pushPrefs[String(rid)];
   if (!p) return { followMode: 'all', vendorIds: [] };
   return {
     followMode: p.followMode === 'selected' ? 'selected' : 'all',
@@ -500,14 +553,15 @@ function getPushPrefs(routingId) {
 }
 
 function setPushPrefs(routingId, prefs) {
+  const rid = canonicalRoutingId(routingId);
   const mode = (prefs && prefs.followMode === 'selected') ? 'selected' : 'all';
   let vendorIds = [];
   if (mode === 'selected' && Array.isArray(prefs.vendorIds)) {
     vendorIds = prefs.vendorIds.map(function (v) { return String(v).trim(); }).filter(Boolean);
   }
-  pushPrefs[String(routingId)] = { followMode: mode, vendorIds: vendorIds };
+  pushPrefs[String(rid)] = { followMode: mode, vendorIds: vendorIds };
   savePushPrefs();
-  return getPushPrefs(routingId);
+  return getPushPrefs(rid);
 }
 
 // Liste des vendeurs/prestataires (pour le réglage « suivi des vendeurs »).
@@ -555,10 +609,11 @@ function sendPushOne(sub, payload) {
 // Envoie à tous les appareils abonnés d'une identité donnée. Retourne true si
 // au moins un abonnement existait (le serveur a donc été « réveillé »).
 function sendPush(routingId, payload) {
-  const subs = pushListFor(routingId);
-  console.log('[Push] sendPush', { routingId, subs: subs.length, title: (payload && payload.title) || '' });
+  const rid = canonicalRoutingId(routingId);
+  const subs = pushListFor(rid);
+  console.log('[Push] sendPush', { routingId: rid, subs: subs.length, title: (payload && payload.title) || '' });
   if (subs.length === 0) return false;
-  subs.forEach(function (sub) { sub.routingId = sub.routingId || routingId; sendPushOne(sub, payload); });
+  subs.forEach(function (sub) { sub.routingId = sub.routingId || rid; sendPushOne(sub, payload); });
   return true;
 }
 
@@ -2989,7 +3044,7 @@ function handleMessage(ws, msg) {
 }
 
 function handleRegister(ws, msg) {
-  const id = String(msg.id || '').trim();
+  const id = canonicalRoutingId(msg.id || '');
   if (!id) { send(ws, { type: 'register-error', reason: 'id manquant' }); return; }
   const role = String(msg.role || 'client').trim();
   const name = String(msg.name || id || 'Inconnu').trim();
