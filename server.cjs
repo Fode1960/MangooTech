@@ -6197,10 +6197,15 @@ function handleHttp(req, res) {
     // Diagnostic Web Push (lecture seule). Aide à vérifier côté serveur que :
     // web-push est chargé, les clés VAPID sont prêtes, et que des abonnements
     // sont bien enregistrés sous le bon routingId (même id que le WebSocket).
+    // Expose aussi le détail de CHAQUE abonnement (nom, rôle, userAgent, date)
+    // ainsi que l'état en ligne WebSocket de chaque routingId, pour repérer un
+    // croisement d'appareils : ex. un abonnement Android enregistré sous l'id
+    // client (cli-...) ou un PC enregistré sous l'id pro (pro-...).
     ensureVapidKeys();
     const byRole = { client: 0, prestataire: 0, livreur: 0, autre: 0 };
     let total = 0;
     const routingIds = Object.keys(pushSubscriptions);
+    const subscriptions = [];
     routingIds.forEach(function (rid) {
       const list = pushSubscriptions[rid] || [];
       total += list.length;
@@ -6210,7 +6215,19 @@ function handleHttp(req, res) {
       else if (role === 'vendeur' || role === 'prestataire') byRole.prestataire += list.length;
       else if (role === 'livreur') byRole.livreur += list.length;
       else byRole.autre += list.length;
+      list.forEach(function (s) {
+        subscriptions.push({
+          routingId: rid,
+          role: (s && s.role) || role,
+          name: (s && s.name) || '',
+          userAgent: (s && s.userAgent) || '',
+          createdAt: (s && s.createdAt) || '',
+          endpoint: s && s.endpoint ? String(s.endpoint).slice(-24) : ''
+        });
+      });
     });
+    const online = {};
+    routingIds.forEach(function (rid) { online[rid] = isOnline(rid); });
     res.writeHead(200, JSON_HEADERS);
     res.end(JSON.stringify({
       ok: true,
@@ -6218,7 +6235,9 @@ function handleHttp(req, res) {
       vapidConfigured: !!(pushVapid && pushVapid.publicKey && pushVapid.privateKey),
       subscriptionsTotal: total,
       subscriptionsByRole: byRole,
-      routingIds: routingIds
+      routingIds: routingIds,
+      subscriptions: subscriptions,
+      online: online
     }));
     return;
   }
