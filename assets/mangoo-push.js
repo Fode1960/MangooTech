@@ -640,9 +640,9 @@
           actBtn.disabled = false;
           actBtn.textContent = 'Réessayer';
           if (res && res.reason === 'denied') {
-            desc.textContent = 'Notifications bloquées par le navigateur. Autorisez-les via le cadenas de la barre d'adresse.';
+            desc.textContent = 'Notifications bloquées par le navigateur. Autorisez-les via le cadenas de la barre d\'adresse.';
           } else if (res && res.error) {
-            desc.textContent = 'Échec de l'abonnement. Réessayez ou rechargez la page.';
+            desc.textContent = 'Échec de l\'abonnement. Réessayez ou rechargez la page.';
           }
         }
       });
