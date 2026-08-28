@@ -110,6 +110,31 @@
     });
   }
 
+  // Attend que le service worker soit réellement ACTIF. `register()` se résout
+  // souvent pendant l'installation (état `installing`/`waiting`) ; or
+  // `pushManager.subscribe()` exige un worker `activated`, sinon Chrome renvoie
+  // « Subscription failed - no active Service Worker ».
+  function waitForActiveWorker(reg) {
+    return new Promise(function (resolve) {
+      if (reg.active) { resolve(); return; }
+      var w = reg.waiting || reg.installing;
+      if (!w) { resolve(); return; }
+      var done = false;
+      function onState() {
+        if (w.state === 'activated') {
+          done = true;
+          w.removeEventListener('statechange', onState);
+          resolve();
+        }
+      }
+      w.addEventListener('statechange', onState);
+      // Filet de sécurité : ne jamais bloquer l'abonnement plus de 4 s.
+      setTimeout(function () {
+        if (!done) { w.removeEventListener('statechange', onState); resolve(); }
+      }, 4000);
+    });
+  }
+
   // Abonnement complet : clé VAPID → enregistrement SW → souscription → envoi serveur.
   function subscribeNow() {
     var currentKey = '';
@@ -117,7 +142,9 @@
       currentKey = pk;
       if (!pk) throw new Error('clé VAPID indisponible');
       return navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function (reg) {
-        return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(pk) });
+        return waitForActiveWorker(reg).then(function () {
+          return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(pk) });
+        });
       });
     }).then(function (subscription) {
       return postSubscription(subscription);
@@ -228,6 +255,10 @@
     return navigator.serviceWorker.getRegistration('/sw.js').then(function (reg) {
       out.hasSwRegistration = !!reg;
       if (!reg) return out;
+      if (reg.active) out.swState = 'active';
+      else if (reg.waiting) out.swState = 'waiting';
+      else if (reg.installing) out.swState = 'installing';
+      else out.swState = 'none';
       return reg.pushManager.getSubscription().then(function (sub) {
         out.hasSubscription = !!sub;
         out.endpoint = sub ? sub.endpoint : '';
