@@ -114,6 +114,15 @@
     var isGuestPage = guestPages.indexOf(currentPageName()) >= 0;
     if (!s.token || !s.user) {
       if (isGuestPage) return true;
+      try {
+        console.warn('[Shell] redirection vers connexion (session absente)', {
+          origin: location.origin,
+          href: location.href,
+          hasToken: !!s.token,
+          hasUser: !!s.user,
+          pushLanding: hasPushLanding()
+        });
+      } catch (e) {}
       savePushLandingForAuth();
       window.location.replace('./auth.html');
       return false;

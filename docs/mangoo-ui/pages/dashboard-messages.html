@@ -653,8 +653,18 @@ html.dark {
             return { id: p.id, name: p.name, role: 'client' };
           }
         }
-        // 2. Repli : identifiants déduits du libellé.
-        if (name === 'Dida DANSO' || name === 'Dida') return { id: 'cli-66b551e17c29', name: 'Dida DANSO', role: 'client' };
+        // 2. Contact déjà chargé depuis l'annuaire (/api/contacts) : source de
+        //    vérité de l'identifiant réel. On ne code jamais un id de compte en
+        //    dur (il deviendrait obsolète et casserait le routage des notifs).
+        var convs = document.querySelectorAll('.msg-conv');
+        for (var j = 0; j < convs.length; j++) {
+          var cn = normalizeName(convs[j].getAttribute('data-name') || '');
+          var cid = convs[j].getAttribute('data-peer-id') || '';
+          if (cn && cid && (norm === cn || norm.indexOf(cn) === 0 || cn.indexOf(norm) === 0)) {
+            return { id: cid, name: convs[j].getAttribute('data-name'), role: 'client' };
+          }
+        }
+        // 3. Repli générique : identifiant dérivé du libellé.
         var slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         return { id: 'client-' + (slug || 'inconnu'), name: name, role: 'client' };
       }
@@ -880,11 +890,9 @@ html.dark {
         }
         if (empty) empty.style.display = 'none';
         contacts.forEach(buildContactRow);
-        // Privilégie la conversation avec Dida DANSO (cli-66b551e17c29) afin que
-        // le dashboard du pro ouvre directement la bonne discussion au lieu de la
-        // première conversation de la liste.
-        var first = list.querySelector('.msg-conv[data-peer-id="cli-66b551e17c29"]')
-          || list.querySelector('.msg-conv');
+        // Ouvre la première conversation (l'annuaire fournit déjà l'id réel via
+        // data-peer-id ; ne plus privilégier un id codé en dur).
+        var first = list.querySelector('.msg-conv');
         if (first) setActive(first);
         updateUnreadBadge();
         if (window.lucide) window.lucide.createIcons();
@@ -963,9 +971,7 @@ html.dark {
         if (!pendingPushLanding) return;
         var p = pendingPushLanding;
         pendingPushLanding = null;
-        var name = (p.from === 'cli-66b551e17c29' || p.fromName === 'Dida')
-          ? 'Dida DANSO'
-          : (p.fromName || p.from || 'Client');
+        var name = p.fromName || p.from || 'Client';
         var conv = pushFindConv(name, p.from);
         if (!conv) {
           var list = document.getElementById('msg-conv-list');
@@ -1625,7 +1631,6 @@ html.dark {
           return null;
         }
         function convNameForPeer(from, fromName) {
-          if (from === 'cli-66b551e17c29' || fromName === 'Dida') return 'Dida DANSO';
           return fromName || from || 'Client';
         }
         function syncOnlineStatus() {
@@ -1811,11 +1816,10 @@ html.dark {
         });
 
         RT.onPresence(function (peers) {
-          var online = (peers || []).some(function (p) { return p.id === 'cli-66b551e17c29'; });
+          var peerId = currentConv ? currentConv.getAttribute('data-peer-id') : '';
+          var online = !!(peerId && (peers || []).some(function (p) { return p.id === peerId; }));
           var st = document.getElementById('conv-status');
-          if (currentConv && currentConv.getAttribute('data-name') === 'Dida DANSO' && st) {
-            renderPresenceStatus(st, online);
-          }
+          if (currentConv && st) renderPresenceStatus(st, online);
         });
 
         function appendAppointmentRequestReal(a) {

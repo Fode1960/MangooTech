@@ -435,8 +435,8 @@ html.dark {
   <script>
     // Identité du spectateur — personnalisable via l'URL : ?id=client-aisha&name=Aisha
     const _qp = new URLSearchParams(location.search);
-    const MY_ID = _qp.get('id') || 'cli-66b551e17c29';
-    const MY_NAME = _qp.get('name') || 'Dida DANSO';
+    const MY_ID = _qp.get('id') || ('guest-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1e6).toString(36));
+    const MY_NAME = _qp.get('name') || 'Invité';
     // Ciblage précis de la salle : depuis l'annuaire on reçoit vendorId (et/ou
     // room sous la forme « room-<vendorId> »). Si présent, le client rejoint
     // CETTE salle au lieu de la première active.
