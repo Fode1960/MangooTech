@@ -72,6 +72,19 @@
     if (role === 'vendeur' || role === 'prestataire') return 'dashboard-overview.html';
     return 'auth.html';
   }
+  // Conserve la destination d'un clic sur une notification push (dashboard
+  // fermé) avant de rediriger vers la connexion. Sans session, requireRole()
+  // renvoie vers auth.html en perdant les paramètres kind/from/fromName ; on
+  // les mémorise ici pour les rejouer après la connexion (redirectAfterLogin
+  // dans auth.html relit cette clé).
+  function savePushLandingForAuth() {
+    try {
+      var qp = new URLSearchParams(location.search);
+      var isPushLanding = !!(qp.get('from') || qp.get('fromName') || qp.get('kind'));
+      if (!isPushLanding) return;
+      localStorage.setItem('mgt_push_landing_v1', location.pathname + location.search);
+    } catch (e) { /* ignore */ }
+  }
   function requireRole(role) {
     // Aperçu démo depuis les liens publics (ex. footer « Dashboard prestataire ») :
     // affiche le dashboard prestataire de démonstration sans exiger de session
@@ -86,6 +99,7 @@
     var isGuestPage = guestPages.indexOf(currentPageName()) >= 0;
     if (!s.token || !s.user) {
       if (isGuestPage) return true;
+      savePushLandingForAuth();
       window.location.replace('./auth.html');
       return false;
     }
