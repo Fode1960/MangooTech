@@ -6084,6 +6084,23 @@ function handleHttp(req, res) {
       }
       const sub = body.subscription;
       const routingId = routingIdForUser(user);
+      // Le même endpoint (service worker d'un navigateur/appareil partagé) peut
+      // avoir été enregistré auparavant sous une AUTRE identité. Sans purge
+      // globale, cet ancien abonnement reste orphelin sous l'autre routingId et
+      // reçoit des notifications destinées à un autre utilisateur (ex. Dida
+      // reçoit la notification destinée à DAN Boutique). On retire donc cet
+      // endpoint de toutes les autres identités avant de l'enregistrer sous
+      // l'identité courante.
+      Object.keys(pushSubscriptions).forEach(function (rid) {
+        if (String(rid) === String(routingId)) return;
+        const arr = pushSubscriptions[rid];
+        if (!Array.isArray(arr)) return;
+        const next = arr.filter(function (s) { return !s || s.endpoint !== sub.endpoint; });
+        if (next.length !== arr.length) {
+          if (next.length === 0) delete pushSubscriptions[rid];
+          else pushSubscriptions[rid] = next;
+        }
+      });
       const list = pushListFor(routingId).filter(function (s) { return s.endpoint !== sub.endpoint; });
       list.push({
         endpoint: sub.endpoint,
