@@ -398,6 +398,7 @@ function isSensitiveFile(filePath) {
  * ------------------------------------------------------------------ */
 const PUSH_SUBSCRIPTIONS_FILE = 'push-subscriptions.json';
 const PUSH_VAPID_FILE = 'vapid.json';
+const PUSH_VAPID_FINGERPRINT_FILE = 'vapid-fingerprint.json';
 const PUSH_PREFS_FILE = 'push-preferences.json';
 
 let pushVapid = null;         // { publicKey, privateKey, subject }
@@ -485,6 +486,32 @@ function ensureVapidKeys() {
   }
   applyVapidDetails();
   return pushVapid;
+}
+
+function vapidPublicKeyFingerprint() {
+  const key = (pushVapid && pushVapid.publicKey) ? String(pushVapid.publicKey) : '';
+  if (!key) return '';
+  return crypto.createHash('sha256').update(key).digest('hex');
+}
+
+function guardVapidRotation() {
+  if (!webpush || !pushVapid) return;
+  const current = vapidPublicKeyFingerprint();
+  if (!current) return;
+  const stored = readJsonFile(PUSH_VAPID_FINGERPRINT_FILE, null);
+  const previous = (stored && typeof stored === 'object') ? String(stored.fingerprint || '') : '';
+  if (previous && previous !== current) {
+    const total = Object.keys(pushSubscriptions).reduce(function (n, rid) {
+      const list = pushSubscriptions[rid];
+      return n + (Array.isArray(list) ? list.length : 0);
+    }, 0);
+    if (total > 0) {
+      pushSubscriptions = {};
+      savePushSubscriptions();
+      console.warn('[Push] rotation des clés VAPID détectée : ' + total + ' abonnement(s) invalidé(s). Les utilisateurs doivent recharger leur page pour se réabonner.');
+    }
+  }
+  writeJsonAtomic(PUSH_VAPID_FINGERPRINT_FILE, { fingerprint: current, updatedAt: nowIso() });
 }
 
 function loadPushSubscriptions() {
@@ -6253,6 +6280,7 @@ loadNegotiations();
 loadPushSubscriptions();
 loadPushPrefs();
 ensureVapidKeys();
+guardVapidRotation();
 
 const httpServer = http.createServer(handleHttp);
 
