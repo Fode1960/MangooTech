@@ -653,6 +653,7 @@ html.dark {
   var ACTIVE = null;        // vendorId actif
   var ONLINE = {};          // vendorId -> bool
   var UNREAD = {};          // vendorId -> compteur non-lu
+  var LAST_PEERS = [];      // dernier état de présence reçu (rejoué après chargement de l'annuaire)
   var THREADS = {};         // vendorId -> [message]
 
   // PEER reste synchronisé sur la conversation active : les envois (message,
@@ -672,6 +673,14 @@ html.dark {
   var searchQ = '';
 
   function convById(id){ for (var i=0;i<CONVERSATIONS.length;i++) if (CONVERSATIONS[i].vendorId===id) return CONVERSATIONS[i]; return null; }
+
+  // Rejoue un état de présence (liste de peers) sur les conversations chargées.
+  function applyPresence(peers){
+    var set = {};
+    (peers||[]).forEach(function(p){ set[p.id] = true; });
+    CONVERSATIONS.forEach(function(c){ ONLINE[c.vendorId] = !!set[c.vendorId]; });
+    if (ACTIVE) updateStatusEl(!!ONLINE[ACTIVE]);
+  }
   function threadOf(id){ return THREADS[id] || (THREADS[id] = []); }
   function pushMsg(id, msg){ threadOf(id).push(msg); saveStore(); }
   function scrollBottom(){ if (threadEl) threadEl.scrollTop = threadEl.scrollHeight; }
@@ -1126,10 +1135,8 @@ html.dark {
       if (ACTIVE) sysMsg('Rendez-vous ' + (accepted ? 'confirmé' : 'refusé') + ' par ' + (r.name || 'le professionnel'));
     });
     RT.onPresence(function(peers){
-      var set = {};
-      (peers||[]).forEach(function(p){ set[p.id] = true; });
-      CONVERSATIONS.forEach(function(c){ ONLINE[c.vendorId] = !!set[c.vendorId]; });
-      if (ACTIVE) updateStatusEl(!!ONLINE[ACTIVE]);
+      LAST_PEERS = peers || [];
+      applyPresence(LAST_PEERS);
       renderSidebar();
     });
     if (typeof RT.register === 'function') RT.register('client', CLIENT.id, CLIENT.name);
@@ -1160,6 +1167,7 @@ html.dark {
           }
         }
         if (!initial && CONVERSATIONS.length) initial = CONVERSATIONS[0].vendorId;
+        applyPresence(LAST_PEERS);
         renderSidebar();
         if (initial) {
           selectConversation(initial);
