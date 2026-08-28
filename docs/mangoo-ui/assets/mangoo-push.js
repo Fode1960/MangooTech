@@ -17,6 +17,7 @@
   if (global.MangooPush) return;
 
   var SUBSCRIBED_KEY = 'mgt_push_subscribed_v1';
+  var VAPID_KEY = 'mgt_push_vapid_key_v1';
 
   function readUser() {
     try {
@@ -87,6 +88,13 @@
     try { localStorage.removeItem(SUBSCRIBED_KEY); } catch (e) { /* ignore */ }
   }
 
+  function storedVapidKey() {
+    try { return localStorage.getItem(VAPID_KEY) || ''; } catch (e) { return ''; }
+  }
+  function storeVapidKey(pk) {
+    try { localStorage.setItem(VAPID_KEY, pk || ''); } catch (e) { /* ignore */ }
+  }
+
   function postSubscription(subscription) {
     return fetch('/push/subscribe', {
       method: 'POST',
@@ -104,7 +112,9 @@
 
   // Abonnement complet : clé VAPID → enregistrement SW → souscription → envoi serveur.
   function subscribeNow() {
+    var currentKey = '';
     return fetchPublicKey().then(function (pk) {
+      currentKey = pk;
       if (!pk) throw new Error('clé VAPID indisponible');
       return navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function (reg) {
         return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(pk) });
@@ -112,6 +122,7 @@
     }).then(function (subscription) {
       return postSubscription(subscription);
     }).then(function () {
+      storeVapidKey(currentKey);
       markSubscribed();
       return true;
     });
@@ -124,22 +135,29 @@
   // JAMAIS (aucun SW actif) => deadlock => subscriptionsTotal reste à 0.
   function ensureSubscribed() {
     if (!supported() || !token() || !routingId()) return Promise.resolve(false);
-    return navigator.serviceWorker.register('/sw.js', { scope: '/' })
-      .then(function (reg) {
-        return reg.pushManager.getSubscription();
-      })
-      .then(function (sub) {
-        if (sub) {
-          // Re-synchronise l'endpoint (utile après rotation VAPID ou purge).
-          return postSubscription(sub).then(function () { markSubscribed(); return true; })
-            .catch(function () { return true; });
-        }
-        return subscribeNow();
-      })
-      .catch(function (e) {
-        console.warn('[Push] échec ensureSubscribed :', (e && e.message) || e);
-        return false;
-      });
+    return fetchPublicKey().then(function (pk) {
+      var wantKey = pk || '';
+      return navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        .then(function (reg) {
+          return reg.pushManager.getSubscription().then(function (sub) {
+            if (sub) {
+              // Après rotation des clés VAPID, un abonnement existant est chiffré
+              // avec l'ancienne clé et rejeté (403) par le service push. On le
+              // détruit puis on se réabonne avec la clé courante.
+              if (wantKey && storedVapidKey() !== wantKey) {
+                return sub.unsubscribe().then(function () { return subscribeNow(); });
+              }
+              // Re-synchronise l'endpoint (utile après purge côté serveur).
+              return postSubscription(sub).then(function () { markSubscribed(); return true; })
+                .catch(function () { return true; });
+            }
+            return subscribeNow();
+          });
+        });
+    }).catch(function (e) {
+      console.warn('[Push] échec ensureSubscribed :', (e && e.message) || e);
+      return false;
+    });
   }
 
   // Abonnement silencieux : uniquement si la permission est déjà accordée.
