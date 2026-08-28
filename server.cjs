@@ -586,13 +586,38 @@ function sendPushToClients(payload, vendorId) {
   return n;
 }
 
-// Page d'atterrissage selon le rôle (ouverte au clic sur la notification).
-function pushLandingFor(routingId) {
+// Construit l'URL d'atterrissage au clic sur la notification. Le service worker
+// ne lit que notification.data.url : tout le contexte (type message/appel,
+// identité de l'émetteur, conversation) DOIT transiter par les paramètres d'URL.
+// Les pages cibles (chat.html côté client, dashboard-messages.html côté pro)
+// lisent ces paramètres pour ouvrir la bonne conversation / l'overlay d'appel.
+function pushLandingUrl(opts) {
+  opts = opts || {};
+  const routingId = opts.routingId || '';
+  const kind = opts.kind === 'call' ? 'call' : 'message';
   const u = userByRoutingId(routingId);
-  const role = (u && u.role) || '';
-  if (role === 'client' || role === 'cliente') return '/pages/client-dashboard.html';
-  if (role === 'vendeur' || role === 'prestataire' || role === 'livreur') return '/pages/dashboard-overview.html';
-  return '/pages/accueil.html';
+  const role = (u && String(u.role || '').toLowerCase()) || '';
+  const isClient = (role === 'client' || role === 'cliente');
+  const q = [];
+  function add(key, val) {
+    if (val == null || val === '') return;
+    q.push(encodeURIComponent(key) + '=' + encodeURIComponent(String(val)));
+  }
+  add('kind', kind);
+  add('from', opts.from);
+  add('fromName', opts.fromName);
+  if (kind === 'call') {
+    add('callId', opts.callId);
+    add('mode', opts.mode || 'audio');
+  } else {
+    add('convId', opts.convId);
+  }
+  // Côté client, la conversation se sélectionne par le vendorId du pro émetteur.
+  if (isClient) add('vendorId', opts.from);
+  const qs = q.length ? ('?' + q.join('&')) : '';
+  if (isClient) return '/pages/chat.html' + qs;
+  if (role === 'vendeur' || role === 'prestataire' || role === 'livreur') return '/pages/dashboard-messages.html' + qs;
+  return '/pages/accueil.html' + qs;
 }
 
 const PRESTATIONS_FILE = dataPath('prestations.json');
@@ -2990,12 +3015,14 @@ function handleCallOffer(ws, msg) {
     // Dashboard fermé (ou hors ligne) : on tente de réveiller le destinataire
     // par notification Web Push native (même sans onglet ouvert).
     const callerName = (ws.meta && ws.meta.name) || 'Quelqu\'un';
+    const callMode = msg.mode || 'audio';
     const pushed = sendPush(to, {
       title: 'Appel entrant',
       body: callerName + ' souhaite vous joindre',
-      url: pushLandingFor(to),
+      url: pushLandingUrl({ routingId: to, kind: 'call', from: ws.meta.id, fromName: ws.meta.name, callId: callId, mode: callMode }),
       tag: 'call-' + callId,
-      ttl: 60
+      ttl: 60,
+      data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode }
     });
     send(ws, { type: 'call-error', callId, reason: 'offline', pushed: pushed });
     return;
@@ -3068,12 +3095,13 @@ function handleChatMessage(ws, msg) {
   });
   // Destinataire hors ligne (Dashboard fermé) : notification Web Push native.
   if (!isOnline(to)) {
+    const fromName = (ws.meta && ws.meta.name) || '';
     sendPush(to, {
-      title: (ws.meta && ws.meta.name) || 'Nouveau message',
+      title: fromName || 'Nouveau message',
       body: text.slice(0, 200),
-      url: pushLandingFor(to),
+      url: pushLandingUrl({ routingId: to, kind: 'message', from: from, fromName: fromName, convId: entry.convId }),
       tag: 'msg-' + entry.msgId,
-      data: { from: from, convId: entry.convId }
+      data: { kind: 'message', from: from, fromName: fromName, convId: entry.convId }
     });
   }
 }

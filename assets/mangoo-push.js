@@ -193,6 +193,31 @@
     };
   }
 
+  // Diagnostic détaillé (pour le support) : permission, support, identité de
+  // routage, et état de l'abonnement service worker / push réel.
+  function diagnose() {
+    var u = readUser();
+    var out = {
+      supported: supported(),
+      secureContext: !!(global.isSecureContext),
+      permission: supported() ? global.Notification.permission : 'unsupported',
+      token: !!token(),
+      routingId: routingId(),
+      role: u ? u.role : '',
+      userRaw: readUser()
+    };
+    if (!supported()) return Promise.resolve(out);
+    return navigator.serviceWorker.getRegistration('/sw.js').then(function (reg) {
+      out.hasSwRegistration = !!reg;
+      if (!reg) return out;
+      return reg.pushManager.getSubscription().then(function (sub) {
+        out.hasSubscription = !!sub;
+        out.endpoint = sub ? sub.endpoint : '';
+        return out;
+      });
+    }).catch(function (e) { out.error = (e && e.message) || String(e); return out; });
+  }
+
   // Réglage « suivi des vendeurs » : lit les préférences + la liste des
   // vendeurs/prestataires disponibles auprès du serveur.
   function getPreferences() {
@@ -685,6 +710,7 @@
     supported: supported,
     isGranted: function () { return supported() && global.Notification.permission === 'granted'; },
     state: state,
+    diagnose: diagnose,
     notifLabel: notifLabel,
     autoSubscribe: autoSubscribe,
     enable: enable,
