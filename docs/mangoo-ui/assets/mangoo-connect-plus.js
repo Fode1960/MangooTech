@@ -1319,6 +1319,28 @@
     } catch (e) { /* non bloquant */ }
   })();
 
+  // Charge et auto-abonne le module Web Push sur TOUTES les pages qui chargent
+  // ce module (chat, accueil, carte, fiche-boutique, checkout...), pas seulement
+  // les pages dotées d'un shell. Indispensable pour le scénario « dashboard
+  // fermé » : l'abonnement doit exister dès la navigation, sinon
+  // subscriptionsTotal reste à 0 côté serveur. Auto-abonnement silencieux :
+  // il ne s'exécute que si la permission est déjà « granted » (sinon, le bandeau
+  // « Activer » de mangoo-push.js prend le relais via un geste utilisateur).
+  (function ensurePush() {
+    if (global.MangooPush) return;
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/assets/mangoo-push.js', false);
+      xhr.send(null);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        (0, eval)(xhr.responseText);
+      }
+    } catch (e) { /* non bloquant */ }
+    if (global.MangooPush && global.MangooPush.autoSubscribe) {
+      global.MangooPush.autoSubscribe();
+    }
+  })();
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', injectLiveBanner);
   } else {
