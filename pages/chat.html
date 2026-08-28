@@ -635,7 +635,15 @@ html.dark {
         if (id && name) return { id: String(id), name: String(name) };
       }
     } catch(e){}
-    return { id: 'cli-66b551e17c29', name: 'Dida DANSO' };
+    // Repli anonyme stable (persisté). On ne réutilise jamais un identifiant de
+    // compte réel codé en dur : il deviendrait obsolète et casserait le routage.
+    var anon = '';
+    try { anon = localStorage.getItem('mgt_client_anon_id_v1') || ''; } catch(e){}
+    if (!anon) {
+      anon = 'guest-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1e6).toString(36);
+      try { localStorage.setItem('mgt_client_anon_id_v1', anon); } catch(e){}
+    }
+    return { id: anon, name: 'Client' };
   }
   var CLIENT = readClient();
   var CLIENT_INITIAL = initialsOf(CLIENT.name);

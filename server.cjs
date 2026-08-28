@@ -627,10 +627,17 @@ function sendPushOne(sub, payload) {
   ).then(function () {
     // OK
   }).catch(function (err) {
-    if (err && (err.statusCode === 404 || err.statusCode === 410)) {
+    var sc = err && err.statusCode;
+    var body = err && err.body;
+    // 404/410 : endpoint supprimé par le service push. 403 : abonnement chiffré
+    // avec une ancienne clé VAPID (rotation) ou endpoint rejeté. Dans tous ces
+    // cas l'envoi est voué à l'échec : on retire l'abonnement et on journalise
+    // l'identité pour diagnostiquer les échecs silencieux.
+    if (sc === 404 || sc === 410 || sc === 403) {
+      console.warn('[Push] abonnement invalide retiré', { routingId: sub.routingId, statusCode: sc, body: body });
       removeSubscriptionByEndpoint(sub.routingId, sub.endpoint);
     } else {
-      console.warn('[Push] échec envoi :', err && err.statusCode, err && err.body);
+      console.warn('[Push] échec envoi', { routingId: sub.routingId, statusCode: sc, body: body });
     }
   });
   return true;
@@ -641,8 +648,11 @@ function sendPushOne(sub, payload) {
 function sendPush(routingId, payload) {
   const rid = canonicalRoutingId(routingId);
   const subs = pushListFor(rid);
-  console.log('[Push] sendPush', { routingId: rid, subs: subs.length, title: (payload && payload.title) || '' });
-  if (subs.length === 0) return false;
+  console.log('[Push] sendPush', { routingId: rid, subs: subs.length, available: Object.keys(pushSubscriptions), title: (payload && payload.title) || '' });
+  if (subs.length === 0) {
+    console.warn('[Push] Aucun abonnement pour', rid, '— abonnés connus :', JSON.stringify(Object.keys(pushSubscriptions)));
+    return false;
+  }
   subs.forEach(function (sub) { sub.routingId = sub.routingId || rid; sendPushOne(sub, payload); });
   return true;
 }
