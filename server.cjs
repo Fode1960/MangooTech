@@ -447,7 +447,10 @@ function displayNameForUser(u) {
 function userByRoutingId(rid) {
   if (!rid) return null;
   const id = canonicalRoutingId(rid);
-  return users.find((u) => u && (u.id === id || u.vendorId === id)) || null;
+  // Résout aussi bien l'id canonique que l'id réel d'un compte pro dupliqué
+  // (ex. pro-41cafa4bcb31 <-> ven-e9e831ccf698) : on compare sur la forme
+  // canonique des deux identifiants, pas sur la valeur brute.
+  return users.find((u) => u && (canonicalRoutingId(u.id) === id || canonicalRoutingId(u.vendorId) === id)) || null;
 }
 
 function applyVapidDetails() {
@@ -1744,7 +1747,7 @@ function carteVendors() {
 
     list.push({
       id: nextId++,
-      vendorId: u.vendorId || u.id,
+      vendorId: canonicalRoutingId(u.vendorId || u.id),
       name: profile.enseigne || u.enseigne || u.name || 'Professionnel',
       type: type,
       category: category,
@@ -1890,9 +1893,9 @@ function activeBoostsFor(vendorId) {
  * ont `vendorId === id` dans la seed). Utilisé pour tracer le paiement d'un
  * badge sans exiger de token de session. */
 function userForVendorId(vendorId) {
-  const id = String(vendorId || '');
+  const id = canonicalRoutingId(vendorId);
   if (!id) return null;
-  return users.find(function (u) { return u && ((u.vendorId || u.id) === id); }) || null;
+  return users.find(function (u) { return u && canonicalRoutingId(u.vendorId || u.id) === id; }) || null;
 }
 
 /* Valide et trace le paiement d'un badge (activation ou renouvellement).
