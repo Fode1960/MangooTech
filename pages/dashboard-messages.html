@@ -899,10 +899,104 @@ html.dark {
         }).then(function (d) {
           if (d && d.ok) renderContacts(d.contacts);
           else renderContacts(null);
-        }).catch(function () { renderContacts(null); });
+          applyPushLanding();
+        }).catch(function () {
+          renderContacts(null);
+          applyPushLanding();
+        });
       }
 
       loadContacts();
+
+      // ---- Atterrissage depuis une notification push (dashboard fermé) ----
+      // Le serveur cible cette page pour les professionnels avec kind / from /
+      // fromName / callId / mode / convId. L'atterrissage est mémorisé au
+      // chargement puis appliqué APRÈS le rendu de la liste de contacts, sinon
+      // renderContacts() reconstruit la liste et écrase la conversation / l'overlay.
+      var pendingPushLanding = (function () {
+        var qp;
+        try { qp = new URLSearchParams(location.search); } catch (e) { return null; }
+        var from = qp.get('from');
+        var fromName = qp.get('fromName');
+        var kind = qp.get('kind');
+        var mode = qp.get('mode');
+        if (!from && !fromName) return null;
+        return { from: from, fromName: fromName, kind: kind, mode: mode };
+      })();
+      function pushFindConv(name, from) {
+        var list = document.querySelectorAll('.msg-conv');
+        for (var i = 0; i < list.length; i++) {
+          if (from && list[i].getAttribute('data-peer-id') === from) return list[i];
+        }
+        for (var j = 0; j < list.length; j++) {
+          if (list[j].getAttribute('data-name') === name) return list[j];
+        }
+        return null;
+      }
+      function showCallPushOverlay(fromName, mode) {
+        if (document.getElementById('msg-push-call-overlay')) return;
+        var name = fromName || 'Client';
+        var ov = document.createElement('div');
+        ov.id = 'msg-push-call-overlay';
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:9400;display:flex;align-items:center;justify-content:center;padding:20px;';
+        var box = document.createElement('div');
+        box.style.cssText = 'background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:380px;padding:24px;text-align:center;font-family:var(--mgt-font-sans);box-shadow:0 24px 80px rgba(0,0,0,.4);';
+        box.innerHTML =
+          '<div style="width:64px;height:64px;margin:0 auto 14px;border-radius:50%;background:rgb(var(--mgt-primary-50));display:flex;align-items:center;justify-content:center;">' +
+            '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgb(var(--mgt-primary))" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
+          '</div>' +
+          '<div style="font-size:17px;font-weight:700;color:rgb(var(--mgt-foreground));">Appel entrant</div>' +
+          '<div style="font-size:13px;color:rgb(var(--mgt-muted-foreground));margin-top:4px;">' + esc(name) + ' a tenté de vous joindre.</div>' +
+          '<div style="display:flex;gap:10px;margin-top:20px;">' +
+            '<button data-act="close" style="flex:1;height:42px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Fermer</button>' +
+            '<button data-act="callback" style="flex:1;height:42px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Rappeler</button>' +
+          '</div>';
+        box.addEventListener('click', function (e) {
+          var act = e.target && e.target.getAttribute && e.target.getAttribute('data-act');
+          if (act === 'close') ov.remove();
+          else if (act === 'callback') { ov.remove(); callTarget(mode || 'audio'); }
+        });
+        ov.appendChild(box);
+        document.body.appendChild(ov);
+      }
+      function applyPushLanding() {
+        if (!pendingPushLanding) return;
+        var p = pendingPushLanding;
+        pendingPushLanding = null;
+        var name = (p.from === 'cli-66b551e17c29' || p.fromName === 'Dida')
+          ? 'Dida DANSO'
+          : (p.fromName || p.from || 'Client');
+        var conv = pushFindConv(name, p.from);
+        if (!conv) {
+          var list = document.getElementById('msg-conv-list');
+          if (list) {
+            var empty = document.getElementById('msg-conv-empty');
+            if (empty) empty.style.display = 'none';
+            conv = document.createElement('div');
+            conv.className = 'msg-conv flex items-start gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))] cursor-pointer';
+            conv.setAttribute('data-name', name);
+            conv.setAttribute('data-peer-id', p.from || '');
+            conv.setAttribute('data-unread', 'false');
+            conv.setAttribute('data-online', 'true');
+            conv.setAttribute('data-real', 'true');
+            conv.innerHTML =
+              '<div class="relative flex-shrink-0">' +
+                '<div class="w-10 h-10 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] flex items-center justify-center font-semibold text-xs">' + initials(name) + '</div>' +
+              '</div>' +
+              '<div class="flex-1 min-w-0">' +
+                '<div class="flex items-center justify-between gap-2">' +
+                  '<p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">' + esc(name) + '</p>' +
+                  '<span class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex-shrink-0"></span>' +
+                '</div>' +
+                '<p class="text-sm text-[rgb(var(--mgt-foreground))] truncate"></p>' +
+              '</div>';
+            list.appendChild(conv);
+            conv.addEventListener('click', function () { setActive(conv); markRead(conv, false); });
+          }
+        }
+        if (conv) setActive(conv);
+        if (p.kind === 'call') showCallPushOverlay(name, p.mode);
+      }
 
       // ---- Envoi de message ----
       var input = document.getElementById('msg-input');
@@ -1723,51 +1817,6 @@ html.dark {
             renderPresenceStatus(st, online);
           }
         });
-
-        // --- Atterrissage depuis une notification push (dashboard fermé) ---
-        // Le serveur cible cette page pour les professionnels avec kind / from /
-        // fromName / callId / mode / convId. On ouvre (ou crée) la conversation
-        // de l'émetteur, puis on affiche l'overlay pour un appel.
-        function showCallPushOverlay(fromName, mode) {
-          if (document.getElementById('msg-push-call-overlay')) return;
-          var name = fromName || 'Client';
-          var ov = document.createElement('div');
-          ov.id = 'msg-push-call-overlay';
-          ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:9400;display:flex;align-items:center;justify-content:center;padding:20px;';
-          var box = document.createElement('div');
-          box.style.cssText = 'background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:380px;padding:24px;text-align:center;font-family:var(--mgt-font-sans);box-shadow:0 24px 80px rgba(0,0,0,.4);';
-          box.innerHTML =
-            '<div style="width:64px;height:64px;margin:0 auto 14px;border-radius:50%;background:rgb(var(--mgt-primary-50));display:flex;align-items:center;justify-content:center;">' +
-              '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgb(var(--mgt-primary))" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
-            '</div>' +
-            '<div style="font-size:17px;font-weight:700;color:rgb(var(--mgt-foreground));">Appel entrant</div>' +
-            '<div style="font-size:13px;color:rgb(var(--mgt-muted-foreground));margin-top:4px;">' + esc(name) + ' a tenté de vous joindre.</div>' +
-            '<div style="display:flex;gap:10px;margin-top:20px;">' +
-              '<button data-act="close" style="flex:1;height:42px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Fermer</button>' +
-              '<button data-act="callback" style="flex:1;height:42px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Rappeler</button>' +
-            '</div>';
-          box.addEventListener('click', function (e) {
-            var act = e.target && e.target.getAttribute && e.target.getAttribute('data-act');
-            if (act === 'close') ov.remove();
-            else if (act === 'callback') { ov.remove(); callTarget(mode || 'audio'); }
-          });
-          ov.appendChild(box);
-          document.body.appendChild(ov);
-        }
-        function handlePushLanding() {
-          var qp;
-          try { qp = new URLSearchParams(location.search); } catch (e) { return; }
-          var from = qp.get('from');
-          var fromName = qp.get('fromName');
-          var kind = qp.get('kind');
-          var mode = qp.get('mode');
-          if (!from && !fromName) return;
-          var name = convNameForPeer(from, fromName);
-          var conv = ensureConversation(name, from);
-          setActive(conv);
-          if (kind === 'call') showCallPushOverlay(name, mode);
-        }
-        handlePushLanding();
 
         function appendAppointmentRequestReal(a) {
           if (!thread) return;
