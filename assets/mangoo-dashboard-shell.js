@@ -77,12 +77,27 @@
   // renvoie vers auth.html en perdant les paramètres kind/from/fromName ; on
   // les mémorise ici pour les rejouer après la connexion (redirectAfterLogin
   // dans auth.html relit cette clé).
-  function savePushLandingForAuth() {
+  function hasPushLanding() {
     try {
       var qp = new URLSearchParams(location.search);
-      var isPushLanding = !!(qp.get('from') || qp.get('fromName') || qp.get('kind'));
-      if (!isPushLanding) return;
+      return !!(qp.get('from') || qp.get('fromName') || qp.get('kind'));
+    } catch (e) { return false; }
+  }
+  function savePushLandingForAuth() {
+    try {
+      if (!hasPushLanding()) return;
       localStorage.setItem('mgt_push_landing_v1', location.pathname + location.search);
+    } catch (e) { /* ignore */ }
+  }
+  // Vide la session locale (token + identité) sans toucher à l'atterrissage push
+  // mémorisé. Utilisé quand un rôle incorrect (ex. un client resté connecté dans
+  // le même navigateur) bloque l'accès à l'espace pro après un clic sur une
+  // notification destinée à un professionnel.
+  function clearWrongSession() {
+    try {
+      localStorage.removeItem('mgt_token');
+      localStorage.removeItem('mgt_user');
+      localStorage.removeItem('mgt_vendor_identity_v1');
     } catch (e) { /* ignore */ }
   }
   function requireRole(role) {
@@ -105,7 +120,22 @@
     }
     var r = s.user.role;
     var ok = (r === role) || (role === 'prestataire' && r === 'vendeur');
-    if (!ok) { window.location.replace('./' + homeForRole(r)); return false; }
+    if (!ok) {
+      // Atterrissage push destiné à un professionnel (message / appel) alors que
+      // la session courante est un autre rôle (ex. Dida, client, resté connecté
+      // dans le même navigateur). On ne redirige PAS vers l'accueil de ce rôle :
+      // on préserve le landing, on vide la session erronée et on renvoie vers la
+      // connexion pour que le bon professionnel puisse s'authentifier puis
+      // rouvrir la bonne conversation (voir redirectAfterLogin dans auth.html).
+      if (hasPushLanding()) {
+        savePushLandingForAuth();
+        clearWrongSession();
+        window.location.replace('./auth.html');
+        return false;
+      }
+      window.location.replace('./' + homeForRole(r));
+      return false;
+    }
     return true;
   }
   // ---- Modules propres à chaque rôle (liste partagée nav + garde) ----
