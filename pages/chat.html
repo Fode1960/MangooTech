@@ -617,6 +617,51 @@ html.dark {
 <script src="../assets/mangoo-connect-plus.js"></script>
 <script>
 (function () {
+  // Garde-fou : cette page est réservée aux clients. Si un professionnel
+  // (vendeur / prestataire / livreur) y atterrit — par ex. via un vieux landing
+  // push mémorisé — on le renvoie immédiatement vers son propre espace, sinon il
+  // reste « coincé » sur une page sans menu pro (et le retour casse).
+  function redirectIfPro() {
+    try {
+      var _mgUser = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+      // Si la session locale est vide (ex. redirection directe sans passer par
+      // l'accueil), on resynchronise depuis le cookie httpOnly `mgt_session` via
+      // /api/auth/session. Sans cela, un pro dont le localStorage est vide ne
+      // serait pas détecté et resterait bloqué sur la page client.
+      if (!_mgUser) {
+        try {
+          var _xhr = new XMLHttpRequest();
+          _xhr.open('GET', '/api/auth/session', false);
+          _xhr.setRequestHeader('Accept', 'application/json');
+          _xhr.send(null);
+          if (_xhr.status >= 200 && _xhr.status < 300) {
+            var _d = JSON.parse(_xhr.responseText);
+            if (_d && _d.ok && _d.user) {
+              _mgUser = _d.user;
+              try { localStorage.setItem('mgt_user', JSON.stringify(_d.user)); } catch (e) {}
+            }
+          }
+        } catch (e) { /* non bloquant */ }
+      }
+      if (_mgUser) {
+        var _mgRole = String(_mgUser.role || '').toLowerCase();
+        if (_mgRole === 'vendeur' || _mgRole === 'prestataire') { location.replace('/pages/dashboard-messages.html'); return true; }
+        if (_mgRole === 'livreur') { location.replace('/pages/livreur.html'); return true; }
+      }
+    } catch (e) {}
+    return false;
+  }
+  if (redirectIfPro()) return;
+  // Rejoue le garde-fou quand la PWA revient au premier plan (reprise de l'app
+  // sans rechargement) : un pro resté sur cette page client ne doit pas y être
+  // piégé, même s'il n'y a pas eu de navigation fraîche.
+  try {
+    window.addEventListener('pageshow', function () { redirectIfPro(); });
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') redirectIfPro();
+    });
+  } catch (e) {}
+
   var RT = window.MangooConnect;
   var STORE_KEY = 'mgt_client_chat_v1';
 
@@ -684,6 +729,36 @@ html.dark {
   function threadOf(id){ return THREADS[id] || (THREADS[id] = []); }
   function pushMsg(id, msg){ threadOf(id).push(msg); saveStore(); }
   function scrollBottom(){ if (threadEl) threadEl.scrollTop = threadEl.scrollHeight; }
+
+  // --- Édition / suppression de messages ---
+  function genMsgId(){ return 'm-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8); }
+  var editingMsgId = null;      // msgId du message en cours d'édition (inline)
+  function findMsg(msgId){
+    var t = threadOf(ACTIVE);
+    for (var i=0;i<t.length;i++) if (t[i].msgId === msgId) return t[i];
+    return null;
+  }
+  function beginEdit(msgId){ editingMsgId = msgId; renderThread(); }
+  function cancelEdit(){ editingMsgId = null; renderThread(); }
+  function commitEdit(msgId, ta){
+    var val = ta ? String(ta.value || '').trim() : '';
+    editingMsgId = null;
+    if (!val) { renderThread(); return; }
+    var msg = findMsg(msgId);
+    if (msg) { msg.text = val; msg.edited = true; saveStore(); }
+    renderThread();
+    renderSidebar();
+    if (RT && typeof RT.editMessage === 'function') RT.editMessage(msgId, PEER.id, val);
+  }
+  function confirmDelete(msgId){
+    if (!window.confirm('Supprimer ce message ?')) return;
+    var t = threadOf(ACTIVE);
+    for (var i=0;i<t.length;i++) if (t[i].msgId === msgId) { t.splice(i,1); break; }
+    saveStore();
+    renderThread();
+    renderSidebar();
+    if (RT && typeof RT.deleteMessage === 'function') RT.deleteMessage(msgId, PEER.id);
+  }
 
   function lastPreviewOf(id){
     var t = threadOf(id);
@@ -796,6 +871,7 @@ html.dark {
 
   function renderMessage(m){
     var el = document.createElement('div');
+    if (m.msgId) el.setAttribute('data-msg-id', m.msgId);
     if (m.dir === 'sys'){
       el.className = 'flex items-center justify-center py-2';
       el.innerHTML = '<span class="text-xs text-muted-foreground bg-white/80 px-3 py-1 rounded-full shadow-sm">'+esc(m.text)+'</span>';
@@ -805,6 +881,8 @@ html.dark {
     var initial = outgoing ? CLIENT_INITIAL : PEER_INITIAL;
     var avatarBg = outgoing ? 'background:rgb(var(--mgt-accent-300));' : 'background:rgb(var(--mgt-primary));';
     el.className = outgoing ? 'flex items-end gap-2 max-w-[75%] ml-auto flex-row-reverse' : 'flex items-end gap-2 max-w-[75%]';
+
+    var editing = outgoing && m.msgId && m.msgId === editingMsgId;
 
     var body;
     if (m.kind === 'file'){
@@ -829,6 +907,15 @@ html.dark {
               '</div>'
             : '<p class="text-xs mt-1.5 text-foreground">'+(m.status==='accepted'?'Rendez-vous accepté ✓':'Rendez-vous refusé')+'</p>') +
         '</div>';
+    } else if (editing){
+      body =
+        '<div class="bg-[rgb(var(--mgt-primary))] text-white rounded-2xl rounded-br-sm px-3 py-2.5" style="min-width:220px;">' +
+          '<textarea data-edit-input style="width:100%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.45);border-radius:8px;padding:6px 8px;color:#fff;font-size:14px;line-height:1.4;resize:none;min-height:46px;box-sizing:border-box;">'+esc(m.text)+'</textarea>' +
+          '<div style="display:flex;justify-content:flex-end;gap:6px;margin-top:6px;">' +
+            '<button type="button" data-edit-cancel style="font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;">Annuler</button>' +
+            '<button type="button" data-edit-save style="font-size:12px;font-weight:600;border:none;background:#fff;color:rgb(var(--mgt-primary));border-radius:6px;padding:4px 12px;cursor:pointer;">Enregistrer</button>' +
+          '</div>' +
+        '</div>';
     } else {
       body = '<div class="'+(outgoing?'bg-[rgb(var(--mgt-primary))] text-white rounded-2xl rounded-br-sm':'bg-white rounded-2xl rounded-bl-sm shadow-sm')+' px-4 py-2.5"><p class="text-sm leading-relaxed"></p></div>';
     }
@@ -837,10 +924,40 @@ html.dark {
       '<div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 mb-1" style="'+avatarBg+'">'+initial+'</div>' +
       '<div class="'+(outgoing?'flex flex-col items-end':'')+'">' +
         body +
-        '<span class="text-[11px] text-muted-foreground mt-1 '+(outgoing?'mr-1':'ml-1')+' inline-block">'+esc(m.time||'')+(outgoing?' ✓✓':'')+'</span>' +
+        '<span class="text-[11px] text-muted-foreground mt-1 '+(outgoing?'mr-1':'ml-1')+' inline-block">'+esc(m.time||'')+(outgoing?' ✓✓':'')+(m.edited?' · modifié':'')+'</span>' +
       '</div>';
     var p = el.querySelector('p');
-    if (p && m.kind !== 'file' && m.kind !== 'appt') p.textContent = m.text || '';
+    if (p && m.kind !== 'file' && m.kind !== 'appt' && !editing) p.textContent = m.text || '';
+
+    // Menu d'actions (modifier / supprimer) sur les messages texte sortants.
+    if (outgoing && !editing && m.kind !== 'file' && m.kind !== 'appt' && m.msgId) {
+      var wrap = el.children[1];
+      var actions = document.createElement('div');
+      actions.style.cssText = 'display:flex;align-items:center;gap:4px;margin-top:2px;opacity:0;transition:opacity .15s ease;';
+      actions.innerHTML =
+        '<button type="button" data-msg-act="edit" title="Modifier" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:rgb(var(--mgt-muted-foreground));cursor:pointer;">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>' +
+        '</button>' +
+        '<button type="button" data-msg-act="delete" title="Supprimer" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:rgb(var(--mgt-muted-foreground));cursor:pointer;">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>' +
+        '</button>';
+      wrap.appendChild(actions);
+      el.addEventListener('mouseenter', function(){ actions.style.opacity = '1'; });
+      el.addEventListener('mouseleave', function(){ actions.style.opacity = '0'; });
+      var actBtns = actions.querySelectorAll('button');
+      actBtns[0].addEventListener('click', function(e){ e.stopPropagation(); beginEdit(m.msgId); });
+      actBtns[1].addEventListener('click', function(e){ e.stopPropagation(); confirmDelete(m.msgId); });
+    }
+
+    if (editing) {
+      var ta = el.querySelector('[data-edit-input]');
+      var save = el.querySelector('[data-edit-save]');
+      var cancel = el.querySelector('[data-edit-cancel]');
+      if (save) save.addEventListener('click', function(){ commitEdit(m.msgId, ta); });
+      if (cancel) cancel.addEventListener('click', function(){ cancelEdit(); });
+      if (ta) { ta.focus(); var len = ta.value.length; ta.setSelectionRange(len, len); }
+    }
+
     return el;
   }
 
@@ -875,10 +992,11 @@ html.dark {
     if (!text || !ACTIVE) return;
     input.value = '';
     input.style.height = 'auto';
-    pushMsg(ACTIVE, { dir:'out', text:text, time:nowTime() });
+    var msgId = genMsgId();
+    pushMsg(ACTIVE, { dir:'out', text:text, time:nowTime(), msgId: msgId });
     renderThread();
     renderSidebar();
-    if (RT && typeof RT.sendMessage === 'function') RT.sendMessage(PEER.id, text);
+    if (RT && typeof RT.sendMessage === 'function') RT.sendMessage(PEER.id, text, msgId);
   }
 
   if (sendBtn) sendBtn.addEventListener('click', send);
@@ -1084,8 +1202,26 @@ html.dark {
     RT.onMessage(function(m){
       var from = m.from || '';
       if (!from) return;
-      pushMsg(from, { dir:'in', text:m.text, time:nowTime(), name:m.fromName });
+      pushMsg(from, { dir:'in', text:m.text, time:nowTime(), name:m.fromName, msgId:m.msgId });
       if (from !== ACTIVE) UNREAD[from] = (UNREAD[from]||0)+1;
+      if (from === ACTIVE) renderThread();
+      renderSidebar();
+    });
+    RT.onMessageEdited(function(e){
+      var from = e.from || '';
+      if (!from || !e.msgId) return;
+      var t = threadOf(from);
+      for (var i=0;i<t.length;i++) if (t[i].msgId === e.msgId) { t[i].text = e.text; t[i].edited = true; break; }
+      saveStore();
+      if (from === ACTIVE) renderThread();
+      renderSidebar();
+    });
+    RT.onMessageDeleted(function(e){
+      var from = e.from || '';
+      if (!from || !e.msgId) return;
+      var t = threadOf(from);
+      for (var i=0;i<t.length;i++) if (t[i].msgId === e.msgId) { t.splice(i,1); break; }
+      saveStore();
       if (from === ACTIVE) renderThread();
       renderSidebar();
     });
@@ -1153,8 +1289,14 @@ html.dark {
         }).filter(function(c){ return c.vendorId; });
 
         var qp = new URLSearchParams(location.search);
-        var wantVid = qp.get('vendorId');
-        var wantName = qp.get('to');
+        // L'émetteur de la notification est identifié par `vendorId` (côté client)
+        // ou `from` (repli, même valeur). `to`/`fromName` servent de repli par nom.
+        var wantVid = qp.get('vendorId') || qp.get('from');
+        var wantName = qp.get('to') || qp.get('fromName');
+        // Un atterrissage push est « demandé » dès qu'un paramètre de ciblage est
+        // présent : on ne doit alors PAS retomber sur la première conversation
+        // (comportement « au hasard ») si l'émetteur n'est pas trouvé.
+        var hasLanding = !!(qp.get('vendorId') || qp.get('from') || qp.get('to') || qp.get('fromName') || qp.get('kind'));
         var initial = null;
         if (wantVid){
           for (var i=0;i<CONVERSATIONS.length;i++) if (CONVERSATIONS[i].vendorId === wantVid){ initial = wantVid; break; }
@@ -1166,7 +1308,7 @@ html.dark {
             if (n && (n===norm || n.indexOf(norm)===0 || norm.indexOf(n)===0)){ initial = CONVERSATIONS[j].vendorId; break; }
           }
         }
-        if (!initial && CONVERSATIONS.length) initial = CONVERSATIONS[0].vendorId;
+        if (!initial && !hasLanding && CONVERSATIONS.length) initial = CONVERSATIONS[0].vendorId;
         applyPresence(LAST_PEERS);
         renderSidebar();
         if (initial) {
