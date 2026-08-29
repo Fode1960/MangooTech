@@ -21,6 +21,15 @@ self.addEventListener('activate', function (event) {
   event.waitUntil(self.clients.claim());
 });
 
+// Permet aux pages de forcer l'activation immédiate d'un worker en attente
+// (utilisé par l'auto-mise à jour de mangoo-push.js). Sans cela, un worker
+// « waiting » pourrait rester inactif jusqu'à la fermeture de tous les onglets.
+self.addEventListener('message', function (event) {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // Gestionnaire fetch minimal — requis par Chrome pour rendre l'app installable
 // (déclenchement de `beforeinstallprompt`) et pour fournir un repli hors-ligne
 // basique. Stratégie « réseau d'abord » : aucun cache écrit, donc aucun asset
