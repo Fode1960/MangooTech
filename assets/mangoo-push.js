@@ -229,6 +229,30 @@
     }).catch(function () { /* ignore */ });
   }
 
+  // ===== Auto-mise à jour du service worker =====
+  // Le navigateur met en cache le script du service worker et espace ses contrôles
+  // de mise à jour (jusqu'à ~24 h). Après un déploiement, un ANCIEN worker (et son
+  // ancien routage de notification / ses anciennes pages en cache) peut donc rester
+  // actif, d'où des comportements fantômes (ex. logo PWA qui renvoie vers la page
+  // de chat au lieu de l'espace pro). On force un contrôle de mise à jour à chaque
+  // chargement, puis on recharge UNE seule fois quand le nouveau worker prend le
+  // contrôle, pour appliquer la correction immédiatement sans vider le cache à la main.
+  if ('serviceWorker' in navigator) {
+    try {
+      navigator.serviceWorker.getRegistration('/sw.js').then(function (reg) {
+        if (!reg) return;
+        reg.update().catch(function () { /* ignore */ });
+        if (reg.waiting) { try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) { /* ignore */ } }
+      }).catch(function () { /* ignore */ });
+      var _mgtSwReloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (_mgtSwReloaded) return;
+        _mgtSwReloaded = true;
+        try { global.location.reload(); } catch (e) { /* ignore */ }
+      });
+    } catch (e) { /* ignore */ }
+  }
+
   // État courant, pour afficher un bouton « Notifications » dans la cloche.
   function state() {
     return {
