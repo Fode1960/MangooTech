@@ -971,6 +971,14 @@ html.dark {
         if (!pendingPushLanding) return;
         var p = pendingPushLanding;
         pendingPushLanding = null;
+        // Efface la cible mémorisée par le service worker : elle vient d'être
+        // consommée (ouverture de la conversation / overlay d'appel), afin qu'un
+        // prochain lancement via le logo de la PWA ne rejoue pas un vieux landing.
+        try {
+          caches.open('mgt-push-state').then(function (cache) {
+            return cache.delete('/__mgt_last_landing__');
+          });
+        } catch (e) {}
         var name = p.fromName || p.from || 'Client';
         var conv = pushFindConv(name, p.from);
         if (!conv) {

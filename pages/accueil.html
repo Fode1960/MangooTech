@@ -291,6 +291,54 @@ html.dark {
         background-color: currentColor;
       }
     </style>
+<script>
+(function () {
+  // Routage PWA : un professionnel connecté qui ouvre l'app via le logo (start_url "/")
+  // doit arriver sur sa messagerie (ou sa dernière conversation / l'overlay d'appel),
+  // jamais sur la page d'accueil publique ni sur la page de connexion.
+  var token = null, user = null;
+  try { token = localStorage.getItem('mgt_token'); } catch (e) {}
+  try { user = JSON.parse(localStorage.getItem('mgt_user') || 'null'); } catch (e) {}
+  if (!token || !user) return;
+
+  var role = String(user.role || '').toLowerCase();
+
+  function validLanding(p) {
+    if (!p) return false;
+    if (p.indexOf('//') >= 0) return false;
+    if (p.indexOf('/pages/') !== 0) return false;
+    return p.indexOf('.html') !== -1;
+  }
+
+  // Livreur : renvoie vers son propre espace (aucun landing push spécifique).
+  if (role === 'livreur') { location.replace('/pages/livreur.html'); return; }
+
+  var isPro = role === 'vendeur' || role === 'prestataire';
+  if (!isPro) return; // client / admin : l'accueil public reste visible.
+
+  // 1) Landing push mémorisé par le shell avant une redirection vers la connexion.
+  var landing = null;
+  try { landing = localStorage.getItem('mgt_push_landing_v1'); } catch (e) {}
+  if (landing && validLanding(landing)) {
+    try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
+    location.replace(landing);
+    return;
+  }
+
+  // 2) Dernière cible de notification mémorisée par le service worker.
+  function goDefault() { location.replace('/pages/dashboard-messages.html'); }
+  try {
+    caches.open('mgt-push-state').then(function (cache) {
+      return cache.match('/__mgt_last_landing__');
+    }).then(function (resp) {
+      return resp ? resp.text() : '';
+    }).then(function (url) {
+      if (url && validLanding(url)) location.replace(url);
+      else goDefault();
+    }).catch(goDefault);
+  } catch (e) { goDefault(); }
+})();
+</script>
 </head>
 <body class="min-h-screen font-sans antialiased">
 

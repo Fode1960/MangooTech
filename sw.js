@@ -52,6 +52,28 @@ function resolveUrl(url) {
   }
 }
 
+// Mémorise la dernière cible de notification (message / appel) dans le cache afin
+// que la page d'accueil — ouverte via le logo de la PWA sans clic sur la
+// notification — puisse rediriger le professionnel connecté vers la bonne
+// conversation / l'overlay d'appel. Le cache est le seul espace partagé entre le
+// service worker et les pages (localStorage n'est pas accessible au SW).
+var LAST_LANDING_CACHE = 'mgt-push-state';
+var LAST_LANDING_KEY = '/__mgt_last_landing__';
+function persistLastLanding(url) {
+  try {
+    return caches.open(LAST_LANDING_CACHE).then(function (cache) {
+      return cache.put(LAST_LANDING_KEY, new Response(String(url || '/')));
+    });
+  } catch (e) { return Promise.resolve(); }
+}
+function clearLastLanding() {
+  try {
+    return caches.open(LAST_LANDING_CACHE).then(function (cache) {
+      return cache.delete(LAST_LANDING_KEY);
+    });
+  } catch (e) { return Promise.resolve(); }
+}
+
 self.addEventListener('push', function (event) {
   var payload = {};
   try {
@@ -65,13 +87,14 @@ self.addEventListener('push', function (event) {
   }
 
   var title = payload.title || 'MangooTech';
+  var targetUrl = resolveUrl(payload.url || '/');
   var options = {
     body: payload.body || '',
     icon: payload.icon || '/assets/favicon.png',
     badge: payload.badge || '/assets/favicon.png',
     tag: payload.tag || ('mangoo-' + Date.now()),
     data: {
-      url: resolveUrl(payload.url || '/'),
+      url: targetUrl,
       extra: payload.data || {}
     },
     vibrate: [200, 100, 200]
@@ -80,7 +103,11 @@ self.addEventListener('push', function (event) {
   if (payload.requireInteraction) options.requireInteraction = true;
   if (Array.isArray(payload.actions) && payload.actions.length) options.actions = payload.actions;
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    self.registration.showNotification(title, options).then(function () {
+      return persistLastLanding(targetUrl);
+    })
+  );
 });
 
 self.addEventListener('notificationclick', function (event) {
@@ -98,10 +125,10 @@ self.addEventListener('notificationclick', function (event) {
       for (var i = 0; i < clientList.length; i++) {
         var client = clientList[i];
         if (client.url === target || (client.url && client.url.indexOf(target) === 0)) {
-          return client.focus();
+          return client.focus().then(function () { return clearLastLanding(); });
         }
       }
-      return self.clients.openWindow(target);
+      return self.clients.openWindow(target).then(function () { return clearLastLanding(); });
     })
   );
 });
