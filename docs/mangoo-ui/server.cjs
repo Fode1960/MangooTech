@@ -6242,6 +6242,50 @@ function handleHttp(req, res) {
     return;
   }
 
+  if (urlPath === '/push/test') {
+    // Diagnostic TEMPORAIRE : envoie une notification de test réelle à un
+    // routingId donné, indépendamment de l'état en ligne, et renvoie le résultat
+    // de chaque webpush.sendNotification (succès / erreur détaillée). Permet de
+    // distinguer « abonnement invalide » de « isOnline() vrai ».
+    ensureVapidKeys();
+    const secret = queryParam(req, 'secret') || '';
+    const expected = process.env.PUSH_TEST_SECRET || 'mangoo-diag-20260829';
+    if (secret !== expected) {
+      res.writeHead(403, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: false, error: 'interdit' }));
+      return;
+    }
+    const rid = canonicalRoutingId(queryParam(req, 'routingId') || '');
+    if (!rid) {
+      res.writeHead(400, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: false, error: 'routingId requis' }));
+      return;
+    }
+    const subs = pushListFor(rid);
+    const tasks = subs.map(function (sub) {
+      return new Promise(function (resolve) {
+        const entry = { endpoint: String(sub && sub.endpoint || '').slice(-24) };
+        if (!webpush || !pushVapid || !sub || !sub.endpoint) {
+          entry.ok = false; entry.error = 'abonnement ou VAPID indisponible'; resolve(entry); return;
+        }
+        const p = { title: 'Test MangooTech', body: 'Notification de test (diagnostic)', url: '/pages/chat.html', tag: 'diag-' + Date.now(), data: { kind: 'message', test: true } };
+        webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, JSON.stringify(p), { TTL: 60 })
+          .then(function () { entry.ok = true; resolve(entry); })
+          .catch(function (err) {
+            entry.ok = false;
+            entry.statusCode = err && err.statusCode;
+            entry.body = err && err.body;
+            resolve(entry);
+          });
+      });
+    });
+    Promise.all(tasks).then(function (results) {
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, routingId: rid, subs: subs.length, available: Object.keys(pushSubscriptions), results: results }));
+    });
+    return;
+  }
+
   if (urlPath === '/') {
     // La page d'accueil publique est `pages/accueil.html` (elle contient déjà
     // les liens Connexion / Inscription). Redirection permanente pour le SEO.
