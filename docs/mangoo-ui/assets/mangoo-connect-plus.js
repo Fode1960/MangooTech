@@ -404,7 +404,7 @@
     ws.onopen = function () {
       reconnectAttempts = 0; // réinitialise le backoff après une connexion réussie
       setConnState('online');
-      if (identity) sendWS({ type: 'register', role: identity.role, id: identity.id, name: identity.name });
+      if (identity) sendWS({ type: 'register', role: identity.role, id: identity.id, name: identity.name, page: currentPage() });
     };
     ws.onmessage = function (ev) {
       if (ev.data instanceof ArrayBuffer) { onFileChunk(currentFileId, ev.data); return; }
@@ -515,6 +515,19 @@
   // Enregistre automatiquement une identité (client connecté ou « invité ») pour
   // que les appels/discussions partent en temps réel vers le prestataire, même
   // sans compte. Sans identité, isReal() reste faux et on bascule en simulation.
+  // Page de messagerie courante : le serveur ne considere un destinataire
+  // comme joignable en temps reel (donc PAS a notifier par push) que s'il est
+  // connecte depuis sa page de messagerie. Une socket ouverte ailleurs (accueil,
+  // carte, fiche, live...) ne doit PAS supprimer la notification push.
+  function currentPage() {
+    var p = (location.pathname || '').toLowerCase();
+    var m = p.match(/\/([^/]+)$/);
+    var name = m ? m[1] : p;
+    if (name === 'chat.html' || name === 'messages.html') return 'chat';
+    if (name === 'dashboard-messages.html') return 'dashboard';
+    return 'browse';
+  }
+
   function ensureGuest() {
     if (identity) return identity;
     var stored = readStoredClient();
@@ -529,7 +542,7 @@
     }
     ensureWS();
     if (ws && ws.readyState === 1) {
-      sendWS({ type: 'register', role: identity.role, id: identity.id, name: identity.name });
+      sendWS({ type: 'register', role: identity.role, id: identity.id, name: identity.name, page: currentPage() });
     }
     return identity;
   }
@@ -983,7 +996,7 @@
       // onopen de ensureWS() s'en charge (il appelle setConnState('online')
       // puis envoie le register). Ne pas écraser onopen ici.
       if (ws && ws.readyState === 1) {
-        sendWS({ type: 'register', role: identity.role, id: identity.id, name: identity.name });
+        sendWS({ type: 'register', role: identity.role, id: identity.id, name: identity.name, page: currentPage() });
       }
       return identity;
     },

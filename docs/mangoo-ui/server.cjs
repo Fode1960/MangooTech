@@ -161,6 +161,28 @@ function isOnline(id) {
   return onlineSockets(id).length > 0;
 }
 
+// Page de messagerie : seule une connexion ouverte depuis chat.html (client)
+// ou dashboard-messages.html (professionnel) rend l'utilisateur « joignable en
+// temps réel ». Une socket ouverte ailleurs (accueil, carte, live, fiche...)
+// via autoRegisterClient ne doit PAS supprimer la notification push.
+function isMessagingPage(page) {
+  return page === 'chat' || page === 'dashboard';
+}
+
+function onlineMessagingSockets(id) {
+  const cid = canonicalRoutingId(id);
+  const list = clients.get(cid);
+  if (!list) return [];
+  return list.filter(function (c) {
+    return c.online && c.ws && c.ws.readyState === 1 &&
+      isMessagingPage(c.ws.meta && c.ws.meta.page);
+  });
+}
+
+function isOnMessaging(id) {
+  return onlineMessagingSockets(id).length > 0;
+}
+
 // Résout la meilleure socket pour un flux 1:1 (appel / fichier) : la socket
 // de live du vendeur ou du spectateur quand un live est actif, sinon la
 // connexion la plus récente.
@@ -3088,7 +3110,7 @@ function handleRegister(ws, msg) {
   if (!id) { send(ws, { type: 'register-error', reason: 'id manquant' }); return; }
   const role = String(msg.role || 'client').trim();
   const name = String(msg.name || id || 'Inconnu').trim();
-  ws.meta = { id, role, name };
+  ws.meta = { id, role, name, page: String(msg.page || '').trim() };
   addClient(id, ws, role, name);
   console.log('[WS] register', { id, role, name, time: new Date().toLocaleTimeString() });
   send(ws, { type: 'registered', id, role, name });
@@ -3105,7 +3127,7 @@ function handleRegister(ws, msg) {
 function handleCallOffer(ws, msg) {
   const callId = msg.callId || rand();
   const to = String(msg.to || '').trim();
-  const target = resolvePeer(to);
+  const target = isOnMessaging(to) ? resolvePeer(to) : null;
   if (!target || !target.online) {
     // Dashboard fermé (ou hors ligne) : on tente de réveiller le destinataire
     // par notification Web Push native (même sans onglet ouvert).
@@ -3172,6 +3194,7 @@ function handleChatMessage(ws, msg) {
     to: to,
     text: text.slice(0, 40),
     toOnline: isOnline(to),
+    toMessaging: isOnMessaging(to),
     toSockets: onlineSockets(to).length,
     onlineIds: Array.from(clients.keys())
   });
@@ -3188,8 +3211,9 @@ function handleChatMessage(ws, msg) {
     type: 'chat-new', msgId: entry.msgId, convId: entry.convId,
     from, fromName: ws.meta.name, text, sentAt: entry.sentAt
   });
-  // Destinataire hors ligne (Dashboard fermé) : notification Web Push native.
-  if (!isOnline(to)) {
+  // Destinataire absent de sa page de messagerie (dashboard fermé, ou simple
+  // page Mangoo ouverte ailleurs) : notification Web Push native.
+  if (!isOnMessaging(to)) {
     const fromName = (ws.meta && ws.meta.name) || '';
     sendPush(to, {
       title: fromName || 'Nouveau message',
@@ -6239,50 +6263,6 @@ function handleHttp(req, res) {
       subscriptions: subscriptions,
       online: online
     }));
-    return;
-  }
-
-  if (urlPath === '/push/test') {
-    // Diagnostic TEMPORAIRE : envoie une notification de test réelle à un
-    // routingId donné, indépendamment de l'état en ligne, et renvoie le résultat
-    // de chaque webpush.sendNotification (succès / erreur détaillée). Permet de
-    // distinguer « abonnement invalide » de « isOnline() vrai ».
-    ensureVapidKeys();
-    const secret = queryParam(req, 'secret') || '';
-    const expected = process.env.PUSH_TEST_SECRET || 'mangoo-diag-20260829';
-    if (secret !== expected) {
-      res.writeHead(403, JSON_HEADERS);
-      res.end(JSON.stringify({ ok: false, error: 'interdit' }));
-      return;
-    }
-    const rid = canonicalRoutingId(queryParam(req, 'routingId') || '');
-    if (!rid) {
-      res.writeHead(400, JSON_HEADERS);
-      res.end(JSON.stringify({ ok: false, error: 'routingId requis' }));
-      return;
-    }
-    const subs = pushListFor(rid);
-    const tasks = subs.map(function (sub) {
-      return new Promise(function (resolve) {
-        const entry = { endpoint: String(sub && sub.endpoint || '').slice(-24) };
-        if (!webpush || !pushVapid || !sub || !sub.endpoint) {
-          entry.ok = false; entry.error = 'abonnement ou VAPID indisponible'; resolve(entry); return;
-        }
-        const p = { title: 'Test MangooTech', body: 'Notification de test (diagnostic)', url: '/pages/chat.html', tag: 'diag-' + Date.now(), data: { kind: 'message', test: true } };
-        webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, JSON.stringify(p), { TTL: 60 })
-          .then(function () { entry.ok = true; resolve(entry); })
-          .catch(function (err) {
-            entry.ok = false;
-            entry.statusCode = err && err.statusCode;
-            entry.body = err && err.body;
-            resolve(entry);
-          });
-      });
-    });
-    Promise.all(tasks).then(function (results) {
-      res.writeHead(200, JSON_HEADERS);
-      res.end(JSON.stringify({ ok: true, routingId: rid, subs: subs.length, available: Object.keys(pushSubscriptions), results: results }));
-    });
     return;
   }
 
