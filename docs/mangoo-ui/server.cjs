@@ -86,7 +86,7 @@ const FORCE_HTTPS_ADMIN = String(process.env.FORCE_HTTPS_ADMIN || 'true').toLowe
 // vers `<CANONICAL_HOST>` pour garantir une origine unique à localStorage (qui
 // est hôte-spécifique) et éviter tout futur écart de session entre les deux.
 // Surchargeable via env pour les environnements de staging (ex. `staging.mangoo.tech`).
-const CANONICAL_HOST = String(process.env.CANONICAL_HOST || 'mangoo.tech').toLowerCase();
+const CANONICAL_HOST = String(process.env.CANONICAL_HOST || 'mangoo.tech').toLowerCase(); // (réservé, non utilisé par normalizeHost)
 
 let adminSeedCredentials = null; // identifiants générés (affichés une seule fois au premier démarrage)
 let httpsAvailable = false;      // true si cert.pem + key.pem présents
@@ -3757,28 +3757,30 @@ function isAdminPage(urlPath) {
 function isAdminApi(urlPath) {
   return urlPath.indexOf('/api/admin') === 0;
 }
-// Normalisation d'hôte : `www.<CANONICAL_HOST>` → `<CANONICAL_HOST>` (apex).
-// Garantit une origine unique pour localStorage (hôte-spécifique) et écarte tout
-// écart de session futur entre `www.mangoo.tech` et `mangoo.tech`, en complément
-// du cookie `Domain=mangoo.tech`. 308 (permanent, préserve méthode + corps) pour
-// ne pas casser les appels API ; conserve chemin, query et schéma (https derrière
-// le proxy). Ne s'applique qu'au préfixe `www.` devant l'hôte canonique — tout
-// autre domaine (localhost, IP LAN, *.onrender.com) reste inchangé.
+// Normalisation d'hôte : retire le point final FQDN (`www.mangoo.tech.` →
+// `www.mangoo.tech`, `mangoo.tech.` → `mangoo.tech`). Un hôte avec point final
+// constitue une AUTRE origine (localStorage vide, cookie potentiellement non
+// partagé) et a été identifié comme cause de la bascule « bonne page →
+// chat.html » sur téléphone. 308 (permanent, préserve méthode + corps) pour ne
+// pas casser les appels API ; conserve chemin, query et schéma (https derrière
+// le proxy). Ne s'applique qu'aux hôtes dotés d'un point final — tout autre
+// domaine (localhost, IP LAN, *.onrender.com) reste inchangé.
 function normalizeHost(req, res) {
   const rawHost = String(req.headers && req.headers.host ? req.headers.host : '');
-  // Retire le point final FQDN (`www.mangoo.tech.` → `www.mangoo.tech`) : un
-  // hôte avec point final constitue une AUTRE origine (localStorage vide, cookie
-  // potentiellement non partagé) et a été identifié comme cause de la bascule
-  // « bonne page → chat.html » sur téléphone. On le normalise donc aussi.
+  if (!rawHost) return false;
+  // Retire uniquement le point final FQDN (`www.mangoo.tech.` → `www.mangoo.tech`,
+  // `mangoo.tech.` → `mangoo.tech`). Un hôte avec point final constitue une AUTRE
+  // origine (localStorage vide, cookie potentiellement non partagé) et a été
+  // identifié comme cause de la bascule « bonne page → chat.html » sur téléphone.
+  // On NE convertit PAS `www` ↔ apex ici : Cloudflare gère déjà l'apex → www
+  // (301), et forcer l'inverse créerait une boucle de redirection infinie.
   let host = rawHost.split(':')[0].toLowerCase();
+  if (!host.endsWith('.')) return false;
   while (host.endsWith('.')) host = host.slice(0, -1);
-  if (!CANONICAL_HOST) return false;
-  // `www.<apex>` → `<apex>` pour garantir une origine unique à localStorage.
-  if (host === 'www.' + CANONICAL_HOST) host = CANONICAL_HOST;
-  if (host !== CANONICAL_HOST) return false;
+  if (!host) return false;
   const proto = isSecureRequest(req) ? 'https' : 'http';
   const port = rawHost.indexOf(':') >= 0 ? ':' + rawHost.slice(rawHost.indexOf(':') + 1) : '';
-  res.writeHead(308, { 'Location': proto + '://' + CANONICAL_HOST + port + (req.url || '/'), 'Cache-Control': 'no-store' });
+  res.writeHead(308, { 'Location': proto + '://' + host + port + (req.url || '/'), 'Cache-Control': 'no-store' });
   res.end();
   return true;
 }
