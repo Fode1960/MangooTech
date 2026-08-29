@@ -82,6 +82,11 @@ const ADMIN_SEED_PIN = process.env.ADMIN_PIN || '';
 const ADMIN_PASSWORD_RESET = process.env.ADMIN_PASSWORD_RESET || '';
 const ADMIN_PIN_RESET = process.env.ADMIN_PIN_RESET || '';
 const FORCE_HTTPS_ADMIN = String(process.env.FORCE_HTTPS_ADMIN || 'true').toLowerCase() !== 'false';
+// Hôte canonique de l'application (apex). `www.<CANONICAL_HOST>` est redirigé
+// vers `<CANONICAL_HOST>` pour garantir une origine unique à localStorage (qui
+// est hôte-spécifique) et éviter tout futur écart de session entre les deux.
+// Surchargeable via env pour les environnements de staging (ex. `staging.mangoo.tech`).
+const CANONICAL_HOST = String(process.env.CANONICAL_HOST || 'mangoo.tech').toLowerCase();
 
 let adminSeedCredentials = null; // identifiants générés (affichés une seule fois au premier démarrage)
 let httpsAvailable = false;      // true si cert.pem + key.pem présents
@@ -2963,6 +2968,16 @@ function cookieFromReq(req, name) {
 // est toujours le cas en production Render/Cloudflare.
 function sessionCookieFlags(req, maxAge) {
   let flags = 'HttpOnly; Path=/; SameSite=Lax';
+  // Partage le cookie entre `mangoo.tech` et `www.mangoo.tech` (et tout
+  // sous-domaine). Sans Domain explicite, le cookie est hôte-spécifique :
+  // une session créée sur `mangoo.tech` n'est pas envoyée sur `www.mangoo.tech`
+  // (et inversement), ce qui casse la restauration de session au clic d'une
+  // notification / du logo PWA. Hors domaine mangoo.tech (ex. localhost), on
+  // laisse le cookie hôte-spécifique pour ne pas casser le développement.
+  const host = String(req.headers && req.headers.host ? req.headers.host : '').split(':')[0].toLowerCase();
+  if (host === 'mangoo.tech' || host.endsWith('.mangoo.tech')) {
+    flags += '; Domain=mangoo.tech';
+  }
   if (maxAge) flags += '; Max-Age=' + maxAge;
   if (isSecureRequest(req)) flags += '; Secure';
   return flags;
@@ -3083,6 +3098,8 @@ function handleMessage(ws, msg) {
     case 'call-end': handleCallEnd(ws, msg); break;
     case 'ice-candidate': handleIce(ws, msg); break;
     case 'chat-message': handleChatMessage(ws, msg); break;
+    case 'chat-edit': handleChatEdit(ws, msg); break;
+    case 'chat-delete': handleChatDelete(ws, msg); break;
     case 'chat-history': handleChatHistory(ws, msg); break;
     case 'typing': handleTyping(ws, msg); break;
     case 'appointment-request': handleApptRequest(ws, msg); break;
@@ -3240,6 +3257,57 @@ function handleTyping(ws, msg) {
   broadcastToPeer(to, {
     type: 'typing', from, fromName: ws.meta.name, isTyping: !!msg.isTyping
   });
+}
+
+// Édition d'un message déjà envoyé. Seul l'auteur peut modifier son message :
+// on résout l'entrée du chatLog par msgId ET par from === ws.meta.id (un pair ne
+// peut pas éditer le message d'un autre). Le texte est mis à jour, daté, puis
+// diffusé à l'auteur (autres onglets) et au destinataire sous le type
+// `chat-edited`, avec ack vers l'éditeur.
+function handleChatEdit(ws, msg) {
+  const from = ws.meta && ws.meta.id;
+  const msgId = String(msg.msgId || '').trim();
+  const text = String(msg.text || '').slice(0, 4000);
+  if (!from || !msgId || !text) {
+    send(ws, { type: 'chat-edit-error', msgId, reason: 'paramètres manquants' });
+    return;
+  }
+  const entry = chatLog.find((m) => m.msgId === msgId && m.from === from);
+  if (!entry) {
+    send(ws, { type: 'chat-edit-error', msgId, reason: 'message introuvable' });
+    return;
+  }
+  entry.text = text;
+  entry.editedAt = nowIso();
+  send(ws, { type: 'chat-edit-ack', msgId, text: entry.text, editedAt: entry.editedAt });
+  const evt = {
+    type: 'chat-edited', msgId, convId: entry.convId,
+    from: entry.from, to: entry.to, text: entry.text, editedAt: entry.editedAt
+  };
+  broadcastToPeer(entry.to, evt);
+  broadcastToPeer(from, evt, ws); // autres onglets de l'auteur
+}
+
+// Suppression d'un message déjà envoyé. Même règle de propriété que l'édition :
+// l'auteur uniquement. Retire l'entrée du chatLog et diffuse `chat-deleted`.
+function handleChatDelete(ws, msg) {
+  const from = ws.meta && ws.meta.id;
+  const msgId = String(msg.msgId || '').trim();
+  if (!from || !msgId) {
+    send(ws, { type: 'chat-delete-error', msgId, reason: 'paramètres manquants' });
+    return;
+  }
+  const idx = chatLog.findIndex((m) => m.msgId === msgId && m.from === from);
+  if (idx === -1) {
+    send(ws, { type: 'chat-delete-error', msgId, reason: 'message introuvable' });
+    return;
+  }
+  const entry = chatLog[idx];
+  chatLog.splice(idx, 1);
+  send(ws, { type: 'chat-delete-ack', msgId });
+  const evt = { type: 'chat-deleted', msgId, convId: entry.convId, from: entry.from, to: entry.to };
+  broadcastToPeer(entry.to, evt);
+  broadcastToPeer(from, evt, ws); // autres onglets de l'auteur
 }
 
 function handleChatHistory(ws, msg) {
@@ -3689,6 +3757,31 @@ function isAdminPage(urlPath) {
 function isAdminApi(urlPath) {
   return urlPath.indexOf('/api/admin') === 0;
 }
+// Normalisation d'hôte : `www.<CANONICAL_HOST>` → `<CANONICAL_HOST>` (apex).
+// Garantit une origine unique pour localStorage (hôte-spécifique) et écarte tout
+// écart de session futur entre `www.mangoo.tech` et `mangoo.tech`, en complément
+// du cookie `Domain=mangoo.tech`. 308 (permanent, préserve méthode + corps) pour
+// ne pas casser les appels API ; conserve chemin, query et schéma (https derrière
+// le proxy). Ne s'applique qu'au préfixe `www.` devant l'hôte canonique — tout
+// autre domaine (localhost, IP LAN, *.onrender.com) reste inchangé.
+function normalizeHost(req, res) {
+  const rawHost = String(req.headers && req.headers.host ? req.headers.host : '');
+  // Retire le point final FQDN (`www.mangoo.tech.` → `www.mangoo.tech`) : un
+  // hôte avec point final constitue une AUTRE origine (localStorage vide, cookie
+  // potentiellement non partagé) et a été identifié comme cause de la bascule
+  // « bonne page → chat.html » sur téléphone. On le normalise donc aussi.
+  let host = rawHost.split(':')[0].toLowerCase();
+  while (host.endsWith('.')) host = host.slice(0, -1);
+  if (!CANONICAL_HOST) return false;
+  // `www.<apex>` → `<apex>` pour garantir une origine unique à localStorage.
+  if (host === 'www.' + CANONICAL_HOST) host = CANONICAL_HOST;
+  if (host !== CANONICAL_HOST) return false;
+  const proto = isSecureRequest(req) ? 'https' : 'http';
+  const port = rawHost.indexOf(':') >= 0 ? ':' + rawHost.slice(rawHost.indexOf(':') + 1) : '';
+  res.writeHead(308, { 'Location': proto + '://' + CANONICAL_HOST + port + (req.url || '/'), 'Cache-Control': 'no-store' });
+  res.end();
+  return true;
+}
 function forceHttpsAdmin(req, res, urlPath) {
   if (!FORCE_HTTPS_ADMIN || !httpsAvailable || isSecureRequest(req)) return false;
   if (isAdminApi(urlPath)) {
@@ -3721,6 +3814,34 @@ function requireAdminSession(req, res, urlPath) {
   });
   res.end();
   return true;
+}
+
+/* Garde-fou serveur de la messagerie client : `chat.html` est réservée aux
+ * clients (Dida). Un professionnel (vendeur / prestataire) ou un livreur qui y
+ * atterrirait — via un vieux service worker, un ancien landing de notification
+ * ou un raccourci PWA périmé — est redirigé ici, CÔTÉ SERVEUR, vers son propre
+ * espace. Cette protection s'appuie sur le cookie httpOnly `mgt_session` et ne
+ * dépend ni du localStorage (hôte-spécifique, perdu entre www/mangoo.tech et
+ * le point final), ni de l'état du service worker côté téléphone : elle est
+ * donc non contournable et règle définitivement la bascule « bonne page →
+ * chat.html » observée sur Android. */
+function guardProChatAccess(req, res, urlPath) {
+  // Ne concerne que la messagerie client (avec ou sans query/hash).
+  if (urlPath !== '/pages/chat.html') return false;
+  const user = userFromReq(req);
+  if (!user) return false;
+  const role = String(user.role || '').toLowerCase();
+  if (role === 'vendeur' || role === 'prestataire') {
+    res.writeHead(302, { 'Location': '/pages/dashboard-messages.html', 'Cache-Control': 'no-store' });
+    res.end();
+    return true;
+  }
+  if (role === 'livreur') {
+    res.writeHead(302, { 'Location': '/pages/livreur.html', 'Cache-Control': 'no-store' });
+    res.end();
+    return true;
+  }
+  return false;
 }
 
 /* ------------------------------------------------------------------ *
@@ -3773,6 +3894,7 @@ function healthStatus() {
 
 function handleHttp(req, res) {
   const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
+  if (normalizeHost(req, res)) return;
   // Journal HTTP minimal (diagnostic connexion téléphones)
   if (urlPath !== '/favicon.ico') {
     const rip = req.socket && req.socket.remoteAddress;
@@ -3780,6 +3902,7 @@ function handleHttp(req, res) {
   }
   if (forceHttpsAdmin(req, res, urlPath)) return;
   if (requireAdminSession(req, res, urlPath)) return;
+  if (guardProChatAccess(req, res, urlPath)) return;
   if (urlPath === '/health') {
     const h = healthStatus();
     res.writeHead(h.ok ? 200 : 503, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -4538,6 +4661,20 @@ function handleHttp(req, res) {
       res.writeHead(200, JSON_HEADERS);
       res.end(JSON.stringify({ ok: true, user: publicUser(user) }));
     });
+    return;
+  }
+
+  if (urlPath === '/api/auth/session') {
+    // Resynchronise la session locale (localStorage) depuis le cookie httpOnly
+    // `mgt_session`. Permet au shell prestataire et à l'accueil PWA de restaurer
+    // `mgt_token` / `mgt_user` AVANT la garde requireRole() quand localStorage a
+    // été purgé ou appartient à une autre origine (mangoo.tech vs www.mangoo.tech)
+    // alors que le cookie de session serveur reste, lui, valide.
+    const token = tokenFromReq(req);
+    const user = userByToken(token);
+    if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
+    res.writeHead(200, JSON_HEADERS);
+    res.end(JSON.stringify({ ok: true, token, user: publicUser(user) }));
     return;
   }
 
