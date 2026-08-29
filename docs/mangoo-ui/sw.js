@@ -62,7 +62,10 @@ var LAST_LANDING_KEY = '/__mgt_last_landing__';
 function persistLastLanding(url) {
   try {
     return caches.open(LAST_LANDING_CACHE).then(function (cache) {
-      return cache.put(LAST_LANDING_KEY, new Response(String(url || '/')));
+      // Stocke l'URL avec un horodatage pour pouvoir ignorer un landing périmé
+      // (et ne plus rejouer indéfiniment une vieille notification).
+      var payload = JSON.stringify({ url: String(url || '/'), ts: Date.now() });
+      return cache.put(LAST_LANDING_KEY, new Response(payload));
     });
   } catch (e) { return Promise.resolve(); }
 }

@@ -167,6 +167,31 @@
     return true;
   }
 
+  // Resynchronise la session locale (localStorage) depuis le cookie httpOnly
+  // `mgt_session` via /api/auth/session, AVANT la garde requireRole(). Sans
+  // cette étape, un professionnel (DAN) qui ouvre son dashboard après un clic
+  // sur une notification push ou sur le logo PWA peut être renvoyé à tort vers
+  // auth.html : localStorage est vide (ou appartient à une autre origine
+  // mangoo.tech vs www.mangoo.tech) alors que le cookie de session serveur
+  // reste, lui, valide. XHR synchrone (comme ensureConnectPlus plus haut) pour
+  // garantir que la resync est terminée avant l'exécution de requireRole().
+  function resyncSessionFromCookie() {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/api/auth/session', false);
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.send(null);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        var d = JSON.parse(xhr.responseText);
+        if (d && d.ok && d.token && d.user) {
+          localStorage.setItem('mgt_token', d.token);
+          localStorage.setItem('mgt_user', JSON.stringify(d.user));
+        }
+      }
+    } catch (e) { /* non bloquant : requireRole() gérera l'absence de session */ }
+  }
+  resyncSessionFromCookie();
+
   if (!requireRole('prestataire')) return;
   if (!guardPageRole(readSession().user)) return;
 

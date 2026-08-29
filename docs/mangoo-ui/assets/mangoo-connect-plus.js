@@ -446,6 +446,8 @@
       case 'call-error': onCallError(msg); break;
       case 'ice-candidate': onIce(msg); break;
       case 'chat-new': onChatNew(msg); break;
+      case 'chat-edited': emit(messageEditedCbs, msg); break;
+      case 'chat-deleted': emit(messageDeletedCbs, msg); break;
       case 'chat-ack': break;
       case 'typing': onTypingInternal(msg); emit(typingCbs, { from: msg.from, fromName: msg.fromName, isTyping: msg.isTyping }); break;
       case 'chat-history': break;
@@ -807,7 +809,7 @@
 
   function onChatNew(msg) {
     var text = String(msg.text || '');
-    emit(messageCbs, { from: msg.from, fromName: msg.fromName, text: text, sentAt: msg.sentAt });
+    emit(messageCbs, { from: msg.from, fromName: msg.fromName, text: text, sentAt: msg.sentAt, msgId: msg.msgId, convId: msg.convId });
     if (!text) return;
     var isCurrent = chatTarget && targetId(chatTarget) === String(msg.from || '');
     if (chatEl.classList.contains('open') && isCurrent) {
@@ -1009,6 +1011,8 @@
     onStatus: function (cb) { statusCbs.push(cb); },
     onPresence: function (cb) { presenceCbs.push(cb); },
     onMessage: function (cb) { messageCbs.push(cb); },
+    onMessageEdited: function (cb) { messageEditedCbs.push(cb); },
+    onMessageDeleted: function (cb) { messageDeletedCbs.push(cb); },
     // Désactive l'ouverture automatique de l'overlay de discussion lors de
     // l'arrivée d'un message. À utiliser par les pages qui affichent déjà le
     // fil elles-mêmes (ex. chat.html) pour éviter un double affichage.
@@ -1029,9 +1033,26 @@
     onFile: function (cb) { fileCbs.push(cb); },
     onFileProgress: function (cb) { fileProgressCbs.push(cb); },
     onFileSendProgress: function (cb) { fileSendProgressCbs.push(cb); },
-    sendMessage: function (to, text) {
+    sendMessage: function (to, text, msgId) {
       var payload = { type: 'chat-message', to: to, text: String(text || '') };
+      if (msgId) payload.msgId = String(msgId);
       return enqueueOutbox(function () { sendWS(payload); });
+    },
+    // Modifie un message déjà envoyé (auteur uniquement, résolu par msgId côté
+    // serveur). Le destinataire reçoit `chat-edited`.
+    editMessage: function (msgId, to, text) {
+      if (!msgId || !to) return false;
+      return enqueueOutbox(function () {
+        sendWS({ type: 'chat-edit', msgId: String(msgId), to: String(to), text: String(text || '') });
+      });
+    },
+    // Supprime un message déjà envoyé (auteur uniquement). Le destinataire
+    // reçoit `chat-deleted`.
+    deleteMessage: function (msgId, to) {
+      if (!msgId || !to) return false;
+      return enqueueOutbox(function () {
+        sendWS({ type: 'chat-delete', msgId: String(msgId), to: String(to) });
+      });
     },
     sendTyping: function (to, isTyping) {
       if (!to) return false;

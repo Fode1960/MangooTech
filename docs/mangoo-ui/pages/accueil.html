@@ -296,6 +296,27 @@ html.dark {
   // Routage PWA : un professionnel connecté qui ouvre l'app via le logo (start_url "/")
   // doit arriver sur sa messagerie (ou sa dernière conversation / l'overlay d'appel),
   // jamais sur la page d'accueil publique ni sur la page de connexion.
+  //
+  // Resynchronise d'abord la session locale depuis le cookie httpOnly
+  // `mgt_session` (via /api/auth/session). Sans cela, un professionnel qui
+  // ouvre l'app via le logo PWA sur une autre origine (mangoo.tech vs
+  // www.mangoo.tech) reste bloqué sur l'accueil public : localStorage est vide
+  // alors que le cookie de session serveur est valide. XHR synchrone pour
+  // terminer la resync avant le routage ci-dessous.
+  try {
+    var _xhr = new XMLHttpRequest();
+    _xhr.open('GET', '/api/auth/session', false);
+    _xhr.setRequestHeader('Accept', 'application/json');
+    _xhr.send(null);
+    if (_xhr.status >= 200 && _xhr.status < 300) {
+      var _d = JSON.parse(_xhr.responseText);
+      if (_d && _d.ok && _d.token && _d.user) {
+        localStorage.setItem('mgt_token', _d.token);
+        localStorage.setItem('mgt_user', JSON.stringify(_d.user));
+      }
+    }
+  } catch (e) { /* non bloquant */ }
+
   var token = null, user = null;
   try { token = localStorage.getItem('mgt_token'); } catch (e) {}
   try { user = JSON.parse(localStorage.getItem('mgt_user') || 'null'); } catch (e) {}
@@ -319,21 +340,43 @@ html.dark {
   // 1) Landing push mémorisé par le shell avant une redirection vers la connexion.
   var landing = null;
   try { landing = localStorage.getItem('mgt_push_landing_v1'); } catch (e) {}
-  if (landing && validLanding(landing)) {
+  // On n'accepte jamais la page client chat.html pour un professionnel : un
+  // vieux landing mémorisé ne doit pas pouvoir renvoyer le pro côté client.
+  if (landing && validLanding(landing) && landing.indexOf('/pages/chat.html') !== 0) {
     try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
     location.replace(landing);
     return;
   }
+  // Nettoie tout de même une valeur invalide / client, pour ne pas la rejouer.
+  if (landing) {
+    try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
+  }
 
   // 2) Dernière cible de notification mémorisée par le service worker.
+  //    Usage « one-shot » : dès qu'on lit la cible, on l'efface, sinon chaque
+  //    lancement via le logo PWA rejouerait un vieux landing et le pro resterait
+  //    coincé (ex. sur la page client chat.html). On n'accepte en outre que les
+  //    cibles valides pour un PROFESSIONNEL (dashboard-messages), jamais la page
+  //    client chat.html, et seulement si la notification est récente.
   function goDefault() { location.replace('/pages/dashboard-messages.html'); }
+  function validProLanding(p) {
+    if (!validLanding(p)) return false;
+    return p.indexOf('/pages/chat.html') !== 0;
+  }
   try {
     caches.open('mgt-push-state').then(function (cache) {
       return cache.match('/__mgt_last_landing__');
     }).then(function (resp) {
       return resp ? resp.text() : '';
-    }).then(function (url) {
-      if (url && validLanding(url)) location.replace(url);
+    }).then(function (raw) {
+      var url = raw, ts = 0;
+      if (raw && raw.charAt(0) === '{') {
+        try { var o = JSON.parse(raw); if (o && o.url) { url = o.url; ts = o.ts || 0; } } catch (e) {}
+      }
+      // One-shot : on efface immédiatement la cible, qu'elle soit utilisée ou non.
+      try { caches.open('mgt-push-state').then(function (c) { return c.delete('/__mgt_last_landing__'); }); } catch (e) {}
+      var fresh = (Date.now() - ts) < 120000; // 2 minutes maximum
+      if (fresh && validProLanding(url)) location.replace(url);
       else goDefault();
     }).catch(goDefault);
   } catch (e) { goDefault(); }
