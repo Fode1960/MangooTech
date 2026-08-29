@@ -17,8 +17,35 @@ self.addEventListener('install', function () {
   self.skipWaiting();
 });
 
+// Identifiant de version : à chaque déploiement, on le change pour forcer la
+// purge des anciens caches (dont « mgt-push-state » qui mémorisait un landing de
+// notification). Cela garantit qu'aucun vieux routage — ex. renvoyer un
+// professionnel vers la page client chat.html — n'est rejoué après coup.
+var SW_VERSION = 'mgt-sw-2026-08-29-1';
+
 self.addEventListener('activate', function (event) {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then(function (keys) {
+      // Aucun cache n'est persistant : le SW est « réseau d'abord » (aucune
+      // écriture de cache de page) et mgt-push-state est un usage one-shot.
+      return Promise.all(keys.map(function (key) { return caches.delete(key); }));
+    }).then(function () {
+      return self.clients.claim();
+    }).then(function () {
+      // Recharge les fenêtres bloquées sur l'ancienne page client chat.html
+      // (résidu d'un vieux routage) : la page fraîche contient le garde-fou qui
+      // renvoie un professionnel vers sa propre messagerie.
+      return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clients) {
+        clients.forEach(function (client) {
+          try {
+            if (client.url && client.url.indexOf('/pages/chat.html') >= 0) {
+              client.navigate(client.url);
+            }
+          } catch (e) { /* ignore */ }
+        });
+      });
+    })
+  );
 });
 
 // Permet aux pages de forcer l'activation immédiate d'un worker en attente

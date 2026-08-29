@@ -141,7 +141,7 @@
     return fetchPublicKey().then(function (pk) {
       currentKey = pk;
       if (!pk) throw new Error('clé VAPID indisponible');
-      return navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function (reg) {
+      return navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).then(function (reg) {
         return waitForActiveWorker(reg).then(function () {
           return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(pk) });
         });
@@ -164,7 +164,7 @@
     if (!supported() || !token() || !routingId()) return Promise.resolve(false);
     return fetchPublicKey().then(function (pk) {
       var wantKey = pk || '';
-      return navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      return navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
         .then(function (reg) {
           return reg.pushManager.getSubscription().then(function (sub) {
             if (sub) {
