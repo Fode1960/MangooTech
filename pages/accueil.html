@@ -292,6 +292,34 @@ html.dark {
       }
     </style>
 <script>
+/* Récupération one-shot après la régression « professionnel renvoyé vers la page
+   client chat.html » apparue avec le correctif des notifications Android. Un
+   ancien service worker (déploiement « public/ », SW v8→v16) et/ou ses caches ont
+   pu rester actifs et rejouer un vieux routage. On les déprogramme UNE seule fois,
+   on purge les caches et les landings résiduels, puis on recharge : le nouveau
+   service worker (mgt-sw) se ré-enregistre et se ré-abonne silencieusement. */
+(function () {
+  try {
+    if (localStorage.getItem('mgt_sw_reset_v2') === '1') return;
+    localStorage.setItem('mgt_sw_reset_v2', '1');
+    try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
+    try { localStorage.removeItem('mgt_push_landing_v0'); } catch (e) {}
+    var done = function () { try { location.reload(); } catch (e) {} };
+    if (!('serviceWorker' in navigator)) { done(); return; }
+    navigator.serviceWorker.getRegistrations().then(function (regs) {
+      var jobs = [];
+      regs.forEach(function (r) { try { jobs.push(r.unregister()); } catch (e) {} });
+      return Promise.all(jobs);
+    }).then(function () {
+      if (typeof caches !== 'undefined' && caches.keys) {
+        return caches.keys().then(function (keys) {
+          return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+        });
+      }
+      return Promise.resolve();
+    }).then(done).catch(done);
+  } catch (e) { /* non bloquant */ }
+})();
 (function () {
   // Routage PWA : un professionnel connecté qui ouvre l'app via le logo (start_url "/")
   // doit arriver sur sa messagerie (ou sa dernière conversation / l'overlay d'appel),
