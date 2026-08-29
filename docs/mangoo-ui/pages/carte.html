@@ -1,0 +1,2430 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte Local+</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex flex-col">
+
+<!-- ===== HEADER / NAVIGATION ===== -->
+<header class="sticky top-0 z-50 w-full border-b shadow-sm flex-shrink-0" style="background-color: rgb(var(--mgt-primary)); border-color: rgb(var(--mgt-primary-700)); box-shadow: var(--mgt-shadow-sm);">
+  <div class="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-3">
+    <a href="accueil.html" class="flex items-center gap-3 no-underline" style="color: rgb(var(--mgt-primary-foreground));">
+      <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-10 w-10 rounded-md" style="border-radius: var(--mgt-radius-md);">
+      <span class="text-xl font-semibold tracking-tight" style="font-family: var(--mgt-font-sans);">MangooTech</span>
+    </a>
+    <nav class="hidden items-center gap-6 md:flex">
+      <a href="carte.html" class="text-sm font-medium border-b-2 pb-0.5 transition-opacity" style="color: rgb(var(--mgt-accent)); border-color: rgb(var(--mgt-accent)); font-family: var(--mgt-font-sans);">Boutique &amp; Prestataires</a>
+      <a href="./comparatif-prestataire-boutique.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Comparatif</a>
+      <a href="accueil.html#a-propos" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">A propos</a>
+      <a href="./auth.html" class="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Connexion</a>
+    </nav>
+    <button id="mobile-menu-toggle" class="block md:hidden p-2 rounded-md" style="color: rgb(var(--mgt-primary-foreground));" aria-label="Menu">
+      <i data-lucide="menu" class="h-6 w-6"></i>
+    </button>
+  </div>
+</header>
+
+<main class="flex-1 relative overflow-hidden">
+
+  <!-- ===== BARRE DE RECHERCHE + FILTRES (overlay) ===== -->
+  <div class="absolute top-4 left-4 right-4 z-[1000] pointer-events-none" id="search-bar">
+    <div class="mx-auto max-w-[1200px] flex flex-col gap-3 pointer-events-auto">
+      <div class="flex flex-col md:flex-row gap-3 items-stretch">
+        <!-- Search input -->
+        <div class="flex-1 relative">
+          <i data-lucide="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none" style="color: rgb(var(--mgt-muted-foreground));"></i>
+          <input type="text" id="search-input" placeholder="Rechercher par nom ou ville..." class="w-full pl-10 pr-4 py-3 text-sm rounded-md border shadow-sm focus:outline-none focus:ring-2 transition-all" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm); --tw-ring-color: rgb(var(--mgt-ring));">
+        </div>
+        <!-- Category filter -->
+        <select id="filter-category" class="px-4 py-3 text-sm rounded-md border shadow-sm focus:outline-none focus:ring-2 cursor-pointer transition-all" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm); --tw-ring-color: rgb(var(--mgt-ring));">
+          <option value="">Toutes les categories</option>
+          <option value="restaurant">Restaurants</option>
+          <option value="salon">Salons de beaute</option>
+          <option value="artisan">Artisans</option>
+          <option value="service">Services</option>
+          <option value="boutique">Boutiques</option>
+        </select>
+        <!-- Type filter -->
+        <select id="filter-type" class="px-4 py-3 text-sm rounded-md border shadow-sm focus:outline-none focus:ring-2 cursor-pointer transition-all" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm); --tw-ring-color: rgb(var(--mgt-ring));">
+          <option value="">Tous les profils</option>
+          <option value="prestataire">Prestataires</option>
+          <option value="boutique">Boutiques</option>
+        </select>
+        <!-- Rating filter -->
+        <select id="filter-rating" class="px-4 py-3 text-sm rounded-md border shadow-sm focus:outline-none focus:ring-2 cursor-pointer transition-all" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm); --tw-ring-color: rgb(var(--mgt-ring));">
+          <option value="">Toutes les notes</option>
+          <option value="5">5 etoiles</option>
+          <option value="4">4+ etoiles</option>
+          <option value="3">3+ etoiles</option>
+        </select>
+        <!-- Price filter -->
+        <select id="filter-price" class="px-4 py-3 text-sm rounded-md border shadow-sm focus:outline-none focus:ring-2 cursor-pointer transition-all" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm); --tw-ring-color: rgb(var(--mgt-ring));">
+          <option value="">Tous les prix</option>
+          <option value="$">$ Economique</option>
+          <option value="$$">$$ Moyen</option>
+          <option value="$$$">$$$ Premium</option>
+        </select>
+        <!-- Live toggle -->
+        <button id="filter-live" type="button" class="flex items-center gap-2 px-4 py-3 text-sm rounded-md border shadow-sm focus:outline-none cursor-pointer transition-all whitespace-nowrap" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm);">
+          <span id="live-dot" class="w-2 h-2 rounded-full" style="background: rgb(var(--mgt-border));"></span>
+          En direct
+        </button>
+      </div>
+      <!-- Lives en ce moment -->
+      <div id="live-carousel-section" class="rounded-md border shadow-sm px-3 py-2.5" style="display:none; background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm);">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="w-2.5 h-2.5 rounded-full" style="background:#ef4444;animation:mgt-pulse 1.6s infinite;"></span>
+          <p class="text-xs font-bold uppercase tracking-wide m-0" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Lives en ce moment</p>
+        </div>
+        <div id="live-carousel" class="flex gap-3 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1"></div>
+      </div>
+
+      <!-- Promotions du jour -->
+      <div id="promo-banner" class="flex items-stretch gap-3 rounded-md border shadow-sm px-3 py-2.5" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm);">
+        <div class="flex items-center gap-2 pr-1 flex-shrink-0 border-r" style="border-color: rgb(var(--mgt-border));">
+          <span class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgb(var(--mgt-accent-50)); color:rgb(var(--mgt-accent-600)); border-radius:var(--mgt-radius-full);"><i data-lucide="flame" class="h-4 w-4"></i></span>
+          <div class="leading-tight">
+            <p class="text-xs font-bold" style="color:rgb(var(--mgt-foreground)); font-family:var(--mgt-font-sans);">Offres du jour</p>
+            <p class="text-[10px]" style="color:rgb(var(--mgt-muted-foreground)); font-family:var(--mgt-font-sans);">Expire bientot</p>
+          </div>
+        </div>
+        <div id="promo-list" class="flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar"></div>
+        <button id="promo-dismiss" class="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 cursor-pointer border-0 self-center" style="background:transparent; color:rgb(var(--mgt-muted-foreground)); border-radius:var(--mgt-radius-md);" aria-label="Masquer les offres"><i data-lucide="x" class="h-4 w-4"></i></button>
+      </div>
+      <!-- Rayon de distance -->
+      <div id="radius-bar" class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs font-medium flex items-center gap-1" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);"><i data-lucide="radius" class="h-3.5 w-3.5"></i> Rayon</span>
+        <div class="flex gap-1.5 flex-wrap">
+          <button data-radius="5" class="radius-chip px-3 py-1.5 text-xs font-medium rounded-full border transition-all cursor-pointer" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm);">5 km</button>
+          <button data-radius="10" class="radius-chip px-3 py-1.5 text-xs font-medium rounded-full border transition-all cursor-pointer" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm);">10 km</button>
+          <button data-radius="25" class="radius-chip px-3 py-1.5 text-xs font-medium rounded-full border transition-all cursor-pointer" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm);">25 km</button>
+          <button data-radius="country" class="radius-chip px-3 py-1.5 text-xs font-medium rounded-full border transition-all cursor-pointer" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm);">Tout le pays</button>
+        </div>
+        <span class="text-xs font-medium flex items-center gap-1" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);"><i data-lucide="map-pin" class="h-3.5 w-3.5"></i> Ma ville</span>
+        <button id="city-toggle" type="button" class="px-3 py-1.5 text-xs font-medium rounded-full border shadow-sm transition-all cursor-pointer flex items-center gap-1.5" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm);">
+          <span id="city-toggle-label">Changer de ville</span>
+          <i data-lucide="chevron-down" class="h-3.5 w-3.5" style="color: rgb(var(--mgt-muted-foreground));"></i>
+        </button>
+        <select id="city-select" class="hidden px-3 py-1.5 text-xs rounded-full border shadow-sm focus:outline-none focus:ring-2 cursor-pointer transition-all" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm); --tw-ring-color: rgb(var(--mgt-ring));"></select>
+      </div>
+      <!-- Fallback notice -->
+      <div id="radius-notice" class="hidden text-xs font-medium px-3 py-2 rounded-md border items-center gap-2" style="background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-600)); border-color: rgb(var(--mgt-accent-200)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+        <i data-lucide="info" class="h-3.5 w-3.5 flex-shrink-0"></i>
+        <span id="radius-notice-text" class="flex-1 min-w-0"></span>
+        <button id="radius-notice-action" class="hidden px-2.5 py-1 text-xs font-semibold rounded-full border-0 cursor-pointer transition-all hover:brightness-105" style="background: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Voir plus</button>
+        <button id="radius-notice-dismiss" class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 border-0 cursor-pointer transition-all hover:brightness-105" style="background:transparent; color:rgb(var(--mgt-accent-600)); font-family: var(--mgt-font-sans);" aria-label="Masquer">✕</button>
+      </div>
+      <!-- Active filters count badge -->
+      <div id="results-count" class="text-xs font-medium px-3 py-1 rounded-full self-start hidden" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
+      </div>
+      <!-- Empty state : aucun résultat après filtres -->
+      <div id="empty-state" class="hidden self-stretch items-center gap-3 px-4 py-3 rounded-md border" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm); font-family: var(--mgt-font-sans);">
+        <i data-lucide="search-x" class="h-5 w-5 flex-shrink-0" style="color: rgb(var(--mgt-muted-foreground));"></i>
+        <span id="empty-state-text" class="flex-1 text-sm" style="color: rgb(var(--mgt-muted-foreground));">Aucun commerce ne correspond a vos criteres.</span>
+        <button id="empty-reset" class="px-3 py-1.5 text-xs font-semibold rounded-full border-0 cursor-pointer transition-all hover:brightness-105 whitespace-nowrap" style="background: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Reinitialiser</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CONTENU CARTE ===== -->
+  <div id="map-container" class="w-full h-full" style="min-height: calc(100vh - 64px); min-height: calc(100svh - 64px); min-height: calc(100dvh - 64px);"></div>
+
+  <!-- ===== CONTROLES CARTE PERSO ===== -->
+  <div class="absolute bottom-6 right-4 z-[1000] flex flex-col gap-2" id="map-controls">
+    <button id="btn-zoom-in" class="w-10 h-10 rounded-md flex items-center justify-center shadow-sm transition-all hover:brightness-110 cursor-pointer border-0" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm);" title="Zoom avant" aria-label="Zoom avant">
+      <i data-lucide="plus" class="h-5 w-5"></i>
+    </button>
+    <button id="btn-zoom-out" class="w-10 h-10 rounded-md flex items-center justify-center shadow-sm transition-all hover:brightness-110 cursor-pointer border-0" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm);" title="Zoom arriere" aria-label="Zoom arriere">
+      <i data-lucide="minus" class="h-5 w-5"></i>
+    </button>
+    <button id="btn-geoloc" class="w-10 h-10 rounded-md flex items-center justify-center shadow-sm transition-all hover:brightness-110 cursor-pointer border-0" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm);" title="Me localiser" aria-label="Me localiser">
+      <i data-lucide="crosshair" class="h-5 w-5"></i>
+    </button>
+  </div>
+
+  <!-- ===== SELECTEUR VUE (Carte / Liste) ===== -->
+  <div id="view-toggle" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] flex rounded-md border shadow-sm overflow-hidden" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-md);">
+    <button id="view-map" class="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition-colors cursor-pointer border-0" style="background:rgb(var(--mgt-primary)); color:rgb(var(--mgt-primary-foreground)); font-family:var(--mgt-font-sans);">
+      <i data-lucide="map" class="h-4 w-4"></i> Carte
+    </button>
+    <button id="view-list" class="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition-colors cursor-pointer border-0" style="background:transparent; color:rgb(var(--mgt-foreground)); font-family:var(--mgt-font-sans);">
+      <i data-lucide="list" class="h-4 w-4"></i> Liste
+    </button>
+  </div>
+
+  <!-- ===== VUE LISTE ===== -->
+  <div id="list-view" class="absolute inset-0 z-[1000] hidden overflow-y-auto" style="background-color: rgb(var(--mgt-muted));">
+    <div class="mx-auto max-w-[720px] px-4 py-4">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Tous les commerces</h2>
+        <button id="list-close" class="w-8 h-8 rounded-md flex items-center justify-center cursor-pointer border-0" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md);" aria-label="Fermer la liste">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+      <div id="list-content" class="flex flex-col gap-3"></div>
+    </div>
+  </div>
+
+  <!-- ===== LEGENDE ===== -->
+  <div id="map-legend" class="absolute bottom-6 left-4 z-[950] hidden md:block pointer-events-none">
+    <div class="flex flex-col gap-2 px-3.5 py-3 text-xs rounded-md border shadow-sm" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm); font-family: var(--mgt-font-sans);">
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full inline-block" style="background:#1a5c2a;"></span>
+        <span style="color: rgb(var(--mgt-foreground));">Prestataire</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full inline-block" style="background:#e8610c;"></span>
+        <span style="color: rgb(var(--mgt-foreground));">Boutique</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full inline-block" style="background:#ef4444; animation: mgt-pulse 1.6s infinite;"></span>
+        <span style="color: rgb(var(--mgt-foreground));">En direct</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="mgt-badge-blink w-3 h-3 rounded-full inline-block" style="border:3px solid #c2410c; background:#f59e0b;"></span>
+        <span style="color: rgb(var(--mgt-foreground));">Boosté</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DRAWER LATERAL ===== -->
+  <div id="vendor-drawer" class="absolute top-0 right-0 h-full w-full md:w-[420px] z-[1100] translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-lg" style="background-color: rgb(var(--mgt-background)); box-shadow: var(--mgt-shadow-lg);">
+    <!-- Drawer header -->
+    <div class="flex items-center justify-between px-5 py-4 border-b flex-shrink-0" style="border-color: rgb(var(--mgt-border));">
+      <h3 id="drawer-title" class="text-lg font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Fiche prestataire</h3>
+      <button id="drawer-close" class="w-8 h-8 rounded-md flex items-center justify-center transition-colors hover:opacity-80 cursor-pointer border-0" style="background-color: rgb(var(--mgt-muted)); color: rgb(var(--mgt-muted-foreground)); border-radius: var(--mgt-radius-md);" aria-label="Fermer">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+    </div>
+    <!-- Drawer content -->
+    <div id="drawer-content" class="flex-1 overflow-y-auto p-5">
+      <!-- Placeholder: will be filled dynamically -->
+      <div class="flex flex-col items-center justify-center h-full gap-3">
+        <i data-lucide="map-pin" class="h-12 w-12" style="color: rgb(var(--mgt-muted-foreground)); opacity: 0.4;"></i>
+        <p class="body text-center" style="color: rgb(var(--mgt-muted-foreground));">Cliquez sur un marqueur pour voir les details du prestataire.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawer overlay -->
+  <div id="drawer-overlay" class="absolute inset-0 z-[1050] hidden cursor-pointer" style="background-color: rgba(15,23,42,0.3);"></div>
+
+  <!-- ===== MOBILE FILTER TOGGLE ===== -->
+  <button id="mobile-filter-toggle" class="absolute bottom-20 left-4 z-[1000] md:hidden px-4 py-2 rounded-md shadow-sm border flex items-center gap-2 text-sm font-medium transition-all cursor-pointer" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm); font-family: var(--mgt-font-sans);">
+    <i data-lucide="sliders-horizontal" class="h-4 w-4"></i>
+    Filtres
+  </button>
+
+</main>
+
+<!-- ===== LEAFLET CDN ===== -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+<script>
+(function() {
+  /* ===== DONNEES PRESTATAIRES =====
+     Chargées depuis /api/carte (profils réels : prestataires & boutiques
+     vérifiés, hors comptes admin/démo). */
+  var vendors = [];
+  // Offres du jour actives (achat à durée limitée), indexées par vendorId.
+  var offresJourByVendor = {};
+
+  // Villes disponibles (pour le sélecteur « Ma ville »), reconstruites
+  // après chargement des profils réels.
+  var CITIES = {};
+
+  // Villes complètes chargées depuis /api/cities (source unique, toutes les
+  // villes d'Afrique). Utilisées en priorité ; FALLBACK_CITIES reste un filet
+  // de sécurité si l'API est injoignable.
+  var ALL_CITIES = {};
+
+  var FALLBACK_CITIES = {
+    'Dakar': { lat: 14.7167, lng: -17.4677, country: 'Senegal' },
+    'Libreville': { lat: 0.4162, lng: 9.4673, country: 'Gabon' },
+    'Abidjan': { lat: 5.3599, lng: -4.0083, country: "Cote d'Ivoire" },
+    'Paris': { lat: 48.8566, lng: 2.3522, country: 'France' }
+  };
+
+  function rebuildDerivedData() {
+    CITIES = {};
+    // Villes en premier : liste complète si disponible, sinon repli restreint.
+    var citySource = (Object.keys(ALL_CITIES).length > 0) ? ALL_CITIES : FALLBACK_CITIES;
+    Object.keys(citySource).forEach(function(city) {
+      CITIES[city] = citySource[city];
+    });
+    vendors.forEach(function(v) {
+      if (v.city && !CITIES[v.city]) CITIES[v.city] = { lat: v.lat, lng: v.lng, country: v.country };
+    });
+
+    // Filet de sécurité : recale les coordonnées GPS de chaque vendeur sur
+    // celles, canoniques, de sa ville (source /api/cities). Corrige tout compte
+    // dont la ville a été modifiée sans mise à jour des coordonnées (ex. « Paris »
+    // avec lat/lng restés sur Dakar). Garantit que la carte, la liste et
+    // l'annuaire affichent le même lieu, même si le serveur renvoie des
+    // coordonnées obsolètes (cache, données non migrées, etc.).
+    vendors.forEach(function(v) {
+      var canon = (v.city && CITIES[v.city]) ? CITIES[v.city] : null;
+      if (canon && typeof canon.lat === 'number' && typeof canon.lng === 'number' &&
+          isFinite(canon.lat) && isFinite(canon.lng)) {
+        v.lat = canon.lat;
+        v.lng = canon.lng;
+        if (canon.country) v.country = canon.country;
+      }
+    });
+
+    // Filet ultime : garantit des coordonnées numériques FINIES pour tout vendeur,
+    // afin que la carte et la liste restent strictement cohérentes. Sans ce
+    // garde-fou, un commerce sans coordonnées exploitables serait affiché en liste
+    // (même ville) mais ignoré par renderMarkers() -> « visible en liste, absent
+    // de la carte ». On l'ancre sur Dakar (centre par défaut de l'app).
+    var _anchor = FALLBACK_CITIES['Dakar'];
+    vendors.forEach(function(v) {
+      if (typeof v.lat !== 'number' || typeof v.lng !== 'number' || !isFinite(v.lat) || !isFinite(v.lng)) {
+        v.lat = _anchor.lat;
+        v.lng = _anchor.lng;
+        if (!v.country) v.country = _anchor.country;
+      }
+    });
+
+    // Lives « démo » statiques (définis dans les données) : ils restent
+    // locaux à leur ville, indépendamment du live diffusé en temps réel.
+    vendors.forEach(function(v) {
+      v._demoLive = v.live === true;
+    });
+
+    // Reconstruit l'index de correspondance ville (Paris, Dakar, ...).
+    rebuildCityIndex();
+  }
+
+
+  /* ===== RAYON & PORTEE (Local+) ===== */
+  // Découverte en 3 paliers : 5 km -> 10 km -> 25 km. On élargit tant que
+  // l'utilisateur n'a pas assez de commerces locaux autour de lui (0 ou < 6).
+  var LP_DISTANCE_TIERS = [5, 10, 25];
+  var LP_DISTANCE_MIN_RESULTS = 6;
+  var lpScopeMode = 'nearby';   // 'nearby' | 'country'
+  var lpDistanceTierIndex = 0;  // démarre à 5 km
+  var lpManualRadius = false;   // true dès que l'utilisateur choisit un rayon précis
+  var maxDistanceKm = LP_DISTANCE_TIERS[0];
+  var userPosition = { lat: 14.7167, lng: -17.4677 }; // Dakar par defaut (mis a jour par geolocalisation)
+  var userCity = 'Dakar';        // ville de scope (Dakar par défaut)
+  var userCountry = 'Senegal';   // pays de scope dérivé de la ville
+  var radiusCircle = null;
+
+  // Réinitialise le rayon au palier le plus proche (5 km) en mode auto.
+  function resetRadiusToStart() {
+    lpDistanceTierIndex = 0;
+    maxDistanceKm = LP_DISTANCE_TIERS[0];
+    lpManualRadius = false;
+  }
+
+  // Retrouve la ville connue la plus proche d'une position GPS (scope local).
+  function detectCity(pos) {
+    var best = null, bestKm = Infinity;
+    Object.keys(CITIES).forEach(function(city) {
+      var c = CITIES[city];
+      var d = haversineKm(pos.lat, pos.lng, c.lat, c.lng);
+      if (d < bestKm) { bestKm = d; best = { city: city, country: c.country }; }
+    });
+    return (best && bestKm <= 80) ? best : null;
+  }
+
+  // Le scope d'affichage : même ville (nearby) ou tout le pays (country).
+  function matchesScopeFor(v) {
+    if (lpScopeMode === 'country') {
+      return !userCountry || normalizeText(v.country) === normalizeText(userCountry);
+    }
+    if (userCity) {
+      // Un compte « other » (ancienne option « Autre ») ou sans ville n'a pas
+      // de ville de rattachement : on le rattache par proximité GPS au lieu de
+      // l'exclure (il est géolocalisé par défaut sur Dakar).
+      var cityKey = normalizeText(v.city);
+      var cityKnown = cityKey !== '' && cityKey !== 'other' && cityKey !== 'autre';
+      // Comparaison insensible à la casse/aux accents pour éviter tout faux
+      // négatif (ex. « Yaoundé » vs « yaounde »).
+      var matchesCity = cityKnown ? (cityKey === normalizeText(userCity)) : true;
+      if (matchesCity) {
+        // Même ville : toujours affiché. La ville est la référence fiable, alors
+        // que les coordonnées GPS peuvent être obsolètes/erronées après un
+        // changement de ville. Ce garde-fou empêche qu'un commerce présent dans
+        // la liste disparaisse de la carte à cause d'une distance mal calculée.
+        return true;
+      }
+      return vendorDistanceKm(v) <= maxDistanceKm;
+    }
+    return vendorDistanceKm(v) <= maxDistanceKm;
+  }
+
+  // Normalise un texte pour comparaison (minuscules + suppression des accents).
+  function normalizeText(s) {
+    return String(s == null ? '' : s)
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  // Index des villes connues par clé normalisée (pour la correspondance Nominatim).
+  // Reconstruit après chargement des profils réels (rebuildDerivedData) afin
+  // d'inclure Paris et toutes les villes portées par les vendeurs inscrits.
+  var CITY_INDEX = {};
+  function rebuildCityIndex() {
+    CITY_INDEX = {};
+    Object.keys(CITIES).forEach(function(city) { CITY_INDEX[normalizeText(city)] = city; });
+  }
+  rebuildCityIndex();
+
+  function matchCity(name) {
+    if (!name) return null;
+    return CITY_INDEX[normalizeText(name)] || null;
+  }
+
+  // Reverse-geocoding Nominatim (OpenStreetMap) : GPS -> ville + pays réels.
+  // Gratuit, mais usage léger conseillé (≈1 req/s max par IP en production).
+  // Un cache localStorage (durée de vie 7 jours) évite de rappeler l'API pour
+  // une même zone géographique, ce qui réduit le risque de blocage par quota.
+  var RG_CACHE_KEY = 'mgt_geocode_cache';
+  var RG_CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 jours
+
+  function geocodeCacheRead() {
+    try {
+      var raw = localStorage.getItem(RG_CACHE_KEY);
+      var data = raw ? JSON.parse(raw) : {};
+      return (data && typeof data === 'object') ? data : {};
+    } catch (e) { return {}; }
+  }
+  function geocodeCacheWrite(data) {
+    try { localStorage.setItem(RG_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+  }
+
+  // Clé de cache arrondie à ~0.5 km pour couvrir les petites variations de GPS.
+  function geocodeCacheKey(pos) {
+    var lat = Math.round(pos.lat * 200) / 200;
+    var lng = Math.round(pos.lng * 200) / 200;
+    return lat.toFixed(4) + ',' + lng.toFixed(4);
+  }
+
+  function reverseGeocode(pos) {
+    var key = geocodeCacheKey(pos);
+    var cache = geocodeCacheRead();
+    var hit = cache[key];
+    if (hit && hit.expiresAt && hit.expiresAt > Date.now()) {
+      return Promise.resolve({ city: hit.city, country: hit.country });
+    }
+
+    var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2'
+      + '&lat=' + encodeURIComponent(pos.lat)
+      + '&lon=' + encodeURIComponent(pos.lng)
+      + '&zoom=10&accept-language=fr&addressdetails=1';
+    return fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(data) {
+        var a = data && data.address ? data.address : {};
+        var res = {
+          city: a.city || a.town || a.village || a.municipality || a.county || '',
+          country: a.country || ''
+        };
+        // Mémorise uniquement si on a au moins un élément utile.
+        if (res.city || res.country) {
+          cache = geocodeCacheRead();
+          cache[key] = { city: res.city, country: res.country, expiresAt: Date.now() + RG_CACHE_TTL };
+          geocodeCacheWrite(cache);
+        }
+        return res;
+      });
+  }
+
+  // Applique le résultat du reverse-geocoding :
+  //  - ville connue -> scope exact + recentrage ;
+  //  - ville inconnue mais pays couvert -> repli sur « Tout le pays » ;
+  //  - pays non couvert -> message invitant à choisir une ville.
+  function applyReverseGeocode(res) {
+    if (!res) return;
+    var knownCity = matchCity(res.city);
+
+    if (knownCity) {
+      if (citySelect) citySelect.value = knownCity;
+      // Détection GPS automatique : ne pas mémoriser comme choix manuel de ville.
+      setCity(knownCity, { persist: false });
+      return;
+    }
+
+    if (res.city) userCity = res.city;
+    if (res.country) userCountry = res.country;
+
+    var countryHasData = vendors.some(function(v) {
+      return v.country && normalizeText(v.country) === normalizeText(res.country);
+    });
+
+    if (countryHasData) {
+      lpScopeMode = 'country';
+      updateRadiusChips();
+      updateRadiusCircle();
+      applyFilters();
+      showRadiusNotice('Pas encore de commerces a ' + (res.city || res.country) + ' — affichage de tout ' + res.country + '.');
+    } else {
+      lpScopeMode = 'nearby';
+      resetRadiusToStart();
+      placeUserMarker();
+      updateRadiusChips();
+      updateRadiusCircle();
+      applyFilters();
+      showRadiusNotice('Pas encore de commerces dans votre zone (' + (res.city || res.country) + '). Choisissez une ville pour explorer.');
+    }
+  }
+
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function vendorDistanceKm(vendor) {
+    return haversineKm(userPosition.lat, userPosition.lng, vendor.lat, vendor.lng);
+  }
+
+  function distanceLabel(km) {
+    if (km < 1) return (Math.round(km * 1000)) + ' m';
+    if (km < 100) return km.toFixed(1).replace('.', ',') + ' km';
+    return Math.round(km) + ' km';
+  }
+
+  /* ===== INIT CARTE LEAFLET ===== */
+  var mapEl = document.getElementById('map-container');
+  var map = L.map(mapEl, {
+    center: [14.7167, -17.4677],
+    zoom: 12,
+    zoomControl: false,
+    minZoom: 2,
+    maxZoom: 18
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
+  }).addTo(map);
+
+  /* ===== CERCLE DE RAYON ===== */
+  function updateRadiusCircle() {
+    if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
+    if (lpScopeMode !== 'nearby') return;
+    radiusCircle = L.circle([userPosition.lat, userPosition.lng], {
+      radius: maxDistanceKm * 1000,
+      color: '#e8610c',
+      weight: 1.5,
+      opacity: 0.7,
+      fillColor: '#e8610c',
+      fillOpacity: 0.08,
+      dashArray: '6 6'
+    }).addTo(map);
+  }
+
+  /* ===== HELPERS : type de profil / boost / couleur ===== */
+  function typeLabel(type) {
+    return type === 'boutique' ? 'Boutique' : 'Prestataire';
+  }
+  function typeColor(type) {
+    return type === 'boutique' ? '#e8610c' : '#1a5c2a';
+  }
+  function boostLabel(boost) {
+    return { sponsorise: 'Sponsorisé', promo: 'En Promo', nouveau: 'Nouveau' }[boost] || '';
+  }
+  function boostColor(boost) {
+    return { sponsorise: '#d97706', promo: '#ec4899', nouveau: '#3b82f6' }[boost] || null;
+  }
+  // Dégradé vif du badge : le « Sponsorisé » passe d'un jaune peu lisible à un
+  // or→orange profond, aussi visible et lisible que « En Promo » et « Nouveau ».
+  function boostGradient(boost) {
+    return {
+      sponsorise: 'linear-gradient(135deg, #f59e0b 0%, #c2410c 100%)',
+      promo: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
+      nouveau: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
+    }[boost] || null;
+  }
+  // Poids d'un type de badge pour le classement (Sponsorisé > En Promo > Nouveau).
+  function boostRankOf(type) {
+    if (type === 'sponsorise') return 3;
+    if (type === 'promo') return 2;
+    if (type === 'nouveau') return 1;
+    return 0;
+  }
+  // Liste ordonnée des types de badges actifs d'un vendeur (plusieurs possibles).
+  // Priorité à `boosts` (données serveur) puis repli sur `boost` (valeur en dur).
+  function vendorBoosts(vendor) {
+    if (vendor && vendor.boosts && vendor.boosts.length) return vendor.boosts.slice();
+    if (vendor && vendor.boost) return [vendor.boost];
+    return [];
+  }
+  function hasBoost(vendor, type) {
+    return vendorBoosts(vendor).indexOf(type) !== -1;
+  }
+  function topBoost(vendor) {
+    return vendorBoosts(vendor)[0] || null;
+  }
+  // vendorId du professionnel connecté (session `mgt_user`), ou '' si invité.
+  // L'« Offre du jour » Local+ est un emplacement payé : quand un vendeur est
+  // connecté, on n'affiche que SES offres (jamais celles d'un autre vendeur).
+  function connectedVendorId() {
+    try {
+      var raw = localStorage.getItem('mgt_user');
+      if (!raw) return '';
+      var u = JSON.parse(raw);
+      if (!u) return '';
+      var role = u.role || '';
+      if (role !== 'prestataire' && role !== 'vendeur') return '';
+      return u.vendorId || u.id || '';
+    } catch (e) { return ''; }
+  }
+  // Offres du jour actives rattachées à un vendeur (par vendorId).
+  function offresDuJourFor(vendor) {
+    var myVendorId = connectedVendorId();
+    var list = offresJourByVendor[vendor.vendorId] || [];
+    return list.filter(function (o) {
+      if (!o || o.status !== 'active') return false;
+      if (new Date(o.endsAt).getTime() <= Date.now()) return false;
+      if (myVendorId && o.vendorId !== myVendorId) return false;
+      return true;
+    });
+  }
+  function countdownFromEnds(endsAt) {
+    var diffMs = new Date(endsAt).getTime() - Date.now();
+    if (diffMs <= 0) return 'Expire';
+    var totalMin = Math.floor(diffMs / 60000);
+    var h = Math.floor(totalMin / 60);
+    var m = totalMin % 60;
+    if (h <= 0) return m + ' min';
+    if (m <= 0) return h + ' h';
+    return h + ' h ' + m + ' min';
+  }
+  function offreCountdownText(offre) {
+    return countdownFromEnds(offre.endsAt);
+  }
+  function formatOffreDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    var dd = String(d.getDate()).padStart(2, '0');
+    var mm = String(d.getMonth() + 1).padStart(2, '0');
+    var hh = String(d.getHours()).padStart(2, '0');
+    var mi = String(d.getMinutes()).padStart(2, '0');
+    return dd + '/' + mm + ' ' + hh + ':' + mi;
+  }
+  function offreCardHtml(offre) {
+    var startText = formatOffreDate(offre.startsAt);
+    var endText = formatOffreDate(offre.endsAt);
+    var period = (startText || endText)
+      ? '<div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 pt-2" style="border-top:1px solid rgb(var(--mgt-primary-100));">' +
+          (startText ? '<span class="inline-flex items-center gap-1 text-[11px] font-medium" style="color:rgb(var(--mgt-muted-foreground));font-family:var(--mgt-font-sans);"><i data-lucide="clock" class="h-3 w-3"></i> Début : ' + startText + '</span>' : '') +
+          (endText ? '<span class="inline-flex items-center gap-1 text-[11px] font-medium" style="color:rgb(var(--mgt-muted-foreground));font-family:var(--mgt-font-sans);"><i data-lucide="clock" class="h-3 w-3"></i> Fin : ' + endText + '</span>' : '') +
+        '</div>'
+      : '';
+    return '<div style="border:1px solid rgb(var(--mgt-primary-100));background:rgb(var(--mgt-primary-50));border-radius:var(--mgt-radius-md);padding:12px;">' +
+      '<div class="flex items-center justify-between mb-1.5">' +
+        '<span class="inline-flex items-center gap-1.5 text-xs font-semibold" style="color:rgb(var(--mgt-primary-700));font-family:var(--mgt-font-sans);"><i data-lucide="badge-percent" class="h-3.5 w-3.5"></i> Offre du jour</span>' +
+        '<span class="text-xs font-semibold tabular-nums" style="color:rgb(var(--mgt-primary-700));font-family:var(--mgt-font-sans);">' + offreCountdownText(offre) + '</span>' +
+      '</div>' +
+      '<p class="text-sm font-semibold" style="color:rgb(var(--mgt-foreground));font-family:var(--mgt-font-sans);">' + escapeHtml(offre.title) + '</p>' +
+      (offre.description ? '<p class="text-xs mt-0.5" style="color:rgb(var(--mgt-muted-foreground));font-family:var(--mgt-font-sans);">' + escapeHtml(offre.description) + '</p>' : '') +
+      period +
+    '</div>';
+  }
+  function hexToRgba(hex, a) {
+    var h = hex.replace('#', '');
+    var r = parseInt(h.substring(0, 2), 16);
+    var g = parseInt(h.substring(2, 4), 16);
+    var b = parseInt(h.substring(4, 6), 16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+  }
+
+  /* ===== PROMOTIONS LOCALES (offres à durée limitée) =====
+     Aucune offre réelle pour l'instant : le catalogue est alimenté par les
+     promos créées par les prestataires/boutiques (source à venir). */
+  var PROMO_CATALOG = {};
+
+
+  function promoVendor(p) {
+    return vendors.find(function(x) { return x.id === p.vendor; });
+  }
+
+  // Offres actives et locales selon le scope courant (ville ou pays).
+  function activePromos() {
+    var now = new Date().getTime();
+    var list = [];
+    if (lpScopeMode === 'country' && userCountry) {
+      Object.keys(PROMO_CATALOG).forEach(function(city) {
+        (PROMO_CATALOG[city] || []).forEach(function(p) {
+          var v = promoVendor(p);
+          if (!v || v.country !== userCountry) return;
+          list.push(p);
+        });
+      });
+    } else {
+      list = (PROMO_CATALOG[userCity] || []).slice();
+    }
+    return list.filter(function(p) { return promoEndDate(p).getTime() > now; });
+  }
+
+  function promoById(id) {
+    var found = null;
+    Object.keys(PROMO_CATALOG).forEach(function(city) {
+      (PROMO_CATALOG[city] || []).forEach(function(p) {
+        if (p.vendor === id) found = p;
+      });
+    });
+    return found;
+  }
+  // Calcule l'heure de fin du jour courant pour une promo (HH:MM)
+  function promoEndDate(p) {
+    var parts = p.end.split(':');
+    var d = new Date();
+    d.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+    return d;
+  }
+  function promoCountdownText(p) {
+    var now = new Date();
+    var end = promoEndDate(p);
+    var diffMs = end.getTime() - now.getTime();
+    if (diffMs <= 0) return 'Expire';
+    var totalMin = Math.floor(diffMs / 60000);
+    var h = Math.floor(totalMin / 60);
+    var m = totalMin % 60;
+    if (h <= 0) return m + ' min';
+    return h + 'h' + (m > 0 ? ' ' + m + 'min' : '');
+  }
+  function promoEndText(vendor) {
+    if (!hasBoost(vendor, 'promo')) return '';
+    var p = promoById(vendor.id);
+    return p ? ' &middot; se termine dans ' + promoCountdownText(p) : '';
+  }
+
+  /* ===== PERTINENCE : les profils boostes remontent en tete ===== */
+  function boostRank(vendor) {
+    var best = 0;
+    vendorBoosts(vendor).forEach(function(b) {
+      var r = boostRankOf(b);
+      if (r > best) best = r;
+    });
+    return best;
+  }
+  function relevanceScore(vendor) {
+    // badges payants d'abord, puis live, puis note
+    return (boostRank(vendor) * 1000) + (vendor.live ? 100 : 0) + (vendor.rating * 10);
+  }
+
+  /* ===== MARKERS ===== */
+  var markers = [];
+  var activeMarkerId = null;
+
+  function renderStars(rating) {
+    var full = Math.floor(rating);
+    var half = rating % 1 >= 0.5 ? 1 : 0;
+    var empty = 5 - full - half;
+    var html = '';
+    for (var i = 0; i < full; i++) html += '<i data-lucide="star" class="h-3.5 w-3.5 inline-block" style="fill:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent));"></i>';
+    if (half) html += '<i data-lucide="star-half" class="h-3.5 w-3.5 inline-block" style="fill:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent));"></i>';
+    for (var j = 0; j < empty; j++) html += '<i data-lucide="star" class="h-3.5 w-3.5 inline-block" style="color:rgb(var(--mgt-border));"></i>';
+    return html;
+  }
+
+  function categoryLabel(cat) {
+    var labels = { restaurant:'Restaurant', salon:'Salon de beaute', artisan:'Artisan', service:'Service', boutique:'Boutique' };
+    return labels[cat] || cat;
+  }
+
+  function categoryColor(cat) {
+    var colors = { restaurant:'rgb(var(--mgt-accent))', salon:'rgb(var(--mgt-accent))', artisan:'rgb(var(--mgt-primary))', service:'rgb(var(--mgt-primary))', boutique:'rgb(var(--mgt-accent))' };
+    return colors[cat] || 'rgb(var(--mgt-primary))';
+  }
+
+  // Lien vers la fiche détail : une page par type de vendeur.
+  function ficheUrlFor(v) {
+    return (v.type === 'boutique' ? 'fiche-boutique.html' : 'fiche.html') + '?vendorId=' + encodeURIComponent(v.vendorId);
+  }
+  function openFicheDetail(id) {
+    var vendor = vendors.find(function(x) { return x.id === id; });
+    if (vendor) location.href = ficheUrlFor(vendor);
+  }
+
+  function buildMarkerIcon(vendor) {
+    var tcol = typeColor(vendor.type);
+    var top = topBoost(vendor);
+    var boost = top ? boostColor(top) : null;
+    var grad = top ? boostGradient(top) : null;
+    var border = boost ? ('3px solid ' + boost) : '3px solid #fff';
+    var shadow = boost
+      ? '0 3px 12px rgba(0,0,0,.35), 0 0 0 5px ' + hexToRgba(boost, .30)
+      : '0 3px 12px rgba(0,0,0,.35)';
+    var liveDot = vendor.live
+      ? '<span class="mgt-live-dot" style="position:absolute;top:-5px;right:-5px;width:14px;height:14px;border-radius:50%;background:#ef4444;border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);"></span>'
+      : '';
+    // Pastille compteur si plusieurs badges actifs (ex. Sponsorisé + Nouveau).
+    var count = vendorBoosts(vendor).length;
+    var countBadge = count > 1
+      ? '<span style="position:absolute;bottom:-4px;right:-4px;min-width:16px;height:16px;padding:0 3px;border-radius:9999px;background:' + grad + ';color:#fff;font-size:9px;font-weight:700;line-height:16px;text-align:center;border:2px solid #fff;box-sizing:content-box;">' + count + '</span>'
+      : '';
+    var initial = '<span style="font-weight:700;font-size:14px;line-height:1;color:#fff;">' + (vendor.name ? vendor.name.charAt(0) : '?') + '</span>';
+    // Badges nommés sous l'épingle : boost payant + « Live » (local). Ils sont
+    // empilés verticalement, chacun nommé et clignotant pour rester lisible.
+    var labels = [];
+    if (boost) {
+      var boostText = boostLabel(top) + (count > 1 ? ' +' + (count - 1) : '');
+      labels.push('<span class="mgt-badge-blink" style="display:block;padding:2px 7px;border-radius:9999px;background:' + grad + ';color:#fff;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);">' + boostText + '</span>');
+    }
+    if (vendor.live) {
+      labels.push('<span class="mgt-badge-blink" style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:9999px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);"><span class="mgt-live-dot" style="width:6px;height:6px;border-radius:50%;background:#fff;"></span>Live</span>');
+    }
+    if (offresDuJourFor(vendor).length) {
+      labels.push('<span class="mgt-badge-blink" style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:9999px;background:rgb(var(--mgt-primary));color:#fff;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);"><i data-lucide="badge-percent" style="width:10px;height:10px;"></i>Offre du jour</span>');
+    }
+    var labelsHtml = labels.join('');
+    var circle = '<div style="position:relative;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:' + tcol + ';box-shadow:' + shadow + ';border:' + border + ';cursor:pointer;">' + initial + liveDot + countBadge + '</div>';
+    var html = labelsHtml
+      ? '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:max-content;">' + circle + labelsHtml + '</div>'
+      : circle;
+    var labelCount = labels.length;
+    return L.divIcon({
+      className: 'custom-marker',
+      html: html,
+      iconSize: [40, 40 + labelCount * 20],
+      iconAnchor: [20, 20],
+      popupAnchor: [0, -22]
+    });
+  }
+
+  function openDrawer(vendor) {
+    activeMarkerId = vendor.id;
+    // Contexte exposé pour Mangoo Connect+ (chat / appel / itinéraire).
+    window._mcpVendor = {
+      id: vendor.id,
+      vendorId: vendor.vendorId,
+      name: vendor.name,
+      role: vendor.type === 'boutique' ? 'vendeur' : 'prestataire',
+      category: vendor.category,
+      phone: vendor.phone,
+      lat: vendor.lat,
+      lng: vendor.lng,
+      city: vendor.city
+    };
+    var drawer = document.getElementById('vendor-drawer');
+    var overlay = document.getElementById('drawer-overlay');
+    var content = document.getElementById('drawer-content');
+    var title = document.getElementById('drawer-title');
+    if (title) title.textContent = 'Fiche ' + typeLabel(vendor.type).toLowerCase();
+
+    var typeBadge = '<span class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full" style="background:' + typeColor(vendor.type) + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);">' + typeLabel(vendor.type) + '</span>';
+    var catBadge = '<span class="inline-block text-xs font-medium px-2.5 py-1 rounded-full" style="background:' + categoryColor(vendor.category) + ';color:white;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);">' + categoryLabel(vendor.category) + '</span>';
+    var boostBadge = vendorBoosts(vendor).map(function(b) {
+      return '<span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full" style="background:' + boostGradient(b) + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);box-shadow:var(--mgt-shadow-sm);"><i data-lucide="sparkles" class="h-3.5 w-3.5"></i> ' + boostLabel(b) + (b === 'promo' ? promoEndText(vendor) : '') + '</span>';
+    }).join('');
+    var liveBadge = vendor.live
+      ? '<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full" style="background:#ef4444;color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);box-shadow:var(--mgt-shadow-sm);"><span class="w-1.5 h-1.5 rounded-full" style="background:#fff;animation:mgt-pulse 1.6s infinite;"></span> En direct</span>'
+      : '';
+    var offres = offresDuJourFor(vendor);
+
+    content.innerHTML = [
+      '<div class="flex flex-col gap-5">',
+        '<div class="relative">',
+          '<img src="' + vendor.img + '" alt="' + vendor.name + '" class="w-full h-52 object-cover rounded-md" style="border-radius:var(--mgt-radius-md);" onerror="this.src=\'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop\'">',
+          '<div class="absolute top-3 left-3 flex flex-col gap-1.5">' + liveBadge + '</div>',
+          '<div class="absolute top-3 right-3 flex flex-col gap-1.5 items-end">' + boostBadge + '</div>',
+        '</div>',
+        '<div>',
+          '<div class="flex items-center gap-2 mb-2.5 flex-wrap">' + typeBadge + catBadge + '</div>',
+          '<h2 class="text-xl font-semibold mb-1" style="color:rgb(var(--mgt-foreground));font-family:var(--mgt-font-sans);">' + vendor.name + '</h2>',
+          '<div class="flex items-center gap-1 mb-1.5">' + renderStars(vendor.rating) + ' <span class="text-sm font-medium ml-1" style="color:rgb(var(--mgt-foreground));">' + vendor.rating + '</span></div>',
+          '<p class="text-xs flex items-center gap-1" style="color:rgb(var(--mgt-muted-foreground));"><i data-lucide="map-pin" class="h-3.5 w-3.5"></i> ' + vendor.city + ' &middot; a ' + distanceLabel(vendorDistanceKm(vendor)) + ' &middot; ' + vendor.price + '</p>',
+        '</div>',
+        '<p class="text-sm leading-relaxed" style="color:rgb(var(--mgt-muted-foreground));">' + vendor.desc + '</p>',
+        (offres.length ? '<div class="flex flex-col gap-2">' + offres.map(offreCardHtml).join('') + '</div>' : ''),
+        '<div class="flex items-center gap-2 flex-wrap">' + (window.MangooExpress ? window.MangooExpress.badge(window.MangooExpress.fromCategory(vendor.category)) : '') + '</div>',
+        '<div class="flex flex-col gap-2.5">',
+          (vendor.live ? '<a href="live-client.html" class="flex items-center justify-center gap-2 w-full py-3 px-4 text-sm font-bold rounded-md transition-all hover:brightness-110 no-underline" style="background:#ef4444;color:#fff;border-radius:var(--mgt-radius-md);font-family:var(--mgt-font-sans);box-shadow:var(--mgt-shadow-sm);"><span class="w-2 h-2 rounded-full" style="background:#fff;animation:mgt-pulse 1.6s infinite;"></span> Rejoindre le live</a>' : ''),
+          '<button class="flex items-center justify-center gap-2 w-full py-2.5 px-4 text-sm font-semibold rounded-md transition-all hover:brightness-110 border-0 cursor-pointer" style="background:rgb(var(--mgt-primary));color:rgb(var(--mgt-primary-foreground));border-radius:var(--mgt-radius-md);font-family:var(--mgt-font-sans);" onclick="window.MangooConnect && window.MangooConnect.chat(window._mcpVendor)"><i data-lucide="message-circle" class="h-4 w-4"></i> Discuter</button>',
+          '<button class="flex items-center justify-center gap-2 w-full py-2.5 px-4 text-sm font-semibold rounded-md transition-all hover:brightness-110 border cursor-pointer" style="border-color:rgb(var(--mgt-border));color:rgb(var(--mgt-foreground));border-radius:var(--mgt-radius-md);font-family:var(--mgt-font-sans);" onclick="window.MangooConnect && window.MangooConnect.call(window._mcpVendor)"><i data-lucide="phone" class="h-4 w-4"></i> Appeler</button>',
+          '<button class="flex items-center justify-center gap-2 w-full py-2.5 px-4 text-sm font-semibold rounded-md transition-all hover:brightness-110 border-0 cursor-pointer" style="background:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground));border-radius:var(--mgt-radius-md);font-family:var(--mgt-font-sans);" onclick="window.MangooConnect && window.MangooConnect.navigate(window._mcpVendor)"><i data-lucide="navigation" class="h-4 w-4"></i> Itinéraire</button>',
+          '<a href="' + ficheUrlFor(vendor) + '" class="flex items-center justify-center gap-2 w-full py-2.5 px-4 text-sm font-semibold rounded-md transition-all hover:brightness-110 border-0 cursor-pointer no-underline" style="background:rgb(var(--mgt-muted));color:rgb(var(--mgt-foreground));border-radius:var(--mgt-radius-md);font-family:var(--mgt-font-sans);"><i data-lucide="external-link" class="h-4 w-4"></i> Voir la fiche complète</a>',
+        '</div>',
+      '</div>'
+    ].join('');
+
+    if (window.lucide) { setTimeout(function(){ lucide.createIcons(); }, 50); }
+
+    drawer.classList.remove('translate-x-full');
+    overlay.classList.remove('hidden');
+  }
+
+  function closeDrawer() {
+    activeMarkerId = null;
+    var drawer = document.getElementById('vendor-drawer');
+    var overlay = document.getElementById('drawer-overlay');
+    var content = document.getElementById('drawer-content');
+
+    drawer.classList.add('translate-x-full');
+    overlay.classList.add('hidden');
+
+    setTimeout(function() {
+      content.innerHTML = '<div class="flex flex-col items-center justify-center h-full gap-3"><i data-lucide="map-pin" class="h-12 w-12" style="color:rgb(var(--mgt-muted-foreground));opacity:0.4;"></i><p class="body text-center" style="color:rgb(var(--mgt-muted-foreground));">Cliquez sur un marqueur pour voir les details du prestataire.</p></div>';
+      if (window.lucide) lucide.createIcons();
+    }, 300);
+  }
+
+  function buildPopupContent(vendor) {
+    var boostBadge = vendorBoosts(vendor).map(function(b) {
+      return '<span style="display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:9999px;background:' + boostColor(b) + ';color:#fff;margin-top:2px;margin-right:4px;">' + boostLabel(b) + '</span>';
+    }).join('');
+    var liveBadge = vendor.live ? '<span style="display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:9999px;background:#ef4444;color:#fff;margin-top:2px;">En direct</span>' : '';
+    var offreBadge = offresDuJourFor(vendor).length ? '<span style="display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:9999px;background:rgb(var(--mgt-primary));color:#fff;margin-top:2px;margin-right:4px;">Offre du jour</span>' : '';
+    return [
+      '<div style="font-family:var(--mgt-font-sans);min-width:200px;">',
+        '<div style="display:flex;align-items:start;gap:10px;">',
+          '<div style="width:48px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;">',
+            '<img src="' + vendor.img + '" alt="' + vendor.name + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">',
+          '</div>',
+          '<div>',
+            '<strong style="font-size:14px;color:rgb(var(--mgt-foreground));">' + vendor.name + '</strong>',
+            '<div style="font-size:12px;color:rgb(var(--mgt-muted-foreground));">' + typeLabel(vendor.type) + ' &middot; ' + vendor.city + '</div>',
+            '<span style="display:inline-block;font-size:11px;padding:1px 8px;border-radius:9999px;background:' + categoryColor(vendor.category) + ';color:white;margin-top:2px;">' + categoryLabel(vendor.category) + '</span>' + boostBadge + offreBadge + liveBadge,
+          '</div>',
+        '</div>',
+        '<div style="margin-top:8px;font-size:13px;color:rgb(var(--mgt-muted-foreground));">' + renderStars(vendor.rating) + ' <span style="font-weight:600;color:rgb(var(--mgt-foreground));">' + vendor.rating + '</span> &middot; a ' + distanceLabel(vendorDistanceKm(vendor)) + ' &middot; ' + vendor.price + '</div>',
+        '<button onclick="openFicheDetail(' + vendor.id + ')" style="margin-top:8px;width:100%;padding:6px 0;font-size:12px;font-weight:600;border:none;border-radius:6px;background:rgb(var(--mgt-primary));color:rgb(var(--mgt-primary-foreground));cursor:pointer;font-family:var(--mgt-font-sans);">Voir la fiche</button>',
+      '</div>'
+    ].join('');
+  }
+
+  /* Tri par pertinence : badges payants en premier, puis live, puis note */
+  function renderMarkers() {
+    markers.forEach(function(m) { map.removeLayer(m.marker); });
+    markers = [];
+
+    vendors.sort(function(a, b) { return relevanceScore(b) - relevanceScore(a); });
+
+    // Plusieurs vendeurs partagent parfois exactement les mêmes coordonnées
+    // (souvent le centre-ville par défaut, ex. deux boutiques de Paris ou de
+    // Dakar). Sans correction, leurs marqueurs se superposent : un seul reste
+    // visible, et l'empilement pouvait afficher « deux cercles » (l'un au-dessus
+    // de l'autre) de façon incohérente selon l'appareil.
+    function round6(n) { return Math.round(n * 1e6) / 1e6; }
+    var byCoord = {};
+    vendors.forEach(function(v) {
+      if (!v.name || typeof v.lat !== 'number' || typeof v.lng !== 'number' ||
+          !isFinite(v.lat) || !isFinite(v.lng)) return;
+      var key = round6(v.lat) + ',' + round6(v.lng);
+      (byCoord[key] = byCoord[key] || []).push(v);
+    });
+
+    // Position d'affichage : si un vendeur partage son point avec d'autres, on
+    // l'écarte selon un angle régulier (décalage déterministe, stable entre
+    // rendus) pour séparer visuellement les marqueurs sans toucher aux données.
+    function displayPosition(v) {
+      var key = round6(v.lat) + ',' + round6(v.lng);
+      var group = byCoord[key] || [];
+      if (group.length <= 1) return [v.lat, v.lng];
+      var idx = group.indexOf(v);
+      var angle = (idx / group.length) * Math.PI * 2;
+      var radius = 0.0008; // ~90 m, assez pour séparer les épingles en ville
+      return [v.lat + Math.cos(angle) * radius, v.lng + Math.sin(angle) * radius];
+    }
+
+    vendors.forEach(function(vendor) {
+      // Un vendeur défectueux (nom absent ou coordonnées invalides) ne doit pas
+      // faire disparaître tous les autres marqueurs : on l'ignore proprement.
+      if (!vendor.name || typeof vendor.lat !== 'number' || typeof vendor.lng !== 'number' ||
+          !isFinite(vendor.lat) || !isFinite(vendor.lng)) {
+        return;
+      }
+      try {
+        var zOffset = boostRank(vendor) * 100 + (vendor.live ? 50 : 0);
+        var marker = L.marker(displayPosition(vendor), { icon: buildMarkerIcon(vendor), zIndexOffset: zOffset })
+          .addTo(map);
+
+        // Le clic ouvre uniquement le panneau latéral (pas de popup Leaflet),
+        // pour éviter le petit encart qui restait coincé à l'écran.
+        marker.on('click', function() {
+          document.dispatchEvent(new CustomEvent('vendor-click', { detail: vendor.id }));
+        });
+
+        markers.push({ marker: marker, vendor: vendor });
+      } catch (e) {
+        // Ignore ce marqueur pour ne pas casser le rendu des autres.
+      }
+    });
+  }
+
+  /* ===== LIVE TEMPS REEL : badges + bouton Rejoindre ===== */
+  // Registre client des lives par vendorId : le serveur n'expose qu'un seul
+  // live global, mais chaque vendeur conserve ici son propre état « En direct »
+  // (plusieurs lives simultanés côté carte, chacun rattaché à sa boutique).
+  var _liveByVendor = {};
+  var _lastLiveVendorId = null;
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+
+  function updateLiveIndicator(active) {
+    document.querySelectorAll('.mgt-live-dot-nav').forEach(function(el) {
+      el.style.display = active ? 'block' : 'none';
+    });
+  }
+
+  function renderLiveCarousel() {
+    var section = document.getElementById('live-carousel-section');
+    var wrap = document.getElementById('live-carousel');
+    if (!section) return;
+
+    // Lives locaux : uniquement les vendeurs « en direct » dans le scope
+    // courant (même ville en mode nearby, même pays en mode country).
+    var localLives = vendors.filter(function(v) {
+      return v.live === true && matchesScopeFor(v);
+    });
+
+    if (!localLives.length) {
+      section.style.display = 'none';
+      if (wrap) wrap.innerHTML = '';
+      return;
+    }
+
+    section.style.display = '';
+    var html = '';
+    localLives.forEach(function(v) {
+      var liveMeta = _liveByVendor[v.vendorId] || {};
+      var viewers = (typeof liveMeta.viewers === 'number') ? liveMeta.viewers : 0;
+      var initial = (v.name.charAt(0) || '?').toUpperCase();
+      var meta = viewers > 0
+        ? (viewers + ' spectateur' + (viewers > 1 ? 's' : ''))
+        : (liveMeta.title || v.city || '');
+      html +=
+        '<a href="live-client.html" class="live-card flex-shrink-0 flex items-center gap-3 p-3 rounded-md border shadow-sm no-underline" style="background-color:rgb(var(--mgt-card));border-color:rgb(var(--mgt-border));border-radius:var(--mgt-radius-md);box-shadow:var(--mgt-shadow-sm);font-family:var(--mgt-font-sans);min-width:250px;">' +
+          '<span class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0" style="background:linear-gradient(135deg,#ef4444,#f97316);">' + escapeHtml(initial) + '</span>' +
+          '<span class="flex flex-col leading-tight min-w-0 flex-1">' +
+            '<span class="flex items-center gap-1.5">' +
+              '<span class="mgt-live-dot w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#ef4444;"></span>' +
+              '<span class="text-[10px] font-bold tracking-wide" style="color:#ef4444;">EN DIRECT</span>' +
+              '<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style="background:#fee2e2;color:#b91c1c;border-radius:var(--mgt-radius-full);">' + escapeHtml(v.city || '') + '</span>' +
+            '</span>' +
+            '<span class="text-sm font-semibold truncate" style="color:rgb(var(--mgt-foreground));">' + escapeHtml(v.name) + '</span>' +
+            '<span class="text-xs" style="color:rgb(var(--mgt-muted-foreground));">' + escapeHtml(meta) + '</span>' +
+          '</span>' +
+          '<span class="ml-auto text-xs font-bold px-3 py-1.5 rounded-md whitespace-nowrap" style="background:#ef4444;color:#fff;border-radius:var(--mgt-radius-md);">Rejoindre</span>' +
+        '</a>';
+    });
+    wrap.innerHTML = html;
+  }
+
+  function refreshLiveStatus() {
+    fetch('/live-status', { cache: 'no-store' })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var active = !!(data && data.active);
+        var vendorId = active ? (data.vendorId || '') : '';
+
+        // Registre client des lives par vendorId : on mémorise le live courant
+        // sous SON vendorId, sans écraser les autres vendeurs déjà « en direct »
+        // côté carte (le serveur n'expose qu'un live global à la fois).
+        if (active && vendorId) {
+          _liveByVendor[vendorId] = {
+            title: data.title || '',
+            viewers: (typeof data.viewers === 'number') ? data.viewers : 0,
+            vendorName: data.vendorName || '',
+            active: true,
+            lastSeen: Date.now()
+          };
+          _lastLiveVendorId = vendorId;
+        }
+
+        var now = Date.now();
+        vendors.forEach(function(v) {
+          var live = _liveByVendor[v.vendorId];
+          // Un live client reste « en direct » tant qu'il a été vu récemment
+          // (tolérance 30 s), ou s'il est marqué live en dur dans les données.
+          var clientLive = !!(live && live.active && (now - (live.lastSeen || 0) < 30000));
+          v.live = v._demoLive || clientLive;
+        });
+
+        renderLiveCarousel();
+
+        // L'indicateur de nav reflète la présence d'un live local.
+        var hasLocalLive = vendors.some(function(v) { return v.live === true && matchesScopeFor(v); });
+        updateLiveIndicator(hasLocalLive);
+
+        // Re-trier par pertinence (les lives remontent en tete)
+        vendors.sort(function(a, b) { return relevanceScore(b) - relevanceScore(a); });
+
+        // Mettre a jour l'icone et le z-index de chaque marqueur
+        markers.forEach(function(item) {
+          item.marker.setIcon(buildMarkerIcon(item.vendor));
+          item.marker.setZIndexOffset(boostRank(item.vendor) * 100 + (item.vendor.live ? 50 : 0));
+        });
+
+        // Re-appliquer les filtres (filtre "En direct" + compteur de resultats)
+        if (typeof applyFilters === 'function') applyFilters();
+
+        // Mettre a jour la vue liste si elle est ouverte
+        if (listView && !listView.classList.contains('hidden')) renderList();
+      })
+      .catch(function() { /* serveur indisponible : on garde les valeurs en dur */ });
+  }
+
+  /* ===== CONNEXION BOOSTERS : badges activés dans le module Boosters =====
+     Lit TOUS les badges actifs (tous prestataires/boutiques) depuis /boosters,
+     les regroupe par vendorId, puis reflète chaque badge sur le bon marqueur
+     Local+ (plusieurs badges possibles par profil, classement par poids). */
+  function sortBoosts(list) {
+    var seen = {};
+    return list.filter(function(t) {
+      if (seen[t]) return false;
+      seen[t] = true;
+      return true;
+    }).sort(function(a, b) { return boostRankOf(b) - boostRankOf(a); });
+  }
+
+  function syncBoosters() {
+    fetch('/boosters', { cache: 'no-store' })
+      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(data) {
+        var active = data.active || [];
+        // Regroupe les badges actifs par vendorId.
+        var byVendor = {};
+        active.forEach(function(a) {
+          if (!a.vendorId) return;
+          (byVendor[a.vendorId] = byVendor[a.vendorId] || []).push(a.type);
+        });
+
+        var changed = false;
+        vendors.forEach(function(v) {
+          // Si le vendeur a un vendorId ET des badges côté serveur, on applique.
+          if (v.vendorId && byVendor[v.vendorId]) {
+            v.boosts = sortBoosts(byVendor[v.vendorId]);
+            changed = true;
+          }
+        });
+
+        if (!changed) return;
+
+        // Re-trier + rafraîchir l'icône, le compteur et le z-index de chaque marqueur.
+        vendors.sort(function(a, b) { return relevanceScore(b) - relevanceScore(a); });
+        markers.forEach(function(item) {
+          item.marker.setIcon(buildMarkerIcon(item.vendor));
+          item.marker.setZIndexOffset(boostRank(item.vendor) * 100 + (item.vendor.live ? 50 : 0));
+        });
+
+        if (typeof applyFilters === 'function') applyFilters();
+        if (listView && !listView.classList.contains('hidden')) renderList();
+      })
+      .catch(function(err) { console.warn('[Boosters] synchronisation impossible :', err.message); });
+  }
+
+  refreshLiveStatus();
+  setInterval(refreshLiveStatus, 4000);
+  syncBoosters();
+  setInterval(syncBoosters, 15000);
+
+  /* ===== EVENT: ouvrir drawer au clic marqueur ===== */
+  document.addEventListener('vendor-click', function(e) {
+    var vendor = vendors.find(function(v) { return v.id === e.detail; });
+    if (vendor) openDrawer(vendor);
+  });
+
+  /* ===== DRAWER FERMETURE ===== */
+  document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+  document.getElementById('drawer-overlay').addEventListener('click', closeDrawer);
+
+  /* ===== OFFRES DU JOUR (barre horizontale Local+) =====
+     Affiche les offres actives du vendeur connecté : titre, description,
+     début (startsAt) et fin (endsAt). */
+  function visibleOffresJour() {
+    var out = [];
+    vendors.forEach(function(v) {
+      offresDuJourFor(v).forEach(function(o) {
+        out.push({ vendor: v, offre: o });
+      });
+    });
+    return out;
+  }
+
+  function renderPromos() {
+    var banner = document.getElementById('promo-banner');
+    var list = document.getElementById('promo-list');
+    if (!list) return;
+    var items = visibleOffresJour();
+    if (!items.length) {
+      if (banner) banner.style.display = 'none';
+      list.innerHTML = '';
+      return;
+    }
+    if (banner) banner.style.display = '';
+    var html = '';
+    items.forEach(function(item) {
+      var v = item.vendor;
+      var o = item.offre;
+      var cd = offreCountdownText(o);
+      var startText = formatOffreDate(o.startsAt);
+      var endText = formatOffreDate(o.endsAt);
+      html += '<button data-offre-vendor="' + escapeHtml(v.vendorId) + '" data-offre-ends="' + escapeHtml(o.endsAt) + '" class="promo-item flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-full border flex-shrink-0 cursor-pointer transition-all hover:brightness-105" style="background:rgb(var(--mgt-accent-50)); border-color:rgb(var(--mgt-accent-200)); border-radius:var(--mgt-radius-full); font-family:var(--mgt-font-sans);">' +
+        '<img src="' + v.img + '" alt="' + escapeHtml(v.name) + '" class="w-6 h-6 rounded-full object-cover" style="border-radius:var(--mgt-radius-full);" onerror="this.style.display=\'none\'">' +
+        '<span class="text-xs font-semibold whitespace-nowrap" style="color:rgb(var(--mgt-foreground));">' + escapeHtml(o.title) + '</span>' +
+        (startText && endText ? '<span class="text-[10px] font-medium whitespace-nowrap" style="color:rgb(var(--mgt-muted-foreground));">' + startText + ' → ' + endText + '</span>' : '') +
+        '<span class="promo-countdown text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded-full" style="background:rgb(var(--mgt-accent-600)); color:#fff; border-radius:var(--mgt-radius-full);">' + cd + '</span>' +
+      '</button>';
+    });
+    list.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
+    list.querySelectorAll('.promo-item').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var vid = btn.getAttribute('data-offre-vendor');
+        var v = vendors.find(function(x) { return x.vendorId === vid; });
+        if (v) openDrawer(v);
+      });
+    });
+  }
+
+  // Met à jour les compteurs chaque seconde, et retire les offres expirées du DOM.
+  function tickPromos() {
+    var banner = document.getElementById('promo-banner');
+    var list = document.getElementById('promo-list');
+    var items = document.querySelectorAll('.promo-item');
+    var remaining = 0;
+    items.forEach(function(btn) {
+      var ends = btn.getAttribute('data-offre-ends');
+      if (!ends) return;
+      if (new Date(ends).getTime() <= Date.now()) {
+        btn.remove();
+        return;
+      }
+      remaining++;
+      var cdEl = btn.querySelector('.promo-countdown');
+      if (cdEl) cdEl.textContent = countdownFromEnds(ends);
+    });
+    if (list && remaining === 0) {
+      list.innerHTML = '';
+      if (banner) banner.style.display = 'none';
+    }
+  }
+
+  var promoBanner = document.getElementById('promo-banner');
+  var promoDismiss = document.getElementById('promo-dismiss');
+  if (promoDismiss) {
+    promoDismiss.addEventListener('click', function() {
+      if (promoBanner) promoBanner.style.display = 'none';
+    });
+  }
+  renderPromos();
+  setInterval(tickPromos, 1000);
+
+  /* ===== VUE LISTE ===== */
+  var viewMapBtn = document.getElementById('view-map');
+  var viewListBtn = document.getElementById('view-list');
+  var listView = document.getElementById('list-view');
+  var listContent = document.getElementById('list-content');
+  var listClose = document.getElementById('list-close');
+  var searchBarEl = document.getElementById('search-bar');
+  var mapControlsEl = document.getElementById('map-controls');
+  var viewToggleEl = document.querySelector('.absolute.bottom-6.left-1\\/2');
+  var legendEl = document.getElementById('map-legend');
+
+  function renderList() {
+    // vendors est deja trie par pertinence (badges payants en tete).
+    // La liste respecte EXACTEMENT les mêmes critères que la carte : scope
+    // Local+ (même ville / pays) + recherche + catégorie + type + note + prix
+    // + live. Sans cela, un filtre actif (ex. « Prestataires ») vidait la carte
+    // (applyFilters) tout en laissant la liste afficher les commerces filtrés,
+    // d'où l'incohérence « visible en liste, absent de la carte ».
+    var searchTerm = (searchInput && searchInput.value ? searchInput.value.toLowerCase().trim() : '');
+    var catValue = filterCategory.value;
+    var typeValue = filterType.value;
+    var ratingValue = filterRating.value;
+    var priceValue = filterPrice.value;
+    var scoped = vendors.filter(function(v) {
+      var inScope = matchesScopeFor(v);
+      var matchesSearch = !searchTerm || v.name.toLowerCase().includes(searchTerm) || v.city.toLowerCase().includes(searchTerm);
+      var matchesCategory = !catValue || v.category === catValue;
+      var matchesType = !typeValue || v.type === typeValue;
+      var matchesLive = !liveOnly || v.live === true;
+      var matchesRating = !ratingValue || v.rating >= parseInt(ratingValue);
+      var matchesPrice = !priceValue || v.price === priceValue;
+      return (searchTerm ? true : inScope) && matchesSearch && matchesCategory && matchesType && matchesLive && matchesRating && matchesPrice;
+    });
+    if (!scoped.length) {
+      listContent.innerHTML = '<div class="text-center py-10 text-sm" style="color:rgb(var(--mgt-muted-foreground));font-family:var(--mgt-font-sans);">Aucun commerce ne correspond a vos criteres.</div>';
+      return;
+    }
+    var html = '';
+    scoped.forEach(function(v) {
+      var typeBadge = '<span class="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:' + typeColor(v.type) + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);">' + typeLabel(v.type) + '</span>';
+      var boostBadge = vendorBoosts(v).map(function(b) {
+        return '<span class="inline-flex items-center gap-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:' + boostGradient(b) + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);"><i data-lucide="sparkles" class="h-3 w-3"></i> ' + boostLabel(b) + '</span>';
+      }).join('');
+      var liveBadge = v.live
+        ? '<span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:#ef4444;color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);"><span class="w-1.5 h-1.5 rounded-full" style="background:#fff;animation:mgt-pulse 1.6s infinite;"></span> En direct</span>'
+        : '';
+      var pinLabel = vendorBoosts(v).length ? 'Épinglé' : '';
+      html += [
+        '<button data-vendor-id="' + v.id + '" class="list-item flex items-center gap-4 w-full text-left p-3 rounded-md border shadow-sm transition-all hover:brightness-105 cursor-pointer" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm); font-family: var(--mgt-font-sans);">',
+          '<img src="' + v.img + '" alt="' + v.name + '" class="w-16 h-16 rounded-md object-cover flex-shrink-0" style="border-radius: var(--mgt-radius-md);" onerror="this.src=\'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop\'">',
+          '<div class="flex-1 min-w-0">',
+            '<div class="flex items-center gap-2 mb-1 flex-wrap">',
+              '<span class="font-semibold text-sm truncate" style="color: rgb(var(--mgt-foreground));">' + v.name + '</span>',
+              pinLabel ? '<span class="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded" style="background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary));border-radius:var(--mgt-radius-sm);">' + pinLabel + '</span>' : '',
+            '</div>',
+            '<div class="flex items-center gap-1.5 mb-1.5 flex-wrap">' + typeBadge + boostBadge + liveBadge + '</div>',
+            '<div class="flex items-center gap-1 text-xs" style="color: rgb(var(--mgt-muted-foreground));">' + renderStars(v.rating) + ' <span class="font-medium ml-0.5" style="color:rgb(var(--mgt-foreground));">' + v.rating + '</span> <span class="mx-1">&middot;</span> <span class="truncate">' + v.city + '</span> <span class="mx-1">&middot;</span> <span class="whitespace-nowrap">a ' + distanceLabel(vendorDistanceKm(v)) + '</span> <span class="mx-1">&middot;</span> ' + v.price + '</div>',
+          '</div>',
+          '<i data-lucide="chevron-right" class="h-5 w-5 flex-shrink-0" style="color:rgb(var(--mgt-muted-foreground));"></i>',
+        '</button>'
+      ].join('');
+    });
+    listContent.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
+
+    listContent.querySelectorAll('.list-item').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var id = parseInt(btn.getAttribute('data-vendor-id'), 10);
+        var vendor = vendors.find(function(x) { return x.id === id; });
+        if (vendor) {
+          showMapView();
+          openDrawer(vendor);
+        }
+      });
+    });
+  }
+
+  function setViewStyles(isMap) {
+    if (isMap) {
+      viewMapBtn.style.background = 'rgb(var(--mgt-primary))';
+      viewMapBtn.style.color = 'rgb(var(--mgt-primary-foreground))';
+      viewListBtn.style.background = 'transparent';
+      viewListBtn.style.color = 'rgb(var(--mgt-foreground))';
+    } else {
+      viewListBtn.style.background = 'rgb(var(--mgt-primary))';
+      viewListBtn.style.color = 'rgb(var(--mgt-primary-foreground))';
+      viewMapBtn.style.background = 'transparent';
+      viewMapBtn.style.color = 'rgb(var(--mgt-foreground))';
+    }
+  }
+
+  function showMapView() {
+    listView.classList.add('hidden');
+    if (searchBarEl) searchBarEl.style.display = '';
+    if (mapControlsEl) mapControlsEl.style.display = '';
+    if (viewToggleEl) viewToggleEl.style.display = '';
+    if (legendEl) legendEl.style.display = '';
+    setViewStyles(true);
+    map.invalidateSize();
+  }
+
+  function showListView() {
+    renderList();
+    listView.classList.remove('hidden');
+    if (searchBarEl) searchBarEl.style.display = 'none';
+    if (mapControlsEl) mapControlsEl.style.display = 'none';
+    if (viewToggleEl) viewToggleEl.style.display = 'none';
+    if (legendEl) legendEl.style.display = 'none';
+    setViewStyles(false);
+  }
+
+  viewMapBtn.addEventListener('click', showMapView);
+  viewListBtn.addEventListener('click', showListView);
+  listClose.addEventListener('click', showMapView);
+
+  /* ===== CONTROLES CARTE ===== */
+  document.getElementById('btn-zoom-in').addEventListener('click', function() { map.zoomIn(); });
+  document.getElementById('btn-zoom-out').addEventListener('click', function() { map.zoomOut(); });
+
+  var userMarker = null;
+
+  // Georeference reelle de l'utilisateur (production). Recentre la carte,
+  // affiche un marqueur « Vous etes ici », puis met a jour rayon et distances.
+  function locateUser(opts) {
+    opts = opts || {};
+    if (!navigator.geolocation) {
+      if (!opts.silent) alert('La geolocalisation n\u2019est pas supportee par votre navigateur.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        var latlng = [pos.coords.latitude, pos.coords.longitude];
+        userPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        map.setView(latlng, 12);
+
+        // 1) Scope immédiat : ville connue la plus proche (affichage rapide).
+        var detected = detectCity(userPosition);
+        if (detected) {
+          userCity = detected.city;
+          userCountry = detected.country;
+        }
+        // Si aucune ville connue n'est proche, on conserve la ville déjà
+        // sélectionnée (Dakar par défaut) plutôt que de basculer le sélecteur
+        // sur « Ma position (GPS) » et de perdre le contexte de l'utilisateur.
+        lpScopeMode = 'nearby';
+        resetRadiusToStart();
+        placeUserMarker();
+        if (opts.openPopup && userMarker) userMarker.openPopup();
+
+        // Reflète la ville détectée dans le sélecteur (uniquement si connue).
+        if (citySelect && detected) citySelect.value = detected.city;
+        updateCityToggleLabel();
+
+        updateRadiusCircle();
+        updateRadiusChips();
+        applyFilters();
+
+        // 2) Reverse-geocoding Nominatim : ville/pays réels (même hors des
+        //    villes déjà connues), puis correction du scope si nécessaire.
+        reverseGeocode(userPosition)
+          .then(applyReverseGeocode)
+          .catch(function() { /* échec réseau : on garde la détection locale */ });
+      },
+      function() {
+        if (!opts.silent) alert('Geolocalisation indisponible. Veuillez autoriser l\u2019acces a votre position.');
+        // Invite l'utilisateur à choisir sa ville pour ne pas rester sur Dakar.
+        showRadiusNotice('Position introuvable — choisissez votre ville pour afficher les commerces autour.');
+        if (citySelect) {
+          citySelect.classList.remove('hidden'); // ouvre le sélecteur de ville
+          citySelect.style.borderColor = 'rgb(var(--mgt-accent))';
+          citySelect.style.boxShadow = '0 0 0 2px rgb(var(--mgt-accent-200))';
+          citySelect.focus();
+        }
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+    );
+  }
+
+  document.getElementById('btn-geoloc').addEventListener('click', function() {
+    locateUser({ openPopup: true });
+  });
+
+  /* ===== FILTRES ===== */
+  var searchInput = document.getElementById('search-input');
+  var filterCategory = document.getElementById('filter-category');
+  var filterType = document.getElementById('filter-type');
+  var filterRating = document.getElementById('filter-rating');
+  var filterPrice = document.getElementById('filter-price');
+  var filterLive = document.getElementById('filter-live');
+  var liveDot = document.getElementById('live-dot');
+  var liveOnly = false;
+  var resultsCount = document.getElementById('results-count');
+  var emptyState = document.getElementById('empty-state');
+  var emptyStateText = document.getElementById('empty-state-text');
+  var emptyReset = document.getElementById('empty-reset');
+
+  // Réinitialise tous les filtres de recherche (pas le scope ville/rayon).
+  function resetFilters() {
+    searchInput.value = '';
+    filterCategory.value = '';
+    filterType.value = '';
+    filterRating.value = '';
+    filterPrice.value = '';
+    if (liveOnly) filterLive.click();
+    applyFilters();
+  }
+
+  if (emptyReset) emptyReset.addEventListener('click', resetFilters);
+
+  filterLive.addEventListener('click', function() {
+    liveOnly = !liveOnly;
+    if (liveOnly) {
+      filterLive.style.borderColor = '#ef4444';
+      filterLive.style.boxShadow = '0 0 0 1px #ef4444, var(--mgt-shadow-sm)';
+      filterLive.style.background = 'rgb(254, 242, 242)';
+      liveDot.style.background = '#ef4444';
+    } else {
+      filterLive.style.borderColor = 'rgb(var(--mgt-border))';
+      filterLive.style.boxShadow = 'var(--mgt-shadow-sm)';
+      filterLive.style.background = 'rgb(var(--mgt-card))';
+      liveDot.style.background = 'rgb(var(--mgt-border))';
+    }
+    applyFilters();
+  });
+
+  // Recadre la carte pour faire apparaître un ensemble de marqueurs (utilisé
+  // lors d'une recherche : le résultat peut se trouver hors du viewport courant,
+  // par ex. une boutique à Paris alors que la carte est centrée sur Dakar).
+  function fitMapToMarkers(items) {
+    if (!items || !items.length) return;
+    var latlngs = items.map(function (it) { return [it.vendor.lat, it.vendor.lng]; });
+    if (latlngs.length === 1) {
+      map.setView(latlngs[0], Math.max(map.getZoom(), 14));
+    } else {
+      map.fitBounds(L.latLngBounds(latlngs), { padding: [60, 60], maxZoom: 15 });
+    }
+  }
+
+  function applyFilters() {
+    var searchTerm = searchInput.value.toLowerCase().trim();
+    var catValue = filterCategory.value;
+    var typeValue = filterType.value;
+    var ratingValue = filterRating.value;
+    var priceValue = filterPrice.value;
+
+    var visibleCount = 0;
+    var scopeCount = 0;
+    var visibleMarkers = [];
+
+    markers.forEach(function(item) {
+      var v = item.vendor;
+      // Scope Local+ : même ville (nearby) ou tout le pays (country).
+      var inScope = matchesScopeFor(v);
+      if (inScope) scopeCount++;
+
+      var matchesSearch = !searchTerm || v.name.toLowerCase().includes(searchTerm) || v.city.toLowerCase().includes(searchTerm);
+      var matchesCategory = !catValue || v.category === catValue;
+      var matchesType = !typeValue || v.type === typeValue;
+      var matchesLive = !liveOnly || v.live === true;
+      var matchesRating = !ratingValue || v.rating >= parseInt(ratingValue);
+      var matchesPrice = !priceValue || v.price === priceValue;
+
+      // La recherche est globale : on ignore le scope ville/rayon pour qu'un
+      // commerce situé dans une autre ville (ex. DAN à Paris, carte sur Dakar)
+      // apparaisse dès qu'on le cherche par son nom.
+      var passesScope = searchTerm ? true : inScope;
+
+      if (passesScope && matchesSearch && matchesCategory && matchesType && matchesLive && matchesRating && matchesPrice) {
+        item.marker.addTo(map);
+        visibleCount++;
+        visibleMarkers.push(item);
+      } else {
+        item.marker.remove();
+      }
+    });
+
+    // Recentre la carte si au moins un résultat visible est hors du viewport
+    // courant : cas d'une recherche ciblée ou d'un scope qui n'affiche qu'un
+    // commerce éloigné du centre actuel (ex. boutique à Paris, carte à Dakar).
+    if (visibleMarkers.length) {
+      var currentBounds = map.getBounds();
+      var anyOffscreen = visibleMarkers.some(function (it) {
+        return !currentBounds.contains([it.vendor.lat, it.vendor.lng]);
+      });
+      if (anyOffscreen) {
+        fitMapToMarkers(visibleMarkers);
+      }
+    }
+
+    // Découverte auto 5->10->25 km : élargit selon le nombre de commerces
+    // réellement disponibles autour (indépendamment des filtres de recherche).
+    updateRadiusNotice(scopeCount);
+
+    if (visibleCount < vendors.length) {
+      resultsCount.classList.remove('hidden');
+      resultsCount.textContent = visibleCount + ' resultat' + (visibleCount > 1 ? 's' : '') + ' trouve' + (visibleCount > 1 ? 's' : '');
+    } else {
+      resultsCount.classList.add('hidden');
+    }
+
+    // État vide : on distingue « aucun commerce enregistré » (message neutre,
+    // bouton de réinitialisation masqué car inutile) de « aucun résultat après
+    // filtres » (bouton de réinitialisation proposé pour revenir en arrière).
+    if (vendors.length === 0) {
+      if (emptyStateText) emptyStateText.textContent = 'Aucun commerce disponible pour le moment.';
+      if (emptyReset) emptyReset.classList.add('hidden');
+      emptyState.classList.remove('hidden');
+      emptyState.classList.add('flex');
+    } else if (visibleCount === 0) {
+      if (emptyStateText) emptyStateText.textContent = 'Aucun commerce ne correspond a vos criteres.';
+      if (emptyReset) emptyReset.classList.remove('hidden');
+      emptyState.classList.remove('hidden');
+      emptyState.classList.add('flex');
+    } else {
+      emptyState.classList.add('hidden');
+      emptyState.classList.remove('flex');
+    }
+  }
+
+  searchInput.addEventListener('input', applyFilters);
+  filterCategory.addEventListener('change', applyFilters);
+  filterType.addEventListener('change', applyFilters);
+  filterRating.addEventListener('change', applyFilters);
+  filterPrice.addEventListener('change', applyFilters);
+
+  /* ===== RAYON : chips + fallback + persistance ===== */
+  var radiusNotice = document.getElementById('radius-notice');
+  var radiusNoticeText = document.getElementById('radius-notice-text');
+  var radiusNoticeAction = document.getElementById('radius-notice-action');
+  var radiusNoticeDismissBtn = document.getElementById('radius-notice-dismiss');
+  var radiusNoticeDismissed = false;
+  var radiusNoticeTimer = null;
+
+  function showRadiusNotice(msg, actionText) {
+    radiusNoticeText.textContent = msg;
+    if (actionText) {
+      radiusNoticeAction.textContent = actionText;
+      radiusNoticeAction.classList.remove('hidden');
+    } else {
+      radiusNoticeAction.classList.add('hidden');
+    }
+    radiusNotice.classList.remove('hidden');
+    radiusNotice.classList.add('flex');
+    // Auto-masquage : le bandeau ne doit pas recouvrir la carte durablement.
+    if (radiusNoticeTimer) clearTimeout(radiusNoticeTimer);
+    radiusNoticeTimer = setTimeout(function() {
+      radiusNoticeDismissed = true;
+      hideRadiusNotice();
+    }, 6000);
+  }
+  function hideRadiusNotice() {
+    if (radiusNoticeTimer) { clearTimeout(radiusNoticeTimer); radiusNoticeTimer = null; }
+    radiusNotice.classList.add('hidden');
+    radiusNotice.classList.remove('flex');
+    radiusNoticeAction.classList.add('hidden');
+  }
+
+  function updateRadiusChips() {
+    document.querySelectorAll('.radius-chip').forEach(function(chip) {
+      var val = chip.getAttribute('data-radius');
+      var active = (val === 'country' && lpScopeMode === 'country') ||
+                   (val !== 'country' && lpScopeMode === 'nearby' && parseInt(val, 10) === maxDistanceKm);
+      if (active) {
+        chip.style.background = 'rgb(var(--mgt-primary))';
+        chip.style.color = 'rgb(var(--mgt-primary-foreground))';
+        chip.style.borderColor = 'rgb(var(--mgt-primary))';
+      } else {
+        chip.style.background = 'rgb(var(--mgt-card))';
+        chip.style.color = 'rgb(var(--mgt-foreground))';
+        chip.style.borderColor = 'rgb(var(--mgt-border))';
+      }
+    });
+  }
+
+  // Élargit manuellement le rayon au palier suivant (action du bandeau).
+  function expandRadiusTier() {
+    radiusNoticeDismissed = false;
+    var nextIndex = lpDistanceTierIndex + 1;
+    if (nextIndex >= LP_DISTANCE_TIERS.length) return;
+    lpDistanceTierIndex = nextIndex;
+    maxDistanceKm = LP_DISTANCE_TIERS[nextIndex];
+    lpManualRadius = true; // évite tout nouvel auto-élargissement ensuite
+    updateRadiusCircle();
+    updateRadiusChips();
+    applyFilters();
+    persistScope();
+    hideRadiusNotice();
+  }
+
+  function updateRadiusNotice(count) {
+    hideRadiusNotice();
+    if (radiusNoticeDismissed) return;
+    if (lpScopeMode !== 'nearby') return;
+    if (count >= LP_DISTANCE_MIN_RESULTS) return;
+
+    // L'utilisateur a choisi un rayon précis : pas d'action forcée.
+    if (lpManualRadius) {
+      showRadiusNotice('Seulement ' + count + ' resultat' + (count > 1 ? 's' : '') + ' dans ce rayon.');
+      return;
+    }
+
+    // 0 résultat -> élargissement automatique obligatoire (carte vide inutile).
+    if (count === 0) {
+      var nextIdx = lpDistanceTierIndex + 1;
+      if (nextIdx < LP_DISTANCE_TIERS.length) {
+        var prevKm = LP_DISTANCE_TIERS[lpDistanceTierIndex];
+        lpDistanceTierIndex = nextIdx;
+        maxDistanceKm = LP_DISTANCE_TIERS[nextIdx];
+        updateRadiusCircle();
+        updateRadiusChips();
+        showRadiusNotice('Aucun commerce a ' + prevKm + ' km — rayon elargi a ' + maxDistanceKm + ' km.');
+        applyFilters();
+        return;
+      }
+      // Déjà au palier maximal : bascule automatiquement sur « Tout le pays »
+      // si le pays contient des commerces, pour ne jamais laisser une carte
+      // inutilement vide alors que des profils existent ailleurs dans le pays.
+      var countryCount = vendors.filter(function (v) {
+        return !userCountry || v.country === userCountry;
+      }).length;
+      if (countryCount > 0) {
+        lpScopeMode = 'country';
+        updateRadiusChips();
+        updateRadiusCircle();
+        showRadiusNotice('Aucun commerce a ' + maxDistanceKm + ' km — affichage de tout ' + (userCountry || 'le pays') + '.');
+        applyFilters();
+        persistScope();
+      } else {
+        showRadiusNotice('Aucun commerce a ' + maxDistanceKm + ' km — essayez une autre ville.');
+      }
+      return;
+    }
+
+    // 1 à 5 résultats -> suggestion cliquable (on ne dilue pas le local par défaut).
+    var nextIdx2 = lpDistanceTierIndex + 1;
+    if (nextIdx2 < LP_DISTANCE_TIERS.length) {
+      var nextKm = LP_DISTANCE_TIERS[nextIdx2];
+      showRadiusNotice('Seulement ' + count + ' resultat' + (count > 1 ? 's' : '') + ' a ' + maxDistanceKm + ' km.', 'Voir a ' + nextKm + ' km');
+    } else {
+      showRadiusNotice('Seulement ' + count + ' resultat' + (count > 1 ? 's' : '') + ' a ' + maxDistanceKm + ' km — essayez « Tout le pays ».');
+    }
+  }
+
+  function persistScope() {
+    try {
+      localStorage.setItem('lp_scope_mode', lpScopeMode);
+      localStorage.setItem('lp_max_distance', String(maxDistanceKm));
+      localStorage.setItem('lp_user_city', userCity || '');
+    } catch (e) {}
+  }
+
+  document.querySelectorAll('.radius-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      radiusNoticeDismissed = false;
+      var val = chip.getAttribute('data-radius');
+      if (val === 'country') {
+        lpScopeMode = 'country';
+      } else {
+        lpScopeMode = 'nearby';
+        maxDistanceKm = parseInt(val, 10);
+        lpDistanceTierIndex = LP_DISTANCE_TIERS.indexOf(parseInt(val, 10));
+        lpManualRadius = true;
+      }
+      updateRadiusChips();
+      updateRadiusCircle();
+      if (lpScopeMode === 'nearby') {
+        map.setView([userPosition.lat, userPosition.lng], 10);
+      }
+      applyFilters();
+      persistScope();
+    });
+  });
+
+  // Le bouton du bandeau « Voir à X km » élargit manuellement le rayon.
+  if (radiusNoticeAction) {
+    radiusNoticeAction.addEventListener('click', expandRadiusTier);
+  }
+
+  // Le bouton « ✕ » masque le bandeau pour le reste de la navigation courante.
+  if (radiusNoticeDismissBtn) {
+    radiusNoticeDismissBtn.addEventListener('click', function() {
+      radiusNoticeDismissed = true;
+      hideRadiusNotice();
+    });
+  }
+
+  /* ===== SELECTEUR DE VILLE (scope Dakar / Libreville / ...) ===== */
+  var citySelect = document.getElementById('city-select');
+  var cityToggle = document.getElementById('city-toggle');
+  var cityToggleLabel = document.getElementById('city-toggle-label');
+
+  function populateCitySelect() {
+    if (!citySelect) return;
+    var opts = '<option value="">Ma position (GPS)</option>';
+    Object.keys(CITIES).sort(function(a, b) {
+      return normalizeText(a).localeCompare(normalizeText(b));
+    }).forEach(function(city) {
+      var selected = (city === userCity) ? ' selected' : '';
+      opts += '<option value="' + city + '"' + selected + '>' + city + ' &middot; ' + CITIES[city].country + '</option>';
+    });
+    citySelect.innerHTML = opts;
+    updateCityToggleLabel();
+  }
+
+  function updateCityToggleLabel() {
+    if (!cityToggleLabel) return;
+    if (userCity) {
+      cityToggleLabel.textContent = userCity;
+    } else if (userCountry) {
+      cityToggleLabel.textContent = userCountry;
+    } else {
+      cityToggleLabel.textContent = 'Changer de ville';
+    }
+  }
+
+  // Bascule l'affichage du sélecteur de ville (bouton discret replié par défaut).
+  if (cityToggle && citySelect) {
+    cityToggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var hidden = citySelect.classList.toggle('hidden');
+      if (!hidden) {
+        citySelect.focus();
+      }
+    });
+    // Referme le sélecteur quand on clique ailleurs.
+    document.addEventListener('click', function(e) {
+      if (!citySelect.classList.contains('hidden') && !citySelect.contains(e.target) && !cityToggle.contains(e.target)) {
+        citySelect.classList.add('hidden');
+      }
+    });
+  }
+
+  function placeUserMarker() {
+    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+    userMarker = L.marker([userPosition.lat, userPosition.lng], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="width:16px;height:16px;border-radius:50%;background:rgb(var(--mgt-primary));border:3px solid white;box-shadow:0 0 0 4px rgba(26,92,42,.3);"></div>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      })
+    }).addTo(map).bindPopup('<strong style="font-family:var(--mgt-font-sans);">Vous etes ici</strong>');
+  }
+
+  function setCity(city, opts) {
+    opts = opts || {};
+    // Un changement de ville est par défaut une action EXPLICITE de l'utilisateur
+    // et doit être mémorisé. La géolocalisation automatique (detectCity /
+    // reverse-geocode) passe { persist: false } pour ne PAS écraser lp_user_city :
+    // sinon la ville détectée au chargement précédent serait restaurée comme choix
+    // manuel et le GPS réel ne serait plus jamais refait (carte/liste bloquées sur
+    // l'ancienne ville, d'où « tout est vide » après un déplacement).
+    var shouldPersist = opts.persist !== false;
+    radiusNoticeDismissed = false;
+    if (!city) {
+      // « Ma position » -> GPS réel, pas de scope ville forcé.
+      userCity = null;
+      userCountry = null;
+      locateUser({ silent: false });
+      updateCityToggleLabel();
+      if (shouldPersist) persistScope(); // efface lp_user_city pour repartir en GPS
+      return;
+    }
+    var c = CITIES[city];
+    if (!c) return;
+    userCity = city;
+    userCountry = c.country;
+    userPosition = { lat: c.lat, lng: c.lng };
+    map.setView([c.lat, c.lng], 12);
+    lpScopeMode = 'nearby';
+    resetRadiusToStart();
+    placeUserMarker();
+    updateRadiusChips();
+    updateRadiusCircle();
+    applyFilters();
+    if (shouldPersist) persistScope();
+    updateCityToggleLabel();
+  }
+
+  if (citySelect) {
+    citySelect.addEventListener('change', function() {
+      setCity(citySelect.value);
+      citySelect.classList.add('hidden'); // referme après le choix
+    });
+  }
+
+  // Initialise la carte une fois les profils réels chargés depuis /api/carte.
+  function initCarte(data) {
+    // Migration unique v3 : purge une dernière fois l'ancienne ville mémorisée
+    // (lp_user_city) pour les utilisateurs restés bloqués sur une ville périmée
+    // après le correctif v2 (ex. Dakar mémorisé alors qu'ils sont désormais à
+    // Paris, ou une ville sans commerce qui laissait carte ET liste vides). On ne
+    // purge qu'UNE fois, pour ne jamais effacer les choix manuels ultérieurs.
+    try {
+      if (!localStorage.getItem('lp_scope_v3')) {
+        localStorage.removeItem('lp_user_city');
+        localStorage.removeItem('lp_scope_v2');
+        localStorage.setItem('lp_scope_v3', '1');
+      }
+    } catch (e) {}
+
+    vendors = (data && data.vendors) ? data.vendors : [];
+    rebuildDerivedData();
+    renderMarkers();
+
+    populateCitySelect();
+    placeUserMarker();
+
+    // Etat initial des chips
+    updateRadiusChips();
+
+    // Initialisation du rayon et du filtre de distance (mode par defaut 'nearby', 5 km)
+    updateRadiusCircle();
+    applyFilters();
+
+    // Au chargement : applique un éventuel lien profond (#ville=, #rayon=, #live),
+    // sinon restaure la dernière ville choisie, sinon géolocalise automatiquement.
+    // En cas d'échec du GPS on reste sur Dakar et l'utilisateur peut choisir sa ville.
+    function parseDeepLink() {
+      var hash = location.hash || '';
+      if (hash === '#live') {
+        filterLive.click();
+        history.replaceState(null, '', location.pathname + location.search);
+        return true;
+      }
+      var params = {};
+      hash.replace(/^#/, '').split('&').forEach(function(part) {
+        var eq = part.indexOf('=');
+        if (eq === -1) return;
+        var k = decodeURIComponent(part.slice(0, eq)).trim();
+        var v = decodeURIComponent(part.slice(eq + 1)).trim();
+        if (k) params[k] = v;
+      });
+
+      var handled = false;
+      if (params.ville) {
+        var city = matchCity(params.ville) || params.ville;
+        if (CITIES[city]) { setCity(city); handled = true; }
+      }
+      if (params.rayon) {
+        var km = parseInt(params.rayon, 10);
+        if (LP_DISTANCE_TIERS.indexOf(km) !== -1) {
+          lpScopeMode = 'nearby';
+          maxDistanceKm = km;
+          lpDistanceTierIndex = LP_DISTANCE_TIERS.indexOf(km);
+          lpManualRadius = true;
+          updateRadiusChips();
+          updateRadiusCircle();
+          applyFilters();
+          persistScope();
+          handled = true;
+        } else if (params.rayon === 'pays') {
+          lpScopeMode = 'country';
+          updateRadiusChips();
+          updateRadiusCircle();
+          applyFilters();
+          persistScope();
+          handled = true;
+        }
+      }
+      if (handled) {
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+      return handled;
+    }
+
+    if (!parseDeepLink()) {
+      var savedCity = null;
+      try { savedCity = localStorage.getItem('lp_user_city') || ''; } catch (e) {}
+      if (savedCity && CITIES[savedCity]) {
+        setCity(savedCity);
+      } else {
+        locateUser({ silent: true });
+      }
+    }
+
+    // Re-rend la barre « Offres du jour » une fois les offres chargées.
+    renderPromos();
+  }
+
+  function loadOffresJour() {
+    return fetch('/api/offres-jour', { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        offresJourByVendor = {};
+        var offres = (data && data.offres) ? data.offres : [];
+        offres.forEach(function(o) {
+          if (!o || !o.vendorId) return;
+          if (!offresJourByVendor[o.vendorId]) offresJourByVendor[o.vendorId] = [];
+          offresJourByVendor[o.vendorId].push(o);
+        });
+      })
+      .catch(function() { offresJourByVendor = {}; });
+  }
+
+  // Charge la liste complète des villes (Afrique + Europe) pour le sélecteur.
+  function loadCities() {
+    return fetch('/api/cities', { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        ALL_CITIES = {};
+        if (data && data.cities) {
+          Object.keys(data.cities).forEach(function(k) {
+            var c = data.cities[k];
+            ALL_CITIES[c.city] = { lat: c.lat, lng: c.lng, country: c.country };
+          });
+        }
+      })
+      .catch(function() { ALL_CITIES = {}; });
+  }
+
+  Promise.all([
+    fetch('/api/carte', { headers: { 'Accept': 'application/json' }, cache: 'no-store' }).then(function(r) { return r.json(); }),
+    loadOffresJour(),
+    loadCities()
+  ])
+    .then(function(results) { initCarte(results[0]); })
+    .catch(function(err) {
+      console.warn('[Carte] chargement des profils impossible :', err.message);
+      initCarte({ vendors: [] });
+    });
+
+  /* ===== MOBILE FILTERS ===== */
+  var mobileFilterToggle = document.getElementById('mobile-filter-toggle');
+  var searchBar = document.getElementById('search-bar');
+
+  mobileFilterToggle.addEventListener('click', function() {
+    var filtersInner = searchBar.querySelector('.flex.flex-col.md\\:flex-row');
+    var isHidden = filtersInner.style.display === 'none';
+    filtersInner.style.display = isHidden ? 'flex' : 'none';
+    if (!isHidden) {
+      resultsCount.classList.add('hidden');
+    } else {
+      applyFilters();
+    }
+  });
+
+  /* ===== RESPONSIVE : HIDE FILTERS ON MOBILE BY DEFAULT ===== */
+  function handleResize() {
+    var filtersInner = searchBar.querySelector('.flex.flex-col.md\\:flex-row');
+    if (window.innerWidth >= 768) {
+      filtersInner.style.display = 'flex';
+      mobileFilterToggle.classList.add('hidden');
+    } else {
+      filtersInner.style.display = 'none';
+      mobileFilterToggle.classList.remove('hidden');
+    }
+  }
+
+  handleResize();
+  window.addEventListener('resize', handleResize);
+
+  /* ===== KEYBOARD: ESC pour fermer le drawer ===== */
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      var drawer = document.getElementById('vendor-drawer');
+      if (!drawer.classList.contains('translate-x-full')) {
+        closeDrawer();
+      }
+    }
+  });
+
+  /* ===== INVALIDATE SIZE on container changes ===== */
+  window.addEventListener('resize', function() { map.invalidateSize(); });
+
+  /* ===== LEAFLET POPUP STYLES OVERRIDE ===== */
+  var style = document.createElement('style');
+  style.textContent = '.leaflet-popup-content-wrapper{border-radius:8px;box-shadow:0 8px 24px -8px rgba(15,23,42,.18);}.leaflet-popup-content{margin:12px 14px;font-family:var(--mgt-font-sans);}.leaflet-popup-tip{display:none;}.custom-marker{background:transparent!important;border:none!important;}@keyframes mgt-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.45);}50%{box-shadow:0 0 0 6px rgba(239,68,68,0);}}.mgt-live-dot{animation:mgt-pulse 1.6s ease-out infinite;}@keyframes mgt-blink{0%,100%{opacity:1;}50%{opacity:.45;}}.mgt-badge-blink{animation:mgt-blink 1.4s ease-in-out infinite;}@media(prefers-reduced-motion:reduce){.mgt-live-dot,.mgt-badge-blink{animation:none!important;}}';
+  document.head.appendChild(style);
+
+})();
+</script>
+
+<script>lucide.createIcons();</script>
+<!-- Mobile responsive navigation & layout -->
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-layout { flex-direction: column !important; }
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .dashboard-main { margin-left: 0 !important; width: 100% !important; }
+  .dashboard-topbar { position: sticky; top: 0; z-index: 100; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .services-grid, .favorites-grid, .features-grid, .booster-grid { grid-template-columns: 1fr !important; }
+  .data-table { display: block !important; }
+  .data-table thead { display: none !important; }
+  .data-table tbody, .data-table tr { display: block !important; }
+  .data-table td { display: flex !important; justify-content: space-between; align-items: center; padding: 8px 12px !important; border-bottom: 1px solid rgb(var(--mgt-border)) !important; }
+  .data-table td::before { content: attr(data-label); font-weight: 600; font-size: 12px; color: rgb(var(--mgt-muted-foreground)); text-transform: uppercase; margin-right: 8px; flex-shrink: 0; }
+  .topbar-search { display: none !important; }
+  .topbar-title { font-size: 18px !important; }
+  .hero-section { padding: 40px 16px !important; text-align: center; }
+  .hero-section h1, .hero-section .h-display { font-size: 28px !important; }
+  .hero-section h1 + p { font-size: 15px !important; }
+  .hero-ctas { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
+  .auth-split { flex-direction: column !important; }
+  .auth-branding { min-height: 200px !important; padding: 32px 16px !important; }
+  .auth-form-area { padding: 24px 16px !important; }
+  .checkout-layout { flex-direction: column !important; }
+  .checkout-main { width: 100% !important; }
+  .checkout-sidebar { width: 100% !important; }
+  .chat-layout { flex-direction: column !important; height: auto !important; }
+  .chat-sidebar { width: 100% !important; max-height: 200px !important; }
+  .chat-main { width: 100% !important; }
+  .filter-pills { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .drawer-panel { width: 100% !important; max-width: 100% !important; }
+  .content-section { padding-left: 16px !important; padding-right: 16px !important; }
+  .section-padding { padding: 32px 16px !important; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-actions { flex-direction: column !important; }
+  .desktop-only { display: none !important; }
+  .map-container { height: 300px !important; }
+  /* Offres du jour : on compacte l'entête (flamme + libellés) sur mobile pour
+     laisser toute la place à la liste des promos, plus lisible. */
+  #promo-banner > div:first-child { display: none !important; }
+  #promo-banner { padding-left: 12px !important; padding-right: 12px !important; }
+  /* Sélecteur de ville : pleine largeur et plus grand pour le tactile. */
+  #city-select { min-height: 40px; max-width: 100%; }
+  #radius-bar { align-items: flex-start; }
+}
+@media (min-width: 769px) {
+  .mobile-menu-btn { display: none !important; }
+  .mobile-only { display: none !important; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .stats-row { grid-template-columns: 1fr !important; }
+}
+</style>
+<style id="mgt-client-nav">
+.mgt-nav-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:1080}
+.mgt-nav-overlay.show{display:block}
+.mgt-nav-drawer{position:fixed;top:0;left:0;bottom:0;z-index:1090;width:280px;max-width:85vw;background:rgb(var(--mgt-background));border-right:1px solid rgb(var(--mgt-border));transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column;overflow-y:auto}
+.mgt-nav-drawer.open{transform:translateX(0);box-shadow:0 0 60px rgba(0,0,0,.3)}
+.mgt-nav-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid rgb(var(--mgt-border))}
+.mgt-nav-brand{display:flex;align-items:center;gap:12px}
+.mgt-nav-logo{width:40px;height:40px;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+.mgt-nav-title{font-size:16px;font-weight:700;color:rgb(var(--mgt-foreground));margin:0}
+.mgt-nav-sub{font-size:12px;color:rgb(var(--mgt-muted-foreground));margin:0}
+.mgt-nav-close{border:none;background:none;cursor:pointer;color:rgb(var(--mgt-muted-foreground));font-size:18px;line-height:1;padding:6px;border-radius:8px}
+.mgt-nav-close:hover{background:rgb(var(--mgt-muted))}
+.mgt-nav-list{flex:1;padding:12px;display:flex;flex-direction:column;gap:2px}
+.mgt-nav-link{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:rgb(var(--mgt-foreground));text-decoration:none;font-size:14px;font-weight:500}
+.mgt-nav-link:hover{background:rgb(var(--mgt-muted))}
+.mgt-nav-link.active{background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary-700));font-weight:600}
+.mgt-nav-link i{width:20px;height:20px;flex-shrink:0;color:rgb(var(--mgt-muted-foreground))}
+.mgt-nav-link.active i{color:rgb(var(--mgt-primary-700))}
+.mgt-nav-foot{padding:12px;border-top:1px solid rgb(var(--mgt-border))}
+.mgt-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:1050;border-top:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));padding-bottom:env(safe-area-inset-bottom)}
+.mgt-bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px;font-size:11px;font-weight:500;color:rgb(var(--mgt-muted-foreground));text-decoration:none}
+.mgt-bottom-nav a.active{color:rgb(var(--mgt-primary));font-weight:600}
+.mgt-bottom-nav a i{width:22px;height:22px}
+.mgt-nav-ico{position:relative;display:inline-flex;line-height:0}
+.mgt-live-dot-nav{position:absolute;top:-2px;right:-4px;width:9px;height:9px;border-radius:50%;background:#ef4444;border:2px solid rgb(var(--mgt-card));box-shadow:0 0 0 1px rgba(0,0,0,.06)}
+@media(max-width:768px){.mgt-bottom-nav{display:flex}}
+/* Controles carte flottants au-dessus de la barre de navigation mobile */
+@media(max-width:768px){
+  #map-controls,#view-toggle,#mobile-filter-toggle{position:fixed!important;z-index:950}
+  #map-controls{bottom:calc(68px + env(safe-area-inset-bottom))!important;right:14px!important;top:auto!important}
+  #view-toggle{bottom:calc(68px + env(safe-area-inset-bottom))!important;left:50%!important;transform:translateX(-50%)!important;top:auto!important}
+  #mobile-filter-toggle{bottom:calc(68px + env(safe-area-inset-bottom))!important;left:14px!important;top:auto!important}
+  /* Attribution Leaflet : la remonter au-dessus de la barre pour ne pas masquer RDV / Profil */
+  .leaflet-bottom{ z-index:800!important; margin-bottom:calc(60px + env(safe-area-inset-bottom))!important; }
+  .leaflet-control-attribution{ font-size:9px!important; padding:2px 6px!important; background:rgba(255,255,255,.85)!important; }
+}
+</style>
+<script>
+(function(){
+  var DRAWER=[
+    ['client-dashboard.html','home','Accueil'],
+    ['chat.html','message-circle','Messagerie'],
+    ['chat.html#rdv','calendar-days','Mes rendez-vous','rdv'],
+    ['client-orders.html','shopping-bag','Mes commandes'],
+    ['client-favorites.html','heart','Mes favoris'],
+    ['carte.html','map','Boutique &amp; Prestataires'],
+    ['client-profile.html','user','Mon profil']
+  ];
+  var BOTTOM=[
+    ['client-dashboard.html','home','Accueil'],
+    ['chat.html','message-circle','Messages'],
+    ['carte.html','map','Boutiques'],
+    ['chat.html#rdv','calendar-days','RDV','rdv'],
+    ['client-profile.html','user','Profil']
+  ];
+  var path=location.pathname.toLowerCase();
+  function isActive(h){var f=h.split('/').pop().toLowerCase();return path.indexOf(f)!==-1;}
+
+  var overlay=document.createElement('div');overlay.className='mgt-nav-overlay';
+  var drawer=document.createElement('aside');drawer.className='mgt-nav-drawer';
+  drawer.innerHTML='<div class="mgt-nav-head"><div class="mgt-nav-brand"><img src="../assets/favicon.png" alt="" style="width:40px;height:40px;border-radius:10px;object-fit:cover;"><div><p class="mgt-nav-title">Mangoo</p><p class="mgt-nav-sub">Espace client</p></div></div><button class="mgt-nav-close" id="mgt-nav-close" aria-label="Fermer">✕</button></div><nav class="mgt-nav-list"></nav><div class="mgt-nav-foot"><a href="./auth.html" class="mgt-nav-link"><i data-lucide="log-out"></i><span>Déconnexion</span></a></div>';
+  var list=drawer.querySelector('.mgt-nav-list');
+  DRAWER.forEach(function(d){
+    var a=document.createElement('a');a.href='./'+d[0];
+    a.className='mgt-nav-link'+(d[3]!=='rdv'&&isActive(d[0])?' active':'');
+    a.innerHTML='<span class="mgt-nav-ico"><i data-lucide="'+d[1]+'"></i>'+(d[1]==='map'?'<span class="mgt-live-dot-nav" style="display:none;"></span>':'')+'</span><span>'+d[2]+'</span>';list.appendChild(a);
+  });
+  var bottom=document.createElement('nav');bottom.className='mgt-bottom-nav';
+  BOTTOM.forEach(function(d){
+    var a=document.createElement('a');a.href='./'+d[0];
+    a.className=(d[3]!=='rdv'&&isActive(d[0])?'active':'');
+    a.innerHTML='<span class="mgt-nav-ico"><i data-lucide="'+d[1]+'"></i>'+(d[1]==='map'?'<span class="mgt-live-dot-nav" style="display:none;"></span>':'')+'</span><span>'+d[2]+'</span>';bottom.appendChild(a);
+  });
+  document.body.appendChild(overlay);document.body.appendChild(drawer);document.body.appendChild(bottom);
+
+  function open(){drawer.classList.add('open');overlay.classList.add('show');}
+  function close(){drawer.classList.remove('open');overlay.classList.remove('show');}
+  overlay.addEventListener('click',close);
+  drawer.querySelector('#mgt-nav-close').addEventListener('click',close);
+  list.querySelectorAll('a').forEach(function(a){a.addEventListener('click',close);});
+  drawer.querySelector('.mgt-nav-foot a').addEventListener('click',close);
+
+  var toggle=document.getElementById('mobile-menu-toggle');
+  if(toggle){toggle.addEventListener('click',function(){drawer.classList.contains('open')?close():open();});}
+  if(window.lucide)lucide.createIcons();
+})();
+</script>
+<script src="../assets/mangoo-connect-plus.js"></script>
+</body>
+</html>

@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Fidélité</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root { --mgt-radius-sm: 4px; --mgt-radius-md: 8px; --mgt-radius-lg: 16px; --mgt-radius-full: 9999px; }
+
+:root,
+html.light {
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+:root {
+  --background: 255 255 255; --foreground: 15 23 42; --card: 255 255 255; --card-foreground: 15 23 42;
+  --popover: 255 255 255; --popover-foreground: 15 23 42; --primary: 26 92 42; --primary-foreground: 255 255 255;
+  --muted: 248 250 252; --muted-foreground: 100 116 139; --border: 226 232 240; --input: 226 232 240; --ring: 26 92 42;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 9999px;
+  --state-success: 129 199 134; --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77; --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68; --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246; --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-card: 20 20 26; --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26; --mgt-popover-foreground: 248 250 252; --mgt-muted: 30 30 38; --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50; --mgt-input: 40 40 50; --mgt-ring: 76 168 82;
+  --background: 11 11 15; --foreground: 248 250 252; --card: 20 20 26; --card-foreground: 248 250 252;
+  --popover: 20 20 26; --popover-foreground: 248 250 252; --primary: 76 168 82; --primary-foreground: 255 255 255;
+  --muted: 30 30 38; --muted-foreground: 148 163 184; --border: 40 40 50; --input: 40 40 50; --ring: 76 168 82;
+}
+
+.h-display { font-family: var(--mgt-font-sans); font-size: clamp(40px, 6vw, 88px); line-height: 1.02; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(28px, 3.5vw, 48px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.h2 { font-family: var(--mgt-font-sans); font-size: clamp(22px, 2.4vw, 32px); line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body-l { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.55; font-weight: 400; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); } .text-background { color: var(--background); } .border-background { border-color: var(--background); } .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); } .text-foreground { color: var(--foreground); } .border-foreground { border-color: var(--foreground); } .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); } .text-card { color: var(--card); } .border-card { border-color: var(--card); } .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); } .text-card-foreground { color: var(--card-foreground); } .border-card-foreground { border-color: var(--card-foreground); } .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); } .text-popover { color: var(--popover); } .border-popover { border-color: var(--popover); } .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); } .text-popover-foreground { color: var(--popover-foreground); } .border-popover-foreground { border-color: var(--popover-foreground); } .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); } .text-primary { color: var(--primary); } .border-primary { border-color: var(--primary); } .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); } .text-primary-foreground { color: var(--primary-foreground); } .border-primary-foreground { border-color: var(--primary-foreground); } .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); } .text-muted { color: var(--muted); } .border-muted { border-color: var(--muted); } .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); } .text-muted-foreground { color: var(--muted-foreground); } .border-muted-foreground { border-color: var(--muted-foreground); } .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); } .text-border { color: var(--border); } .border-border { border-color: var(--border); } .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); } .text-input { color: var(--input); } .border-input { border-color: var(--input); } .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); } .text-ring { color: var(--ring); } .border-ring { border-color: var(--ring); } .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] { display: inline-flex; align-items: center; justify-content: center; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; background-color: currentColor; }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="h3 tabular-nums">Fidélité</h1>
+          <span class="inline-flex items-center gap-1.5 caption px-2.5 py-0.5 rounded-full font-semibold bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))]">
+            <i data-lucide="lock" class="w-3 h-3"></i>
+            Professionnel+
+          </span>
+          <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span>
+            <span id="fid-members-badge">248</span> membres
+          </span>
+          <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-accent))]"></span>
+            3 niveaux
+          </span>
+          <button id="btn-program-toggle" class="inline-flex items-center gap-2 caption px-3 py-1.5 rounded-full font-semibold border transition-colors" style="border-color:rgb(var(--mgt-border)); color:rgb(var(--mgt-foreground));">
+            <span id="program-dot" class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span>
+            <span id="program-label">Programme actif</span>
+          </button>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="relative hidden sm:block">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            <input id="topbar-search" type="text" placeholder="Rechercher..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+          </div>
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 p-8 space-y-6">
+<!-- ===== KPIs FIDELITE ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="users" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +12
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Membres actifs</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]" id="fid-members">248</p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="award" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +18%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Points distribués</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]" id="fid-points-distributed">12 400</p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="gift" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +9%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Récompenses échangées</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]" id="fid-redeemed">64</p>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="repeat" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +5%
+              </span>
+            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Taux de rétention</p>
+            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]"><span id="fid-retention">72</span><span class="text-lg font-medium text-[rgb(var(--mgt-muted-foreground))]">%</span></p>
+          </div>
+        </div>
+
+        <!-- ===== NIVEAUX DE FIDELITE ===== -->
+        <div>
+          <h2 class="h2 mb-1">Niveaux du programme</h2>
+          <p class="body text-[rgb(var(--mgt-muted-foreground))] mb-5">Récompensez vos clientes selon leur fidélité</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-primary-50))]">
+                  <i data-lucide="sprout" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Bronze</h3>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">0 - 500 points</p>
+                </div>
+              </div>
+              <ul class="space-y-2 text-sm text-[rgb(var(--mgt-foreground))] mb-4">
+                <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-[rgb(var(--mgt-success))]"></i> 1 point = 100 FCFA</li>
+                <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-[rgb(var(--mgt-success))]"></i> -5 % sur la 5e visite</li>
+              </ul>
+              <p class="caption font-semibold text-[rgb(var(--mgt-muted-foreground))]">184 membres</p>
+              <div class="flex justify-end mt-2">
+                <button type="button" data-level-action="edit" data-level-id="bronze" class="inline-flex items-center gap-1 text-xs font-medium text-[rgb(var(--mgt-primary))] hover:underline">Modifier</button>
+              </div>
+            </div>
+            <div class="bg-[rgb(var(--mgt-card))] border-2 border-[rgb(var(--mgt-accent))] rounded-xl p-6 shadow-[var(--mgt-shadow-md)] relative">
+              <span class="absolute -top-2.5 right-4 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-accent))] text-white shadow-md">Populaire</span>
+              <div class="flex items-center gap-3 mb-4">
+                <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-accent-50))]">
+                  <i data-lucide="medal" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Argent</h3>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">501 - 1 500 points</p>
+                </div>
+              </div>
+              <ul class="space-y-2 text-sm text-[rgb(var(--mgt-foreground))] mb-4">
+                <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-[rgb(var(--mgt-success))]"></i> 1 point = 80 FCFA</li>
+                <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-[rgb(var(--mgt-success))]"></i> -10 % + soin offert</li>
+              </ul>
+              <p class="caption font-semibold text-[rgb(var(--mgt-muted-foreground))]">52 membres</p>
+              <div class="flex justify-end mt-2">
+                <button type="button" data-level-action="edit" data-level-id="argent" class="inline-flex items-center gap-1 text-xs font-medium text-[rgb(var(--mgt-primary))] hover:underline">Modifier</button>
+              </div>
+            </div>
+            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-primary-50))]">
+                  <i data-lucide="crown" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Or</h3>
+                  <p class="caption text-[rgb(var(--mgt-muted-foreground))]">1 500+ points</p>
+                </div>
+              </div>
+              <ul class="space-y-2 text-sm text-[rgb(var(--mgt-foreground))] mb-4">
+                <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-[rgb(var(--mgt-success))]"></i> 1 point = 50 FCFA</li>
+                <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-[rgb(var(--mgt-success))]"></i> -15 % + accès prioritaire</li>
+              </ul>
+              <p class="caption font-semibold text-[rgb(var(--mgt-muted-foreground))]">12 membres</p>
+              <div class="flex justify-end mt-2">
+                <button type="button" data-level-action="edit" data-level-id="or" class="inline-flex items-center gap-1 text-xs font-medium text-[rgb(var(--mgt-primary))] hover:underline">Modifier</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== RECOMPENSES DISPONIBLES ===== -->
+        <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div>
+              <h2 class="h2">Récompenses disponibles</h2>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mt-1">Vos clientes échangent leurs points contre ces avantages</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="relative">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                <input id="reward-search" type="text" placeholder="Rechercher une récompense..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+              </div>
+              <button id="btn-add-reward" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                Ajouter
+              </button>
+            </div>
+          </div>
+          <div id="fidelite-rewards" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- ===== ACTIVITE POINTS ===== -->
+        <div>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div>
+              <h2 class="h2">Activité des points</h2>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mt-1">Dernières transactions de fidélité</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="relative">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                <input id="activity-search" type="text" placeholder="Rechercher cliente ou action..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+              </div>
+              <button id="btn-export-fidelite" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                Exporter
+              </button>
+            </div>
+          </div>
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl shadow-[var(--mgt-shadow-sm)] overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-[rgb(var(--mgt-border))]">
+                    <th class="text-left py-3 px-4 font-semibold text-[rgb(var(--mgt-muted-foreground))] caption">Cliente</th>
+                    <th class="text-left py-3 px-4 font-semibold text-[rgb(var(--mgt-muted-foreground))] caption">Action</th>
+                    <th class="text-left py-3 px-4 font-semibold text-[rgb(var(--mgt-muted-foreground))] caption">Points</th>
+                    <th class="text-left py-3 px-4 font-semibold text-[rgb(var(--mgt-muted-foreground))] caption">Date</th>
+                  </tr>
+                </thead>
+                <tbody id="activity-tbody" class="divide-y divide-[rgb(var(--mgt-border))]">
+                  <tr class="hover:bg-[rgb(var(--mgt-muted))] transition-colors">
+                    <td class="py-3.5 px-4 font-medium text-[rgb(var(--mgt-foreground))]">Awa S.</td>
+                    <td class="py-3.5 px-4 text-[rgb(var(--mgt-foreground))]">Achat de prestation</td>
+                    <td class="py-3.5 px-4 font-semibold tabular-nums text-[rgb(var(--mgt-success))]">+120</td>
+                    <td class="py-3.5 px-4 tabular-nums text-[rgb(var(--mgt-muted-foreground))]">Aujourd'hui</td>
+                  </tr>
+                  <tr class="hover:bg-[rgb(var(--mgt-muted))] transition-colors">
+                    <td class="py-3.5 px-4 font-medium text-[rgb(var(--mgt-foreground))]">Fatou B.</td>
+                    <td class="py-3.5 px-4 text-[rgb(var(--mgt-foreground))]">Récompense échangée</td>
+                    <td class="py-3.5 px-4 font-semibold tabular-nums text-[rgb(var(--mgt-error))]">-300</td>
+                    <td class="py-3.5 px-4 tabular-nums text-[rgb(var(--mgt-muted-foreground))]">Hier</td>
+                  </tr>
+                  <tr class="hover:bg-[rgb(var(--mgt-muted))] transition-colors">
+                    <td class="py-3.5 px-4 font-medium text-[rgb(var(--mgt-foreground))]">Mariama K.</td>
+                    <td class="py-3.5 px-4 text-[rgb(var(--mgt-foreground))]">Achat de produit</td>
+                    <td class="py-3.5 px-4 font-semibold tabular-nums text-[rgb(var(--mgt-success))]">+85</td>
+                    <td class="py-3.5 px-4 tabular-nums text-[rgb(var(--mgt-muted-foreground))]">Il y a 2 j</td>
+                  </tr>
+                  <tr class="hover:bg-[rgb(var(--mgt-muted))] transition-colors">
+                    <td class="py-3.5 px-4 font-medium text-[rgb(var(--mgt-foreground))]">Nafissatou D.</td>
+                    <td class="py-3.5 px-4 text-[rgb(var(--mgt-foreground))]">Parrainage</td>
+                    <td class="py-3.5 px-4 font-semibold tabular-nums text-[rgb(var(--mgt-success))]">+200</td>
+                    <td class="py-3.5 px-4 tabular-nums text-[rgb(var(--mgt-muted-foreground))]">Il y a 3 j</td>
+                  </tr>
+                  <tr class="hover:bg-[rgb(var(--mgt-muted))] transition-colors">
+                    <td class="py-3.5 px-4 font-medium text-[rgb(var(--mgt-foreground))]">Oumou S.</td>
+                    <td class="py-3.5 px-4 text-[rgb(var(--mgt-foreground))]">Achat de prestation</td>
+                    <td class="py-3.5 px-4 font-semibold tabular-nums text-[rgb(var(--mgt-success))]">+150</td>
+                    <td class="py-3.5 px-4 tabular-nums text-[rgb(var(--mgt-muted-foreground))]">Il y a 4 j</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>lucide.createIcons();</script>
+    <script>
+    (function () {
+      // Comportement de production du programme de fidélité :
+      // - Export réel du tableau d'activité en CSV (téléchargement).
+      // - Bascule « Programme actif / en pause » qui verrouille les actions.
+      var active = true;
+      window.__fidPage = {
+        setActive: function (v) { active = !!v; syncToggle(); },
+        isActive: function () { return active; }
+      };
+
+      function toast(msg) {
+        var t = document.getElementById('fid-toast');
+        if (!t) {
+          t = document.createElement('div');
+          t.id = 'fid-toast';
+          t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translate(-50%,16px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;font-family:var(--mgt-font-sans);z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;';
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translate(-50%,0)'; });
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2400);
+      }
+
+      function syncToggle() {
+        var dot = document.getElementById('program-dot');
+        var label = document.getElementById('program-label');
+        var btn = document.getElementById('btn-program-toggle');
+        if (dot) dot.style.background = active ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-muted-foreground))';
+        if (label) label.textContent = active ? 'Programme actif' : 'Programme en pause';
+        if (btn) {
+          btn.style.borderColor = active ? 'rgb(var(--mgt-border))' : 'rgb(var(--mgt-warning))';
+          btn.style.color = active ? 'rgb(var(--mgt-foreground))' : 'rgb(var(--mgt-accent-700))';
+        }
+        var exp = document.getElementById('btn-export-fidelite');
+        if (exp) { exp.style.opacity = active ? '1' : '0.45'; exp.style.pointerEvents = active ? 'auto' : 'none'; }
+      }
+
+      function exportCsv() {
+        if (!active) { toast('Le programme est en pause.'); return; }
+        var rows = [];
+        document.querySelectorAll('table tbody tr').forEach(function (tr) {
+          var cells = tr.querySelectorAll('td');
+          if (cells.length >= 4) {
+            rows.push([
+              cells[0].textContent.trim(),
+              cells[1].textContent.trim(),
+              cells[2].textContent.trim(),
+              cells[3].textContent.trim()
+            ]);
+          }
+        });
+        if (!rows.length) { toast('Aucune donnée à exporter.'); return; }
+        var csv = 'Cliente;Action;Points;Date\n' + rows.map(function (r) { return r.map(function (c) { return '"' + c.replace(/"/g, '""') + '"'; }).join(';'); }).join('\n');
+        var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'fidelite-mangoo-tech.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        toast('Export CSV téléchargé.');
+      }
+
+      var exp = document.getElementById('btn-export-fidelite');
+      if (exp) exp.addEventListener('click', exportCsv);
+      var tog = document.getElementById('btn-program-toggle');
+      if (tog) {
+        tog.addEventListener('click', function () {
+          active = !active;
+          syncToggle();
+          toast(active ? 'Programme de fidélité réactivé.' : 'Programme de fidélité mis en pause.');
+          if (window.MangooVendorConfig) {
+            MangooVendorConfig.patch('fidelite', { enabled: active }).catch(function () {});
+          }
+        });
+      }
+      syncToggle();
+    })();
+    </script>
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (min-width: 769px) { .mobile-menu-btn { display: none !important; } .mobile-only { display: none !important; } }
+@media (max-width: 480px) { .kpi-grid { grid-template-columns: 1fr !important; } }
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'dashboard-sidebar-overlay';
+    overlay.addEventListener('click', function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+    document.body.appendChild(overlay);
+    var topbar = document.querySelector('.dashboard-topbar');
+    if (topbar) {
+      var btn = document.createElement('button');
+      btn.className = 'mobile-menu-btn';
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+      btn.addEventListener('click', function(){ sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+    sidebar.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      });
+    });
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-vendor-config.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+<script>
+(function(){
+  var currentConfig = null;
+
+  function fmtNum(n){
+    n = Number(n) || 0;
+    var str = String(n);
+    var out = '';
+    var count = 0;
+    for (var i = str.length - 1; i >= 0; i--) {
+      out = str.charAt(i) + out;
+      count++;
+      if (count % 3 === 0 && i > 0) out = ' ' + out;
+    }
+    return out;
+  }
+
+  function setText(id, value){
+    var el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  function toast(msg){
+    var t = document.getElementById('fid-toast-2');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'fid-toast-2';
+      t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translate(-50%,16px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;font-family:var(--mgt-font-sans);z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translate(-50%,0)'; });
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2400);
+  }
+
+  function getFidelite(){ return (currentConfig && currentConfig.fidelite) || {}; }
+
+  function persistFidelite(patch, done){
+    if (currentConfig && window.MangooVendorConfig) {
+      MangooVendorConfig.patch('fidelite', patch).then(function(){ if (done) done(); }).catch(function(){ if (done) done(); });
+    } else {
+      if (done) done();
+    }
+  }
+
+  function render(){
+    var f = getFidelite();
+
+    setText('fid-members-badge', fmtNum(f.members));
+    setText('fid-members', fmtNum(f.members));
+    setText('fid-points-distributed', fmtNum(f.pointsDistributed));
+    setText('fid-redeemed', fmtNum(f.redeemed));
+    setText('fid-retention', fmtNum(f.retention));
+
+    if (window.__fidPage) window.__fidPage.setActive(f.enabled !== false);
+
+    var rewards = f.rewards || [];
+    // Filtre de recherche sur les récompenses (par nom).
+    var searchEl = document.getElementById('reward-search');
+    var q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+    var display = rewards;
+    if (q) display = rewards.filter(function(r){ return (r.name || '').toLowerCase().indexOf(q) !== -1; });
+
+    var list = document.getElementById('fidelite-rewards');
+    if (list) {
+      list.innerHTML = '';
+      if (!display.length) {
+        list.innerHTML = '<p class="caption text-[rgb(var(--mgt-muted-foreground))] sm:col-span-3">'
+          + (q ? 'Aucune récompense ne correspond à « ' + esc(searchEl.value.trim()) + ' »' : 'Aucune récompense. Cliquez sur « Ajouter » pour en créer une.')
+          + '</p>';
+      } else {
+        display.forEach(function (r) {
+          var card = document.createElement('div');
+          card.className = 'rounded-lg border border-[rgb(var(--mgt-border))] p-4 relative';
+          card.innerHTML =
+            '<button type="button" data-reward-action="delete" data-reward-id="' + esc(r.id) + '" title="Supprimer" aria-label="Supprimer" class="absolute top-2 right-2 w-7 h-7 rounded-md inline-flex items-center justify-center text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-error)/0.10)] hover:text-[rgb(var(--mgt-error))] transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>' +
+            '<div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))] mb-3">' +
+              '<i data-lucide="gift" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>' +
+            '</div>' +
+            '<p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] pr-6">' + esc(r.name) + '</p>' +
+            '<p class="caption text-[rgb(var(--mgt-muted-foreground))] mt-1">' + fmtNum(r.cost) + ' points</p>';
+          list.appendChild(card);
+        });
+      }
+      if (window.lucide && window.lucide.createIcons) lucide.createIcons();
+    }
+  }
+
+  function addRewardForm(){
+    var list = document.getElementById('fidelite-rewards');
+    if (!list) return;
+    if (document.getElementById('reward-add-form')) return;
+    var form = document.createElement('div');
+    form.id = 'reward-add-form';
+    form.className = 'rounded-lg border border-dashed border-[rgb(var(--mgt-primary))] p-4 sm:col-span-3';
+    form.innerHTML =
+      '<p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-3">Nouvelle récompense</p>' +
+      '<div class="flex flex-col gap-2 mb-3">' +
+        '<input id="reward-name" type="text" placeholder="Nom (ex. -10 % sur prestation)" class="px-3 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)]">' +
+        '<input id="reward-cost" type="number" min="10" step="10" placeholder="Coût en points (ex. 100)" class="px-3 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)]">' +
+      '</div>' +
+      '<div class="flex gap-2">' +
+        '<button type="button" data-reward-action="save-new" class="flex-1 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold">Ajouter</button>' +
+        '<button type="button" data-reward-action="cancel-new" class="flex-1 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium">Annuler</button>' +
+      '</div>';
+    list.prepend(form);
+    var nameEl = form.querySelector('#reward-name');
+    if (nameEl) nameEl.focus();
+  }
+
+  function saveNewReward(){
+    var nameEl = document.getElementById('reward-name');
+    var costEl = document.getElementById('reward-cost');
+    var name = (nameEl && nameEl.value || '').trim();
+    var cost = parseInt((costEl && costEl.value) || '0', 10);
+    if (!name) { toast('Veuillez saisir un nom de récompense'); if (nameEl) nameEl.focus(); return; }
+    if (!cost || cost <= 0) { toast('Veuillez saisir un coût en points valide'); if (costEl) costEl.focus(); return; }
+    var f = getFidelite();
+    var rewards = (f.rewards || []).concat([{ id: 'rw-' + Date.now(), name: name, cost: cost }]);
+    f.rewards = rewards;
+    persistFidelite({ rewards: rewards }, function(){ render(); toast('Récompense ajoutée'); });
+  }
+
+  function deleteReward(id){
+    var f = getFidelite();
+    var rewards = (f.rewards || []).filter(function(r){ return r.id !== id; });
+    f.rewards = rewards;
+    persistFidelite({ rewards: rewards }, function(){ render(); toast('Récompense supprimée'); });
+  }
+
+  function editLevel(card, id){
+    var name = card.querySelector('h3');
+    var range = card.querySelector('p.caption');
+    var items = card.querySelectorAll('ul li');
+    var perks = [];
+    items.forEach(function(li){ var t = li.textContent.trim(); if (t) perks.push(t); });
+    card._levelOriginal = card.innerHTML;
+    card._levelName = name ? name.textContent.trim() : '';
+    card._levelRange = range ? range.textContent.trim() : '';
+    card.innerHTML =
+      '<p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-3">Modifier les avantages</p>' +
+      '<p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-2">Une ligne = un avantage</p>' +
+      '<textarea data-level-field="perks" rows="4" class="w-full px-3 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] mb-3">' + esc(perks.join('\n')) + '</textarea>' +
+      '<div class="flex gap-2">' +
+        '<button type="button" data-level-action="save" data-level-id="' + esc(id) + '" class="flex-1 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold">Enregistrer</button>' +
+        '<button type="button" data-level-action="cancel" class="flex-1 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium">Annuler</button>' +
+      '</div>';
+  }
+
+  function saveLevel(card, id){
+    var perksEl = card.querySelector('[data-level-field="perks"]');
+    var perks = (perksEl && perksEl.value || '').split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+    if (!perks.length) { toast('Ajoutez au moins un avantage'); return; }
+    var f = getFidelite();
+    var levels = (f.levels || []).slice();
+    var found = false;
+    for (var i = 0; i < levels.length; i++) { if (levels[i].id === id) { levels[i] = { id: id, name: card._levelName, range: card._levelRange, perks: perks }; found = true; break; } }
+    if (!found) levels.push({ id: id, name: card._levelName, range: card._levelRange, perks: perks });
+    f.levels = levels;
+    persistFidelite({ levels: levels }, function(){
+      card.innerHTML = card._levelOriginal;
+      var ul = card.querySelector('ul');
+      if (ul) {
+        ul.innerHTML = perks.map(function(p){ return '<li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-[rgb(var(--mgt-success))]"></i> ' + esc(p) + '</li>'; }).join('');
+      }
+      if (window.lucide && window.lucide.createIcons) lucide.createIcons();
+      toast('Niveau mis à jour');
+    });
+  }
+
+  function cancelLevel(card){
+    card.innerHTML = card._levelOriginal;
+    if (window.lucide && window.lucide.createIcons) lucide.createIcons();
+  }
+
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-reward-action]');
+    if (btn) {
+      var a = btn.getAttribute('data-reward-action');
+      if (a === 'delete') deleteReward(btn.getAttribute('data-reward-id'));
+      else if (a === 'save-new') saveNewReward();
+      else if (a === 'cancel-new') { var form = document.getElementById('reward-add-form'); if (form) form.remove(); }
+      return;
+    }
+    btn = e.target.closest('[data-level-action]');
+    if (btn) {
+      var la = btn.getAttribute('data-level-action');
+      var card = btn.closest('.rounded-xl');
+      if (!card) return;
+      if (la === 'edit') editLevel(card, btn.getAttribute('data-level-id'));
+      else if (la === 'save') saveLevel(card, btn.getAttribute('data-level-id'));
+      else if (la === 'cancel') cancelLevel(card);
+    }
+  });
+
+  var addRewardBtn = document.getElementById('btn-add-reward');
+  if (addRewardBtn) addRewardBtn.addEventListener('click', addRewardForm);
+
+  var rewardSearch = document.getElementById('reward-search');
+  if (rewardSearch) rewardSearch.addEventListener('input', function(){ render(); });
+
+  // Filtre de l'activité des points (cliente ou action).
+  var activitySearch = document.getElementById('activity-search');
+  var activityTbody = document.getElementById('activity-tbody');
+  function applyActivityFilter() {
+    if (!activityTbody) return;
+    var q = activitySearch ? activitySearch.value.trim().toLowerCase() : '';
+    var rows = activityTbody.querySelectorAll('tr[data-activity-row]');
+    var visible = 0;
+    rows.forEach(function (tr) {
+      var cells = tr.querySelectorAll('td');
+      var cliente = (cells[0] ? cells[0].textContent : '') || '';
+      var action = (cells[1] ? cells[1].textContent : '') || '';
+      var show = !q || cliente.toLowerCase().indexOf(q) !== -1 || action.toLowerCase().indexOf(q) !== -1;
+      tr.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    var empty = document.getElementById('activity-empty-row');
+    if (empty) empty.remove();
+    if (visible === 0) {
+      var tr = document.createElement('tr');
+      tr.id = 'activity-empty-row';
+      tr.innerHTML = '<td colspan="4" class="py-8 px-4 text-center caption text-[rgb(var(--mgt-muted-foreground))]">Aucune transaction ne correspond à « ' + esc(q) + ' ».</td>';
+      activityTbody.appendChild(tr);
+    }
+  }
+  // Marque les lignes du tableau comme filtrables.
+  if (activityTbody) {
+    activityTbody.querySelectorAll('tr').forEach(function (tr) { tr.setAttribute('data-activity-row', '1'); });
+  }
+  if (activitySearch) activitySearch.addEventListener('input', applyActivityFilter);
+
+  function hydrate(res){
+    currentConfig = res.config || {};
+    render();
+  }
+
+  if (window.MangooVendorConfig) {
+    MangooVendorConfig.get().then(function(res){ if (res && res.ok) hydrate(res); }).catch(function(){});
+  } else {
+    render();
+  }
+})();
+</script>
+</body>
+</html>

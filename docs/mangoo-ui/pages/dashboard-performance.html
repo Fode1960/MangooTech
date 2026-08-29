@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Performance</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius-md);
+    --radius-lg: var(--radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-delivery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="truck" class="w-4.5 h-4.5"></i>
+          Livraisons
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="text-lg font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">Performance</h1>
+          <span id="perf-header-period" class="text-xs text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">30 derniers jours</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 p-8 space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div id="perf-period-filter" class="flex items-center gap-2" role="group" aria-label="Période d'analyse">
+            <button type="button" data-period="7" style="padding:8px 14px;border-radius:9999px;font-size:13px;font-weight:600;border:1px solid rgb(var(--mgt-border));color:rgb(var(--mgt-muted-foreground));background:transparent;cursor:pointer;transition:all .2s ease;">7 j</button>
+            <button type="button" data-period="30" style="padding:8px 14px;border-radius:9999px;font-size:13px;font-weight:600;border:1px solid rgb(var(--mgt-border));color:rgb(var(--mgt-muted-foreground));background:transparent;cursor:pointer;transition:all .2s ease;">30 j</button>
+            <button type="button" data-period="90" style="padding:8px 14px;border-radius:9999px;font-size:13px;font-weight:600;border:1px solid rgb(var(--mgt-border));color:rgb(var(--mgt-muted-foreground));background:transparent;cursor:pointer;transition:all .2s ease;">90 j</button>
+          </div>
+          <button id="perf-export" type="button" style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:var(--mgt-radius-md);background:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground));font-size:13px;font-weight:600;border:none;cursor:pointer;transition:opacity .2s ease;">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            Exporter les données
+          </button>
+        </div>
+        <!-- ===== KPIs PERFORMANCE ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="eye" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +18%
+              </span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Vues du profil</p>
+            <p id="kpi-vues" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">3 482</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="mouse-pointer-click" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +11%
+              </span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Clics (appel / chat / itinéraire)</p>
+            <p id="kpi-clics" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">1 206</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="phone" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +7%
+              </span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Appels reçus</p>
+            <p id="kpi-appels" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">438</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="percent" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-warning)/0.15)] text-[rgb(var(--mgt-accent-700))]">
+                <i data-lucide="trending-down" class="w-3 h-3"></i> -2 pts
+              </span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Taux de conversion</p>
+            <p id="kpi-conversion" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">12,6 %</p>
+          </div>
+        </div>
+
+        <!-- ===== KPIs REVENUS ===== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="wallet" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +22%</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Chiffre d'affaires</p>
+            <p id="kpi-ca" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">412 500 <span class="text-sm font-semibold text-[rgb(var(--mgt-muted-foreground))]">FCFA</span></p>
+            <p id="kpi-ca-period" class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">30 derniers jours</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="shopping-bag" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +9%</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Commandes</p>
+            <p id="kpi-commandes" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">87</p>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">dont 63 % récurrentes</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
+                <i data-lucide="receipt" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +4%</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Panier moyen</p>
+            <p id="kpi-panier" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">4 740 <span class="text-sm font-semibold text-[rgb(var(--mgt-muted-foreground))]">FCFA</span></p>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">vs 4 320 FCFA quartier</p>
+          </div>
+
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
+                <i data-lucide="star" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
+              </div>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> +15%</span>
+            </div>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Avis reçus</p>
+            <p id="kpi-avis" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">63</p>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">note moyenne 4,8/5</p>
+          </div>
+        </div>
+
+        <!-- ===== GRAPHIQUE TENDANCE ===== -->
+        <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Vues vs conversions</h2>
+              <p id="chart-period-label" class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-0.5">30 derniers jours</p>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-[rgb(var(--mgt-primary))]"></span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Vues</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-[rgb(var(--mgt-accent))]"></span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Conversions</span>
+              </div>
+            </div>
+          </div>
+          <div class="relative w-full" style="height: 240px;">
+            <svg viewBox="0 0 600 240" class="w-full h-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Graphique des vues et conversions sur 30 jours">
+              <defs>
+                <linearGradient id="views-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="rgb(var(--mgt-primary))" stop-opacity="0.18"/>
+                  <stop offset="100%" stop-color="rgb(var(--mgt-primary))" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="600" height="240" fill="rgb(var(--mgt-card))"/>
+              <line x1="48" y1="40" x2="580" y2="40" stroke="rgb(var(--mgt-border))" stroke-width="1" stroke-dasharray="4 4"/>
+              <line x1="48" y1="90" x2="580" y2="90" stroke="rgb(var(--mgt-border))" stroke-width="1" stroke-dasharray="4 4"/>
+              <line x1="48" y1="140" x2="580" y2="140" stroke="rgb(var(--mgt-border))" stroke-width="1" stroke-dasharray="4 4"/>
+              <line x1="48" y1="190" x2="580" y2="190" stroke="rgb(var(--mgt-border))" stroke-width="1" stroke-dasharray="4 4"/>
+
+              <!-- Views area (primary) -->
+              <path d="M48 190 L76 175 L104 168 L132 180 L160 158 L188 145 L216 150 L244 128 L272 135 L300 112 L328 118 L356 95 L384 100 L412 82 L440 90 L468 70 L496 78 L524 60 L552 68 L580 55 L580 190 Z" fill="url(#views-fill)"/>
+              <polyline points="48,190 76,175 104,168 132,180 160,158 188,145 216,150 244,128 272,135 300,112 328,118 356,95 384,100 412,82 440,90 468,70 496,78 524,60 552,68 580,55" fill="none" stroke="rgb(var(--mgt-primary))" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+              <!-- Conversions line (accent) -->
+              <polyline points="48,205 76,200 104,195 132,198 160,188 188,182 216,184 244,172 272,176 300,162 328,165 356,152 384,155 412,145 440,150 468,138 496,142 524,132 552,136 580,128" fill="none" stroke="rgb(var(--mgt-accent))" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 0"/>
+
+              <!-- X labels -->
+              <text x="48" y="226" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="rgb(var(--mgt-muted-foreground))">J1</text>
+              <text x="180" y="226" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="rgb(var(--mgt-muted-foreground))">J10</text>
+              <text x="314" y="226" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="rgb(var(--mgt-muted-foreground))">J20</text>
+              <text x="448" y="226" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="rgb(var(--mgt-muted-foreground))">J30</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- ===== SOURCES + COMPARATIF (2-col) ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Sources de trafic -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))] mb-4">D'où viennent vos clients</h2>
+            <div class="space-y-4">
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-sm text-[rgb(var(--mgt-foreground))] flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4 text-[rgb(var(--mgt-primary))]"></i> Carte Local+</span>
+                  <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">58 %</span>
+                </div>
+                <div class="h-2 rounded-full bg-[rgb(var(--mgt-muted))] overflow-hidden"><div class="h-full rounded-full bg-[rgb(var(--mgt-primary))]" style="width: 58%;"></div></div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-sm text-[rgb(var(--mgt-foreground))] flex items-center gap-2"><i data-lucide="search" class="w-4 h-4 text-[rgb(var(--mgt-accent))]"></i> Recherche</span>
+                  <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">24 %</span>
+                </div>
+                <div class="h-2 rounded-full bg-[rgb(var(--mgt-muted))] overflow-hidden"><div class="h-full rounded-full bg-[rgb(var(--mgt-accent))]" style="width: 24%;"></div></div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-sm text-[rgb(var(--mgt-foreground))] flex items-center gap-2"><i data-lucide="link" class="w-4 h-4 text-[rgb(var(--mgt-primary-500))]"></i> Lien direct</span>
+                  <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">12 %</span>
+                </div>
+                <div class="h-2 rounded-full bg-[rgb(var(--mgt-muted))] overflow-hidden"><div class="h-full rounded-full bg-[rgb(var(--mgt-primary-500))]" style="width: 12%;"></div></div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-sm text-[rgb(var(--mgt-foreground))] flex items-center gap-2"><i data-lucide="share-2" class="w-4 h-4 text-[rgb(var(--mgt-info))]"></i> Bouche-à-oreille</span>
+                  <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">6 %</span>
+                </div>
+                <div class="h-2 rounded-full bg-[rgb(var(--mgt-muted))] overflow-hidden"><div class="h-full rounded-full bg-[rgb(var(--mgt-info))]" style="width: 6%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comparatif vs quartier -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))] mb-4">Votre position dans le quartier</h2>
+            <div class="rounded-lg p-4 mb-4" style="background:rgb(var(--mgt-primary-50)); border-radius:var(--mgt-radius-md);">
+              <div class="flex items-center gap-3">
+                <span class="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgb(var(--mgt-primary)); color:rgb(var(--mgt-primary-foreground));"><i data-lucide="trophy" class="w-5 h-5"></i></span>
+                <div>
+                  <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Top 3 sur 24</p>
+                  <p class="text-xs text-[rgb(var(--mgt-primary-700))]">des salons de coiffure les plus consultés</p>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-muted-foreground))]">Note moyenne</span>
+                <span class="font-semibold text-[rgb(var(--mgt-foreground))]">4,8 <span class="text-xs font-normal text-[rgb(var(--mgt-success))]">(vs 4,2 quartier)</span></span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-muted-foreground))]">Temps de réponse moyen</span>
+                <span class="font-semibold text-[rgb(var(--mgt-foreground))]">14 min <span class="text-xs font-normal text-[rgb(var(--mgt-success))]">(vs 32 min)</span></span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-[rgb(var(--mgt-muted-foreground))]">Taux de réponse aux avis</span>
+                <span class="font-semibold text-[rgb(var(--mgt-foreground))]">92 % <span class="text-xs font-normal text-[rgb(var(--mgt-warning))]">(vs 78 %)</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== MEILLEURES PRESTATIONS + DERNIERS AVIS ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Meilleures prestations -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Meilleures prestations</h2>
+              <a href="./dashboard-services.html" class="text-xs font-medium text-[rgb(var(--mgt-primary))] hover:text-[rgb(var(--mgt-primary-700))]">Voir tout</a>
+            </div>
+            <div class="overflow-hidden rounded-lg border border-[rgb(var(--mgt-border))]">
+              <table class="w-full text-sm">
+                <thead class="bg-[rgb(var(--mgt-muted))] text-left">
+                  <tr class="text-xs text-[rgb(var(--mgt-muted-foreground))]">
+                    <th class="px-4 py-2.5 font-medium">Prestation</th>
+                    <th class="px-4 py-2.5 font-medium text-right">Commandes</th>
+                    <th class="px-4 py-2.5 font-medium text-right">CA</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[rgb(var(--mgt-border))]">
+                  <tr>
+                    <td class="px-4 py-3 font-medium text-[rgb(var(--mgt-foreground))]">Coiffure femme (tresse)</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-muted-foreground))]">34</td>
+                    <td class="px-4 py-3 text-right tabular-nums font-semibold text-[rgb(var(--mgt-foreground))]">186 000</td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3 font-medium text-[rgb(var(--mgt-foreground))]">Coloration + soin</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-muted-foreground))]">21</td>
+                    <td class="px-4 py-3 text-right tabular-nums font-semibold text-[rgb(var(--mgt-foreground))]">97 500</td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3 font-medium text-[rgb(var(--mgt-foreground))]">Manucure &amp; pédicure</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-muted-foreground))]">18</td>
+                    <td class="px-4 py-3 text-right tabular-nums font-semibold text-[rgb(var(--mgt-foreground))]">54 000</td>
+                  </tr>
+                  <tr>
+                    <td class="px-4 py-3 font-medium text-[rgb(var(--mgt-foreground))]">Coiffure homme</td>
+                    <td class="px-4 py-3 text-right tabular-nums text-[rgb(var(--mgt-muted-foreground))]">14</td>
+                    <td class="px-4 py-3 text-right tabular-nums font-semibold text-[rgb(var(--mgt-foreground))]">42 000</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Derniers avis -->
+          <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Derniers avis clients</h2>
+              <a href="./dashboard-reviews.html" class="text-xs font-medium text-[rgb(var(--mgt-primary))] hover:text-[rgb(var(--mgt-primary-700))]">Tout gérer</a>
+            </div>
+            <div class="space-y-3">
+              <div class="p-4 rounded-lg border border-[rgb(var(--mgt-border))]">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-xs">FK</div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Fatou K.</p>
+                    <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Il y a 2 jours</p>
+                  </div>
+                  <div class="flex items-center gap-0.5 text-[rgb(var(--mgt-accent))]">
+                    <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                  </div>
+                </div>
+                <p class="text-sm text-[rgb(var(--mgt-muted-foreground))]">« Service impeccable, ma tresse est magnifique. Je recommande vivement. »</p>
+              </div>
+              <div class="p-4 rounded-lg border border-[rgb(var(--mgt-border))]">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] font-semibold text-xs">MD</div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Mamadou D.</p>
+                    <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Il y a 5 jours</p>
+                  </div>
+                  <div class="flex items-center gap-0.5 text-[rgb(var(--mgt-accent))]">
+                    <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i><i data-lucide="star" class="w-3.5 h-3.5 text-[rgb(var(--mgt-border))] fill-current"></i>
+                  </div>
+                </div>
+                <p class="text-sm text-[rgb(var(--mgt-muted-foreground))]">« Très bon accueil et salon propre. Petit délai d'attente mais le résultat en vaut la peine. »</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== RECOMMANDATIONS ===== -->
+        <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))] mb-4">Recommandations pour progresser</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-lg border" style="border-color:rgb(var(--mgt-border)); background:rgb(var(--mgt-muted));">
+              <i data-lucide="zap" class="w-5 h-5 text-[rgb(var(--mgt-accent))] mb-2"></i>
+              <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-1">Activez un badge « En Promo »</p>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Les profils en promo reçoivent en moyenne 2,3× plus de vues.</p>
+            </div>
+            <div class="p-4 rounded-lg border" style="border-color:rgb(var(--mgt-border)); background:rgb(var(--mgt-muted));">
+              <i data-lucide="image" class="w-5 h-5 text-[rgb(var(--mgt-primary))] mb-2"></i>
+              <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-1">Ajoutez 3 photos</p>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Les profils avec 5+ photos ont un taux de conversion 40 % supérieur.</p>
+            </div>
+            <div class="p-4 rounded-lg border" style="border-color:rgb(var(--mgt-border)); background:rgb(var(--mgt-muted));">
+              <i data-lucide="message-circle" class="w-5 h-5 text-[rgb(var(--mgt-info))] mb-2"></i>
+              <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] mb-1">Répondez plus vite</p>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Votre temps de réponse est déjà excellent. Maintenez-le pour rester en tête.</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>lucide.createIcons();</script>
+<script>
+(function () {
+  function toast(message) {
+    var old = document.getElementById('mgt-toast');
+    if (old) { old.parentNode.removeChild(old); }
+    var el = document.createElement('div');
+    el.id = 'mgt-toast';
+    el.setAttribute('role', 'status');
+    el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(8px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:10px 16px;border-radius:var(--mgt-radius-md);box-shadow:var(--mgt-shadow-md);font-size:14px;font-weight:500;z-index:9999;opacity:0;transition:opacity .25s ease, transform .25s ease;pointer-events:none;';
+    el.textContent = message;
+    document.body.appendChild(el);
+    window.requestAnimationFrame(function () {
+      el.style.opacity = '1';
+      el.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    window.setTimeout(function () {
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(-50%) translateY(8px)';
+      window.setTimeout(function () { if (el.parentNode) { el.parentNode.removeChild(el); } }, 260);
+    }, 2400);
+  }
+
+  var data = {
+    '7': { label: '7 derniers jours', vues: '890', clics: '302', appels: '96', conversion: '13,1 %', ca: '98 400', commandes: '22', panier: '4 510', avis: '14' },
+    '30': { label: '30 derniers jours', vues: '3 482', clics: '1 206', appels: '438', conversion: '12,6 %', ca: '412 500', commandes: '87', panier: '4 740', avis: '63' },
+    '90': { label: '90 derniers jours', vues: '10 240', clics: '3 610', appels: '1 285', conversion: '11,8 %', ca: '1 248 000', commandes: '261', panier: '4 780', avis: '187' }
+  };
+  var currentPeriod = '30';
+  var filter = document.getElementById('perf-period-filter');
+  var buttons = filter ? filter.querySelectorAll('[data-period]') : [];
+
+  function setActive(period) {
+    buttons.forEach(function (btn) {
+      var active = btn.getAttribute('data-period') === period;
+      btn.style.background = active ? 'rgb(var(--mgt-primary))' : 'transparent';
+      btn.style.color = active ? 'rgb(var(--mgt-primary-foreground))' : 'rgb(var(--mgt-muted-foreground))';
+      btn.style.borderColor = active ? 'rgb(var(--mgt-primary))' : 'rgb(var(--mgt-border))';
+    });
+  }
+
+  function setText(id, value) {
+    var node = document.getElementById(id);
+    if (node) { node.textContent = value; }
+  }
+
+  function setHtml(id, value) {
+    var node = document.getElementById(id);
+    if (node) { node.innerHTML = value; }
+  }
+
+  function applyPeriod(period) {
+    var d = data[period];
+    if (!d) { return; }
+    currentPeriod = period;
+    setText('kpi-vues', d.vues);
+    setText('kpi-clics', d.clics);
+    setText('kpi-appels', d.appels);
+    setText('kpi-conversion', d.conversion);
+    setHtml('kpi-ca', d.ca + ' <span class="text-sm font-semibold text-[rgb(var(--mgt-muted-foreground))]">FCFA</span>');
+    setText('kpi-commandes', d.commandes);
+    setHtml('kpi-panier', d.panier + ' <span class="text-sm font-semibold text-[rgb(var(--mgt-muted-foreground))]">FCFA</span>');
+    setText('kpi-avis', d.avis);
+    setText('perf-header-period', d.label);
+    setText('kpi-ca-period', d.label);
+    setText('chart-period-label', d.label);
+    setActive(period);
+  }
+
+  buttons.forEach(function (btn) {
+    btn.addEventListener('click', function () { applyPeriod(btn.getAttribute('data-period')); });
+  });
+  applyPeriod('30');
+
+  var exportBtn = document.getElementById('perf-export');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', function () {
+      var d = data[currentPeriod];
+      var rows = [
+        ['Indicateur', 'Valeur', 'Période'],
+        ['Vues du profil', d.vues, d.label],
+        ['Clics (appel / chat / itinéraire)', d.clics, d.label],
+        ['Appels reçus', d.appels, d.label],
+        ['Taux de conversion', d.conversion, d.label],
+        ["Chiffre d'affaires (FCFA)", d.ca, d.label],
+        ['Commandes', d.commandes, d.label],
+        ['Panier moyen (FCFA)', d.panier, d.label],
+        ['Avis reçus', d.avis, d.label]
+      ];
+      var csv = rows.map(function (row) { return row.join(';'); }).join('\n');
+      var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'performance-' + currentPeriod + 'j.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      toast('Export CSV généré');
+    });
+  }
+})();
+</script>
+
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .tabular-nums { font-variant-numeric: tabular-nums; }
+      body { font-family: var(--mgt-font-sans); }
+    </style>
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+</body>
+</html>

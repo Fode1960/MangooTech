@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accueil MangooTech</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      @keyframes mgt-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.45);}50%{box-shadow:0 0 0 6px rgba(239,68,68,0);}}
+      .mgt-live-dot-nav{position:relative;display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef4444;margin-left:6px;vertical-align:middle;box-shadow:0 0 0 2px rgb(var(--mgt-primary));}
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+<script>
+(function () {
+  // Routage PWA : un professionnel connecté qui ouvre l'app via le logo (start_url "/")
+  // doit arriver sur sa messagerie (ou sa dernière conversation / l'overlay d'appel),
+  // jamais sur la page d'accueil publique ni sur la page de connexion.
+  //
+  // Resynchronise d'abord la session locale depuis le cookie httpOnly
+  // `mgt_session` (via /api/auth/session). Sans cela, un professionnel qui
+  // ouvre l'app via le logo PWA sur une autre origine (mangoo.tech vs
+  // www.mangoo.tech) reste bloqué sur l'accueil public : localStorage est vide
+  // alors que le cookie de session serveur est valide. XHR synchrone pour
+  // terminer la resync avant le routage ci-dessous.
+  try {
+    var _xhr = new XMLHttpRequest();
+    _xhr.open('GET', '/api/auth/session', false);
+    _xhr.setRequestHeader('Accept', 'application/json');
+    _xhr.send(null);
+    if (_xhr.status >= 200 && _xhr.status < 300) {
+      var _d = JSON.parse(_xhr.responseText);
+      if (_d && _d.ok && _d.token && _d.user) {
+        localStorage.setItem('mgt_token', _d.token);
+        localStorage.setItem('mgt_user', JSON.stringify(_d.user));
+      }
+    }
+  } catch (e) { /* non bloquant */ }
+
+  var token = null, user = null;
+  try { token = localStorage.getItem('mgt_token'); } catch (e) {}
+  try { user = JSON.parse(localStorage.getItem('mgt_user') || 'null'); } catch (e) {}
+  if (!token || !user) return;
+
+  var role = String(user.role || '').toLowerCase();
+
+  function validLanding(p) {
+    if (!p) return false;
+    if (p.indexOf('//') >= 0) return false;
+    if (p.indexOf('/pages/') !== 0) return false;
+    return p.indexOf('.html') !== -1;
+  }
+
+  // Livreur : renvoie vers son propre espace (aucun landing push spécifique).
+  if (role === 'livreur') { location.replace('/pages/livreur.html'); return; }
+
+  var isPro = role === 'vendeur' || role === 'prestataire';
+  if (!isPro) return; // client / admin : l'accueil public reste visible.
+
+  // 1) Landing push mémorisé par le shell avant une redirection vers la connexion.
+  var landing = null;
+  try { landing = localStorage.getItem('mgt_push_landing_v1'); } catch (e) {}
+  // On n'accepte jamais la page client chat.html pour un professionnel : un
+  // vieux landing mémorisé ne doit pas pouvoir renvoyer le pro côté client.
+  if (landing && validLanding(landing) && landing.indexOf('/pages/chat.html') !== 0) {
+    try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
+    location.replace(landing);
+    return;
+  }
+  // Nettoie tout de même une valeur invalide / client, pour ne pas la rejouer.
+  if (landing) {
+    try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
+  }
+
+  // 2) Dernière cible de notification mémorisée par le service worker.
+  //    Usage « one-shot » : dès qu'on lit la cible, on l'efface, sinon chaque
+  //    lancement via le logo PWA rejouerait un vieux landing et le pro resterait
+  //    coincé (ex. sur la page client chat.html). On n'accepte en outre que les
+  //    cibles valides pour un PROFESSIONNEL (dashboard-messages), jamais la page
+  //    client chat.html, et seulement si la notification est récente.
+  function goDefault() { location.replace('/pages/dashboard-messages.html'); }
+  function validProLanding(p) {
+    if (!validLanding(p)) return false;
+    return p.indexOf('/pages/chat.html') !== 0;
+  }
+  try {
+    caches.open('mgt-push-state').then(function (cache) {
+      return cache.match('/__mgt_last_landing__');
+    }).then(function (resp) {
+      return resp ? resp.text() : '';
+    }).then(function (raw) {
+      var url = raw, ts = 0;
+      if (raw && raw.charAt(0) === '{') {
+        try { var o = JSON.parse(raw); if (o && o.url) { url = o.url; ts = o.ts || 0; } } catch (e) {}
+      }
+      // One-shot : on efface immédiatement la cible, qu'elle soit utilisée ou non.
+      try { caches.open('mgt-push-state').then(function (c) { return c.delete('/__mgt_last_landing__'); }); } catch (e) {}
+      var fresh = (Date.now() - ts) < 120000; // 2 minutes maximum
+      if (fresh && validProLanding(url)) location.replace(url);
+      else goDefault();
+    }).catch(goDefault);
+  } catch (e) { goDefault(); }
+})();
+</script>
+</head>
+<body class="min-h-screen font-sans antialiased">
+
+<!-- ===== HEADER / NAVIGATION ===== -->
+<header class="sticky top-0 z-50 w-full border-b shadow-sm" style="background-color: rgb(var(--mgt-primary)); border-color: rgb(var(--mgt-primary-700)); box-shadow: var(--mgt-shadow-sm);">
+  <div class="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-3">
+    <!-- Logo -->
+    <a href="/" class="flex items-center gap-3 no-underline" style="color: rgb(var(--mgt-primary-foreground));">
+      <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-10 w-10 rounded-md" style="border-radius: var(--mgt-radius-md);">
+      <span class="text-xl font-semibold tracking-tight" style="font-family: var(--mgt-font-sans);">MangooTech</span>
+    </a>
+    <!-- Navigation -->
+    <nav class="hidden items-center gap-6 md:flex">
+      <a href="carte.html" data-dom-id="nav-carte" id="nav-carte" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Boutique &amp; Prestataires<span class="mgt-live-dot-nav" style="display:none;"></span></a>
+      <a href="./lives-en-direct.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Lives en direct<span class="mgt-live-dot-nav" style="display:none;"></span></a>
+      <a href="./comparatif-prestataire-boutique.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Comparatif</a>
+      <a href="./accueil.html#a-propos" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">A propos</a>
+      <a href="./auth.html" data-dom-id="nav-connexion" id="nav-connexion" class="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Connexion</a>
+    </nav>
+    <!-- Mobile menu toggle -->
+    <button id="mobile-menu-toggle" class="block md:hidden p-2 rounded-md" style="color: rgb(var(--mgt-primary-foreground));" aria-label="Menu">
+      <i data-lucide="menu" class="h-6 w-6"></i>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- ===== HERO SECTION ===== -->
+  <section class="relative overflow-hidden" style="background-color: rgb(var(--mgt-primary));">
+    <!-- Decorative background pattern -->
+    <div class="absolute inset-0 opacity-5" style="background-image: radial-gradient(circle at 20% 50%, rgb(var(--mgt-primary-300)) .5px, transparent .5px); background-size: 24px 24px;"></div>
+    <div class="relative mx-auto flex max-w-[1200px] flex-col items-center gap-10 px-6 py-20 md:flex-row md:gap-16 md:py-28 lg:py-32">
+      <!-- Hero Text -->
+      <div class="flex flex-col items-start gap-6 md:w-1/2">
+        <span class="inline-block rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase" style="background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-600)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Lancement 2026</span>
+        <h1 class="h-display" style="color: rgb(var(--mgt-primary-foreground));">MangooTech</h1>
+        <p class="body-l max-w-lg" style="color: rgb(var(--mgt-primary-100));">Le commerce local reinvente. Connectez-vous aux meilleurs prestataires et boutiques africains grace a une carte interactive, du live shopping et un chat en temps reel.</p>
+        <div class="flex flex-wrap gap-4 pt-2">
+          <a href="./auth.html" data-dom-id="cta-prestataire" id="cta-prestataire" class="inline-flex items-center gap-2 rounded-md px-6 py-3.5 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">
+            Devenir prestataire ou vendeur
+            <i data-lucide="arrow-right" class="h-4 w-4"></i>
+          </a>
+          <a href="./carte.html" data-dom-id="cta-client" id="cta-client" class="inline-flex items-center gap-2 rounded-md border px-6 py-3.5 text-sm font-semibold transition-all hover:brightness-110" style="border-color: rgb(var(--mgt-primary-foreground)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+            Trouver un service ou une boutique
+            <i data-lucide="map-pin" class="h-4 w-4"></i>
+          </a>
+        </div>
+      </div>
+      <!-- Hero Illustration: Africa Map Concept with Markers -->
+      <div class="flex items-center justify-center md:w-1/2">
+        <svg viewBox="0 0 480 540" class="w-full max-w-[440px] drop-shadow-xl" xmlns="http://www.w3.org/2000/svg" aria-label="Carte de l'Afrique avec marqueurs de commerce local" role="img">
+          <defs>
+            <radialGradient id="africaGlow" cx="50%" cy="45%" r="55%">
+              <stop offset="0%" style="stop-color: rgb(var(--mgt-primary-300)); stop-opacity:.3"/>
+              <stop offset="100%" style="stop-color: rgb(var(--mgt-primary-800)); stop-opacity:0"/>
+            </radialGradient>
+            <filter id="markerShadow">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgb(var(--mgt-foreground))" flood-opacity=".25"/>
+            </filter>
+          </defs>
+          <!-- Glow behind map -->
+          <ellipse cx="240" cy="240" rx="200" ry="220" fill="url(#africaGlow)"/>
+          <!-- Africa simplified silhouette -->
+          <path d="M220 60 C240 50 265 48 280 55 C295 62 305 78 310 95 C315 110 312 125 318 140 C325 158 340 168 345 185 C350 202 342 218 335 235 C328 252 318 265 310 280 C302 295 300 310 295 325 C290 340 278 350 268 362 C255 378 242 390 235 405 C228 420 225 435 218 445 C210 458 195 468 180 472 C165 476 150 470 142 460 C132 448 130 432 125 418 C120 404 118 388 110 375 C102 360 95 348 88 335 C80 318 78 298 72 280 C66 262 58 245 55 228 C52 210 55 190 62 172 C70 152 80 138 92 125 C105 112 120 102 135 95 C152 87 168 82 185 78 C198 74 210 70 220 60Z" fill="rgb(var(--mgt-primary-400))" opacity=".25" stroke="rgb(var(--mgt-primary-300))" stroke-width="1.5" stroke-opacity=".4"/>
+          <!-- Connection lines between markers -->
+          <line x1="180" y1="140" x2="260" y2="210" stroke="rgb(var(--mgt-accent))" stroke-width="1" stroke-dasharray="6 4" opacity=".4"/>
+          <line x1="260" y1="210" x2="320" y2="320" stroke="rgb(var(--mgt-accent))" stroke-width="1" stroke-dasharray="6 4" opacity=".4"/>
+          <line x1="180" y1="140" x2="160" y2="300" stroke="rgb(var(--mgt-accent))" stroke-width="1" stroke-dasharray="6 4" opacity=".3"/>
+          <line x1="160" y1="300" x2="320" y2="320" stroke="rgb(var(--mgt-accent))" stroke-width="1" stroke-dasharray="6 4" opacity=".3"/>
+          <!-- Markers -->
+          <g filter="url(#markerShadow)">
+            <!-- Dakar -->
+            <circle cx="180" cy="140" r="10" fill="rgb(var(--mgt-accent))" opacity=".95"/>
+            <circle cx="180" cy="140" r="5" fill="rgb(var(--mgt-accent-foreground))"/>
+            <!-- Abidjan -->
+            <circle cx="200" cy="215" r="8" fill="rgb(var(--mgt-accent-400))" opacity=".95"/>
+            <circle cx="200" cy="215" r="4" fill="rgb(var(--mgt-accent-foreground))"/>
+            <!-- Lagos -->
+            <circle cx="260" cy="210" r="12" fill="rgb(var(--mgt-accent))" opacity=".95"/>
+            <circle cx="260" cy="210" r="6" fill="rgb(var(--mgt-accent-foreground))"/>
+            <!-- Kinshasa -->
+            <circle cx="300" cy="290" r="9" fill="rgb(var(--mgt-accent-400))" opacity=".95"/>
+            <circle cx="300" cy="290" r="4.5" fill="rgb(var(--mgt-accent-foreground))"/>
+            <!-- Nairobi -->
+            <circle cx="340" cy="235" r="9" fill="rgb(var(--mgt-accent))" opacity=".95"/>
+            <circle cx="340" cy="235" r="4.5" fill="rgb(var(--mgt-accent-foreground))"/>
+            <!-- Johannesburg -->
+            <circle cx="320" cy="380" r="10" fill="rgb(var(--mgt-accent-400))" opacity=".95"/>
+            <circle cx="320" cy="380" r="5" fill="rgb(var(--mgt-accent-foreground))"/>
+            <!-- Casablanca -->
+            <circle cx="220" cy="100" r="8" fill="rgb(var(--mgt-accent))" opacity=".95"/>
+            <circle cx="220" cy="100" r="4" fill="rgb(var(--mgt-accent-foreground))"/>
+            <!-- Accra -->
+            <circle cx="230" cy="230" r="7" fill="rgb(var(--mgt-accent-300))" opacity=".95"/>
+            <circle cx="230" cy="230" r="3.5" fill="rgb(var(--mgt-accent-foreground))"/>
+            <!-- Kigali -->
+            <circle cx="318" cy="270" r="7" fill="rgb(var(--mgt-accent-300))" opacity=".95"/>
+            <circle cx="318" cy="270" r="3.5" fill="rgb(var(--mgt-accent-foreground))"/>
+          </g>
+          <!-- Pulse rings on key markers -->
+          <circle cx="260" cy="210" r="18" fill="none" stroke="rgb(var(--mgt-accent))" stroke-width="1.5" opacity=".35">
+            <animate attributeName="r" from="12" to="26" dur="2.5s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" from=".5" to="0" dur="2.5s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="180" cy="140" r="18" fill="none" stroke="rgb(var(--mgt-accent))" stroke-width="1.5" opacity=".35">
+            <animate attributeName="r" from="10" to="24" dur="2s" repeatCount="indefinite" begin=".7s"/>
+            <animate attributeName="opacity" from=".5" to="0" dur="2s" repeatCount="indefinite" begin=".7s"/>
+          </circle>
+          <circle cx="320" cy="380" r="18" fill="none" stroke="rgb(var(--mgt-accent-400))" stroke-width="1.5" opacity=".35">
+            <animate attributeName="r" from="10" to="24" dur="2.2s" repeatCount="indefinite" begin="1.4s"/>
+            <animate attributeName="opacity" from=".5" to="0" dur="2.2s" repeatCount="indefinite" begin="1.4s"/>
+          </circle>
+          <!-- Label callouts -->
+          <g style="font-family: var(--mgt-font-sans); font-size: 10px; font-weight: 600; fill: rgb(var(--mgt-primary-foreground));" text-anchor="middle">
+            <text x="260" y="198">Lagos</text>
+            <text x="180" y="128">Dakar</text>
+            <text x="320" y="368">Joburg</text>
+            <text x="340" y="223">Nairobi</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+    <!-- Bottom wave divider -->
+    <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
+      <svg viewBox="0 0 1440 80" class="relative block w-full h-16 md:h-20" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <path d="M0 40 C240 80 480 0 720 30 C960 60 1200 10 1440 40 L1440 80 L0 80 Z" fill="rgb(var(--mgt-background))"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ===== LIVES EN CE MOMENT ===== -->
+  <section id="live-carousel-section" style="display:none; background-color: rgb(var(--mgt-background)); padding: 0 0 24px;">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="w-2.5 h-2.5 rounded-full" style="background:#ef4444;animation:mgt-pulse 1.6s infinite;"></span>
+        <h2 class="text-lg font-bold m-0" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Lives en ce moment</h2>
+      </div>
+      <div id="live-carousel" class="flex gap-3 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1"></div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURES SECTION / A PROPOS ===== -->
+  <section id="a-propos" class="py-20 md:py-28" style="background-color: rgb(var(--mgt-background));">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <!-- Section Header -->
+      <div class="mb-14 text-center">
+        <span class="inline-block rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase mb-4" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Fonctionnalites</span>
+        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Tout ce dont vous avez besoin pour reussir</h2>
+        <p class="body-l max-w-2xl mx-auto mt-3" style="color: rgb(var(--mgt-muted-foreground));">Une plateforme complete qui transforme le commerce local africain grace a la technologie.</p>
+      </div>
+      <!-- Feature Cards Grid 2x2 -->
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <!-- Card 1: Local+ Map -->
+        <div class="group rounded-lg border p-8 transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md)); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-md" style="background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-md);">
+            <i data-lucide="map" class="h-6 w-6" style="color: rgb(var(--mgt-primary-600));"></i>
+          </div>
+          <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Local+ Map</h3>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Explorez une carte interactive et trouvez les meilleurs prestataires pres de chez vous. Filtrez par categorie, note et disponibilite en temps reel.</p>
+          <a href="carte.html" class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">Explorer la carte <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i></a>
+        </div>
+        <!-- Card 2: Live Shopping -->
+        <div class="group rounded-lg border p-8 transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-md" style="background-color: rgb(var(--mgt-accent-50)); border-radius: var(--mgt-radius-md);">
+            <i data-lucide="video" class="h-6 w-6" style="color: rgb(var(--mgt-accent));"></i>
+          </div>
+          <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Live Shopping</h3>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Assistez a des demonstrations en direct, posez vos questions et achetez en temps reel. Une experience immersive qui rapproche marchands et clients.</p>
+          <a href="live-shopping.html" class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">Decouvrir le live <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i></a>
+        </div>
+        <!-- Card 3: Connect+ Chat -->
+        <div class="group rounded-lg border p-8 transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-md" style="background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-md);">
+            <i data-lucide="message-circle" class="h-6 w-6" style="color: rgb(var(--mgt-primary-600));"></i>
+          </div>
+          <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Connect+ Chat</h3>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Discutez directement avec les prestataires via notre messagerie integree. Negociez, posez vos questions et finalisez vos commandes sans quitter la plateforme.</p>
+          <a href="chat.html" class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">Ouvrir la messagerie <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i></a>
+        </div>
+        <!-- Card 4: Paiements multi-methodes -->
+        <div class="group rounded-lg border p-8 transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-md" style="background-color: rgb(var(--mgt-accent-50)); border-radius: var(--mgt-radius-md);">
+            <i data-lucide="credit-card" class="h-6 w-6" style="color: rgb(var(--mgt-accent));"></i>
+          </div>
+          <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Paiements multi-methodes</h3>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Payez comme vous voulez : Mobile Money (MoMo, Orange Money, Free Money), carte bancaire ou virement. Des transactions securisees et adaptees au marche africain.</p>
+          <a href="paiements.html" class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">Voir les paiements <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HOW IT WORKS SECTION ===== -->
+  <section class="py-20 md:py-28" style="background-color: rgb(var(--mgt-muted));">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <!-- Section Header -->
+      <div class="mb-14 text-center">
+        <span class="inline-block rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase mb-4" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Comment ca marche</span>
+        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Trois etapes simples</h2>
+        <p class="body-l max-w-2xl mx-auto mt-3" style="color: rgb(var(--mgt-muted-foreground));">Decouvrez comment MangooTech simplifie votre experience de commerce local.</p>
+      </div>
+      <!-- Steps -->
+      <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+        <!-- Step 1: Naviguer -->
+        <div class="relative flex flex-col items-center text-center">
+          <!-- Connector line (desktop only) -->
+          <div class="absolute top-10 left-[calc(50%+20px)] hidden h-0.5 w-[calc(100%-40px)] md:block" style="background: linear-gradient(to right, rgb(var(--mgt-primary-300)), rgb(var(--mgt-primary-200)));"></div>
+          <!-- Step number badge -->
+          <div class="relative z-10 mb-6 flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: 0 8px 24px rgba(26,92,42,.25);">
+            <i data-lucide="search" class="h-8 w-8"></i>
+          </div>
+          <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Naviguer</h3>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Parcourez la carte interactive et les catalogues pour decouvrir les prestataires et produits disponibles autour de vous.</p>
+        </div>
+        <!-- Step 2: Echanger -->
+        <div class="relative flex flex-col items-center text-center">
+          <div class="absolute top-10 left-[calc(50%+20px)] hidden h-0.5 w-[calc(100%-40px)] md:block" style="background: linear-gradient(to right, rgb(var(--mgt-primary-300)), rgb(var(--mgt-primary-200)));"></div>
+          <div class="relative z-10 mb-6 flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: 0 8px 24px rgba(232,97,12,.25);">
+            <i data-lucide="messages-square" class="h-8 w-8"></i>
+          </div>
+          <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Echanger</h3>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Discutez en temps reel avec les prestataires, participez a des lives shopping et affinez votre choix avant de commander.</p>
+        </div>
+        <!-- Step 3: Payer -->
+        <div class="relative flex flex-col items-center text-center">
+          <div class="relative z-10 mb-6 flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold" style="background-color: rgb(var(--mgt-success)); color: rgb(var(--mgt-success-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: 0 8px 24px rgba(129,199,134,.30);">
+            <i data-lucide="wallet" class="h-8 w-8"></i>
+          </div>
+          <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Payer</h3>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Reglez en toute securite avec le moyen de paiement de votre choix : Mobile Money, carte bancaire ou virement.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PACKS & TARIFS SECTION ===== -->
+  <section id="tarifs" class="py-20 md:py-28" style="background-color: rgb(var(--mgt-background));">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <div class="mb-14 text-center">
+        <span class="inline-block rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase mb-4" style="background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-600)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Tarifs</span>
+        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Des packs pour chaque etape de votre croissance</h2>
+        <p class="body-l max-w-2xl mx-auto mt-3" style="color: rgb(var(--mgt-muted-foreground));">Commencez gratuitement, puis evoluez vers le pack qui correspond a votre activite. Sans engagement.</p>
+      </div>
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <!-- Pack Decouverte -->
+        <div class="relative flex flex-col rounded-lg border p-7 transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <h3 class="h3 mb-1" style="color: rgb(var(--mgt-foreground));">Pack Découverte</h3>
+          <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">Nouveaux artisans</p>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="tabular-nums text-4xl font-bold" style="color: rgb(var(--mgt-primary));">0</span>
+            <span class="caption font-medium" style="color: rgb(var(--mgt-muted-foreground));">FCFA / mois</span>
+          </div>
+          <ul class="space-y-2.5 mb-7 flex-1">
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Fiche boutique de base</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Presence sur la carte Local+</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Messagerie Connect+</li>
+          </ul>
+          <a href="./auth.html" class="w-full rounded-md border py-2.5 text-center text-sm font-semibold transition-colors hover:bg-muted" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Commencer gratuitement</a>
+        </div>
+        <!-- Pack Visibilite (populaire) -->
+        <div class="relative flex flex-col rounded-lg border-2 p-7" style="border-color: rgb(var(--mgt-primary)); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-md);">
+          <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-full);">Populaire</span>
+          <h3 class="h3 mb-1" style="color: rgb(var(--mgt-foreground));">Pack Visibilité</h3>
+          <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">Artisans en croissance</p>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="tabular-nums text-4xl font-bold" style="color: rgb(var(--mgt-accent));">5 000</span>
+            <span class="caption font-medium" style="color: rgb(var(--mgt-muted-foreground));">FCFA / mois</span>
+          </div>
+          <ul class="space-y-2.5 mb-7 flex-1">
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Tout le Pack Découverte</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Badge « Sponsorise » inclus</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Statistiques de visibilite</li>
+          </ul>
+          <a href="./auth.html" class="w-full rounded-md py-2.5 text-center text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Choisir Visibilite</a>
+        </div>
+        <!-- Pack Professionnel -->
+        <div class="relative flex flex-col rounded-lg border p-7 transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <h3 class="h3 mb-1" style="color: rgb(var(--mgt-foreground));">Pack Professionnel</h3>
+          <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">Artisans organises, PME</p>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="tabular-nums text-4xl font-bold" style="color: rgb(var(--mgt-primary));">10 000</span>
+            <span class="caption font-medium" style="color: rgb(var(--mgt-muted-foreground));">FCFA / mois</span>
+          </div>
+          <ul class="space-y-2.5 mb-7 flex-1">
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Tout le Pack Visibilite</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Gestion multi-produits</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Support prioritaire</li>
+          </ul>
+          <a href="./auth.html" class="w-full rounded-md border py-2.5 text-center text-sm font-semibold transition-colors hover:bg-muted" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Choisir Professionnel</a>
+        </div>
+        <!-- Pack Premium -->
+        <div class="relative flex flex-col rounded-lg border p-7 transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <h3 class="h3 mb-1" style="color: rgb(var(--mgt-foreground));">Pack Premium</h3>
+          <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">PME structurees</p>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="tabular-nums text-4xl font-bold" style="color: rgb(var(--mgt-primary));">15 000</span>
+            <span class="caption font-medium" style="color: rgb(var(--mgt-muted-foreground));">FCFA / mois</span>
+          </div>
+          <ul class="space-y-2.5 mb-7 flex-1">
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Tout le Pack Professionnel</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Featured sur la plateforme</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Accompagnement dedie</li>
+          </ul>
+          <a href="./auth.html" class="w-full rounded-md border py-2.5 text-center text-sm font-semibold transition-colors hover:bg-muted" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Choisir Premium</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PRESTATAIRE VS BOUTIQUE ===== -->
+  <section class="py-16 md:py-20" style="background-color: rgb(var(--mgt-muted));">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <div class="mb-12 text-center">
+        <span class="inline-block rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase mb-4" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Prestataire ou Boutique ?</span>
+        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Deux parcours, un même compte</h2>
+        <p class="body-l max-w-2xl mx-auto mt-3" style="color: rgb(var(--mgt-muted-foreground));">Vendez votre temps ou vendez des produits : choisissez le parcours adapté à votre activité.</p>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <!-- Prestataire -->
+        <a href="./comparatif-prestataire-boutique.html" class="flex flex-col overflow-hidden rounded-lg border no-underline transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <div class="h-1.5 w-full" style="background: linear-gradient(90deg, rgb(var(--mgt-primary-600)), rgb(var(--mgt-primary-300)));"></div>
+          <div class="flex flex-1 flex-col p-8">
+            <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-md" style="background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-md);">
+              <i data-lucide="briefcase" class="h-6 w-6" style="color: rgb(var(--mgt-primary));"></i>
+            </div>
+            <h3 class="h3 mb-2" style="color: rgb(var(--mgt-foreground));">Prestataire de services</h3>
+            <p class="body mb-5" style="color: rgb(var(--mgt-muted-foreground));">Coiffeurs, salons, coachs, artisans… Vous vendez votre temps et un savoir-faire.</p>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-center gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="h-4 w-4 shrink-0" style="color: rgb(var(--mgt-primary));"></i>Prestations et grille tarifaire</li>
+              <li class="flex items-center gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="h-4 w-4 shrink-0" style="color: rgb(var(--mgt-primary));"></i>Agenda et rendez-vous</li>
+            </ul>
+            <span class="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">En savoir plus <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i></span>
+          </div>
+        </a>
+
+        <!-- Boutique -->
+        <a href="./comparatif-prestataire-boutique.html" class="flex flex-col overflow-hidden rounded-lg border no-underline transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <div class="h-1.5 w-full" style="background: linear-gradient(90deg, rgb(var(--mgt-accent-600)), rgb(var(--mgt-accent-300)));"></div>
+          <div class="flex flex-1 flex-col p-8">
+            <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-md" style="background-color: rgb(var(--mgt-accent-50)); border-radius: var(--mgt-radius-md);">
+              <i data-lucide="store" class="h-6 w-6" style="color: rgb(var(--mgt-accent));"></i>
+            </div>
+            <h3 class="h3 mb-2" style="color: rgb(var(--mgt-foreground));">Vendeur-boutique</h3>
+            <p class="body mb-5" style="color: rgb(var(--mgt-muted-foreground));">Commerçants, e-commerçants… Vous vendez des produits avec stock, livraison et panier.</p>
+            <ul class="space-y-2 mb-6">
+              <li class="flex items-center gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="h-4 w-4 shrink-0" style="color: rgb(var(--mgt-accent));"></i>Catalogue et inventaire</li>
+              <li class="flex items-center gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="h-4 w-4 shrink-0" style="color: rgb(var(--mgt-accent));"></i>Commandes et livraison</li>
+            </ul>
+            <span class="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold" style="color: rgb(var(--mgt-accent)); font-family: var(--mgt-font-sans);">En savoir plus <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i></span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Démo : tester les deux espaces sans créer de compte -->
+      <div class="mt-10 rounded-lg border p-6 md:p-8" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+        <div class="flex flex-col items-center gap-5 md:flex-row md:justify-between">
+          <div class="text-center md:text-left">
+            <div class="mb-1 flex items-center justify-center gap-2 md:justify-start">
+              <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold" style="background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);"><i data-lucide="play" class="h-3.5 w-3.5"></i>Démo</span>
+            </div>
+            <h3 class="h3" style="color: rgb(var(--mgt-foreground));">Testez les deux espaces sans créer de compte</h3>
+            <p class="body mt-1 max-w-xl" style="color: rgb(var(--mgt-muted-foreground));">Explorez les tableaux de bord de DAN Coiffure (prestataire) et DAN Boutique (vendeur) en mode démo.</p>
+          </div>
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <a href="./dashboard-overview.html?demo=prestataire" class="inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);"><i data-lucide="briefcase" class="h-4 w-4"></i>Dashboard prestataire <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold" style="background-color: rgb(var(--mgt-error)); color: rgb(var(--mgt-error-foreground)); border-radius: var(--mgt-radius-full);">Démo</span></a>
+            <a href="./dashboard-overview.html?demo=boutique" class="inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);"><i data-lucide="store" class="h-4 w-4"></i>Dashboard boutique <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold" style="background-color: rgb(var(--mgt-error)); color: rgb(var(--mgt-error-foreground)); border-radius: var(--mgt-radius-full);">Démo</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FINAL CTA SECTION ===== -->
+  <section id="cta-prestataire" class="py-20 md:py-28" style="background-color: rgb(var(--mgt-primary));">
+    <div class="mx-auto max-w-[1200px] px-6 text-center">
+      <h2 class="h2 mb-4" style="color: rgb(var(--mgt-primary-foreground));">Rejoignez MangooTech</h2>
+      <p class="body-l mb-10 max-w-2xl mx-auto" style="color: rgb(var(--mgt-primary-100));">Que vous soyez un prestataire de services, un vendeur-boutique ou un client, MangooTech est fait pour vous.</p>
+      <div class="flex flex-wrap items-center justify-center gap-5">
+        <a href="./auth.html" class="inline-flex items-center gap-2 rounded-md px-8 py-4 text-base font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 18px rgba(232,97,12,.35);">
+          <i data-lucide="store" class="h-5 w-5"></i>
+          Devenir prestataire ou vendeur
+        </a>
+        <a href="./auth.html" class="inline-flex items-center gap-2 rounded-md border-2 px-8 py-4 text-base font-semibold transition-all hover:bg-white/10" style="border-color: rgb(var(--mgt-primary-foreground)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+          <i data-lucide="user-plus" class="h-5 w-5"></i>
+          Creer un compte client
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== STATS SECTION ===== -->
+  <section class="py-16" style="background-color: rgb(var(--mgt-muted));">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <div class="grid grid-cols-1 gap-8 text-center md:grid-cols-4">
+        <div class="rounded-lg p-6" style="background-color: rgb(var(--mgt-card)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm);">
+          <p class="tabular-nums h-display mb-2" style="color: rgb(var(--mgt-primary));">500+</p>
+          <p class="body font-medium" style="color: rgb(var(--mgt-muted-foreground));">Marchands actifs</p>
+        </div>
+        <div class="rounded-lg p-6" style="background-color: rgb(var(--mgt-card)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm);">
+          <p class="tabular-nums h-display mb-2" style="color: rgb(var(--mgt-accent));">15 000+</p>
+          <p class="body font-medium" style="color: rgb(var(--mgt-muted-foreground));">Clients satisfaits</p>
+        </div>
+        <div class="rounded-lg p-6" style="background-color: rgb(var(--mgt-card)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm);">
+          <p class="tabular-nums h-display mb-2" style="color: rgb(var(--mgt-primary));">120+</p>
+          <p class="body font-medium" style="color: rgb(var(--mgt-muted-foreground));">Villes couvertes</p>
+        </div>
+        <div class="rounded-lg p-6" style="background-color: rgb(var(--mgt-card)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm);">
+          <p class="tabular-nums h-display mb-2" style="color: rgb(var(--mgt-accent));">98%</p>
+          <p class="body font-medium" style="color: rgb(var(--mgt-muted-foreground));">Satisfaction client</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer class="border-t py-12" style="background-color: rgb(var(--mgt-background)); border-color: rgb(var(--mgt-border));">
+  <div class="mx-auto max-w-[1200px] px-6">
+    <div class="grid grid-cols-1 gap-10 md:grid-cols-5">
+      <!-- Brand Column -->
+      <div class="md:col-span-1">
+        <div class="mb-4 flex items-center gap-3">
+          <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-8 w-8 rounded-md" style="border-radius: var(--mgt-radius-sm);">
+          <span class="text-lg font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">MangooTech</span>
+        </div>
+        <p class="caption mb-4" style="color: rgb(var(--mgt-muted-foreground));">Plateforme e-commerce africaine connectant marchands locaux et clients via carte interactive, live shopping et chat temps reel.</p>
+        <div class="flex gap-3">
+          <a href="#" class="flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));" aria-label="Facebook">
+            <i data-lucide="facebook" class="h-4 w-4"></i>
+          </a>
+          <a href="#" class="flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));" aria-label="Twitter / X">
+            <i data-lucide="twitter" class="h-4 w-4"></i>
+          </a>
+          <a href="#" class="flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));" aria-label="Instagram">
+            <i data-lucide="instagram" class="h-4 w-4"></i>
+          </a>
+          <a href="#" class="flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));" aria-label="LinkedIn">
+            <i data-lucide="linkedin" class="h-4 w-4"></i>
+          </a>
+        </div>
+      </div>
+      <!-- Plateforme Links -->
+      <div>
+        <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Plateforme</h4>
+        <ul class="space-y-2.5">
+          <li><a href="carte.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Carte interactive</a></li>
+          <li><a href="./dashboard-overview.html?demo=prestataire" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Dashboard prestataire <span style="color: rgb(var(--mgt-error)); font-weight: 600;">Démo</span></a></li>
+          <li><a href="./dashboard-overview.html?demo=boutique" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Dashboard boutique <span style="color: rgb(var(--mgt-error)); font-weight: 600;">Démo</span></a></li>
+          <li><a href="./comparatif-prestataire-boutique.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Prestataire vs Boutique</a></li>
+          <li><a href="./livreur.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Devenir livreur (Mangoo Express+)</a></li>
+          <li><a href="./live-shopping.html" data-dom-id="link-live-shopping" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Live Shopping</a></li>
+          <li><a href="./paiements.html" data-dom-id="link-paiements" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Paiements</a></li>
+        </ul>
+      </div>
+      <!-- Ressources Links -->
+      <div>
+        <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Ressources</h4>
+        <ul class="space-y-2.5">
+          <li><a href="./aide.html" data-dom-id="link-aide" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Aide et support</a></li>
+          <li><a href="./blog.html" data-dom-id="link-blog" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Blog</a></li>
+          <li><a href="./faq.html" data-dom-id="link-faq" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">FAQ</a></li>
+          <li><a href="./contact.html" data-dom-id="link-contact" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Contact</a></li>
+        </ul>
+      </div>
+      <!-- Legal Links -->
+      <div>
+        <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Legal</h4>
+        <ul class="space-y-2.5">
+          <li><a href="./conditions-utilisation.html" data-dom-id="link-conditions-utilisation" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Conditions d'utilisation</a></li>
+          <li><a href="./confidentialite.html" data-dom-id="link-confidentialite" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Politique de confidentialité</a></li>
+          <li><a href="./mentions-legales.html" data-dom-id="link-mentions-legales" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Mentions légales</a></li>
+          <li><a href="./cgv.html" data-dom-id="link-cgv" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">CGV</a></li>
+        </ul>
+      </div>
+      <!-- Coordonnées -->
+      <div>
+        <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Coordonnées</h4>
+        <ul class="space-y-2.5">
+          <li><span class="caption" style="color: rgb(var(--mgt-muted-foreground));" data-contact="address">3 rue de Cambrai, 75019 Paris (France)</span></li>
+          <li><a href="mailto:mangootech75@gmail.com" data-contact="email" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">mangootech75@gmail.com</a></li>
+          <li><a href="tel:+33962014080" data-contact="phone" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">+33 9 62 01 40 80</a></li>
+          <li><span class="caption" data-contact="hours" style="color: rgb(var(--mgt-muted-foreground));">Lun-Ven 8h-18h</span></li>
+        </ul>
+      </div>
+    </div>
+    <!-- Copyright bar -->
+    <div class="mt-12 border-t pt-6 text-center" style="border-color: rgb(var(--mgt-border));">
+      <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">&copy; 2026 MangooTech. Tous droits reserves. Fait avec passion pour l'Afrique.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="../assets/site-config.js"></script>
+<script>lucide.createIcons();</script>
+<!-- Mobile responsive navigation & layout -->
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-layout { flex-direction: column !important; }
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .dashboard-main { margin-left: 0 !important; width: 100% !important; }
+  .dashboard-topbar { position: sticky; top: 0; z-index: 100; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .services-grid, .favorites-grid, .features-grid, .booster-grid { grid-template-columns: 1fr !important; }
+  .data-table { display: block !important; }
+  .data-table thead { display: none !important; }
+  .data-table tbody, .data-table tr { display: block !important; }
+  .data-table td { display: flex !important; justify-content: space-between; align-items: center; padding: 8px 12px !important; border-bottom: 1px solid rgb(var(--mgt-border)) !important; }
+  .data-table td::before { content: attr(data-label); font-weight: 600; font-size: 12px; color: rgb(var(--mgt-muted-foreground)); text-transform: uppercase; margin-right: 8px; flex-shrink: 0; }
+  .topbar-search { display: none !important; }
+  .topbar-title { font-size: 18px !important; }
+  .hero-section { padding: 40px 16px !important; text-align: center; }
+  .hero-section h1, .hero-section .h-display { font-size: 28px !important; }
+  .hero-section h1 + p { font-size: 15px !important; }
+  .hero-ctas { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
+  .auth-split { flex-direction: column !important; }
+  .auth-branding { min-height: 200px !important; padding: 32px 16px !important; }
+  .auth-form-area { padding: 24px 16px !important; }
+  .checkout-layout { flex-direction: column !important; }
+  .checkout-main { width: 100% !important; }
+  .checkout-sidebar { width: 100% !important; }
+  .chat-layout { flex-direction: column !important; height: auto !important; }
+  .chat-sidebar { width: 100% !important; max-height: 200px !important; }
+  .chat-main { width: 100% !important; }
+  .filter-pills { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .drawer-panel { width: 100% !important; max-width: 100% !important; }
+  .content-section { padding-left: 16px !important; padding-right: 16px !important; }
+  .section-padding { padding: 32px 16px !important; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-actions { flex-direction: column !important; }
+  .desktop-only { display: none !important; }
+  .map-container { height: 300px !important; }
+}
+@media (min-width: 769px) {
+  .mobile-menu-btn { display: none !important; }
+  .mobile-only { display: none !important; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .stats-row { grid-template-columns: 1fr !important; }
+}
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'dashboard-sidebar-overlay';
+    overlay.addEventListener('click', function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+    document.body.appendChild(overlay);
+    var topbar = document.querySelector('.dashboard-topbar');
+    if (topbar) {
+      var btn = document.createElement('button');
+      btn.className = 'mobile-menu-btn';
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+      btn.addEventListener('click', function(){ sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+    sidebar.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      });
+    });
+  });
+})();
+</script>
+
+<script>
+(function(){
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+
+  function updateLiveIndicator(active) {
+    document.querySelectorAll('.mgt-live-dot-nav').forEach(function(el) {
+      el.style.display = active ? 'inline-block' : 'none';
+    });
+  }
+
+  function renderLiveCarousel(data) {
+    var section = document.getElementById('live-carousel-section');
+    var wrap = document.getElementById('live-carousel');
+    if (!section) return;
+    if (!data || !data.active || !data.vendorName) {
+      section.style.display = 'none';
+      if (wrap) wrap.innerHTML = '';
+      return;
+    }
+    var name = data.vendorName || '';
+    var initial = (name.charAt(0) || '?').toUpperCase();
+    var viewers = parseInt(data.viewers, 10) || 0;
+    section.style.display = '';
+    wrap.innerHTML =
+      '<a href="live-client.html" class="live-card flex-shrink-0 flex items-center gap-3 p-4 rounded-md border shadow-sm no-underline" style="background-color:rgb(var(--mgt-card));border-color:rgb(var(--mgt-border));border-radius:var(--mgt-radius-md);box-shadow:var(--mgt-shadow-sm);font-family:var(--mgt-font-sans);min-width:270px;">' +
+        '<span class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0" style="background:linear-gradient(135deg,#ef4444,#f97316);">' + escapeHtml(initial) + '</span>' +
+        '<span class="flex flex-col leading-tight min-w-0 flex-1">' +
+          '<span class="flex items-center gap-1.5">' +
+            '<span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#ef4444;animation:mgt-pulse 1.6s infinite;"></span>' +
+            '<span class="text-[10px] font-bold tracking-wide" style="color:#ef4444;">EN DIRECT</span>' +
+          '</span>' +
+          '<span class="text-sm font-semibold truncate" style="color:rgb(var(--mgt-foreground));">' + escapeHtml(name) + '</span>' +
+          '<span class="text-xs" style="color:rgb(var(--mgt-muted-foreground));">' + viewers + ' spectateur' + (viewers > 1 ? 's' : '') + '</span>' +
+        '</span>' +
+        '<span class="ml-auto text-xs font-bold px-3 py-1.5 rounded-md whitespace-nowrap" style="background:#ef4444;color:#fff;border-radius:var(--mgt-radius-md);">Rejoindre</span>' +
+      '</a>';
+  }
+
+  function poll() {
+    fetch('/live-status', { cache: 'no-store' })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var active = !!(data && data.active);
+        updateLiveIndicator(active);
+        renderLiveCarousel(data);
+      })
+      .catch(function() {});
+  }
+
+  poll();
+  setInterval(poll, 5000);
+})();
+</script>
+
+<script src="../assets/mangoo-public-nav.js"></script>
+<script src="../assets/mangoo-connect-plus.js"></script>
+</body>
+</html>

@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparatif Prestataire vs Boutique</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+:root {
+  --background: rgb(255 255 255);
+  --foreground: rgb(15 23 42);
+  --card: rgb(255 255 255);
+  --card-foreground: rgb(15 23 42);
+  --popover: rgb(255 255 255);
+  --popover-foreground: rgb(15 23 42);
+  --primary: rgb(26 92 42);
+  --primary-foreground: rgb(255 255 255);
+  --muted: rgb(248 250 252);
+  --muted-foreground: rgb(100 116 139);
+  --border: rgb(226 232 240);
+  --input: rgb(226 232 240);
+  --ring: rgb(26 92 42);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  --state-success: rgb(129 199 134);
+  --state-success-foreground: rgb(255 255 255);
+  --state-warning: rgb(255 183 77);
+  --state-warning-foreground: rgb(15 23 42);
+  --state-error: rgb(239 68 68);
+  --state-error-foreground: rgb(255 255 255);
+  --state-info: rgb(59 130 246);
+  --state-info-foreground: rgb(255 255 255);
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+  --background: rgb(11 11 15);
+  --foreground: rgb(248 250 252);
+  --card: rgb(20 20 26);
+  --card-foreground: rgb(248 250 252);
+  --popover: rgb(20 20 26);
+  --popover-foreground: rgb(248 250 252);
+  --primary: rgb(76 168 82);
+  --primary-foreground: rgb(255 255 255);
+  --muted: rgb(30 30 38);
+  --muted-foreground: rgb(148 163 184);
+  --border: rgb(40 40 50);
+  --input: rgb(40 40 50);
+  --ring: rgb(76 168 82);
+}
+
+.h-display { font-family: var(--mgt-font-sans); font-size: clamp(40px, 6vw, 88px); line-height: 1.02; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(28px, 3.5vw, 48px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.h2 { font-family: var(--mgt-font-sans); font-size: clamp(22px, 2.4vw, 32px); line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body-l { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.55; font-weight: 400; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+
+<!-- ===== HEADER ===== -->
+<header class="sticky top-0 z-50 w-full border-b shadow-sm" style="background-color: rgb(var(--mgt-primary)); border-color: rgb(var(--mgt-primary-700)); box-shadow: var(--mgt-shadow-sm);">
+  <div class="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-3">
+    <a href="/" class="flex items-center gap-3 no-underline" style="color: rgb(var(--mgt-primary-foreground));">
+      <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-10 w-10 rounded-md" style="border-radius: var(--mgt-radius-md);">
+      <span class="text-xl font-semibold tracking-tight" style="font-family: var(--mgt-font-sans);">MangooTech</span>
+    </a>
+    <nav class="hidden items-center gap-6 md:flex">
+      <a href="carte.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Boutique &amp; Prestataires</a>
+      <a href="./accueil.html#a-propos" data-dom-id="link-a-propos" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">A propos</a>
+      <a href="./auth.html" class="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Connexion</a>
+    </nav>
+    <button class="block md:hidden p-2 rounded-md" style="color: rgb(var(--mgt-primary-foreground));" aria-label="Menu">
+      <i data-lucide="menu" class="h-6 w-6"></i>
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ===== HERO ===== -->
+  <section class="relative overflow-hidden" style="background: linear-gradient(135deg, rgb(var(--mgt-primary-900)) 0%, rgb(var(--mgt-primary-700)) 40%, rgb(var(--mgt-primary-600)) 100%);">
+    <div class="absolute inset-0 opacity-5" style="background-image: radial-gradient(circle at 20% 50%, rgb(var(--mgt-primary-300)) .5px, transparent .5px); background-size: 24px 24px;"></div>
+    <div class="relative mx-auto max-w-[1200px] px-6 py-14 md:py-20 text-center">
+      <span class="mb-5 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold" style="background-color: rgba(255,255,255,.12); color: rgb(var(--mgt-primary-100)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
+        <i data-lucide="git-compare" class="h-3.5 w-3.5"></i>
+        Comparatif
+      </span>
+      <h1 class="h1 mx-auto max-w-3xl" style="color: rgb(var(--mgt-primary-foreground));">Deux parcours, une seule plateforme</h1>
+      <p class="body-l mx-auto mt-4 max-w-2xl" style="color: rgb(var(--mgt-primary-100));">Un meme compte client accede a deux experiences complementaires : reserver un service chez un prestataire, ou commander un produit chez une boutique.</p>
+    </div>
+    <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
+      <svg viewBox="0 0 1440 80" class="relative block w-full h-12 md:h-16" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <path d="M0 40 C240 80 480 0 720 30 C960 60 1200 10 1440 40 L1440 80 L0 80 Z" fill="rgb(var(--mgt-background))"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ===== COMPARATIF CÔTE À CÔTE ===== -->
+  <section class="py-16 md:py-20" style="background-color: rgb(var(--mgt-background));">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <div class="mb-12 text-center">
+        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Prestataire vs Boutique</h2>
+        <p class="body mt-2" style="color: rgb(var(--mgt-muted-foreground));">Deux types d'activite, deux parcours optimises pour chaque metier.</p>
+      </div>
+
+      <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+
+        <!-- ===== COLONNE PRESTATAIRE (service) ===== -->
+        <div class="flex flex-col overflow-hidden rounded-lg border" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-md);">
+          <div class="h-1.5 w-full" style="background: linear-gradient(90deg, rgb(var(--mgt-primary-600)), rgb(var(--mgt-primary-300)));"></div>
+          <div class="relative overflow-hidden p-8" style="background: linear-gradient(135deg, rgb(var(--mgt-primary-900)) 0%, rgb(var(--mgt-primary-700)) 100%);">
+            <div class="mb-5 flex h-16 w-16 items-center justify-center rounded-xl" style="background-color: rgba(255,255,255,.14); border-radius: var(--mgt-radius-lg);">
+              <i data-lucide="briefcase" class="h-8 w-8" style="color: rgb(var(--mgt-primary-foreground));"></i>
+            </div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="inline-block rounded-full px-3 py-1 text-xs font-semibold" style="background-color: rgba(255,255,255,.16); color: rgb(var(--mgt-primary-100)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Prestataire</span>
+              <span class="inline-block rounded-full px-3 py-1 text-xs font-semibold" style="background-color: rgba(255,255,255,.16); color: rgb(var(--mgt-primary-100)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Service</span>
+            </div>
+            <h3 class="h2" style="color: rgb(var(--mgt-primary-foreground));">Reserver un service</h3>
+            <p class="body mt-2 max-w-md" style="color: rgb(var(--mgt-primary-100));">Pour les artisans, coachs, salons et professionnels qui vendent leur temps et leur savoir-faire.</p>
+          </div>
+
+          <div class="flex flex-1 flex-col gap-8 p-8">
+            <a href="./fiche.html" class="inline-flex items-center justify-center gap-2 rounded-md px-6 py-3.5 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(26,92,42,.35);">
+              <i data-lucide="calendar-check" class="h-4 w-4"></i>
+              Reserver / Prendre rendez-vous
+            </a>
+
+            <div>
+              <p class="caption mb-4 font-semibold uppercase tracking-wide" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Parcours client</p>
+              <ol class="space-y-4">
+                <li class="flex gap-4">
+                  <span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">1</span>
+                  <div>
+                    <p class="body font-semibold" style="color: rgb(var(--mgt-foreground));">Choisir une prestation</p>
+                    <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Coiffure, massage, coaching... comparez tarifs, durees et avis en un coup d'oeil.</p>
+                  </div>
+                </li>
+                <li class="flex gap-4">
+                  <span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">2</span>
+                  <div>
+                    <p class="body font-semibold" style="color: rgb(var(--mgt-foreground));">Reserver le creneau</p>
+                    <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Choisissez la date et l'heure qui vous arrangent, en temps reel.</p>
+                  </div>
+                </li>
+                <li class="flex gap-4">
+                  <span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">3</span>
+                  <div>
+                    <p class="body font-semibold" style="color: rgb(var(--mgt-foreground));">Confirmation & rappel</p>
+                    <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Le prestataire valide, vous etes notifie et un rappel automatique est envoye.</p>
+                  </div>
+                </li>
+                <li class="flex gap-4">
+                  <span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">4</span>
+                  <div>
+                    <p class="body font-semibold" style="color: rgb(var(--mgt-foreground));">Noter l'experience</p>
+                    <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Profitez du service, puis laissez un avis verifie.</p>
+                  </div>
+                </li>
+              </ol>
+            </div>
+
+            <div>
+              <p class="caption mb-4 font-semibold uppercase tracking-wide" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Fonctions dediees</p>
+              <ul class="space-y-2.5">
+                <li class="flex items-center gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><i data-lucide="check" class="h-4 w-4" style="color: rgb(var(--mgt-primary));"></i>Prestations et grille tarifaire</li>
+                <li class="flex items-center gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><i data-lucide="check" class="h-4 w-4" style="color: rgb(var(--mgt-primary));"></i>Agenda et creneaux horaires</li>
+                <li class="flex items-center gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><i data-lucide="check" class="h-4 w-4" style="color: rgb(var(--mgt-primary));"></i>Confirmation & rappels</li>
+                <li class="flex items-center gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><i data-lucide="check" class="h-4 w-4" style="color: rgb(var(--mgt-primary));"></i>Avis verifies apres prestation</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== COLONNE BOUTIQUE (commerce) ===== -->
+        <div class="flex flex-col overflow-hidden rounded-lg border" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-md);">
+          <div class="h-1.5 w-full" style="background: linear-gradient(90deg, rgb(var(--mgt-accent-600)), rgb(var(--mgt-accent-300)));"></div>
+          <div class="relative overflow-hidden p-8" style="background: linear-gradient(135deg, rgb(var(--mgt-accent-700)) 0%, rgb(var(--mgt-accent-500)) 100%);">
+            <div class="mb-5 flex h-16 w-16 items-center justify-center rounded-xl" style="background-color: rgba(255,255,255,.16); border-radius: var(--mgt-radius-lg);">
+              <i data-lucide="store" class="h-8 w-8" style="color: rgb(var(--mgt-accent-foreground));"></i>
+            </div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="inline-block rounded-full px-3 py-1 text-xs font-semibold" style="background-color: rgba(255,255,255,.18); color: rgb(var(--mgt-accent-50)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Boutique</span>
+              <span class="inline-block rounded-full px-3 py-1 text-xs font-semibold" style="background-color: rgba(255,255,255,.18); color: rgb(var(--mgt-accent-50)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Commerce</span>
+            </div>
+            <h3 class="h2" style="color: rgb(var(--mgt-accent-foreground));">Commander un produit</h3>
+            <p class="body mt-2 max-w-md" style="color: rgb(var(--mgt-accent-50));">Pour les restaurateurs, epicières et marchands qui vendent des produits avec livraison ou retrait.</p>
+          </div>
+
+          <div class="flex flex-1 flex-col gap-8 p-8">
+            <a href="./fiche-boutique.html" class="inline-flex items-center justify-center gap-2 rounded-md px-6 py-3.5 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">
+              <i data-lucide="shopping-cart" class="h-4 w-4"></i>
+              Commander
+            </a>
+
+            <div>
+              <p class="caption mb-4 font-semibold uppercase tracking-wide" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Parcours client</p>
+              <ol class="space-y-4">
+                <li class="flex gap-4">
+                  <span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold" style="background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">1</span>
+                  <div>
+                    <p class="body font-semibold" style="color: rgb(var(--mgt-foreground));">Parcourir le catalogue</p>
+                    <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Plats, boissons, produits locaux... photos, prix et stock en temps reel.</p>
+                  </div>
+                </li>
+                <li class="flex gap-4">
+                  <span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold" style="background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">2</span>
+                  <div>
+                    <p class="body font-semibold" style="color: rgb(var(--mgt-foreground));">Composer le panier</p>
+                    <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Ajoutez, retirez ou ajustez les quantites a votre guise.</p>
+                  </div>
+                </li>
+                <li class="flex gap-4">
+                  <span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold" style="background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">3</span>
+                  <div>
+                    <p class="body font-semibold" style="color: rgb(var(--mgt-foreground));">Livraison ou retrait</p>
+                    <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Choisissez votre mode de reception, frais calcules automatiquement.</p>
+                  </div>
+                </li>
+                <li class="flex gap-4">
+                  <span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold" style="background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">4</span>
+                  <div>
+                    <p class="body font-semibold" style="color: rgb(var(--mgt-foreground));">Payer et suivre</p>
+                    <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Orange Money, Wave ou especes, puis suivez chaque etape en direct.</p>
+                  </div>
+                </li>
+              </ol>
+            </div>
+
+            <div>
+              <p class="caption mb-4 font-semibold uppercase tracking-wide" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Fonctions dediees</p>
+              <ul class="space-y-2.5">
+                <li class="flex items-center gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><i data-lucide="check" class="h-4 w-4" style="color: rgb(var(--mgt-accent));"></i>Catalogue avec stock en temps reel</li>
+                <li class="flex items-center gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><i data-lucide="check" class="h-4 w-4" style="color: rgb(var(--mgt-accent));"></i>Panier et quantites</li>
+                <li class="flex items-center gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><i data-lucide="check" class="h-4 w-4" style="color: rgb(var(--mgt-accent));"></i>Livraison / retrait</li>
+                <li class="flex items-center gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><i data-lucide="check" class="h-4 w-4" style="color: rgb(var(--mgt-accent));"></i>Paiement mobile (Orange Money, Wave, especes)</li>
+                <li class="flex items-center gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><i data-lucide="check" class="h-4 w-4" style="color: rgb(var(--mgt-accent));"></i>Suivi de commande en direct</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TABLEAU COMPARATIF ===== -->
+  <section class="py-16 md:py-20" style="background-color: rgb(var(--mgt-background));">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <div class="mb-12 text-center">
+        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Fonction par fonction</h2>
+        <p class="body mt-2" style="color: rgb(var(--mgt-muted-foreground));">Un coup d'oeil pour comprendre ce que chaque parcours propose.</p>
+      </div>
+
+      <div class="overflow-hidden rounded-lg border" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-lg); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-md);">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left" style="border-collapse: collapse;">
+            <thead>
+              <tr style="background-color: rgb(var(--mgt-muted));">
+                <th class="px-5 py-4 text-sm font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Capacite</th>
+                <th class="px-5 py-4 text-sm font-semibold" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">Prestataire</th>
+                <th class="px-5 py-4 text-sm font-semibold" style="color: rgb(var(--mgt-accent)); font-family: var(--mgt-font-sans);">Boutique</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-top: 1px solid rgb(var(--mgt-border));">
+                <td class="px-5 py-4 text-sm font-medium" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Mise en avant</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Prestations, tarifs et durees</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Produits, prix et stock</td>
+              </tr>
+              <tr style="border-top: 1px solid rgb(var(--mgt-border)); background-color: rgb(var(--mgt-muted));">
+                <td class="px-5 py-4 text-sm font-medium" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Action principale</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Reserver / Prendre RDV</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Commander / Panier</td>
+              </tr>
+              <tr style="border-top: 1px solid rgb(var(--mgt-border));">
+                <td class="px-5 py-4 text-sm font-medium" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Gestion du temps</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Agenda &amp; creneaux</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Creneau retrait / livraison</td>
+              </tr>
+              <tr style="border-top: 1px solid rgb(var(--mgt-border)); background-color: rgb(var(--mgt-muted));">
+                <td class="px-5 py-4 text-sm font-medium" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Paiement</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Sur place / a la prestation</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Orange Money, Wave, especes</td>
+              </tr>
+              <tr style="border-top: 1px solid rgb(var(--mgt-border));">
+                <td class="px-5 py-4 text-sm font-medium" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Logistique</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">&mdash;</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Livraison / retrait</td>
+              </tr>
+              <tr style="border-top: 1px solid rgb(var(--mgt-border)); background-color: rgb(var(--mgt-muted));">
+                <td class="px-5 py-4 text-sm font-medium" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Suivi</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Rappels automatiques</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Suivi de commande en direct</td>
+              </tr>
+              <tr style="border-top: 1px solid rgb(var(--mgt-border));">
+                <td class="px-5 py-4 text-sm font-medium" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Confiance</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Avis verifies</td>
+                <td class="px-5 py-4 text-sm" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Avis verifies</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== GUIDE DE CHOIX ===== -->
+  <section class="py-16 md:py-20" style="background-color: rgb(var(--mgt-background));">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <div class="mb-12 text-center">
+        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Quel parcours pour vous ?</h2>
+        <p class="body mt-2" style="color: rgb(var(--mgt-muted-foreground));">Choisissez selon ce que vous vendez.</p>
+      </div>
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div class="rounded-lg border p-8" style="border-color: rgb(var(--mgt-primary-100)); border-radius: var(--mgt-radius-lg); background-color: rgb(var(--mgt-primary-50));">
+          <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-md" style="background-color: rgb(var(--mgt-primary)); border-radius: var(--mgt-radius-md);">
+            <i data-lucide="briefcase" class="h-6 w-6" style="color: rgb(var(--mgt-primary-foreground));"></i>
+          </div>
+          <h3 class="h3 mb-2" style="color: rgb(var(--mgt-primary-900));">Je vends mon temps et un savoir-faire</h3>
+          <p class="body" style="color: rgb(var(--mgt-primary-800));">Artisans, coiffeurs, coachs, salons, reparateurs, professeurs... Vous proposez une prestation, le client reserve un creneau.</p>
+        </div>
+        <div class="rounded-lg border p-8" style="border-color: rgb(var(--mgt-accent-100)); border-radius: var(--mgt-radius-lg); background-color: rgb(var(--mgt-accent-50));">
+          <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-md" style="background-color: rgb(var(--mgt-accent)); border-radius: var(--mgt-radius-md);">
+            <i data-lucide="store" class="h-6 w-6" style="color: rgb(var(--mgt-accent-foreground));"></i>
+          </div>
+          <h3 class="h3 mb-2" style="color: rgb(var(--mgt-accent-800));">Je vends des produits</h3>
+          <p class="body" style="color: rgb(var(--mgt-accent-800));">Restaurateurs, epiciers, marchands, e-commercants... Vous proposez un catalogue, le client commande et choisit livraison ou retrait.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== POINTS COMMUNS ===== -->
+  <section class="py-16 md:py-20" style="background-color: rgb(var(--mgt-muted));">
+    <div class="mx-auto max-w-[1200px] px-6">
+      <div class="mb-12 text-center">
+        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Ce qui les reunit</h2>
+        <p class="body mt-2" style="color: rgb(var(--mgt-muted-foreground));">La meme base de confiance et de communication, quel que soit le type d'activite.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <div class="flex flex-col items-center gap-3 rounded-lg border p-6 text-center" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <i data-lucide="message-circle" class="h-7 w-7" style="color: rgb(var(--mgt-primary));"></i>
+          <span class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Chat temps reel</span>
+        </div>
+        <div class="flex flex-col items-center gap-3 rounded-lg border p-6 text-center" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <i data-lucide="phone" class="h-7 w-7" style="color: rgb(var(--mgt-primary));"></i>
+          <span class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Appel</span>
+        </div>
+        <div class="flex flex-col items-center gap-3 rounded-lg border p-6 text-center" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <i data-lucide="navigation" class="h-7 w-7" style="color: rgb(var(--mgt-primary));"></i>
+          <span class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Itineraire</span>
+        </div>
+        <div class="flex flex-col items-center gap-3 rounded-lg border p-6 text-center" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <i data-lucide="star" class="h-7 w-7" style="color: rgb(var(--mgt-accent));"></i>
+          <span class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Avis verifies</span>
+        </div>
+        <div class="flex flex-col items-center gap-3 rounded-lg border p-6 text-center" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <i data-lucide="map-pin" class="h-7 w-7" style="color: rgb(var(--mgt-accent));"></i>
+          <span class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Localisation</span>
+        </div>
+        <div class="flex flex-col items-center gap-3 rounded-lg border p-6 text-center" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
+          <i data-lucide="shield-check" class="h-7 w-7" style="color: rgb(var(--mgt-accent));"></i>
+          <span class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Badge confiance</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer class="border-t py-12" style="background-color: rgb(var(--mgt-background)); border-color: rgb(var(--mgt-border));">
+  <div class="mx-auto max-w-[1200px] px-6">
+    <div class="flex flex-col items-center justify-between gap-6 md:flex-row">
+      <div class="flex items-center gap-3">
+        <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-8 w-8 rounded-md" style="border-radius: var(--mgt-radius-sm);">
+        <span class="text-lg font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">MangooTech</span>
+      </div>
+      <nav class="flex flex-wrap items-center justify-center gap-6">
+        <a href="carte.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Carte</a>
+        <a href="./fiche.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Fiche prestataire</a>
+        <a href="./fiche-boutique.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Fiche boutique</a>
+        <a href="./accueil.html#a-propos" data-dom-id="link-a-propos-footer" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">A propos</a>
+      </nav>
+    </div>
+    <div class="mt-10 border-t pt-6 text-center" style="border-color: rgb(var(--mgt-border));">
+      <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">&copy; 2026 MangooTech. Tous droits reserves. Fait avec passion pour l'Afrique.</p>
+    </div>
+  </div>
+</footer>
+
+<script>lucide.createIcons();</script>
+<script src="../assets/mangoo-public-nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion Inscription - MangooTech</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <style id="critical-layout">
+      /* ===== AUTH PAGE CRITICAL LAYOUT ===== */
+      .auth-split { display: flex; min-height: 100vh; }
+      .auth-branding { flex: 0 0 50%; max-width: 50%; position: sticky; top: 0; height: 100vh; align-self: flex-start; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 64px 48px; }
+      .auth-form-side { flex: 0 0 50%; max-width: 50%; display: flex; align-items: center; justify-content: center; padding: 48px; }
+      .auth-form-wrapper { width: 100%; max-width: 440px; }
+      .auth-tabs { display: flex; gap: 0; border-bottom: 2px solid rgb(var(--mgt-border)); margin-bottom: 32px; }
+      .auth-tab { flex: 1; text-align: center; padding: 14px 16px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; background: none; color: rgb(var(--mgt-muted-foreground)); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color 0.2s, border-color 0.2s; font-family: inherit; }
+      .auth-tab.active { color: rgb(var(--mgt-primary)); border-bottom-color: rgb(var(--mgt-primary)); }
+      .auth-tab:hover:not(.active) { color: rgb(var(--mgt-foreground)); }
+      .auth-form { display: none; }
+      .auth-form.active { display: block; }
+      .auth-input-group { margin-bottom: 20px; }
+      .auth-label { display: block; font-size: 14px; font-weight: 500; color: rgb(var(--mgt-foreground)); margin-bottom: 6px; }
+      .auth-input { width: 100%; padding: 12px 16px; border: 1.5px solid rgb(var(--mgt-input)); border-radius: var(--mgt-radius-md); font-size: 15px; font-family: inherit; color: rgb(var(--mgt-foreground)); background: rgb(var(--mgt-background)); transition: border-color 0.2s, box-shadow 0.2s; outline: none; box-sizing: border-box; }
+      .auth-input:focus { border-color: rgb(var(--mgt-ring)); box-shadow: 0 0 0 3px rgba(var(--mgt-ring) / 0.15); }
+      .auth-input::placeholder { color: rgb(var(--mgt-muted-foreground)); }
+      .auth-select { width: 100%; padding: 12px 16px; border: 1.5px solid rgb(var(--mgt-input)); border-radius: var(--mgt-radius-md); font-size: 15px; font-family: inherit; color: rgb(var(--mgt-foreground)); background: rgb(var(--mgt-background)); transition: border-color 0.2s, box-shadow 0.2s; outline: none; box-sizing: border-box; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 40px; cursor: pointer; }
+      .auth-select:focus { border-color: rgb(var(--mgt-ring)); box-shadow: 0 0 0 3px rgba(var(--mgt-ring) / 0.15); }
+      .auth-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 13px 24px; border-radius: var(--mgt-radius-md); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; }
+      .auth-btn-primary { background: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); }
+      .auth-btn-primary:hover { background: rgb(var(--mgt-accent-600)); box-shadow: 0 4px 12px rgba(232,97,12,.3); }
+      .auth-btn-social { background: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); border: 1.5px solid rgb(var(--mgt-border)); }
+      .auth-btn-social:hover { background: rgb(var(--mgt-muted)); border-color: rgb(var(--mgt-primary)); }
+      .auth-divider { display: flex; align-items: center; gap: 16px; margin: 24px 0; }
+      .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: rgb(var(--mgt-border)); }
+      .auth-divider span { font-size: 13px; color: rgb(var(--mgt-muted-foreground)); text-transform: uppercase; letter-spacing: 0.05em; }
+      .auth-checkbox-group { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+      .auth-checkbox-group input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; accent-color: rgb(var(--mgt-primary)); cursor: pointer; }
+      .auth-checkbox-group label { font-size: 14px; color: rgb(var(--mgt-muted-foreground)); cursor: pointer; line-height: 1.5; }
+      .auth-checkbox-group label a { color: rgb(var(--mgt-primary)); text-decoration: none; font-weight: 500; }
+      .auth-checkbox-group label a:hover { text-decoration: underline; }
+      .auth-forgot { display: block; text-align: right; font-size: 13px; color: rgb(var(--mgt-primary)); text-decoration: none; font-weight: 500; margin-top: -12px; margin-bottom: 20px; }
+      .auth-forgot:hover { text-decoration: underline; }
+      .auth-back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: rgb(var(--mgt-muted-foreground)); text-decoration: none; font-weight: 500; transition: color 0.2s; position: absolute; top: 32px; left: 32px; z-index: 10; }
+      .auth-back-link:hover { color: rgb(var(--mgt-foreground)); }
+      .auth-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+      .auth-logo-icon { width: 48px; height: 48px; border-radius: var(--mgt-radius-md); background: rgb(var(--mgt-accent)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 24px; flex-shrink: 0; }
+      .auth-logo-text { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+      .auth-slogan { font-size: 18px; color: rgba(255,255,255,0.8); line-height: 1.5; margin-bottom: 40px; max-width: 360px; text-align: center; }
+      .auth-illustration { width: 100%; max-width: 380px; margin-bottom: 40px; }
+      .auth-illustration svg { width: 100%; height: auto; }
+      .auth-trust-badges { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+      .auth-badge { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.7); font-size: 13px; }
+      .auth-badge-icon { width: 20px; height: 20px; color: rgb(var(--mgt-success)); flex-shrink: 0; }
+      /* Password toggle */
+      .auth-password-wrap { position: relative; }
+      .auth-password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: rgb(var(--mgt-muted-foreground)); padding: 4px; display: flex; align-items: center; }
+      .auth-password-toggle:hover { color: rgb(var(--mgt-foreground)); }
+      a[href="comparatif-prestataire-boutique.html"] > div:hover { border-color: rgb(var(--mgt-primary)); box-shadow: var(--mgt-shadow-md); }
+      @keyframes mgt-spin { to { transform: rotate(360deg); } }
+      .auth-input-icon { padding-left: 44px; }
+      .auth-input-icon-wrap { position: relative; }
+      .auth-input-icon-wrap .auth-icon-left { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: rgb(var(--mgt-muted-foreground)); pointer-events: none; }
+
+      @media (max-width: 900px) {
+        .auth-split { flex-direction: column; }
+        .auth-branding { flex: 0 0 auto; max-width: 100%; padding: 76px 24px 40px; min-height: auto; position: static; height: auto; align-self: auto; }
+        .auth-form-side { flex: 0 0 auto; max-width: 100%; padding: 32px 24px; }
+        .auth-back-link { color: #fff; top: 16px; left: 16px; }
+        .auth-back-link:hover { color: rgba(255,255,255,0.8); }
+        .auth-slogan { margin-bottom: 24px; }
+        .auth-illustration { max-width: 240px; margin-bottom: 24px; }
+      }
+    </style>
+
+    <!-- Back link -->
+    <a href="accueil.html" class="auth-back-link" style="color:#fff;">
+      <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Retour a l'accueil
+    </a>
+
+    <main class="auth-split">
+      <!-- LEFT: Branding Panel -->
+      <section class="auth-branding" style="background: linear-gradient(160deg, rgb(26,92,42) 0%, rgb(13,71,18) 100%);">
+        <div class="auth-logo">
+          <div class="auth-logo-icon">
+            <img src="../assets/favicon.png" alt="MangooTech" style="width:48px;height:48px;border-radius:var(--mgt-radius-md);object-fit:cover;display:block;">
+          </div>
+          <span class="auth-logo-text">MangooTech</span>
+        </div>
+        <p class="auth-slogan">Le commerce local, reinvente.<br>Connectez-vous a votre marche africain.</p>
+
+        <!-- Abstract Africa illustration -->
+        <div class="auth-illustration">
+          <svg viewBox="0 0 380 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Abstract Africa continent shape -->
+            <path d="M190 40 C150 30 120 45 95 80 C75 105 60 95 50 115 C35 145 40 155 30 180 C20 210 30 220 45 250 C55 270 65 280 70 300 C75 310 85 315 100 310 C120 305 140 310 160 305 C180 300 200 295 220 290 C250 280 270 275 290 270 C310 265 330 250 340 220 C350 190 355 160 345 130 C335 100 320 75 300 60 C275 40 250 45 230 35 C210 28 200 42 190 40Z" fill="rgba(129,199,134,0.15)" stroke="rgba(129,199,134,0.4)" stroke-width="1.5"/>
+            <!-- Inner highlight -->
+            <path d="M190 60 C160 52 140 65 120 90 C105 110 90 108 82 125 C72 148 78 160 72 185 C66 205 74 215 85 235 C92 248 100 252 115 245 C135 235 155 245 175 240 C195 235 210 230 230 222 C255 212 275 208 285 190 C295 170 298 145 290 120 C282 98 268 82 250 70 C228 58 210 65 190 60Z" fill="rgba(129,199,134,0.08)" stroke="rgba(255,183,77,0.2)" stroke-width="1"/>
+            <!-- Connection dots (market cities) -->
+            <circle cx="170" cy="105" r="4" fill="rgb(255,183,77)" opacity="0.9"/>
+            <circle cx="210" cy="140" r="4" fill="rgb(255,183,77)" opacity="0.9"/>
+            <circle cx="160" cy="170" r="5" fill="rgb(232,97,12)" opacity="0.9"/>
+            <circle cx="230" cy="200" r="4" fill="rgb(255,183,77)" opacity="0.9"/>
+            <circle cx="130" cy="220" r="4" fill="rgb(232,97,12)" opacity="0.9"/>
+            <circle cx="260" cy="250" r="4" fill="rgb(255,183,77)" opacity="0.9"/>
+            <circle cx="180" cy="195" r="5" fill="rgb(232,97,12)" opacity="0.9"/>
+            <!-- Connecting lines -->
+            <line x1="170" y1="105" x2="210" y2="140" stroke="rgba(255,183,77,0.25)" stroke-width="1" stroke-dasharray="4 3"/>
+            <line x1="210" y1="140" x2="180" y2="195" stroke="rgba(255,183,77,0.25)" stroke-width="1" stroke-dasharray="4 3"/>
+            <line x1="180" y1="195" x2="160" y2="170" stroke="rgba(255,183,77,0.25)" stroke-width="1" stroke-dasharray="4 3"/>
+            <line x1="160" y1="170" x2="130" y2="220" stroke="rgba(255,183,77,0.25)" stroke-width="1" stroke-dasharray="4 3"/>
+            <line x1="180" y1="195" x2="230" y2="200" stroke="rgba(255,183,77,0.25)" stroke-width="1" stroke-dasharray="4 3"/>
+            <line x1="230" y1="200" x2="260" y2="250" stroke="rgba(255,183,77,0.25)" stroke-width="1" stroke-dasharray="4 3"/>
+            <!-- Decorative rings -->
+            <circle cx="190" cy="155" r="75" stroke="rgba(129,199,134,0.1)" stroke-width="0.5" stroke-dasharray="2 6"/>
+            <circle cx="190" cy="155" r="95" stroke="rgba(129,199,134,0.06)" stroke-width="0.5" stroke-dasharray="1 8"/>
+          </svg>
+        </div>
+
+        <!-- Trust badges -->
+        <div class="auth-trust-badges">
+          <div class="auth-badge">
+            <i data-lucide="shield-check" class="auth-badge-icon" style="width:18px;height:18px;"></i>
+            <span>Securise SSL</span>
+          </div>
+          <div class="auth-badge">
+            <i data-lucide="users" class="auth-badge-icon" style="width:18px;height:18px;"></i>
+            <span>+10 000 marchands</span>
+          </div>
+          <div class="auth-badge">
+            <i data-lucide="star" class="auth-badge-icon" style="width:18px;height:18px;"></i>
+            <span>Note 4.8/5</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Form Panel -->
+      <section class="auth-form-side" style="background: rgb(var(--mgt-background));">
+        <div class="auth-form-wrapper">
+          <!-- Tabs -->
+          <div class="auth-tabs" role="tablist">
+            <button class="auth-tab active" role="tab" aria-selected="true" id="tab-connexion" onclick="switchAuthTab('connexion')">Connexion</button>
+            <button class="auth-tab" role="tab" aria-selected="false" id="tab-inscription" onclick="switchAuthTab('inscription')">Inscription</button>
+          </div>
+
+          <!-- FORM: Connexion -->
+          <form class="auth-form active" id="form-connexion" onsubmit="return false;">
+            <div id="login-step-creds">
+              <div class="auth-input-group auth-input-icon-wrap">
+                <label class="auth-label" for="login-identifier">Numéro de téléphone ou PIN</label>
+                <i data-lucide="smartphone" class="auth-icon-left" style="width:18px;height:18px;"></i>
+                <input type="text" id="login-identifier" class="auth-input auth-input-icon" placeholder="+221 XX XX XX XX XX  ou  votre PIN à 4 chiffres" required autocomplete="username" inputmode="text">
+              </div>
+              <p class="caption" style="color:rgb(var(--mgt-muted-foreground));margin:-8px 0 16px;">Un seul champ suffit : entrez votre numéro de téléphone, ou simplement votre PIN à 4 chiffres.</p>
+              <a href="forgot-password.html" class="auth-forgot">Mot de passe oublié ?</a>
+              <button type="submit" class="auth-btn auth-btn-primary" style="margin-bottom:8px;" id="login-submit-btn">
+                <i data-lucide="log-in" style="width:18px;height:18px;"></i>
+                Se connecter
+              </button>
+              <button type="button" class="auth-btn" style="background:none;border:none;color:rgb(var(--mgt-primary));font-size:13px;font-weight:600;cursor:pointer;width:100%;padding:6px;" onclick="speakHelp('login')">
+                <i data-lucide="volume-2" style="width:16px;height:16px;vertical-align:middle;"></i>
+                Écouter les instructions
+              </button>
+            </div>
+
+            <div id="login-message" class="auth-message" style="display:none;padding:10px 14px;border-radius:var(--mgt-radius-md);font-size:14px;margin-bottom:16px;"></div>
+
+            <div id="login-step-2fa" style="display:none;">
+              <div class="auth-input-group">
+                <label class="auth-label">Vérification en deux étapes</label>
+                <p class="caption" style="color:rgb(var(--mgt-muted-foreground));margin-bottom:10px;">Un code à 6 chiffres a été envoyé à votre adresse email.</p>
+                <p id="login-2fa-demo" class="caption" style="color:rgb(var(--mgt-accent));font-weight:600;margin-bottom:12px;"></p>
+              </div>
+              <div class="auth-input-group auth-input-icon-wrap">
+                <label class="auth-label" for="login-2fa-code">Code à 6 chiffres</label>
+                <i data-lucide="shield-check" class="auth-icon-left" style="width:18px;height:18px;"></i>
+                <input type="text" id="login-2fa-code" class="auth-input auth-input-icon" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" style="letter-spacing:0.3em;font-size:20px;font-weight:700;">
+              </div>
+              <div id="login-2fa-message" class="auth-message" style="display:none;padding:10px 14px;border-radius:var(--mgt-radius-md);font-size:14px;margin-bottom:16px;"></div>
+              <button type="button" class="auth-btn auth-btn-primary" id="login-2fa-submit-btn" style="margin-bottom:8px;">
+                <i data-lucide="log-in" style="width:18px;height:18px;"></i>
+                Vérifier
+              </button>
+              <button type="button" class="auth-btn" id="login-2fa-cancel-btn" style="background:none;border:none;color:rgb(var(--mgt-primary));font-size:13px;font-weight:600;cursor:pointer;width:100%;padding:6px;">
+                Retour
+              </button>
+            </div>
+          </form>
+
+          <!-- FORM: Inscription -->
+          <form class="auth-form" id="form-inscription" onsubmit="return false;">
+            <!-- Type de compte -->
+            <div class="auth-input-group">
+              <label class="auth-label">Je m'inscris en tant que</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <button type="button" id="reg-role-prestataire" class="auth-role-btn active" data-role="prestataire" style="padding:12px 8px;border:2px solid rgb(var(--mgt-primary));border-radius:var(--mgt-radius-md);background:rgb(var(--mgt-primary-50));cursor:pointer;font-family:inherit;text-align:center;">
+                  <span style="display:block;font-size:20px;">💼</span>
+                  <span style="display:block;font-size:14px;font-weight:700;color:rgb(var(--mgt-primary));margin-top:4px;">Prestataire</span>
+                  <span style="display:block;font-size:11px;color:rgb(var(--mgt-muted-foreground));margin-top:2px;">Services & savoir-faire</span>
+                </button>
+                <button type="button" id="reg-role-vendeur" class="auth-role-btn" data-role="vendeur" style="padding:12px 8px;border:2px solid rgb(var(--mgt-border));border-radius:var(--mgt-radius-md);background:rgb(var(--mgt-background));cursor:pointer;font-family:inherit;text-align:center;">
+                  <span style="display:block;font-size:20px;">🏪</span>
+                  <span style="display:block;font-size:14px;font-weight:700;color:rgb(var(--mgt-foreground));margin-top:4px;">Boutique</span>
+                  <span style="display:block;font-size:11px;color:rgb(var(--mgt-muted-foreground));margin-top:2px;">Produits & livraison</span>
+                </button>
+                <button type="button" id="reg-role-client" class="auth-role-btn" data-role="client" style="padding:12px 8px;border:2px solid rgb(var(--mgt-border));border-radius:var(--mgt-radius-md);background:rgb(var(--mgt-background));cursor:pointer;font-family:inherit;text-align:center;">
+                  <span style="display:block;font-size:20px;">🛍️</span>
+                  <span style="display:block;font-size:14px;font-weight:700;color:rgb(var(--mgt-foreground));margin-top:4px;">Client</span>
+                  <span style="display:block;font-size:11px;color:rgb(var(--mgt-muted-foreground));margin-top:2px;">Je veux acheter</span>
+                </button>
+                <button type="button" id="reg-role-livreur" class="auth-role-btn" data-role="livreur" style="padding:12px 8px;border:2px solid rgb(var(--mgt-border));border-radius:var(--mgt-radius-md);background:rgb(var(--mgt-background));cursor:pointer;font-family:inherit;text-align:center;">
+                  <span style="display:block;font-size:20px;">🛵</span>
+                  <span style="display:block;font-size:14px;font-weight:700;color:rgb(var(--mgt-foreground));margin-top:4px;">Livreur</span>
+                  <span style="display:block;font-size:11px;color:rgb(var(--mgt-muted-foreground));margin-top:2px;">Mangoo Express+</span>
+                </button>
+              </div>
+              <a href="comparatif-prestataire-boutique.html" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:12px;color:rgb(var(--mgt-primary));text-decoration:none;font-weight:500;">
+                <i data-lucide="git-compare" style="width:14px;height:14px;"></i> Prestataire ou Boutique ? Voir le comparatif
+              </a>
+            </div>
+
+            <div class="auth-input-group auth-input-icon-wrap">
+              <label class="auth-label" for="register-name">Nom complet</label>
+              <i data-lucide="user" class="auth-icon-left" style="width:18px;height:18px;"></i>
+              <input type="text" id="register-name" class="auth-input auth-input-icon" placeholder="Votre nom complet" required autocomplete="name">
+            </div>
+
+            <!-- Champs professionnels (masqués pour client) -->
+            <div id="pro-fields" style="display:block;">
+              <div class="auth-input-group auth-input-icon-wrap">
+                <label class="auth-label" for="register-enseigne">Nom de la boutique</label>
+                <i data-lucide="store" class="auth-icon-left" style="width:18px;height:18px;"></i>
+                <input type="text" id="register-enseigne" class="auth-input auth-input-icon" placeholder="Ex. DAN Boutique">
+              </div>
+              <div class="auth-input-group">
+                <label class="auth-label" for="register-category">Catégorie</label>
+                <select id="register-category" class="auth-select">
+                  <option value="" disabled selected>Choisissez votre activité</option>
+                  <option value="salon">Salon de coiffure / Esthétique</option>
+                  <option value="couture">Couture / Tailleur</option>
+                  <option value="restauration">Restauration</option>
+                  <option value="artisanat">Artisanat</option>
+                  <option value="reparation">Réparation / Maintenance</option>
+                  <option value="commerce">Commerce / Boutique</option>
+                  <option value="autre">Autre</option>
+                </select>
+              </div>
+              <div class="auth-input-group">
+                <label class="auth-label">Logo de la boutique (optionnel)</label>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div id="logo-preview" style="width:56px;height:56px;border-radius:var(--mgt-radius-md);border:2px dashed rgb(var(--mgt-border));display:flex;align-items:center;justify-content:center;color:rgb(var(--mgt-muted-foreground));flex-shrink:0;overflow:hidden;background:rgb(var(--mgt-muted));">
+                    <i data-lucide="image" style="width:22px;height:22px;"></i>
+                  </div>
+                  <button type="button" id="logo-upload-btn" class="auth-btn" style="width:auto;background:rgb(var(--mgt-background));border:1.5px solid rgb(var(--mgt-border));color:rgb(var(--mgt-foreground));">
+                    Choisir un logo
+                  </button>
+                  <input type="file" id="logo-input" accept="image/*" style="display:none;">
+                </div>
+                <p class="caption" style="color:rgb(var(--mgt-muted-foreground));margin-top:6px;">Votre logo apparaîtra sur votre fiche boutique.</p>
+              </div>
+              <div class="auth-input-group">
+                <label class="auth-label">Message de bienvenue vocal <span style="color:rgb(var(--mgt-muted-foreground));font-weight:400;">(optionnel)</span></label>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                  <button type="button" id="welcome-record-btn" class="auth-btn" style="width:auto;background:rgb(var(--mgt-background));border:1.5px solid rgb(var(--mgt-border));color:rgb(var(--mgt-foreground));">
+                    <i data-lucide="mic" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"></i>Enregistrer
+                  </button>
+                  <button type="button" id="welcome-preview-btn" class="auth-btn" style="width:auto;background:rgb(var(--mgt-background));border:1.5px solid rgb(var(--mgt-border));color:rgb(var(--mgt-foreground));display:none;">
+                    <i data-lucide="play" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"></i>Réécouter
+                  </button>
+                  <button type="button" id="welcome-delete-btn" class="auth-btn" style="width:auto;background:none;border:none;color:rgb(var(--mgt-error));display:none;">
+                    <i data-lucide="trash-2" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"></i>Supprimer
+                  </button>
+                </div>
+                <div id="welcome-record-status" class="caption" style="color:rgb(var(--mgt-muted-foreground));margin-top:8px;">Aucun message enregistré. Un message par défaut sera utilisé.</div>
+                <p class="caption" style="color:rgb(var(--mgt-muted-foreground));margin-top:6px;">Enregistrez un court message (ex. « Bienvenue chez votre boutique, voici nos horaires... »). Il sera lu sur votre fiche à la place du message par défaut.</p>
+              </div>
+            </div>
+
+            <!-- Champs livreur (Mangoo Express+) -->
+            <div id="livreur-fields" style="display:none;">
+              <div class="auth-input-group">
+                <label class="auth-label" for="register-vehicle">Véhicule</label>
+                <select id="register-vehicle" class="auth-select">
+                  <option value="moto">Moto</option>
+                  <option value="velo">Vélo</option>
+                  <option value="voiture">Voiture</option>
+                  <option value="van">Fourgon</option>
+                  <option value="camion">Camion</option>
+                  <option value="semi">Semi-remorque</option>
+                </select>
+              </div>
+              <div class="auth-input-group auth-input-icon-wrap">
+                <label class="auth-label" for="register-zone">Zone de travail <span style="color:rgb(var(--mgt-muted-foreground));font-weight:400;">(optionnel)</span></label>
+                <i data-lucide="map-pin" class="auth-icon-left" style="width:18px;height:18px;"></i>
+                <input type="text" id="register-zone" class="auth-input auth-input-icon" placeholder="Ex. Plateau, Médina, Almadies">
+              </div>
+            </div>
+
+            <div class="auth-input-group auth-input-icon-wrap">
+              <label class="auth-label" for="register-phone">Téléphone</label>
+              <i data-lucide="phone" class="auth-icon-left" style="width:18px;height:18px;"></i>
+              <input type="tel" id="register-phone" class="auth-input auth-input-icon" placeholder="+225 XX XX XX XX XX" required autocomplete="tel">
+            </div>
+            <div class="auth-input-group auth-input-icon-wrap">
+              <label class="auth-label" for="register-email">Email (optionnel)</label>
+              <i data-lucide="mail" class="auth-icon-left" style="width:18px;height:18px;"></i>
+              <input type="email" id="register-email" class="auth-input auth-input-icon" placeholder="vous@exemple.com" autocomplete="email">
+            </div>
+            <div class="auth-input-group">
+              <label class="auth-label" for="register-pin">PIN à 4 chiffres <span style="color:rgb(var(--mgt-muted-foreground));font-weight:400;">(pour vous connecter)</span></label>
+              <div class="auth-password-wrap">
+                <input type="password" id="register-pin" class="auth-input" inputmode="numeric" maxlength="4" placeholder="••••" required autocomplete="new-password" style="padding-right:44px;letter-spacing:0.4em;font-size:20px;font-weight:700;">
+                <button type="button" class="auth-password-toggle" onclick="togglePassword('register-pin',this)" aria-label="Afficher le PIN">
+                  <i data-lucide="eye" style="width:18px;height:18px;"></i>
+                </button>
+              </div>
+              <p class="caption" style="color:rgb(var(--mgt-muted-foreground));margin-top:6px;">4 chiffres faciles à retenir. Vous vous connecterez avec ce PIN.</p>
+            </div>
+            <div class="auth-input-group">
+              <label class="auth-label" for="register-city">Ville</label>
+              <select id="register-city" class="auth-select" required>
+                <option value="" disabled selected>Chargement des villes…</option>
+                <option value="other">Autre (saisir ma ville)</option>
+              </select>
+              <input type="text" id="register-city-other" class="auth-input" placeholder="Nom de votre ville" autocomplete="address-level2" style="display:none;margin-top:8px;">
+            </div>
+            <script>
+              (function () {
+                var sel = document.getElementById('register-city');
+                var otherInput = document.getElementById('register-city-other');
+                var FALLBACK = [
+                  { slug: 'abidjan', city: 'Abidjan', country: "Cote d'Ivoire" },
+                  { slug: 'dakar', city: 'Dakar', country: 'Senegal' },
+                  { slug: 'paris', city: 'Paris', country: 'France' }
+                ];
+                function fill(list) {
+                  if (!sel) return;
+                  var placeholder = sel.querySelector('option[value=""]');
+                  if (placeholder) placeholder.textContent = 'Sélectionnez votre ville';
+                  sel.querySelectorAll('option[data-city]').forEach(function (o) { o.remove(); });
+                  var otherOpt = sel.querySelector('option[value="other"]');
+                  list.slice().sort(function (a, b) { return a.city.localeCompare(b.city, 'fr'); }).forEach(function (c) {
+                    var o = document.createElement('option');
+                    o.value = c.slug;
+                    o.textContent = c.city + ' · ' + c.country;
+                    o.setAttribute('data-city', '1');
+                    if (otherOpt) sel.insertBefore(o, otherOpt);
+                    else sel.appendChild(o);
+                  });
+                }
+                function apply(data) {
+                  var list = [];
+                  if (data && data.cities) {
+                    Object.keys(data.cities).forEach(function (k) {
+                      list.push({ slug: k, city: data.cities[k].city, country: data.cities[k].country });
+                    });
+                  }
+                  fill(list.length ? list : FALLBACK);
+                }
+                sel.addEventListener('change', function () {
+                  var isOther = sel.value === 'other';
+                  if (otherInput) {
+                    otherInput.style.display = isOther ? 'block' : 'none';
+                    otherInput.required = isOther;
+                    if (!isOther) otherInput.value = '';
+                  }
+                });
+                fetch('/api/cities', { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+                  .then(function (r) { return r.json(); })
+                  .then(apply)
+                  .catch(function () { apply(null); });
+              })();
+            </script>
+            <div id="register-message" class="auth-message" style="display:none;padding:10px 14px;border-radius:var(--mgt-radius-md);font-size:14px;margin-bottom:16px;"></div>
+            <div class="auth-checkbox-group">
+              <input type="checkbox" id="register-terms" required>
+              <label for="register-terms">J'accepte les <a href="./conditions-utilisation.html" data-dom-id="link-conditions-utilisation">conditions générales d'utilisation</a> et la <a href="./confidentialite.html" data-dom-id="link-confidentialite">politique de confidentialité</a></label>
+            </div>
+            <button type="submit" class="auth-btn auth-btn-primary" id="register-submit-btn">
+              <i data-lucide="user-plus" style="width:18px;height:18px;"></i>
+              Créer mon compte
+            </button>
+            <button type="button" class="auth-btn" style="background:none;border:none;color:rgb(var(--mgt-primary));font-size:13px;font-weight:600;cursor:pointer;width:100%;padding:6px;margin-top:4px;" onclick="speakHelp('register')">
+              <i data-lucide="volume-2" style="width:16px;height:16px;vertical-align:middle;"></i>
+              Écouter les instructions
+            </button>
+          </form>
+
+          <!-- Footer -->
+          <p class="caption" style="text-align:center;margin-top:24px;color:rgb(var(--mgt-muted-foreground));">
+            En vous connectant, vous acceptez nos conditions d'utilisation.
+          </p>
+
+          <!-- Carte comparatif Prestataire vs Boutique -->
+          <a href="comparatif-prestataire-boutique.html" style="display:block;margin-top:20px;text-decoration:none;">
+            <div style="display:flex;align-items:center;gap:14px;padding:16px;border:1.5px solid rgb(var(--mgt-border));border-radius:var(--mgt-radius-lg);background:rgb(var(--mgt-card));box-shadow:var(--mgt-shadow-sm);transition:border-color .2s, box-shadow .2s;">
+              <div style="flex-shrink:0;width:44px;height:44px;border-radius:var(--mgt-radius-md);background:rgb(var(--mgt-primary-50));display:flex;align-items:center;justify-content:center;">
+                <i data-lucide="git-compare" style="width:22px;height:22px;color:rgb(var(--mgt-primary));"></i>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <p style="margin:0;font-size:14px;font-weight:700;color:rgb(var(--mgt-foreground));font-family:var(--mgt-font-sans);">Prestataire ou Boutique ?</p>
+                <p style="margin:2px 0 0;font-size:12px;color:rgb(var(--mgt-muted-foreground));line-height:1.5;font-family:var(--mgt-font-sans);">Découvrez le parcours qui correspond à votre activité.</p>
+              </div>
+              <i data-lucide="arrow-right" style="width:18px;height:18px;color:rgb(var(--mgt-muted-foreground));flex-shrink:0;"></i>
+            </div>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // ===== Utilitaires =====
+      function switchAuthTab(tab) {
+        const tabs = document.querySelectorAll('.auth-tab');
+        const forms = document.querySelectorAll('.auth-form');
+        tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
+        forms.forEach(f => f.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.getElementById('tab-' + tab).setAttribute('aria-selected','true');
+        document.getElementById('form-' + tab).classList.add('active');
+        hideMessage('login');
+        hideMessage('register');
+      }
+
+      function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.setAttribute('data-lucide','eye-off');
+        } else {
+          input.type = 'password';
+          icon.setAttribute('data-lucide','eye');
+        }
+        lucide.createIcons();
+      }
+
+      function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+
+      function showMessage(kind, text, isError) {
+        const el = document.getElementById(kind + '-message');
+        if (!el) return;
+        el.textContent = text;
+        el.style.display = 'block';
+        el.style.background = isError ? 'rgba(239,68,68,0.10)' : 'rgba(129,199,134,0.14)';
+        el.style.color = isError ? 'rgb(var(--mgt-error))' : 'rgb(var(--mgt-primary))';
+        el.style.border = '1px solid ' + (isError ? 'rgba(239,68,68,0.25)' : 'rgba(129,199,134,0.30)');
+      }
+      function hideMessage(kind) {
+        const el = document.getElementById(kind + '-message');
+        if (el) el.style.display = 'none';
+      }
+
+      function setBusy(kind, busy) {
+        const btn = document.getElementById(kind + '-submit-btn');
+        if (!btn) return;
+        if (busy) {
+          btn.dataset.original = btn.innerHTML;
+          btn.disabled = true;
+          btn.style.opacity = '0.6';
+          btn.innerHTML = '<span class="auth-spinner" style="width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:mgt-spin .7s linear infinite;"></span> Patientez…';
+        } else {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          if (btn.dataset.original) btn.innerHTML = btn.dataset.original;
+        }
+      }
+
+      function api(path, payload) {
+        return fetch(path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload || {})
+        }).then(function (r) {
+          return r.json().catch(function(){ return {}; }).then(function (data) {
+            return { status: r.status, ok: r.ok, data: data };
+          });
+        });
+      }
+
+      function saveSession(token, user) {
+        try {
+          localStorage.setItem('mgt_token', token);
+          localStorage.setItem('mgt_user', JSON.stringify(user));
+          var role = (user && user.role) || '';
+          if (role === 'prestataire' || role === 'vendeur') {
+            // Synchronise l'identité prestataire pour que MangooVendor.current()
+            // et MangooVendorConfig.vendorId() chargent le bon vendor-config
+            // (sinon toute connexion retombe sur le seed « DAN Boutique »).
+            localStorage.setItem('mgt_vendor_identity_v1', JSON.stringify({
+              vendorId: user.vendorId || user.id || '',
+              name: user.enseigne || user.name || 'Ma boutique',
+              role: role,
+              category: user.category || 'salon',
+              phone: user.phone || '',
+              email: user.email || '',
+              city: user.city || '',
+              logo: user.logo || '',
+              rating: (user.rating != null && user.rating !== '') ? String(user.rating) : '—',
+              verified: !!user.verified,
+              plan: user.plan || 'decouverte'
+            }));
+          } else {
+            // Admin / client : on efface toute identité prestataire résiduelle.
+            localStorage.removeItem('mgt_vendor_identity_v1');
+          }
+        } catch (e) {}
+      }
+
+      function redirectAfterLogin(user) {
+        var role = (user && user.role) || 'prestataire';
+        var base = window.location.pathname.replace(/[^/]*$/, '');
+        // Si on vient d'une page protégée (ex. l'espace admin), on y retourne.
+        var next = null;
+        try { next = new URLSearchParams(window.location.search).get('next'); } catch (e) { next = null; }
+        if (next && /^\/pages\/[A-Za-z0-9._-]+\.html$/.test(next) && next.indexOf('//') < 0) {
+          window.location.href = next;
+          return;
+        }
+        // Rejoue l'atterrissage d'une notification push mémorisé avant la
+        // connexion (voir mangoo-dashboard-shell.js). Le contexte kind/from/
+        // fromName est conservé pour ouvrir la bonne conversation ou l'overlay
+        // d'appel une fois la session établie.
+        var pushLanding = null;
+        try { pushLanding = localStorage.getItem('mgt_push_landing_v1'); } catch (e) { pushLanding = null; }
+        if (pushLanding) {
+          try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
+          var isPro = role === 'prestataire' || role === 'vendeur' || role === 'livreur';
+          if (isPro && /^\/pages\/[A-Za-z0-9._-]+\.html(\?.*)?$/.test(pushLanding) && pushLanding.indexOf('//') < 0) {
+            window.location.href = pushLanding;
+            return;
+          }
+        }
+        var target;
+        if (role === 'admin') target = 'admin.html';
+        else if (role === 'client') target = 'client-dashboard.html';
+        else if (role === 'livreur') target = 'livreur.html';
+        else target = 'dashboard-overview.html';
+        window.location.href = base + target;
+      }
+
+      // ===== Connexion « l'un ou l'autre » (téléphone OU PIN) =====
+      var twoFactorUserId = null;
+
+      function showTwoFactorStep(demoCode) {
+        hideMessage('login');
+        hideMessage('login-2fa');
+        document.getElementById('login-step-creds').style.display = 'none';
+        document.getElementById('login-step-2fa').style.display = 'block';
+        var demo = document.getElementById('login-2fa-demo');
+        if (demo) demo.textContent = demoCode ? ('Code de vérification (démo) : ' + demoCode) : '';
+        var codeInput = document.getElementById('login-2fa-code');
+        if (codeInput) { codeInput.value = ''; setTimeout(function () { codeInput.focus(); }, 50); }
+      }
+
+      function hideTwoFactorStep() {
+        document.getElementById('login-step-creds').style.display = '';
+        document.getElementById('login-step-2fa').style.display = 'none';
+        hideMessage('login-2fa');
+        twoFactorUserId = null;
+      }
+
+      document.getElementById('login-2fa-cancel-btn').addEventListener('click', hideTwoFactorStep);
+
+      document.getElementById('login-2fa-submit-btn').addEventListener('click', function () {
+        hideMessage('login-2fa');
+        var code = document.getElementById('login-2fa-code').value.trim();
+        if (!/^\d{6}$/.test(code)) { showMessage('login-2fa', 'Entrez le code à 6 chiffres reçu par email.', true); return; }
+        setBusy('login-2fa', true);
+        api('/api/auth/verify-2fa', { userId: twoFactorUserId, code: code }).then(function (res) {
+          setBusy('login-2fa', false);
+          if (res.ok && res.data.ok) {
+            saveSession(res.data.token, res.data.user);
+            showMessage('login-2fa', 'Vérification réussie. Redirection…', false);
+            setTimeout(function(){ redirectAfterLogin(res.data.user); }, 600);
+          } else {
+            showMessage('login-2fa', (res.data && res.data.error) || 'Code incorrect.', true);
+          }
+        }).catch(function () {
+          setBusy('login-2fa', false);
+          showMessage('login-2fa', 'Impossible de joindre le serveur.', true);
+        });
+      });
+
+      document.getElementById('form-connexion').addEventListener('submit', function () {
+        hideMessage('login');
+        var identifier = document.getElementById('login-identifier').value.trim();
+        if (!identifier) { showMessage('login', 'Renseignez votre téléphone ou votre PIN à 4 chiffres.', true); return; }
+
+        setBusy('login', true);
+        api('/api/auth/login', { mode: 'auto', identifier: identifier }).then(function (res) {
+          setBusy('login', false);
+          if (res.ok && res.data.ok) {
+            if (res.data.twoFactor) {
+              twoFactorUserId = res.data.userId;
+              showTwoFactorStep(res.data.demoCode);
+            } else {
+              saveSession(res.data.token, res.data.user);
+              showMessage('login', 'Connexion réussie. Redirection…', false);
+              setTimeout(function(){ redirectAfterLogin(res.data.user); }, 600);
+            }
+          } else {
+            showMessage('login', (res.data && res.data.error) || 'Échec de connexion.', true);
+          }
+        }).catch(function () {
+          setBusy('login', false);
+          showMessage('login', 'Impossible de joindre le serveur. Vérifiez que le serveur est démarré.', true);
+        });
+      });
+      var registerRole = 'prestataire';
+      function setRegisterRole(role) {
+        registerRole = role;
+        var isPro = role === 'prestataire' || role === 'vendeur';
+        var isLivreur = role === 'livreur';
+        var states = [
+          { id: 'reg-role-prestataire', on: role === 'prestataire' },
+          { id: 'reg-role-vendeur', on: role === 'vendeur' },
+          { id: 'reg-role-client', on: role === 'client' },
+          { id: 'reg-role-livreur', on: role === 'livreur' }
+        ];
+        states.forEach(function (s) {
+          var el = document.getElementById(s.id);
+          if (!el) return;
+          el.classList.toggle('active', s.on);
+          el.style.borderColor = s.on ? 'rgb(var(--mgt-primary))' : 'rgb(var(--mgt-border))';
+          el.style.background = s.on ? 'rgb(var(--mgt-primary-50))' : 'rgb(var(--mgt-background))';
+        });
+        document.getElementById('pro-fields').style.display = isPro ? 'block' : 'none';
+        document.getElementById('livreur-fields').style.display = isLivreur ? 'block' : 'none';
+        document.getElementById('register-enseigne').required = isPro;
+        document.getElementById('register-category').required = isPro;
+        document.getElementById('register-vehicle').required = isLivreur;
+        // Filtre la liste des activités selon le profil choisi :
+        // un vendeur-boutique = commerce ; un prestataire = métiers de service.
+        var cat = document.getElementById('register-category');
+        if (cat) {
+          Array.prototype.forEach.call(cat.options, function (o) {
+            if (!o.value) return; // option « Choisissez votre activité »
+            o.hidden = (role === 'vendeur') ? (o.value !== 'commerce') : (role === 'prestataire' ? (o.value === 'commerce') : false);
+          });
+          if (role === 'vendeur') { cat.value = 'commerce'; }
+          else if (role === 'prestataire' && cat.value === 'commerce') { cat.value = ''; }
+        }
+      }
+      document.getElementById('reg-role-prestataire').addEventListener('click', function(){ setRegisterRole('prestataire'); });
+      document.getElementById('reg-role-vendeur').addEventListener('click', function(){ setRegisterRole('vendeur'); });
+      document.getElementById('reg-role-client').addEventListener('click', function(){ setRegisterRole('client'); });
+      document.getElementById('reg-role-livreur').addEventListener('click', function(){ setRegisterRole('livreur'); });
+
+      // ===== Upload logo =====
+      var logoDataUrl = '';
+      document.getElementById('logo-upload-btn').addEventListener('click', function(){ document.getElementById('logo-input').click(); });
+      document.getElementById('logo-input').addEventListener('change', function (e) {
+        var file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (file.size > 1500000) { showMessage('register', 'Image trop lourde (max 1,5 Mo).', true); return; }
+        var reader = new FileReader();
+        reader.onload = function (ev) {
+          logoDataUrl = ev.target.result;
+          var prev = document.getElementById('logo-preview');
+          prev.innerHTML = '<img src="' + logoDataUrl + '" style="width:100%;height:100%;object-fit:cover;">';
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // ===== Inscription =====
+      document.getElementById('form-inscription').addEventListener('submit', function () {
+        hideMessage('register');
+        var name = document.getElementById('register-name').value.trim();
+        var phone = document.getElementById('register-phone').value.trim();
+        var pin = document.getElementById('register-pin').value.trim();
+        var email = document.getElementById('register-email').value.trim();
+        var city = document.getElementById('register-city').value;
+        if (city === 'other') {
+          var otherCity = document.getElementById('register-city-other');
+          city = otherCity ? otherCity.value.trim() : '';
+        }
+        var terms = document.getElementById('register-terms').checked;
+
+        if (!name) { showMessage('register', 'Renseignez votre nom complet.', true); return; }
+        if (!phone) { showMessage('register', 'Renseignez votre numéro de téléphone.', true); return; }
+        if (!city) { showMessage('register', 'Sélectionnez ou saisissez votre ville.', true); return; }
+        if (!/^\d{4}$/.test(pin)) { showMessage('register', 'Le PIN doit contenir exactement 4 chiffres.', true); return; }
+        if (!terms) { showMessage('register', 'Veuillez accepter les conditions d\'utilisation.', true); return; }
+
+        var payload = {
+          role: registerRole, name: name, phone: phone, pin: pin,
+          email: email, city: city, logo: logoDataUrl
+        };
+        if (registerRole === 'prestataire' || registerRole === 'vendeur') {
+          payload.enseigne = document.getElementById('register-enseigne').value.trim();
+          payload.category = document.getElementById('register-category').value;
+          if (!payload.enseigne) { showMessage('register', 'Renseignez le nom de votre boutique.', true); return; }
+          if (!payload.category) { showMessage('register', 'Choisissez votre activité.', true); return; }
+        }
+        if (registerRole === 'livreur') {
+          payload.vehicle = document.getElementById('register-vehicle').value;
+          payload.zone = document.getElementById('register-zone').value.trim();
+        }
+
+        setBusy('register', true);
+        api('/api/auth/register', payload).then(function (res) {
+          setBusy('register', false);
+          if (res.ok && res.data.ok) {
+            saveSession(res.data.token, res.data.user);
+            showMessage('register', 'Compte créé avec succès. Redirection…', false);
+            setTimeout(function(){ redirectAfterLogin(res.data.user); }, 600);
+          } else {
+            showMessage('register', (res.data && res.data.error) || 'Échec de la création.', true);
+          }
+        }).catch(function () {
+          setBusy('register', false);
+          showMessage('register', 'Impossible de joindre le serveur.', true);
+        });
+      });
+
+      // ===== Guidance vocale (prestataires peu lettrés) =====
+      var HELP_TEXTS = {
+        login: 'Pour vous connecter, c\'est très simple. Il y a un seul champ à remplir. Vous pouvez soit taper votre numéro de téléphone, soit taper votre code secret à quatre chiffres. Vous n\'avez pas besoin des deux. Ensuite, appuyez sur le bouton vert « Se connecter ».',
+        register: 'Pour créer votre compte, choisissez d\'abord si vous êtes un prestataire de services, un vendeur qui a une boutique, un client, ou un livreur. Renseignez votre nom complet. Si vous êtes prestataire ou vendeur, indiquez le nom de votre boutique, votre activité, et vous pouvez ajouter un logo. Si vous êtes livreur, choisissez votre véhicule et votre zone de travail. Ensuite, tapez votre numéro de téléphone, votre email si vous en avez un, et choisissez un code secret à quatre chiffres que vous retiendrez facilement. Enfin, cochez la case pour accepter les conditions, puis appuyez sur « Créer mon compte ».'
+      };
+      function speakHelp(kind) {
+        var text = HELP_TEXTS[kind];
+        if (!text) return;
+        if (!('speechSynthesis' in window)) { showMessage(kind, 'La lecture vocale n\'est pas disponible sur ce navigateur.', true); return; }
+        try {
+          window.speechSynthesis.cancel();
+          var u = new SpeechSynthesisUtterance(text);
+          u.lang = 'fr-FR';
+          u.rate = 0.95;
+          window.speechSynthesis.speak(u);
+        } catch (e) {
+          showMessage(kind, 'Lecture vocale indisponible.', true);
+        }
+      }
+
+      lucide.createIcons();
+    </script>
+
+    <script src="../assets/mangoo-welcome-audio.js"></script>
+    <script>
+    (function () {
+      // Identifiant temporaire avant attribution du vendorId par le serveur.
+      var REG_PENDING = 'reg_pending';
+      var rec = null;
+      var previewPlaying = false;
+
+      var recordBtn = document.getElementById('welcome-record-btn');
+      var previewBtn = document.getElementById('welcome-preview-btn');
+      var deleteBtn = document.getElementById('welcome-delete-btn');
+      var statusEl = document.getElementById('welcome-record-status');
+
+      function setStatus(text, isError) {
+        if (!statusEl) return;
+        statusEl.textContent = text;
+        statusEl.style.color = isError ? 'rgb(var(--mgt-error))' : 'rgb(var(--mgt-muted-foreground))';
+      }
+
+      function refresh() {
+        var has = window.MangooWelcomeAudio && window.MangooWelcomeAudio.hasRecording(REG_PENDING);
+        if (recordBtn) recordBtn.innerHTML = '<i data-lucide="mic" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"></i>Enregistrer';
+        if (previewBtn) previewBtn.style.display = has ? 'inline-flex' : 'none';
+        if (deleteBtn) deleteBtn.style.display = has ? 'inline-flex' : 'none';
+        if (!rec) setStatus(has ? 'Message personnalisé enregistré. Vous pouvez le réécouter.' : 'Aucun message enregistré. Un message par défaut sera utilisé.');
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      if (!window.MangooWelcomeAudio) { setStatus('Enregistrement non disponible sur ce navigateur.', true); }
+      else if (!window.MangooWelcomeAudio.supported()) { setStatus('Enregistrement non disponible (micro non détecté).', true); }
+
+      if (recordBtn) recordBtn.addEventListener('click', function () {
+        if (!window.MangooWelcomeAudio) return;
+        if (rec && rec.recording) { rec.stop(); return; }
+        setStatus('Enregistrement en cours... parlez maintenant.', false);
+        recordBtn.innerHTML = '<i data-lucide="square" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"></i>Arrêter';
+        if (window.lucide) window.lucide.createIcons();
+        rec = window.MangooWelcomeAudio.recorder(REG_PENDING, {
+          onSaved: function () { rec = null; refresh(); setStatus('Message enregistré avec succès.', false); },
+          onError: function (err) {
+            rec = null;
+            refresh();
+            setStatus('Micro refusé ou indisponible : ' + (err && err.message ? err.message : 'vérifiez les autorisations.'), true);
+          },
+          onCancel: function () { rec = null; refresh(); }
+        });
+        rec.start();
+      });
+
+      if (previewBtn) previewBtn.addEventListener('click', function () {
+        if (!window.MangooWelcomeAudio) return;
+        if (previewPlaying) {
+          window.MangooWelcomeAudio.stop();
+          previewPlaying = false;
+          previewBtn.innerHTML = '<i data-lucide="play" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"></i>Réécouter';
+          if (window.lucide) window.lucide.createIcons();
+          return;
+        }
+        previewPlaying = true;
+        previewBtn.innerHTML = '<i data-lucide="square" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"></i>Arrêter';
+        if (window.lucide) window.lucide.createIcons();
+        window.MangooWelcomeAudio.play(REG_PENDING, '', {
+          onEnd: function () {
+            previewPlaying = false;
+            previewBtn.innerHTML = '<i data-lucide="play" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"></i>Réécouter';
+            if (window.lucide) window.lucide.createIcons();
+          }
+        });
+      });
+
+      if (deleteBtn) deleteBtn.addEventListener('click', function () {
+        if (!window.MangooWelcomeAudio) return;
+        window.MangooWelcomeAudio.stop();
+        window.MangooWelcomeAudio.removeRecording(REG_PENDING);
+        previewPlaying = false;
+        refresh();
+      });
+
+      refresh();
+    })();
+    </script>
+
+    <script>lucide.createIcons();</script>
+<!-- Mobile responsive navigation & layout -->
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-layout { flex-direction: column !important; }
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .dashboard-main { margin-left: 0 !important; width: 100% !important; }
+  .dashboard-topbar { position: sticky; top: 0; z-index: 100; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .services-grid, .favorites-grid, .features-grid, .booster-grid { grid-template-columns: 1fr !important; }
+  .data-table { display: block !important; }
+  .data-table thead { display: none !important; }
+  .data-table tbody, .data-table tr { display: block !important; }
+  .data-table td { display: flex !important; justify-content: space-between; align-items: center; padding: 8px 12px !important; border-bottom: 1px solid rgb(var(--mgt-border)) !important; }
+  .data-table td::before { content: attr(data-label); font-weight: 600; font-size: 12px; color: rgb(var(--mgt-muted-foreground)); text-transform: uppercase; margin-right: 8px; flex-shrink: 0; }
+  .topbar-search { display: none !important; }
+  .topbar-title { font-size: 18px !important; }
+  .hero-section { padding: 40px 16px !important; text-align: center; }
+  .hero-section h1, .hero-section .h-display { font-size: 28px !important; }
+  .hero-section h1 + p { font-size: 15px !important; }
+  .hero-ctas { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
+  .auth-split { flex-direction: column !important; }
+  .auth-branding { min-height: 200px !important; padding: 32px 16px !important; }
+  .auth-form-area { padding: 24px 16px !important; }
+  .checkout-layout { flex-direction: column !important; }
+  .checkout-main { width: 100% !important; }
+  .checkout-sidebar { width: 100% !important; }
+  .chat-layout { flex-direction: column !important; height: auto !important; }
+  .chat-sidebar { width: 100% !important; max-height: 200px !important; }
+  .chat-main { width: 100% !important; }
+  .filter-pills { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .drawer-panel { width: 100% !important; max-width: 100% !important; }
+  .content-section { padding-left: 16px !important; padding-right: 16px !important; }
+  .section-padding { padding: 32px 16px !important; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-actions { flex-direction: column !important; }
+  .desktop-only { display: none !important; }
+  .map-container { height: 300px !important; }
+}
+@media (min-width: 769px) {
+  .mobile-menu-btn { display: none !important; }
+  .mobile-only { display: none !important; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .stats-row { grid-template-columns: 1fr !important; }
+}
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'dashboard-sidebar-overlay';
+    overlay.addEventListener('click', function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+    document.body.appendChild(overlay);
+    var topbar = document.querySelector('.dashboard-topbar');
+    if (topbar) {
+      var btn = document.createElement('button');
+      btn.className = 'mobile-menu-btn';
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+      btn.addEventListener('click', function(){ sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+    sidebar.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

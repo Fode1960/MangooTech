@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Live Shopping</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <!-- Logo -->
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <!-- Nav items -->
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live actif
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Parametres
+        </a>
+      </nav>
+      <!-- Account info bottom -->
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <!-- Header Top Bar -->
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
+        <div class="flex items-center gap-4">
+          <h1 class="h3 tabular-nums">Live Shopping</h1>
+          <span class="inline-flex items-center gap-1.5 caption px-2.5 py-0.5 rounded-full font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
+            <i data-lucide="check" class="w-3 h-3"></i>
+            Gratuit pour tous
+          </span>
+          <span id="live-status-badge" class="caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">Hors ligne</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="relative hidden sm:block">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            <input id="live-search" type="text" placeholder="Rechercher un produit..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+          </div>
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dashboard Content -->
+      <main class="flex-1 flex flex-col p-6 space-y-5 overflow-hidden">
+        <!-- ===== LIVE STATS BAR (visible only when ON) ===== -->
+        <div id="live-stats-bar" class="hidden items-center gap-5 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl px-5 py-3 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center gap-2">
+            <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-red-50">
+              <i data-lucide="radio" class="w-4.5 h-4.5 text-red-500"></i>
+            </div>
+            <div>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Durée</p>
+              <p id="live-duration" class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">00:00:00</p>
+            </div>
+          </div>
+          <div class="w-px h-8 bg-[rgb(var(--mgt-border))]"></div>
+          <div class="flex items-center gap-2">
+            <i data-lucide="eye" class="w-4.5 h-4.5 text-[rgb(var(--mgt-primary))]"></i>
+            <div>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Spectateurs</p>
+              <p id="live-viewers" class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">0</p>
+            </div>
+          </div>
+          <div class="w-px h-8 bg-[rgb(var(--mgt-border))]"></div>
+          <div class="flex items-center gap-2">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-red-500"></i>
+            <div>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Likes</p>
+              <p id="live-likes" class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">0</p>
+            </div>
+          </div>
+          <div class="w-px h-8 bg-[rgb(var(--mgt-border))]"></div>
+          <div class="flex items-center gap-2">
+            <i data-lucide="shopping-cart" class="w-4.5 h-4.5 text-[rgb(var(--mgt-accent))]"></i>
+            <div>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Commandes en direct</p>
+              <p id="live-orders" class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== MAIN LAYOUT: Preview + Chat ===== -->
+        <div id="live-layout" class="flex-1 flex gap-5 min-h-0">
+          <!-- LEFT: Live Preview Area (2/3) -->
+          <div id="live-preview-col" class="flex-[2] flex flex-col space-y-4 min-h-0">
+            <!-- ETAT OFF (default) -->
+            <div id="live-off-state" class="flex-1 flex flex-col items-center justify-center bg-[rgb(var(--mgt-card))] border border-dashed border-[rgb(var(--mgt-border))] rounded-xl p-10 text-center transition-all">
+              <div class="flex items-center justify-center w-20 h-20 rounded-2xl bg-[rgb(var(--mgt-muted))] mb-5">
+                <i data-lucide="video" class="w-9 h-9 text-[rgb(var(--mgt-muted-foreground))]"></i>
+              </div>
+              <h2 class="h3 mb-2 text-[rgb(var(--mgt-foreground))]">Prêt à démarrer votre live ?</h2>
+              <p class="body text-[rgb(var(--mgt-muted-foreground))] max-w-md mb-6">Montrez vos prestations en direct, interagissez avec vos clients et vendez en temps réel.</p>
+              <button id="btn-start-stream" class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm hover:opacity-90 transition-all hover:scale-[1.02] shadow-[var(--mgt-shadow-md)]">
+                <i data-lucide="radio" class="w-5 h-5"></i>
+                Démarrer le live
+              </button>
+              <div class="flex items-center gap-6 mt-8">
+                <div class="flex items-center gap-2 text-[rgb(var(--mgt-muted-foreground))] caption">
+                  <i data-lucide="users" class="w-4 h-4"></i>
+                  <span>Jusqu'à 500 spectateurs</span>
+                </div>
+                <div class="flex items-center gap-2 text-[rgb(var(--mgt-muted-foreground))] caption">
+                  <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+                  <span>Vente intégrée</span>
+                </div>
+                <div class="flex items-center gap-2 text-[rgb(var(--mgt-muted-foreground))] caption">
+                  <i data-lucide="message-circle" class="w-4 h-4"></i>
+                  <span>Chat en direct</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ETAT ON: Live Video Preview -->
+            <div id="live-on-state" class="hidden flex-1 flex flex-col space-y-3 min-h-0">
+              <!-- Video Preview -->
+              <div id="live-preview" class="flex-1 relative bg-gray-900 rounded-xl overflow-hidden min-h-[360px] flex items-center justify-center">
+                <!-- Video preview background -->
+                <div class="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950"></div>
+                <!-- Grid pattern overlay -->
+                <div class="absolute inset-0 opacity-5" style="background-image: repeating-linear-gradient(0deg, #fff, #fff 1px, transparent 1px, transparent 40px), repeating-linear-gradient(90deg, #fff, #fff 1px, transparent 1px, transparent 40px);"></div>
+                <!-- Aperçu caméra du vendeur (flux vidéo de production) -->
+                <video id="local-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover hidden"></video>
+                <!-- Fallback tant que la caméra n'est pas active -->
+                <div id="live-preview-fallback" class="absolute inset-0 flex items-center justify-center">
+                  <div class="flex items-center justify-center w-28 h-28 rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
+                    <i data-lucide="camera" class="w-10 h-10 text-white/30"></i>
+                  </div>
+                </div>
+                <!-- EN DIRECT overlay -->
+                <div class="absolute top-4 left-4 flex items-center gap-2">
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold">
+                    <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                    EN DIRECT
+                  </span>
+                </div>
+                <!-- Viewer count -->
+                <div class="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white text-xs font-semibold">
+                  <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                  <span id="viewer-count-overlay">127</span>
+                </div>
+                <!-- Indicateur qualité réseau (témoin simple + conseil) -->
+                <div id="net-quality" class="absolute top-14 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-sm text-white text-[11px] font-semibold">
+                  <span id="net-dot" class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                  <span id="net-label">En attente</span>
+                </div>
+                <!-- Products pinned in corner -->
+                <div class="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-black/50 backdrop-blur-sm text-white text-xs font-medium">
+                  <i data-lucide="shopping-bag" class="w-3.5 h-3.5 text-[rgb(var(--mgt-accent))]"></i>
+                  <span id="pinned-product-label">Aucun produit partagé</span>
+                </div>
+              </div>
+
+              <!-- Stream Controls Bar -->
+              <div class="flex items-center justify-between bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl px-5 py-3 shadow-[var(--mgt-shadow-sm)]">
+                <div class="flex items-center gap-3">
+                  <button id="btn-mic" class="stream-toggle flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-muted))] hover:bg-[rgb(var(--mgt-primary-50))] transition-colors text-[rgb(var(--mgt-foreground))]" title="Microphone" aria-pressed="false">
+                    <i data-lucide="mic" class="w-5 h-5"></i>
+                  </button>
+                  <button id="btn-camera" class="stream-toggle flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-muted))] hover:bg-[rgb(var(--mgt-primary-50))] transition-colors text-[rgb(var(--mgt-foreground))]" title="Caméra" aria-pressed="false">
+                    <i data-lucide="camera" class="w-5 h-5"></i>
+                  </button>
+                  <!-- Options secondaires (menu « + ») : le partage d'écran reste disponible mais discret -->
+                  <div class="relative">
+                    <button id="btn-more" class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-muted))] hover:bg-[rgb(var(--mgt-primary-50))] transition-colors text-[rgb(var(--mgt-foreground))]" title="Plus d'options" aria-haspopup="true" aria-expanded="false">
+                      <i data-lucide="more-horizontal" class="w-5 h-5"></i>
+                    </button>
+                    <div id="more-menu" class="hidden absolute bottom-12 left-0 z-30 w-60 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl shadow-lg overflow-hidden">
+                      <button id="btn-screen-share" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors text-left" title="Partager mon écran">
+                        <i data-lucide="monitor" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                        <span>Partager mon écran</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="w-px h-6 bg-[rgb(var(--mgt-border))] mx-1"></div>
+                  <button id="btn-share-product" class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-muted))] hover:bg-[rgb(var(--mgt-primary-50))] transition-colors text-[rgb(var(--mgt-foreground))]" title="Partager un produit">
+                    <i data-lucide="tag" class="w-5 h-5"></i>
+                  </button>
+                  <button id="btn-effects" class="stream-toggle flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-muted))] hover:bg-[rgb(var(--mgt-primary-50))] transition-colors text-[rgb(var(--mgt-foreground))]" title="Effets" aria-pressed="false">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                  </button>
+                </div>
+                <button id="btn-stop-stream" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-all">
+                  <i data-lucide="square" class="w-4 h-4 fill-current"></i>
+                  Arrêter le live
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Live Chat -->
+          <div id="live-chat" class="flex-1 flex flex-col bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl shadow-[var(--mgt-shadow-sm)] min-h-0 overflow-hidden">
+            <!-- Chat header -->
+            <div class="flex items-center justify-between px-4 py-3 border-b border-[rgb(var(--mgt-border))] shrink-0">
+              <div class="flex items-center gap-2">
+                <i data-lucide="message-circle" class="w-4.5 h-4.5 text-[rgb(var(--mgt-accent))]"></i>
+                <h3 class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Chat en direct</h3>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span>
+                <span id="chat-viewer-count" class="caption text-[rgb(var(--mgt-muted-foreground))]">0 spectateur</span>
+              </div>
+            </div>
+            <!-- Spectateurs (appel privé) -->
+            <div id="viewers-strip" class="px-4 py-2.5 border-b border-[rgb(var(--mgt-border))] shrink-0 hidden">
+              <div class="flex items-center justify-between mb-2">
+                <span class="flex items-center gap-1.5 caption text-[rgb(var(--mgt-muted-foreground))] font-medium"><i data-lucide="users" class="w-3.5 h-3.5 text-[rgb(var(--mgt-accent))]"></i> Spectateurs connectés</span>
+                <span class="flex items-center gap-1 caption text-[rgb(var(--mgt-muted-foreground))]"><i data-lucide="phone" class="w-3 h-3"></i> Appel privé</span>
+              </div>
+              <div id="viewers-list" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar"></div>
+            </div>
+            <!-- Chat messages -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+              <!-- Pinned message -->
+              <div id="live-welcome" class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[rgb(var(--mgt-accent-50))] text-xs text-[rgb(var(--mgt-accent-700))] font-medium">
+                <i data-lucide="pin" class="w-3 h-3"></i>
+                Bienvenue sur le live de DAN Boutique ! Posez vos questions en commentaire.
+              </div>
+              <!-- Message samples -->
+              <div class="flex gap-2">
+                <div class="flex items-center justify-center w-7 h-7 rounded-full bg-purple-500 text-white font-bold text-xs shrink-0">FD</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-semibold text-[rgb(var(--mgt-foreground))]">Fatou Diallo</p>
+                  <p class="text-sm text-[rgb(var(--mgt-foreground))] leading-snug">Combien coute la coiffure mariage ?</p>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <div class="flex items-center justify-center w-7 h-7 rounded-full bg-blue-500 text-white font-bold text-xs shrink-0">AB</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-semibold text-[rgb(var(--mgt-foreground))]">Aissatou Ba</p>
+                  <p class="text-sm text-[rgb(var(--mgt-foreground))] leading-snug">J'adore vos tresses ! Vous livrez à Dakar ?</p>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <div class="flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500 text-white font-bold text-xs shrink-0">KS</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-semibold text-[rgb(var(--mgt-foreground))]">Kadija Sow</p>
+                  <p class="text-sm text-[rgb(var(--mgt-foreground))] leading-snug">Quels produits utilisez-vous pour le maquillage ?</p>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <div class="flex items-center justify-center w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-bold text-xs shrink-0">MB</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-semibold text-[rgb(var(--mgt-foreground))]">Mariama Balde</p>
+                  <p class="text-sm text-[rgb(var(--mgt-foreground))] leading-snug">Je viens de commander la manucure ! Trop hate :)</p>
+                </div>
+              </div>
+              <!-- System message -->
+              <div class="flex items-center gap-2 py-1">
+                <div class="flex-1 h-px bg-[rgb(var(--mgt-border))]"></div>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Mariama Balde a commande Manucure</span>
+                <div class="flex-1 h-px bg-[rgb(var(--mgt-border))]"></div>
+              </div>
+              <div class="flex gap-2">
+                <div class="flex items-center justify-center w-7 h-7 rounded-full bg-rose-500 text-white font-bold text-xs shrink-0">RN</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-semibold text-[rgb(var(--mgt-foreground))]">Ramatoulaye Ndiaye</p>
+                  <p class="text-sm text-[rgb(var(--mgt-foreground))] leading-snug">Coiffure enfant dispo pour samedi ?</p>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <div class="flex items-center justify-center w-7 h-7 rounded-full bg-indigo-500 text-white font-bold text-xs shrink-0">AS</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-semibold text-[rgb(var(--mgt-foreground))]">Aminata Sy</p>
+                  <p class="text-sm text-[rgb(var(--mgt-foreground))] leading-snug">Magnifique ! Vous êtes la meilleure coiffeuse</p>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <div class="flex items-center justify-center w-7 h-7 rounded-full bg-orange-500 text-white font-bold text-xs shrink-0">FD</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-semibold text-[rgb(var(--mgt-foreground))]">Fatou Diallo</p>
+                  <p class="text-sm text-[rgb(var(--mgt-foreground))] leading-snug">Ok je commande la coiffure mariage !</p>
+                </div>
+              </div>
+            </div>
+            <!-- Chat input -->
+            <div class="border-t border-[rgb(var(--mgt-border))] px-4 py-3 shrink-0">
+              <div class="flex items-center gap-2">
+                <input id="chat-input" type="text" placeholder="Écrivez un message..." class="flex-1 px-4 py-2.5 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+                <button id="chat-send" class="flex items-center justify-center w-9 h-9 rounded-lg bg-[rgb(var(--mgt-accent))] text-white hover:opacity-90 transition-opacity shrink-0" title="Envoyer">
+                  <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SHARED PRODUCTS CAROUSEL ===== -->
+        <div id="live-products" class="shrink-0">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <i data-lucide="shopping-bag" class="w-4.5 h-4.5 text-[rgb(var(--mgt-accent))]"></i>
+              <h3 class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Produits partagés</h3>
+            </div>
+            <button id="btn-manage-products" class="caption text-[rgb(var(--mgt-accent))] hover:underline font-medium">Gérer les produits</button>
+          </div>
+          <div class="flex gap-4 overflow-x-auto pb-2 no-scrollbar" id="live-products-list">
+            <p class="w-full py-8 text-center text-sm text-[rgb(var(--mgt-muted-foreground))]">Chargement de vos produits…</p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      let liveInterval = null;
+      let liveStartTime = null;
+      let viewers = 0;
+      let likes = 0;
+      let liveOrders = 0;
+      let isLive = false;
+
+      // Diffusion vidéo (caméra vendeur -> spectateurs)
+      let localStream = null;
+      let pcMap = {};
+      const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+      // Second flux : partage d'écran + caméra en incrustation (PiP)
+      let screenStream = null;
+      let screenTrack = null;
+      let shareOn = false;
+
+      let ws = null;
+      let wsReady = false;
+
+      // Identité du vendeur connecté : le live est personnel, il doit
+      // correspondre à la boutique/prestataire qui l'a lancé (jamais un nom
+      // figé). On lit d'abord la session `mgt_user`, puis l'identité
+      // prestataire, sinon on retombe sur le seed.
+      function connectedVendor() {
+        var u = null;
+        try { u = JSON.parse(localStorage.getItem('mgt_user') || 'null'); } catch (e) { u = null; }
+        if (u) {
+          var role = u.role || '';
+          if (role === 'prestataire' || role === 'vendeur') {
+            return { id: u.vendorId || u.id || '', name: u.enseigne || u.name || 'Ma boutique' };
+          }
+        }
+        try { u = JSON.parse(localStorage.getItem('mgt_vendor_identity_v1') || 'null'); } catch (e) { u = null; }
+        if (u && u.vendorId) return { id: u.vendorId, name: u.name || 'Ma boutique' };
+        // Source canonique partagée : identifie le professionnel réel (DAN
+        // Coiffure → pro-eb10536cd12d) sans jamais replier sur une boutique.
+        try {
+          if (window.MangooVendor && typeof window.MangooVendor.connectedVendorId === 'function') {
+            var vid = window.MangooVendor.connectedVendorId();
+            if (vid) {
+              var cur = window.MangooVendor.current();
+              return { id: vid, name: (cur && cur.name) || vid };
+            }
+          }
+        } catch (e) {}
+        // Aucune identité professionnelle fiable : on ne s'enregistre pas sous
+        // un identifiant fantôme. Le shell (mangoo-vendor.js) reprendra
+        // l'enregistrement réel dès que la session sera présente.
+        return { id: '', name: '' };
+      }
+      const _me = connectedVendor();
+      const MY_ID = _me.id;
+      const MY_NAME = _me.name;
+
+      // Appel privé (réception client -> vendeur)
+      let callPc = null, callStream = null, callId = null, callState = 'idle'; // idle | ringing | connected
+      let callOfferSdp = null;
+
+      /* --- Sonnerie d'appel entrant (WebAudio + vibration) --- */
+      let _ringNodes = [];
+      let _ringTimer = null;
+      function _ensureRingCtx() {
+        if (!window._mgtAudioCtx) {
+          var AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) window._mgtAudioCtx = new AC();
+        }
+        return window._mgtAudioCtx;
+      }
+      function _stopRingNodes() {
+        _ringNodes.forEach(function (n) { try { if (n.stop) n.stop(); } catch (e) {} try { if (n.disconnect) n.disconnect(); } catch (e) {} });
+        _ringNodes = [];
+      }
+      function _ringPulse(ctx, start) {
+        var o1 = ctx.createOscillator();
+        var o2 = ctx.createOscillator();
+        var g = ctx.createGain();
+        var out = ctx.createGain();
+        o1.type = 'sine'; o1.frequency.value = 440;
+        o2.type = 'sine'; o2.frequency.value = 480;
+        g.gain.setValueAtTime(0, start);
+        g.gain.linearRampToValueAtTime(0.06, start + 0.03);
+        g.gain.setValueAtTime(0.06, start + 0.97);
+        g.gain.linearRampToValueAtTime(0, start + 1.0);
+        o1.connect(g); o2.connect(g); g.connect(out); out.connect(ctx.destination);
+        o1.start(start); o2.start(start); o1.stop(start + 1.05); o2.stop(start + 1.05);
+        _ringNodes.push(o1, o2, g, out);
+      }
+      function startIncomingRing() {
+        stopIncomingRing();
+        var ctx = _ensureRingCtx();
+        if (ctx) {
+          if (ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
+          var now = ctx.currentTime;
+          for (var i = 0; i < 4; i++) _ringPulse(ctx, now + i * 3);
+        }
+        try { if (navigator.vibrate) navigator.vibrate([600, 250, 600, 250, 600]); } catch (e) {}
+        _ringTimer = setInterval(function () {
+          if (callState !== 'ringing') { stopIncomingRing(); return; }
+          var c2 = _ensureRingCtx();
+          if (c2) {
+            if (c2.state === 'suspended') { try { c2.resume(); } catch (e) {} }
+            for (var j = 0; j < 4; j++) _ringPulse(c2, c2.currentTime + j * 3);
+          }
+          try { if (navigator.vibrate) navigator.vibrate([600, 250, 600, 250, 600]); } catch (e) {}
+        }, 3000);
+      }
+      function stopIncomingRing() {
+        if (_ringTimer) { clearInterval(_ringTimer); _ringTimer = null; }
+        _stopRingNodes();
+        try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) {}
+      }
+
+      function toast(msg) {
+        var t = document.getElementById('live-toast');
+        if (!t) {
+          t = document.createElement('div');
+          t.id = 'live-toast';
+          t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translate(-50%,16px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;font-family:var(--mgt-font-sans);z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;max-width:90vw;';
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translate(-50%,0)'; });
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2600);
+      }
+
+      function escHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+
+      function setVisible(el, show) {
+        if (!el) return;
+        if (show) { el.classList.remove('hidden'); el.style.display = ''; }
+        else { el.classList.add('hidden'); el.style.display = 'none'; }
+      }
+
+      /* -------- Connexion temps réel (WebSocket) -------- */
+      function wsUrl() {
+        return (location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host + '/webrtc-ws';
+      }
+
+      function connect() {
+        try { ws = new WebSocket(wsUrl()); } catch (e) { ws = null; scheduleReconnect(); return; }
+        ws.onopen = function () {
+          wsReady = true;
+          if (MY_ID) {
+            ws.send(JSON.stringify({ type: 'register', id: MY_ID, role: 'vendor', name: MY_NAME }));
+          } else {
+            console.warn('[live] Identité professionnelle introuvable, enregistrement temps réel différé.');
+          }
+          ws.send(JSON.stringify({ type: 'live-state-request' }));
+        };
+        ws.onmessage = function (ev) {
+          var msg; try { msg = JSON.parse(ev.data); } catch (e) { return; }
+          handleLiveMessage(msg);
+        };
+        ws.onclose = function () { wsReady = false; scheduleReconnect(); };
+        ws.onerror = function () { try { ws.close(); } catch (e) {} };
+      }
+
+      function scheduleReconnect() { setTimeout(connect, 2000); }
+
+      function send(obj) {
+        if (wsReady && ws && ws.readyState === 1) ws.send(JSON.stringify(obj));
+      }
+
+      function handleLiveMessage(msg) {
+        switch (msg.type) {
+          case 'live-started':
+            // Le live est personnel : on ignore le démarrage d'un autre vendeur.
+            if (msg.vendorId && msg.vendorId !== MY_ID) break;
+            enterLiveState();
+            setViewers(msg.viewers || 0);
+            setLikes(msg.likes || 0);
+            setOrders(msg.orders || 0);
+            toast('Live démarré — en direct');
+            break;
+          case 'live-ended':
+            if (msg.vendorId && msg.vendorId !== MY_ID) break;
+            exitLiveState();
+            break;
+          case 'live-state':
+            if (msg.active) {
+              // État du live d'un autre vendeur : on ne l'affiche pas chez soi.
+              if (msg.vendorId && msg.vendorId !== MY_ID) break;
+              enterLiveState();
+              setViewers(msg.viewers || 0);
+              setLikes(msg.likes || 0);
+              setOrders(msg.orders || 0);
+              if (msg.pinnedProduct && msg.pinnedProduct.name) setPinned(msg.pinnedProduct);
+              (msg.chat || []).forEach(appendViewerMessage);
+            } else {
+              exitLiveState();
+            }
+            break;
+          case 'live-error':
+            toast('Impossible de démarrer le live (déjà en cours).');
+            break;
+          case 'live-viewers':
+            setViewers(msg.viewers || 0);
+            break;
+          case 'live-like':
+            setLikes(msg.likes || 0);
+            break;
+          case 'live-chat':
+            appendViewerMessage(msg);
+            break;
+          case 'live-pinned':
+            setPinned({ name: msg.name, price: msg.price, image: msg.image });
+            break;
+          case 'live-order':
+            setOrders(msg.orders != null ? msg.orders : (liveOrders + 1));
+            appendOrderEvent(msg.fromName, msg.product);
+            break;
+          case 'live-viewer-joined':
+            if (msg.viewerId) createViewerOffer(msg.viewerId);
+            break;
+          case 'live-video-answer':
+            if (msg.viewerId && pcMap[msg.viewerId] && msg.sdp) {
+              pcMap[msg.viewerId].setRemoteDescription(new RTCSessionDescription(msg.sdp)).catch(function () {});
+            }
+            break;
+          case 'live-video-ice':
+            if (msg.viewerId && pcMap[msg.viewerId] && msg.candidate) {
+              try { pcMap[msg.viewerId].addIceCandidate(new RTCIceCandidate(msg.candidate)); } catch (e) {}
+            }
+            break;
+          case 'live-video-viewer-left':
+            if (msg.viewerId) closeViewerPeer(msg.viewerId);
+            break;
+          case 'call-ring': handleCallRing(msg); break;
+          case 'call-accepted': handleCallAccepted(msg); break;
+          case 'ice-candidate': handleCallIce(msg); break;
+          case 'call-ended': handleCallEnded(msg); break;
+          case 'live-viewers-list': renderViewers(msg.viewers); break;
+        }
+      }
+
+      function enterLiveState() {
+        if (isLive) return;
+        isLive = true;
+        var off = document.getElementById('live-off-state');
+        var on = document.getElementById('live-on-state');
+        var stats = document.getElementById('live-stats-bar');
+        var badge = document.getElementById('live-status-badge');
+
+        setVisible(off, false);
+        setVisible(on, true);
+        on.style.display = 'flex';
+        on.style.flexDirection = 'column';
+        setVisible(stats, true);
+        stats.style.display = 'flex';
+
+        badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block mr-1.5 align-middle"></span>En direct';
+        badge.classList.remove('text-[rgb(var(--mgt-muted-foreground))]', 'bg-[rgb(var(--mgt-muted))]');
+        badge.classList.add('text-red-600', 'bg-red-50', 'font-semibold');
+
+        // Nettoyer les exemples statiques du chat avant la vraie session
+        var msgs = document.getElementById('chat-messages');
+        if (msgs) msgs.innerHTML = '';
+
+        liveStartTime = Date.now();
+        setViewers(0);
+        setLikes(0);
+        setOrders(0);
+        updateDuration();
+        if (liveInterval) clearInterval(liveInterval);
+        liveInterval = setInterval(updateDuration, 1000);
+        startCamera();
+        lucide.createIcons();
+      }
+
+      function exitLiveState() {
+        isLive = false;
+        if (liveInterval) { clearInterval(liveInterval); liveInterval = null; }
+        stopScreenShare();
+        stopCamera();
+        closeAllPeers();
+        resetCall();
+        renderViewers([]);
+        renderNetworkQuality({ peers: 0, states: [], lossPct: 0 });
+        var off = document.getElementById('live-off-state');
+        var on = document.getElementById('live-on-state');
+        var stats = document.getElementById('live-stats-bar');
+        var badge = document.getElementById('live-status-badge');
+
+        setVisible(on, false);
+        setVisible(off, true);
+        off.style.display = 'flex';
+        setVisible(stats, false);
+
+        badge.innerHTML = 'Hors ligne';
+        badge.classList.add('text-[rgb(var(--mgt-muted-foreground))]', 'bg-[rgb(var(--mgt-muted))]');
+        badge.classList.remove('text-red-600', 'bg-red-50', 'font-semibold');
+
+        var label = document.getElementById('pinned-product-label');
+        if (label) label.textContent = 'Aucun produit partagé';
+        lucide.createIcons();
+      }
+
+      function startLive() {
+        if (isLive) return;
+        if (!wsReady) { toast('Connexion au serveur en cours...'); return; }
+        send({ type: 'live-start', title: 'Live Shopping — ' + MY_NAME });
+      }
+
+      function stopLive() {
+        if (wsReady) send({ type: 'live-stop' });
+        exitLiveState();
+      }
+
+      function updateDuration() {
+        if (!liveStartTime) return;
+        const elapsed = Math.floor((Date.now() - liveStartTime) / 1000);
+        const h = Math.floor(elapsed / 3600);
+        const m = Math.floor((elapsed % 3600) / 60);
+        const s = elapsed % 60;
+        var dur = document.getElementById('live-duration');
+        if (dur) dur.textContent = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      }
+
+      function setViewers(n) {
+        viewers = n;
+        var lv = document.getElementById('live-viewers');
+        var vco = document.getElementById('viewer-count-overlay');
+        var cvc = document.getElementById('chat-viewer-count');
+        if (lv) lv.textContent = n;
+        if (vco) vco.textContent = n;
+        if (cvc) cvc.textContent = n + ' spectateur' + (n > 1 ? 's' : '');
+      }
+
+      function setLikes(n) {
+        likes = n;
+        var el = document.getElementById('live-likes');
+        if (el) el.textContent = n;
+      }
+
+      function setOrders(n) {
+        liveOrders = n;
+        var el = document.getElementById('live-orders');
+        if (el) el.textContent = n;
+      }
+
+      function setPinned(p) {
+        var label = document.getElementById('pinned-product-label');
+        if (!label) return;
+        if (!p || !p.name) { label.textContent = 'Aucun produit partagé'; return; }
+        label.textContent = p.name + (p.price ? ' — ' + p.price : '');
+      }
+
+      function appendOrderEvent(name, product) {
+        const msgs = document.getElementById('chat-messages');
+        if (!msgs) return;
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-2 py-1';
+        div.innerHTML = '<div class="flex-1 h-px bg-[rgb(var(--mgt-border))]"></div><span class="text-xs text-[rgb(var(--mgt-accent))] font-medium">' + escHtml(name) + ' a commandé ' + escHtml(product) + '</span><div class="flex-1 h-px bg-[rgb(var(--mgt-border))]"></div>';
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+
+      function appendVendorMessage(text) {
+        var msgs = document.getElementById('chat-messages');
+        if (!msgs) return;
+        var div = document.createElement('div');
+        div.className = 'flex gap-2 justify-end';
+        div.innerHTML =
+          '<div class="max-w-[75%]">' +
+            '<p class="text-xs font-semibold text-right text-[rgb(var(--mgt-accent-700))] mb-0.5">' + escHtml(MY_NAME) + '</p>' +
+            '<div class="px-3 py-2 rounded-lg rounded-tr-sm bg-[rgb(var(--mgt-accent))] text-white text-sm leading-snug">' + escHtml(text) + '</div>' +
+          '</div>';
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+
+      function appendViewerMessage(m) {
+        var msgs = document.getElementById('chat-messages');
+        if (!msgs) return;
+        var name = m.fromName || 'Spectateur';
+        var initial = name.charAt(0).toUpperCase();
+        var div = document.createElement('div');
+        div.className = 'flex gap-2';
+        div.innerHTML =
+          '<div class="flex items-center justify-center w-7 h-7 rounded-full bg-[rgb(var(--mgt-primary))] text-white font-bold text-xs shrink-0">' + escHtml(initial) + '</div>' +
+          '<div class="flex-1 min-w-0">' +
+            '<p class="text-xs font-semibold text-[rgb(var(--mgt-foreground))]">' + escHtml(name) + '</p>' +
+            '<p class="text-sm text-[rgb(var(--mgt-foreground))] leading-snug">' + escHtml(m.text) + '</p>' +
+          '</div>';
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+
+      function pinProduct(card) {
+        var name = card.getAttribute('data-name');
+        var price = card.getAttribute('data-price');
+        var image = card.getAttribute('data-image') || '';
+        document.querySelectorAll('.product-card').forEach(function (c) {
+          c.style.boxShadow = '';
+          c.style.borderColor = '';
+        });
+        card.style.boxShadow = '0 0 0 2px rgb(var(--mgt-accent))';
+        card.style.borderColor = 'rgb(var(--mgt-accent))';
+        setPinned({ name: name, price: price, image: image });
+        if (wsReady && isLive) send({ type: 'live-pin-product', name: name, price: price, image: image });
+        toast('Produit partagé au live : ' + name);
+      }
+
+      // Charge les produits réels du catalogue du vendeur connecté et remplace
+      // les cartes de démonstration figées. Les produits ajoutés dans le module
+      // Catalogue (dashboard-catalogue.html) sont persistés dans data/catalogue.json
+      // et exposés par GET /catalogue?vendor=<vendorId>. On les affiche ici pour
+      // pouvoir les partager en direct, avec leur vraie photo.
+      function loadLiveProducts() {
+        var list = document.getElementById('live-products-list');
+        if (!list) return;
+        var vid = MY_ID;
+        if (!vid && window.MangooVendor && window.MangooVendor.current) {
+          var v = window.MangooVendor.current();
+          if (v && v.vendorId) vid = v.vendorId;
+        }
+        function showMsg(msg) {
+          list.innerHTML = '<p class="w-full py-8 text-center text-sm text-[rgb(var(--mgt-muted-foreground))]">' + msg + '</p>';
+        }
+        if (!vid) { showMsg('Connectez-vous à votre boutique pour voir vos produits.'); return; }
+
+        fetch('/catalogue?vendor=' + encodeURIComponent(vid), { cache: 'no-store' })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            var items = (d && d.catalogue) || [];
+            if (!items.length) { showMsg('Aucun produit dans votre catalogue. Ajoutez-en via « Gérer les produits ».'); return; }
+            list.innerHTML = '';
+            items.forEach(function (p) {
+              var name = p.name || 'Produit';
+              var priceLabel = (Number(p.price) || 0).toLocaleString('fr-FR') + ' FCFA';
+              var img = p.image || '';
+              var card = document.createElement('div');
+              card.className = 'product-card flex-shrink-0 w-44 bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden shadow-[var(--mgt-shadow-sm)] hover:shadow-[var(--mgt-shadow-md)] transition-shadow';
+              card.setAttribute('data-name', name);
+              card.setAttribute('data-price', priceLabel);
+              card.setAttribute('data-image', img);
+              var media = img
+                ? '<img src="' + escHtml(img) + '" alt="' + escHtml(name) + '" class="h-28 w-full object-contain" style="background:#fafaf9;">'
+                : '<div class="h-28 w-full flex items-center justify-center" style="background:linear-gradient(135deg,rgb(var(--mgt-primary-50)),rgb(var(--mgt-accent-50)));"><i data-lucide="package" class="w-8 h-8 text-[rgb(var(--mgt-muted-foreground))]"></i></div>';
+              card.innerHTML =
+                media +
+                '<div class="p-3">' +
+                  '<p class="text-xs font-semibold text-[rgb(var(--mgt-foreground))] leading-tight line-clamp-2">' + escHtml(name) + '</p>' +
+                  '<p class="text-sm font-bold text-[rgb(var(--mgt-accent))] mt-1 tabular-nums">' + escHtml(priceLabel) + '</p>' +
+                  '<button class="btn-pin-product w-full mt-2 py-1.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-xs font-semibold hover:opacity-90 transition-opacity">Partager</button>' +
+                '</div>';
+              list.appendChild(card);
+            });
+            lucide.createIcons();
+          })
+          .catch(function () {
+            showMsg('Impossible de charger vos produits pour le moment.');
+          });
+      }
+
+      function setToggle(btn, active) {
+        btn.setAttribute('aria-pressed', String(active));
+        if (active) {
+          btn.style.background = '';
+          btn.style.color = '';
+          btn.style.boxShadow = '';
+        } else {
+          btn.style.background = '#fee2e2';
+          btn.style.color = '#dc2626';
+          btn.style.boxShadow = 'none';
+        }
+      }
+
+      function swapIcon(btn, name) {
+        var icon = btn.querySelector('i, svg');
+        if (icon) icon.outerHTML = '<i data-lucide="' + name + '" class="w-5 h-5"></i>';
+        lucide.createIcons();
+      }
+
+      /* -------- Diffusion vidéo (caméra vendeur -> spectateurs) -------- */
+      function startCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          toast('Caméra indisponible sur ce navigateur.');
+          showLocalVideoFallback();
+          return;
+        }
+        if (localStream) { showLocalVideo(); return; }
+        navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: true
+        }).then(function (stream) {
+          localStream = stream;
+          showLocalVideo();
+        }).catch(function (err) {
+          toast('Impossible d\'accéder à la caméra/micro : ' + (err && err.name ? err.name : 'erreur'));
+          showLocalVideoFallback();
+        });
+      }
+
+      function showLocalVideo() {
+        updateLocalPreview();
+      }
+
+      function showLocalVideoFallback() {
+        var v = document.getElementById('local-video');
+        var pip = document.getElementById('local-pip');
+        var fb = document.getElementById('live-preview-fallback');
+        if (v) { v.srcObject = null; v.classList.add('hidden'); }
+        if (pip) { pip.srcObject = null; pip.classList.add('hidden'); }
+        if (fb) fb.classList.remove('hidden');
+      }
+
+      function updateLocalPreview() {
+        var main = document.getElementById('local-video');
+        var pip = document.getElementById('local-pip');
+        var fb = document.getElementById('live-preview-fallback');
+        if (screenStream && screenTrack) {
+          // Écran en plein écran, caméra en incrustation (PiP)
+          if (main) { main.srcObject = screenStream; main.classList.remove('hidden'); }
+          if (pip && localStream) { pip.srcObject = localStream; pip.classList.remove('hidden'); }
+          else if (pip) { pip.srcObject = null; pip.classList.add('hidden'); }
+          if (fb) fb.classList.add('hidden');
+        } else if (localStream) {
+          if (main) { main.srcObject = localStream; main.classList.remove('hidden'); }
+          if (pip) { pip.srcObject = null; pip.classList.add('hidden'); }
+          if (fb) fb.classList.add('hidden');
+        } else {
+          if (main) { main.srcObject = null; main.classList.add('hidden'); }
+          if (pip) { pip.srcObject = null; pip.classList.add('hidden'); }
+          if (fb) fb.classList.remove('hidden');
+        }
+      }
+
+      function stopCamera() {
+        if (localStream) {
+          localStream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} });
+          localStream = null;
+        }
+        updateLocalPreview();
+      }
+
+      /* -------- Second flux : écran + caméra PiP -------- */
+      function setShareButton(active) {
+        var shareBtn = document.getElementById('btn-screen-share');
+        if (shareBtn) {
+          shareBtn.setAttribute('aria-pressed', String(active));
+          shareBtn.style.background = active ? 'rgb(var(--mgt-primary) / 0.08)' : '';
+        }
+        var moreBtn = document.getElementById('btn-more');
+        if (moreBtn) {
+          moreBtn.style.background = active ? 'rgb(var(--mgt-primary) / 0.14)' : '';
+          moreBtn.style.boxShadow = active ? 'inset 0 0 0 2px rgb(var(--mgt-primary) / 0.35)' : 'none';
+          moreBtn.style.color = active ? 'rgb(var(--mgt-primary))' : '';
+        }
+      }
+
+      function addScreenToPeers(track, stream) {
+        Object.keys(pcMap).forEach(function (id) {
+          try { pcMap[id].addTrack(track, stream); } catch (e) {}
+        });
+      }
+
+      function removeScreenFromPeers(track) {
+        Object.keys(pcMap).forEach(function (id) {
+          try {
+            var pc = pcMap[id];
+            var sender = pc.getSenders().find(function (s) { return s.track === track; });
+            if (sender) pc.removeTrack(sender);
+          } catch (e) {}
+        });
+      }
+
+      function startScreenShare() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+          toast('Partage d\'écran indisponible sur ce navigateur.');
+          return;
+        }
+        navigator.mediaDevices.getDisplayMedia({ video: true }).then(function (ds) {
+          var track = ds.getVideoTracks()[0] || null;
+          if (!track) { ds.getTracks().forEach(function (t) { t.stop(); }); return; }
+          screenStream = ds;
+          screenTrack = track;
+          addScreenToPeers(track, ds);
+          updateLocalPreview();
+          shareOn = true;
+          setShareButton(true);
+          toast('Partage d\'écran démarré — caméra en incrustation');
+          track.onended = function () { stopScreenShare(); };
+        }).catch(function () { toast('Partage d\'écran annulé.'); });
+      }
+
+      function stopScreenShare() {
+        if (screenTrack) { removeScreenFromPeers(screenTrack); try { screenTrack.stop(); } catch (e) {} }
+        if (screenStream) { screenStream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} }); }
+        screenTrack = null;
+        screenStream = null;
+        updateLocalPreview();
+        shareOn = false;
+        setShareButton(false);
+        toast('Partage d\'écran arrêté');
+      }
+
+      function createViewerOffer(viewerId, attempt) {
+        if (!localStream) {
+          const tries = attempt || 0;
+          if (tries < 5) setTimeout(function () { createViewerOffer(viewerId, tries + 1); }, 1000);
+          return;
+        }
+        if (pcMap[viewerId]) { try { pcMap[viewerId].close(); } catch (e) {} }
+        var pc;
+        try { pc = new RTCPeerConnection(RTC_CONFIG); }
+        catch (e) { pc = new RTCPeerConnection(); }
+        pcMap[viewerId] = pc;
+
+        pc.onicecandidate = function (e) {
+          if (e.candidate) send({ type: 'live-video-ice', viewerId: viewerId, candidate: e.candidate });
+        };
+        pc.onconnectionstatechange = function () {
+          if (pc.connectionState === 'failed' || pc.connectionState === 'closed' || pc.connectionState === 'disconnected') {
+            try { pc.close(); } catch (e) {}
+            if (pcMap[viewerId] === pc) delete pcMap[viewerId];
+          }
+        };
+        pc.onnegotiationneeded = function () {
+          pc.createOffer().then(function (offer) {
+            return pc.setLocalDescription(offer);
+          }).then(function () {
+            send({ type: 'live-video-offer', viewerId: viewerId, sdp: pc.localDescription });
+          }).catch(function () {});
+        };
+
+        // Pistes : caméra + micro, puis écran si le partage est actif
+        localStream.getTracks().forEach(function (track) { pc.addTrack(track, localStream); });
+        if (screenTrack) pc.addTrack(screenTrack, screenStream);
+      }
+
+      function closeViewerPeer(viewerId) {
+        var pc = pcMap[viewerId];
+        if (pc) { try { pc.close(); } catch (e) {} delete pcMap[viewerId]; }
+      }
+
+      function closeAllPeers() {
+        Object.keys(pcMap).forEach(function (id) { try { pcMap[id].close(); } catch (e) {} });
+        pcMap = {};
+      }
+
+      /* -------- Appel privé (client <-> vendeur) -------- */
+      function showCallOverlay(state) {
+        var ov = document.getElementById('call-overlay');
+        var ring = document.getElementById('call-ring-buttons');
+        var hang = document.getElementById('btn-call-hangup');
+        if (state === 'idle') { ov.classList.add('hidden'); ov.style.display = 'none'; }
+        else { ov.classList.remove('hidden'); ov.style.display = 'flex'; if (window.lucide) lucide.createIcons(); }
+        if (ring) ring.style.display = (state === 'ringing') ? 'flex' : 'none';
+        if (hang) hang.style.display = (state === 'ringing') ? 'none' : 'flex';
+      }
+      function setBroadcastMicMuted(muted) {
+        if (localStream) localStream.getAudioTracks().forEach(function (t) { t.enabled = !muted; });
+      }
+      function handleCallRing(msg) {
+        if (callState !== 'idle') { send({ type: 'call-reject', callId: msg.callId }); return; }
+        callId = msg.callId;
+        callState = 'ringing';
+        callOfferSdp = msg.sdp;
+        var name = msg.fromName || 'Client';
+        document.getElementById('call-caller').textContent = name;
+        document.getElementById('call-avatar').textContent = name.charAt(0).toUpperCase();
+        document.getElementById('call-status').textContent = 'vous appelle · négociation privée';
+        showCallOverlay('ringing');
+        startIncomingRing();
+        toast('Appel entrant de ' + name);
+      }
+      function acceptCall() {
+        if (callState !== 'ringing') return;
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { rejectCall(); return; }
+        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+          .then(function (stream) {
+            callStream = stream;
+            try { callPc = new RTCPeerConnection(RTC_CONFIG); } catch (e) { callPc = new RTCPeerConnection(); }
+            callPc.onicecandidate = function (e) { if (e.candidate) send({ type: 'ice-candidate', callId: callId, candidate: e.candidate }); };
+            callPc.ontrack = function (e) {
+              var audio = document.getElementById('call-remote-audio');
+              if (audio && e.streams && e.streams[0]) audio.srcObject = e.streams[0];
+            };
+            stream.getTracks().forEach(function (t) { callPc.addTrack(t, stream); });
+            callPc.setRemoteDescription(new RTCSessionDescription(callOfferSdp))
+              .then(function () { return callPc.createAnswer(); })
+              .then(function (ans) { return callPc.setLocalDescription(ans); })
+              .then(function () {
+                callState = 'connected';
+                stopIncomingRing();
+                document.getElementById('call-status').textContent = 'Appel privé en cours';
+                showCallOverlay('connected');
+                setBroadcastMicMuted(true);
+                send({ type: 'call-answer', callId: callId, sdp: callPc.localDescription });
+              })
+              .catch(function () { resetCall(); });
+          })
+          .catch(function () { toast('Accès au micro refusé'); rejectCall(); });
+      }
+      function rejectCall() {
+        if (callId && wsReady) send({ type: 'call-reject', callId: callId });
+        resetCall();
+        toast('Appel refusé');
+      }
+      function startOutgoingCall(viewerId, viewerName) {
+        if (callState !== 'idle') { toast('Un appel est déjà en cours'); return; }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('Micro non disponible'); return; }
+        document.getElementById('call-caller').textContent = viewerName;
+        document.getElementById('call-avatar').textContent = viewerName.charAt(0).toUpperCase();
+        document.getElementById('call-status').textContent = 'Appel vers ' + viewerName + '...';
+        showCallOverlay('calling');
+        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+          .then(function (stream) {
+            callStream = stream;
+            callState = 'calling';
+            callId = 'call-' + Date.now();
+            try { callPc = new RTCPeerConnection(RTC_CONFIG); } catch (e) { callPc = new RTCPeerConnection(); }
+            callPc.onicecandidate = function (e) { if (e.candidate) send({ type: 'ice-candidate', callId: callId, candidate: e.candidate }); };
+            callPc.ontrack = function (e) {
+              var audio = document.getElementById('call-remote-audio');
+              if (!audio) return;
+              audio.srcObject = (e.streams && e.streams[0]) || new MediaStream([e.track]);
+              audio.play().catch(function () {});
+            };
+            stream.getTracks().forEach(function (t) { callPc.addTrack(t, stream); });
+            callPc.createOffer()
+              .then(function (o) { return callPc.setLocalDescription(o); })
+              .then(function () { send({ type: 'call-offer', callId: callId, to: viewerId, sdp: callPc.localDescription, mode: 'audio' }); })
+              .catch(function () { resetCall(); toast('Appel impossible'); });
+          })
+          .catch(function () { resetCall(); toast('Accès au micro refusé'); });
+      }
+      function handleCallAccepted(msg) {
+        if (!callPc || msg.callId !== callId) return;
+        callState = 'connected';
+        document.getElementById('call-status').textContent = 'Appel privé en cours';
+        showCallOverlay('connected');
+        setBroadcastMicMuted(true);
+        callPc.setRemoteDescription(new RTCSessionDescription(msg.sdp)).catch(function () {});
+      }
+      function handleCallIce(msg) {
+        if (!callPc || msg.callId !== callId || !msg.candidate) return;
+        try { callPc.addIceCandidate(new RTCIceCandidate(msg.candidate)); } catch (e) {}
+      }
+      function handleCallEnded(msg) {
+        if (msg.callId !== callId) return;
+        resetCall();
+        toast('Appel terminé');
+      }
+      function endCall() {
+        if (callId && wsReady) {
+          if (callState === 'ringing') send({ type: 'call-reject', callId: callId });
+          else send({ type: 'call-end', callId: callId });
+        }
+        resetCall();
+      }
+      function resetCall() {
+        stopIncomingRing();
+        callState = 'idle';
+        callOfferSdp = null;
+        if (callStream) { callStream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} }); callStream = null; }
+        if (callPc) { try { callPc.close(); } catch (e) {} callPc = null; }
+        callId = null;
+        var audio = document.getElementById('call-remote-audio');
+        if (audio) audio.srcObject = null;
+        setBroadcastMicMuted(false);
+        showCallOverlay('idle');
+      }
+      function renderViewers(list) {
+        var strip = document.getElementById('viewers-strip');
+        var wrap = document.getElementById('viewers-list');
+        if (!wrap) return;
+        wrap.innerHTML = '';
+        var viewers = (list || []).filter(function (v) { return v.id !== MY_ID; });
+        if (!viewers.length) { if (strip) strip.classList.add('hidden'); return; }
+        if (strip) strip.classList.remove('hidden');
+        viewers.forEach(function (v) {
+          var chip = document.createElement('div');
+          chip.className = 'flex items-center gap-2 shrink-0 px-2.5 py-1.5 rounded-full bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))]';
+          var initial = (v.name || 'C').charAt(0).toUpperCase();
+          chip.innerHTML = '<span class="flex items-center justify-center w-6 h-6 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-xs font-bold">' + initial + '</span>' +
+            '<span class="text-xs font-medium max-w-[96px] truncate">' + (v.name || 'Spectateur') + '</span>' +
+            '<button class="btn-call-viewer flex items-center justify-center w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent))] text-white" data-id="' + v.id + '" data-name="' + (v.name || 'Spectateur') + '" title="Appeler"><i data-lucide="phone" class="w-3.5 h-3.5"></i></button>';
+          wrap.appendChild(chip);
+        });
+        var btns = wrap.querySelectorAll('.btn-call-viewer');
+        for (var i = 0; i < btns.length; i++) {
+          btns[i].addEventListener('click', function () {
+            startOutgoingCall(this.getAttribute('data-id'), this.getAttribute('data-name'));
+          });
+        }
+        if (window.lucide) lucide.createIcons();
+      }
+
+      /* -------- Indicateur qualité réseau (témoin simple + conseil) -------- */
+      async function pollNetworkQuality() {
+        if (!isLive) return;
+        const peers = Object.keys(pcMap);
+        let lost = 0, sent = 0;
+        const states = [];
+        for (const id of peers) {
+          const pc = pcMap[id];
+          states.push(pc.connectionState);
+          try {
+            const stats = await pc.getStats();
+            stats.forEach(function (r) {
+              if (r.type === 'outbound-rtp' && r.kind === 'video') {
+                lost += (r.packetsLost || 0);
+                sent += (r.packetsSent || 0);
+              }
+            });
+          } catch (e) {}
+        }
+        const lossPct = (sent + lost) > 0 ? (lost / (sent + lost)) * 100 : 0;
+        renderNetworkQuality({ peers: peers.length, states: states, lossPct: lossPct });
+      }
+
+      function renderNetworkQuality(q) {
+        var dot = document.getElementById('net-dot');
+        var label = document.getElementById('net-label');
+        if (!dot || !label) return;
+
+        var text, color;
+        if (q.peers === 0) {
+          text = 'En attente de spectateurs';
+          color = '#9ca3af';
+        } else if (q.states.some(function (s) { return s === 'failed' || s === 'closed'; })) {
+          text = 'Diffusion interrompue';
+          color = '#ef4444';
+        } else if (q.states.some(function (s) { return s !== 'connected'; })) {
+          text = 'Connexion…';
+          color = '#f59e0b';
+        } else if (q.lossPct < 1) {
+          text = 'Diffusion stable';
+          color = '#22c55e';
+        } else if (q.lossPct < 5) {
+          text = 'Signal correct';
+          color = '#a3e635';
+        } else {
+          text = 'Signal faible — rapprochez-vous du Wi-Fi';
+          color = '#f59e0b';
+        }
+
+        dot.style.background = color;
+        dot.style.boxShadow = '0 0 6px ' + color;
+        label.textContent = text;
+      }
+
+      function init() {
+        // Hydrate l'identité du vendeur connecté (nom dans le header, le
+        // message d'accueil et les bulles de chat).
+        document.querySelectorAll('[data-vendor-name]').forEach(function (el) {
+          el.textContent = MY_NAME;
+        });
+        var welcome = document.getElementById('live-welcome');
+        if (welcome) welcome.textContent = 'Bienvenue sur le live de ' + MY_NAME + ' ! Posez vos questions en commentaire.';
+
+        // Header
+        var bell = document.getElementById('btn-notifications');
+        if (bell) bell.addEventListener('click', function () { window.location.href = './dashboard-notifications.html'; });
+
+        var startBtn = document.getElementById('btn-start-stream');
+        var stopBtn = document.getElementById('btn-stop-stream');
+        if (startBtn) startBtn.addEventListener('click', startLive);
+        if (stopBtn) stopBtn.addEventListener('click', stopLive);
+
+        // Les boutons d'appel vivent dans l'overlay placé APRÈS ce script :
+        // on délègue le clic pour qu'ils restent reliés quoi qu'il arrive.
+        document.addEventListener('click', function (e) {
+          var btn = e.target && e.target.closest ? e.target.closest('#btn-call-accept, #btn-call-reject, #btn-call-hangup') : null;
+          if (!btn) return;
+          if (btn.id === 'btn-call-accept') acceptCall();
+          else if (btn.id === 'btn-call-reject') rejectCall();
+          else if (btn.id === 'btn-call-hangup') endCall();
+        });
+
+        // Contrôles de stream
+        var micOn = true;
+        var micBtn = document.getElementById('btn-mic');
+        if (micBtn) micBtn.addEventListener('click', function () {
+          micOn = !micOn;
+          if (localStream) localStream.getAudioTracks().forEach(function (t) { t.enabled = micOn; });
+          setToggle(micBtn, micOn);
+          swapIcon(micBtn, micOn ? 'mic' : 'mic-off');
+          toast(micOn ? 'Microphone activé' : 'Microphone coupé');
+        });
+
+        var camOn = true;
+        var camBtn = document.getElementById('btn-camera');
+        if (camBtn) camBtn.addEventListener('click', function () {
+          camOn = !camOn;
+          if (localStream) localStream.getVideoTracks().forEach(function (t) { t.enabled = camOn; });
+          setToggle(camBtn, camOn);
+          swapIcon(camBtn, camOn ? 'camera' : 'camera-off');
+          toast(camOn ? 'Caméra activée' : 'Caméra coupée');
+        });
+
+        var shareBtn = document.getElementById('btn-screen-share');
+        if (shareBtn) shareBtn.addEventListener('click', function () {
+          closeMoreMenu();
+          if (shareOn) stopScreenShare(); else startScreenShare();
+        });
+
+        // Menu « + » (options secondaires)
+        var moreBtn = document.getElementById('btn-more');
+        var moreMenu = document.getElementById('more-menu');
+        function openMoreMenu() {
+          if (!moreMenu || !moreBtn) return;
+          var open = !moreMenu.classList.contains('hidden');
+          if (open) { closeMoreMenu(); return; }
+          moreMenu.classList.remove('hidden');
+          moreBtn.setAttribute('aria-expanded', 'true');
+        }
+        function closeMoreMenu() {
+          if (!moreMenu || !moreBtn) return;
+          moreMenu.classList.add('hidden');
+          moreBtn.setAttribute('aria-expanded', 'false');
+        }
+        if (moreBtn) moreBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          openMoreMenu();
+        });
+        document.addEventListener('click', function (e) {
+          if (moreMenu && !moreMenu.classList.contains('hidden') &&
+              !moreMenu.contains(e.target) && moreBtn && !moreBtn.contains(e.target)) {
+            closeMoreMenu();
+          }
+        });
+
+        var fxOn = false;
+        var fxBtn = document.getElementById('btn-effects');
+        if (fxBtn) fxBtn.addEventListener('click', function () {
+          fxOn = !fxOn;
+          fxBtn.setAttribute('aria-pressed', String(fxOn));
+          fxBtn.style.background = fxOn ? 'rgb(var(--mgt-accent) / 0.14)' : '';
+          fxBtn.style.boxShadow = fxOn ? 'inset 0 0 0 2px rgb(var(--mgt-accent) / 0.35)' : 'none';
+          fxBtn.style.color = fxOn ? 'rgb(var(--mgt-accent-700))' : '';
+          toast(fxOn ? 'Effets activés' : 'Effets désactivés');
+        });
+
+        var shareProductBtn = document.getElementById('btn-share-product');
+        if (shareProductBtn) shareProductBtn.addEventListener('click', function () {
+          var list = document.getElementById('live-products');
+          if (list) list.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          var first = document.querySelector('.product-card');
+          if (first) {
+            first.style.boxShadow = '0 0 0 2px rgb(var(--mgt-accent))';
+            setTimeout(function () { if (first) first.style.boxShadow = ''; }, 1200);
+          }
+          toast('Sélectionnez un produit à partager ci-dessous.');
+        });
+
+        // Chat
+        var input = document.getElementById('chat-input');
+        var sendBtn = document.getElementById('chat-send');
+        function sendChat() {
+          var text = input ? input.value.trim() : '';
+          if (!text) return;
+          if (input) input.value = '';
+          if (wsReady && isLive) {
+            send({ type: 'live-chat', text: text });
+            appendVendorMessage(text);
+          } else {
+            appendVendorMessage(text);
+          }
+        }
+        if (sendBtn) sendBtn.addEventListener('click', sendChat);
+        if (input) input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { e.preventDefault(); sendChat(); }
+        });
+
+        // Recherche de produits
+        var search = document.getElementById('live-search');
+        if (search) search.addEventListener('input', function () {
+          var q = this.value.trim().toLowerCase();
+          document.querySelectorAll('.product-card').forEach(function (card) {
+            var name = (card.getAttribute('data-name') || '').toLowerCase();
+            card.style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
+          });
+        });
+
+        // Gérer les produits
+        var manageBtn = document.getElementById('btn-manage-products');
+        if (manageBtn) manageBtn.addEventListener('click', function () { window.location.href = './dashboard-catalogue.html'; });
+
+        // Partager un produit (depuis une carte) — délégation sur le conteneur
+        // pour couvrir aussi les cartes chargées dynamiquement depuis le catalogue.
+        var productsList = document.getElementById('live-products-list');
+        if (productsList) productsList.addEventListener('click', function (e) {
+          var btn = e.target && e.target.closest ? e.target.closest('.btn-pin-product') : null;
+          if (btn) pinProduct(btn.closest('.product-card'));
+        });
+
+        // Charger les produits réels du catalogue du vendeur
+        loadLiveProducts();
+
+        // Connexion temps réel
+        connect();
+
+        // Surveillance continue de la qualité réseau
+        setInterval(pollNetworkQuality, 2000);
+      }
+
+      init();
+    </script>
+    <script>lucide.createIcons();</script>
+<!-- Mobile responsive navigation & layout -->
+<style id="mgt-mobile-responsive">
+@media (max-width: 768px) {
+  .dashboard-layout { flex-direction: column !important; }
+  .dashboard-sidebar { position: fixed !important; top: 0; left: 0; z-index: 1000; width: 260px !important; height: 100vh !important; transform: translateX(-100%); transition: transform .3s ease; overflow-y: auto; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+  .dashboard-sidebar-overlay.show { display: block; }
+  .dashboard-main { margin-left: 0 !important; width: 100% !important; }
+  .dashboard-topbar { position: sticky; top: 0; z-index: 100; }
+  .mobile-menu-btn { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: inherit; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .services-grid, .favorites-grid, .features-grid, .booster-grid { grid-template-columns: 1fr !important; }
+  .data-table { display: block !important; }
+  .data-table thead { display: none !important; }
+  .data-table tbody, .data-table tr { display: block !important; }
+  .data-table td { display: flex !important; justify-content: space-between; align-items: center; padding: 8px 12px !important; border-bottom: 1px solid rgb(var(--mgt-border)) !important; }
+  .data-table td::before { content: attr(data-label); font-weight: 600; font-size: 12px; color: rgb(var(--mgt-muted-foreground)); text-transform: uppercase; margin-right: 8px; flex-shrink: 0; }
+  .topbar-search { display: none !important; }
+  .topbar-title { font-size: 18px !important; }
+  .hero-section { padding: 40px 16px !important; text-align: center; }
+  .hero-section h1, .hero-section .h-display { font-size: 28px !important; }
+  .hero-section h1 + p { font-size: 15px !important; }
+  .hero-ctas { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
+  .auth-split { flex-direction: column !important; }
+  .auth-branding { min-height: 200px !important; padding: 32px 16px !important; }
+  .auth-form-area { padding: 24px 16px !important; }
+  .checkout-layout { flex-direction: column !important; }
+  .checkout-main { width: 100% !important; }
+  .checkout-sidebar { width: 100% !important; }
+  .chat-layout { flex-direction: column !important; height: auto !important; }
+  .chat-sidebar { width: 100% !important; max-height: 200px !important; }
+  .chat-main { width: 100% !important; }
+  .filter-pills { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .drawer-panel { width: 100% !important; max-width: 100% !important; }
+  .content-section { padding-left: 16px !important; padding-right: 16px !important; }
+  .section-padding { padding: 32px 16px !important; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-actions { flex-direction: column !important; }
+  .desktop-only { display: none !important; }
+  .map-container { height: 300px !important; }
+}
+@media (min-width: 769px) {
+  .mobile-menu-btn { display: none !important; }
+  .mobile-only { display: none !important; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .stats-row { grid-template-columns: 1fr !important; }
+}
+/* ---- Live Shopping : responsive dédié (Android / iOS) ---- */
+@media (max-width: 1024px) {
+  #live-layout { flex-direction: column !important; }
+  #live-preview-col { flex: none !important; }
+  #live-preview { min-height: 260px !important; }
+  #live-chat { min-height: 420px; flex: none !important; }
+  #live-off-state { padding: 32px 16px !important; }
+}
+@media (max-width: 640px) {
+  #live-stats-bar { display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; }
+  #live-stats-bar .w-px { display: none !important; }
+  #live-off-state h2 { font-size: 20px !important; }
+  #btn-start-stream { width: 100%; justify-content: center; }
+}
+</style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'dashboard-sidebar-overlay';
+    overlay.addEventListener('click', function(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+    document.body.appendChild(overlay);
+    var topbar = document.querySelector('.dashboard-topbar');
+    if (topbar) {
+      var btn = document.createElement('button');
+      btn.className = 'mobile-menu-btn';
+      btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+      btn.addEventListener('click', function(){ sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+    sidebar.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', function(){
+        if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+      });
+    });
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function __mgtSidebarScrollFix(){
+    var active = document.querySelector('nav a[class*="bg-white/15"]');
+    if (!active) return;
+    var nav = active.closest('nav');
+    if (!nav) return;
+    var navRect = nav.getBoundingClientRect();
+    var linkRect = active.getBoundingClientRect();
+    var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+    nav.scrollTop = Math.max(0, target);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+  } else {
+    __mgtSidebarScrollFix();
+  }
+})();
+</script>
+
+<!-- ===== OVERLAY APPEL PRIVÉ ===== -->
+<div id="call-overlay" class="hidden fixed inset-0 z-[999] bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center text-white px-6" style="display:none">
+  <div class="flex flex-col items-center text-center">
+    <div id="call-avatar" class="flex items-center justify-center w-20 h-20 rounded-full bg-[rgb(var(--mgt-accent))] text-3xl font-bold mb-4 ring-4 ring-white/10">C</div>
+    <p id="call-caller" class="text-xl font-bold mb-1">Appel</p>
+    <p id="call-status" class="text-sm text-white/70 mb-10">Appel privé...</p>
+  </div>
+  <audio id="call-remote-audio" autoplay></audio>
+  <div id="call-ring-buttons" class="flex items-center gap-10" style="display:none">
+    <button id="btn-call-reject" class="flex flex-col items-center gap-2">
+      <span class="flex items-center justify-center w-16 h-16 rounded-full bg-red-600 text-white shadow-lg shadow-red-600/30 active:scale-95 transition-transform"><i data-lucide="phone-off" class="w-7 h-7"></i></span>
+      <span class="text-xs text-white/70">Refuser</span>
+    </button>
+    <button id="btn-call-accept" class="flex flex-col items-center gap-2">
+      <span class="flex items-center justify-center w-16 h-16 rounded-full bg-green-600 text-white shadow-lg shadow-green-600/30 active:scale-95 transition-transform"><i data-lucide="phone" class="w-7 h-7"></i></span>
+      <span class="text-xs text-white/70">Accepter</span>
+    </button>
+  </div>
+  <button id="btn-call-hangup" class="flex flex-col items-center gap-2" style="display:none">
+    <span class="flex items-center justify-center w-16 h-16 rounded-full bg-red-600 text-white shadow-lg shadow-red-600/30 active:scale-95 transition-transform"><i data-lucide="phone-off" class="w-7 h-7"></i></span>
+    <span class="text-xs text-white/70">Raccrocher</span>
+  </button>
+</div>
+
+<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-dashboard-shell.js"></script>
+</body>
+</html>

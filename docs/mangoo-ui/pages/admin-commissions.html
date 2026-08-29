@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Commissions</title>
+<style id="theme-vars">
+:root { --mgt-radius-sm: 4px; --mgt-radius-md: 8px; --mgt-radius-lg: 16px; --mgt-radius-full: 9999px; }
+:root, html.light {
+  --mgt-primary: 26 92 42; --mgt-primary-50: 232 245 233; --mgt-primary-100: 200 230 201; --mgt-primary-200: 165 214 168; --mgt-primary-300: 129 199 134; --mgt-primary-400: 102 183 108; --mgt-primary-500: 76 168 82; --mgt-primary-600: 56 142 60; --mgt-primary-700: 38 112 42; --mgt-primary-800: 26 92 42; --mgt-primary-900: 13 71 18; --mgt-primary-foreground: 255 255 255;
+  --mgt-accent: 232 97 12; --mgt-accent-50: 255 243 224; --mgt-accent-100: 255 224 178; --mgt-accent-200: 255 204 128; --mgt-accent-300: 255 183 77; --mgt-accent-400: 255 153 31; --mgt-accent-500: 232 97 12; --mgt-accent-600: 209 78 0; --mgt-accent-700: 163 61 0; --mgt-accent-800: 130 49 0; --mgt-accent-900: 97 36 0; --mgt-accent-foreground: 255 255 255;
+  --mgt-background: 255 255 255; --mgt-foreground: 15 23 42; --mgt-card: 255 255 255; --mgt-card-foreground: 15 23 42; --mgt-popover: 255 255 255; --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252; --mgt-muted-foreground: 100 116 139; --mgt-border: 226 232 240; --mgt-input: 226 232 240; --mgt-ring: 26 92 42;
+  --mgt-success: 129 199 134; --mgt-success-foreground: 255 255 255; --mgt-warning: 255 183 77; --mgt-warning-foreground: 15 23 42; --mgt-error: 239 68 68; --mgt-error-foreground: 255 255 255; --mgt-info: 59 130 246; --mgt-info-foreground: 255 255 255;
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03); --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18); --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif; --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+:root { --background: rgb(255 255 255); --foreground: rgb(15 23 42); --card: rgb(255 255 255); --card-foreground: rgb(15 23 42); --popover: rgb(255 255 255); --popover-foreground: rgb(15 23 42); --primary: rgb(26 92 42); --primary-foreground: rgb(255 255 255); --muted: rgb(248 250 252); --muted-foreground: rgb(100 116 139); --border: rgb(226 232 240); --input: rgb(226 232 240); --ring: rgb(26 92 42); --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 9999px; --state-success: rgb(129 199 134); --state-success-foreground: rgb(255 255 255); --state-warning: rgb(255 183 77); --state-warning-foreground: rgb(15 23 42); --state-error: rgb(239 68 68); --state-error-foreground: rgb(255 255 255); --state-info: rgb(59 130 246); --state-info-foreground: rgb(255 255 255); }
+html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-card: 20 20 26; --mgt-card-foreground: 248 250 252; --mgt-popover: 20 20 26; --mgt-popover-foreground: 248 250 252; --mgt-muted: 30 30 38; --mgt-muted-foreground: 148 163 184; --mgt-border: 40 40 50; --mgt-input: 40 40 50; --mgt-ring: 76 168 82; --background: rgb(11 11 15); --foreground: rgb(248 250 252); --card: rgb(20 20 26); --card-foreground: rgb(248 250 252); --popover: rgb(20 20 26); --popover-foreground: rgb(248 250 252); --primary: rgb(76 168 82); --primary-foreground: rgb(255 255 255); --muted: rgb(30 30 38); --muted-foreground: rgb(148 163 184); --border: rgb(40 40 50); --input: rgb(40 40 50); --ring: rgb(76 168 82); }
+.h-display { font-family: var(--mgt-font-sans); font-size: clamp(40px, 6vw, 88px); line-height: 1.02; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+.h1 { font-family: var(--mgt-font-sans); font-size: clamp(28px, 3.5vw, 48px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.h2 { font-family: var(--mgt-font-sans); font-size: clamp(22px, 2.4vw, 32px); line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.h3 { font-family: var(--mgt-font-sans); font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.body-l { font-family: var(--mgt-font-sans); font-size: 18px; line-height: 1.55; font-weight: 400; }
+.body { font-family: var(--mgt-font-sans); font-size: 15px; line-height: 1.6; font-weight: 400; }
+.caption { font-family: var(--mgt-font-sans); font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: 0.005em; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<style type="text/tailwindcss">
+  @theme inline { --color-background: var(--background); --color-foreground: var(--foreground); --color-card: var(--card); --color-card-foreground: var(--card-foreground); --color-popover: var(--popover); --color-popover-foreground: var(--popover-foreground); --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground); --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground); --color-border: var(--border); --color-input: var(--input); --color-ring: var(--ring); --radius-sm: var(--mgt-radius-sm); --radius-md: var(--mgt-radius-md); --radius-lg: var(--mgt-radius-lg); }
+  @layer base { body { background: var(--background); color: var(--foreground); } td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; } th { @apply whitespace-nowrap; } }
+</style>
+<style id="semantic-token-fallback">
+  .bg-background { background-color: var(--background); } .text-background { color: var(--background); } .border-background { border-color: var(--background); } .ring-background { --tw-ring-color: var(--background); }
+  .bg-foreground { background-color: var(--foreground); } .text-foreground { color: var(--foreground); } .border-foreground { border-color: var(--foreground); } .ring-foreground { --tw-ring-color: var(--foreground); }
+  .bg-card { background-color: var(--card); } .text-card { color: var(--card); } .border-card { border-color: var(--card); } .ring-card { --tw-ring-color: var(--card); }
+  .bg-card-foreground { background-color: var(--card-foreground); } .text-card-foreground { color: var(--card-foreground); } .border-card-foreground { border-color: var(--card-foreground); } .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+  .bg-popover { background-color: var(--popover); } .text-popover { color: var(--popover); } .border-popover { border-color: var(--popover); } .ring-popover { --tw-ring-color: var(--popover); }
+  .bg-popover-foreground { background-color: var(--popover-foreground); } .text-popover-foreground { color: var(--popover-foreground); } .border-popover-foreground { border-color: var(--popover-foreground); } .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+  .bg-primary { background-color: var(--primary); } .text-primary { color: var(--primary); } .border-primary { border-color: var(--primary); } .ring-primary { --tw-ring-color: var(--primary); }
+  .bg-primary-foreground { background-color: var(--primary-foreground); } .text-primary-foreground { color: var(--primary-foreground); } .border-primary-foreground { border-color: var(--primary-foreground); } .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+  .bg-muted { background-color: var(--muted); } .text-muted { color: var(--muted); } .border-muted { border-color: var(--muted); } .ring-muted { --tw-ring-color: var(--muted); }
+  .bg-muted-foreground { background-color: var(--muted-foreground); } .text-muted-foreground { color: var(--muted-foreground); } .border-muted-foreground { border-color: var(--muted-foreground); } .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+  .bg-border { background-color: var(--border); } .text-border { color: var(--border); } .border-border { border-color: var(--border); } .ring-border { --tw-ring-color: var(--border); }
+  .bg-input { background-color: var(--input); } .text-input { color: var(--input); } .border-input { border-color: var(--input); } .ring-input { --tw-ring-color: var(--input); }
+  .bg-ring { background-color: var(--ring); } .text-ring { color: var(--ring); } .border-ring { border-color: var(--ring); } .ring-ring { --tw-ring-color: var(--ring); }
+</style>
+<style>
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  [data-icon] { display: inline-flex; align-items: center; justify-content: center; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; background-color: currentColor; }
+  input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 9999px; background: rgb(var(--mgt-muted)); outline: none; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: rgb(var(--mgt-primary)); cursor: pointer; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+  input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: rgb(var(--mgt-primary)); cursor: pointer; border: 3px solid #fff; }
+</style>
+<style id="critical-layout">
+  .admin-layout { display: flex; min-height: 100vh; }
+  .admin-sidebar { width: 260px; min-height: 100vh; flex-shrink: 0; position: fixed; top: 0; left: 0; z-index: 40; display: flex; flex-direction: column; }
+  .admin-main { flex: 1; margin-left: 260px; min-width: 0; }
+  @media (max-width: 768px) { .admin-sidebar { transform: translateX(-100%); transition: transform .25s ease; } .admin-sidebar.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0,0,0,.4); } .admin-main { margin-left: 0; } }
+</style>
+</head>
+<body class="min-h-screen font-sans antialiased bg-muted text-foreground">
+<div class="admin-layout">
+  <aside id="admin-nav" class="admin-sidebar" style="background-color: rgb(var(--mgt-primary-900));">
+    <div class="flex items-center gap-3 px-5 py-5 border-b" style="border-color: rgb(var(--mgt-primary-700) / .5);">
+      <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: rgb(var(--mgt-accent));"><img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;"></div>
+      <div><span class="text-white font-semibold text-base leading-tight block">MangooTech</span><span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded tracking-wider uppercase" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));">Admin</span></div>
+    </div>
+    <nav class="flex-1 py-4 px-3 overflow-y-auto no-scrollbar">
+      <a href="./admin.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="layout-dashboard" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Tableau de bord</span></a>
+      <a href="./admin-boutiques.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="store" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Boutiques</span></a>
+      <a href="./admin-vendors.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="users" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Prestataires</span></a>
+      <a href="./admin-commissions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors bg-white/12 text-white"><i data-lucide="percent" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Commissions</span></a>
+      <a href="./admin-transactions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="receipt" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Transactions</span></a>
+      <a href="./admin-boosts.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="rocket" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Boosters</span></a>
+      <a href="./admin-delivery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="truck" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Livraisons</span></a>
+      <a href="./admin-packs.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors text-white/70 hover:bg-white/8 hover:text-white"><i data-lucide="tags" class="w-4.5 h-4.5 flex-shrink-0"></i><span>Packs &amp; Tarifs</span></a>
+    </nav>
+    <div class="p-4 border-t flex items-center gap-3" style="border-color: rgb(var(--mgt-primary-700) / .5);">
+      <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0" style="background-color: rgb(var(--mgt-primary-500)); color: rgb(var(--mgt-primary-foreground));">DF</div>
+      <div class="flex-1 min-w-0"><div class="text-white text-sm font-medium truncate">DANSOKO Fodé</div><div class="text-xs truncate" style="color: rgb(var(--mgt-primary-300));">Administrateur</div></div>
+      <button class="text-white/50 hover:text-white transition-colors"><i data-lucide="settings" class="w-4 h-4"></i></button>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="sticky top-0 z-30 bg-card border-b border-border">
+      <div class="flex items-center justify-between px-6 py-3">
+        <div><h1 class="text-xl font-semibold text-foreground">Commissions</h1><p class="text-sm text-muted-foreground">Taux de commission et reversements</p></div>
+        <div class="flex items-center gap-4">
+          <div class="relative hidden md:block"><i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"></i><input type="text" placeholder="Rechercher..." class="pl-9 pr-4 py-2 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-56 transition-shadow"></div>
+          <button class="relative p-2 rounded-lg hover:bg-muted transition-colors"><i data-lucide="bell" class="w-5 h-5 text-muted-foreground"></i><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style="background-color: rgb(var(--mgt-accent));"></span></button>
+          <div class="flex items-center gap-2 pl-2 border-l border-border"><div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold" style="background-color: rgb(var(--mgt-primary-500)); color: rgb(var(--mgt-primary-foreground));">DF</div><i data-lucide="chevron-down" class="w-4 h-4 text-muted-foreground"></i></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="p-6 space-y-6">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Volume d'affaires</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-primary-50));"><i data-lucide="banknote" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="kpi-ca">—</div><div class="text-xs text-muted-foreground">boutiques + prestataires</div></div>
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Commission estimée</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-accent-50));"><i data-lucide="percent" class="w-4 h-4" style="color: rgb(var(--mgt-accent));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-accent));" id="kpi-commission">—</div><div class="text-xs text-muted-foreground">sur le volume enregistré</div></div>
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Taux prestataires</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-info) / .12);"><i data-lucide="gauge" class="w-4 h-4" style="color: rgb(var(--mgt-info));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-info));" id="kpi-taux-presta">—</div><div class="text-xs text-muted-foreground">prestataires de service</div></div>
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Taux boutiques</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-primary-50));"><i data-lucide="gauge" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="kpi-taux-boutique">—</div><div class="text-xs text-muted-foreground">vendeurs-boutiques</div></div>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-4">
+        <div class="bg-card border border-border rounded-xl p-5 lg:col-span-1">
+          <h2 class="font-semibold text-foreground">Configuration des taux</h2>
+          <p class="text-xs text-muted-foreground mb-5">Ces taux s'appliquent au chiffre d'affaires de chaque vente.</p>
+          <div class="space-y-6">
+            <div>
+              <div class="flex items-center justify-between mb-2"><label class="text-sm font-semibold text-foreground">Prestataires de service</label><span class="text-sm font-bold" style="color: rgb(var(--mgt-accent));" id="val-presta">12 %</span></div>
+              <input type="range" id="range-presta" min="0" max="30" step="1" value="12">
+              <div class="flex justify-between text-[11px] text-muted-foreground mt-1"><span>0 %</span><span>30 %</span></div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-2"><label class="text-sm font-semibold text-foreground">Vendeurs-boutiques</label><span class="text-sm font-bold" style="color: rgb(var(--mgt-primary));" id="val-boutique">8 %</span></div>
+              <input type="range" id="range-boutique" min="0" max="30" step="1" value="8">
+              <div class="flex justify-between text-[11px] text-muted-foreground mt-1"><span>0 %</span><span>30 %</span></div>
+            </div>
+          </div>
+          <button id="btn-save" class="mt-6 w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-white text-sm font-semibold transition-colors" style="background-color: rgb(var(--mgt-primary));"><i data-lucide="save" class="w-4 h-4"></i>Enregistrer les taux</button>
+          <p id="save-status" class="text-xs text-muted-foreground text-center mt-2 h-4"></p>
+        </div>
+
+        <div class="bg-card border border-border rounded-xl p-5 lg:col-span-2">
+          <div class="flex items-center justify-between mb-4"><h2 class="font-semibold text-foreground">Simulation des commissions</h2><span class="text-xs text-muted-foreground">Estimation sur le volume enregistré</span></div>
+          <div class="overflow-x-auto"><table class="w-full"><thead><tr class="bg-muted/50"><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Compte</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Volume</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Taux</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Commission</th></tr></thead><tbody class="divide-y divide-border" id="sim-body"><tr><td colspan="5" class="text-center text-muted-foreground py-8">Chargement…</td></tr></tbody><tfoot id="sim-foot"></tfoot></table></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>lucide.createIcons();</script>
+<script>
+(function () {
+  'use strict';
+  var token = localStorage.getItem('mgt_token') || '';
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function money(n) { n = Number(n) || 0; return n.toLocaleString('fr-FR') + ' FCFA'; }
+  function initials(name) { name = String(name || '?').trim(); var p = name.split(/\s+/); return p.length === 1 ? p[0].slice(0, 2).toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase(); }
+  function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+
+  var rangePresta = document.getElementById('range-presta');
+  var rangeBoutique = document.getElementById('range-boutique');
+  var data = { boutiques: [], prestataires: [] };
+  var summary = null; // résumé serveur : volumeBoutiques, volumePrestataires, total
+
+  function api(path, opts) {
+    opts = opts || {};
+    opts.headers = Object.assign({ 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, opts.headers || {});
+    return fetch(path, opts).then(function (r) {
+      if (!r.ok) return r.json().then(function (j) { throw new Error(j && j.error ? j.error : 'HTTP ' + r.status); });
+      return r.json();
+    });
+  }
+
+  function render() {
+    var tp = Number(rangePresta.value), tb = Number(rangeBoutique.value);
+    setText('val-presta', tp + ' %'); setText('val-boutique', tb + ' %');
+    setText('kpi-taux-presta', tp + ' %'); setText('kpi-taux-boutique', tb + ' %');
+
+    // Volume de référence : transactions complétées côté serveur, sinon somme des comptes.
+    var volumeB = summary ? (Number(summary.volumeBoutiques) || 0) : data.boutiques.reduce(function (s, x) { return s + (Number(x.stats && x.stats.ca) || 0); }, 0);
+    var volumeP = summary ? (Number(summary.volumePrestataires) || 0) : data.prestataires.reduce(function (s, x) { return s + (Number(x.stats && x.stats.ca) || 0); }, 0);
+    var totalCa = volumeB + volumeP;
+    var totalComm = Math.round(volumeB * tb / 100 + volumeP * tp / 100);
+    setText('kpi-ca', money(totalCa));
+    setText('kpi-commission', money(totalComm));
+
+    // Simulation par compte (volume par compte × taux courant).
+    var rows = [];
+    data.prestataires.forEach(function (x) { var ca = Number(x.stats && x.stats.ca) || 0; rows.push({ name: x.name, type: 'Prestataire', ca: ca, commission: ca * tp / 100 }); });
+    data.boutiques.forEach(function (x) { var ca = Number(x.stats && x.stats.ca) || 0; rows.push({ name: x.name, type: 'Boutique', ca: ca, commission: ca * tb / 100 }); });
+
+    var tableCa = rows.reduce(function (s, r) { return s + r.ca; }, 0);
+    var tableComm = rows.reduce(function (s, r) { return s + r.commission; }, 0);
+
+    var body = document.getElementById('sim-body');
+    body.innerHTML = rows.length ? rows.map(function (r) {
+      var badge = r.type === 'Boutique' ? '<span class="inline-flex items-center text-xs font-medium px-2 py-1 rounded-full" style="background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary));">Boutique</span>' : '<span class="inline-flex items-center text-xs font-medium px-2 py-1 rounded-full" style="background:rgb(var(--mgt-accent-50));color:rgb(var(--mgt-accent));">Prestataire</span>';
+      var taux = r.type === 'Boutique' ? tb : tp;
+      return '<tr><td class="px-5 py-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0" style="background:rgb(var(--mgt-muted));color:var(--foreground);">' + esc(initials(r.name)) + '</div><span class="font-semibold text-sm text-foreground">' + esc(r.name) + '</span></div></td>' +
+        '<td class="px-5 py-3">' + badge + '</td>' +
+        '<td class="px-5 py-3 text-muted-foreground">' + money(r.ca) + '</td>' +
+        '<td class="px-5 py-3 font-semibold text-foreground">' + taux + ' %</td>' +
+        '<td class="px-5 py-3 font-bold" style="color: rgb(var(--mgt-primary));">' + money(r.commission) + '</td></tr>';
+    }).join('') : '<tr><td colspan="5" class="text-center text-muted-foreground py-8">Aucun compte enregistré.</td></tr>';
+
+    document.getElementById('sim-foot').innerHTML = '<tr style="background:rgb(var(--mgt-muted));"><td colspan="2" class="px-5 py-3 font-bold text-sm text-foreground">Total</td><td class="px-5 py-3 font-bold text-foreground">' + money(tableCa) + '</td><td class="px-5 py-3"></td><td class="px-5 py-3 font-bold" style="color: rgb(var(--mgt-primary));">' + money(tableComm) + '</td></tr>';
+  }
+
+  rangePresta.addEventListener('input', render);
+  rangeBoutique.addEventListener('input', render);
+
+  document.getElementById('btn-save').addEventListener('click', function () {
+    var btn = document.getElementById('btn-save');
+    var el = document.getElementById('save-status');
+    btn.disabled = true;
+    el.textContent = 'Enregistrement…';
+    function done() { btn.disabled = false; }
+    api('/api/admin/commissions', { method: 'POST', body: JSON.stringify({ prestataire: Number(rangePresta.value), boutique: Number(rangeBoutique.value) }) })
+      .then(function (res) {
+        summary = res.summary || summary;
+        if (res.rates) { rangePresta.value = res.rates.prestataire; rangeBoutique.value = res.rates.boutique; }
+        render();
+        var who = res.updatedBy ? ' par ' + res.updatedBy : '';
+        el.textContent = 'Taux enregistrés côté serveur' + who + '.';
+        setTimeout(function () { el.textContent = ''; }, 4000);
+        done();
+      })
+      .catch(function (err) { el.textContent = 'Erreur : ' + esc(err.message); done(); });
+  });
+
+  // Charge les taux persistés + résumé serveur, puis les comptes pour la simulation.
+  api('/api/admin/commissions').then(function (res) {
+    if (res.rates) { rangePresta.value = res.rates.prestataire; rangeBoutique.value = res.rates.boutique; }
+    summary = res.summary || null;
+    return Promise.all([api('/api/admin/boutiques'), api('/api/admin/prestataires')]);
+  }).then(function (res) {
+    data.boutiques = res[0].boutiques || []; data.prestataires = res[1].prestataires || []; render();
+  }).catch(function (err) {
+    document.getElementById('sim-body').innerHTML = '<tr><td colspan="5" class="text-center py-8" style="color:rgb(var(--mgt-error));">Erreur de chargement : ' + esc(err.message) + '</td></tr>';
+    render();
+  });
+
+  render();
+})();
+</script>
+<script src="../assets/mangoo-admin-shell.js"></script>
+</body>
+</html>

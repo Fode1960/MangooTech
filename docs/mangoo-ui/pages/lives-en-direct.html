@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lives en direct</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); }
+      .text-background { color: var(--background); }
+      .border-background { border-color: var(--background); }
+      .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-foreground { color: var(--foreground); }
+      .border-foreground { border-color: var(--foreground); }
+      .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); }
+      .text-card { color: var(--card); }
+      .border-card { border-color: var(--card); }
+      .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); }
+      .text-card-foreground { color: var(--card-foreground); }
+      .border-card-foreground { border-color: var(--card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); }
+      .text-popover { color: var(--popover); }
+      .border-popover { border-color: var(--popover); }
+      .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); }
+      .text-popover-foreground { color: var(--popover-foreground); }
+      .border-popover-foreground { border-color: var(--popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); }
+      .text-primary { color: var(--primary); }
+      .border-primary { border-color: var(--primary); }
+      .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); }
+      .text-primary-foreground { color: var(--primary-foreground); }
+      .border-primary-foreground { border-color: var(--primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); }
+      .text-muted { color: var(--muted); }
+      .border-muted { border-color: var(--muted); }
+      .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); }
+      .text-muted-foreground { color: var(--muted-foreground); }
+      .border-muted-foreground { border-color: var(--muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); }
+      .text-border { color: var(--border); }
+      .border-border { border-color: var(--border); }
+      .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); }
+      .text-input { color: var(--input); }
+      .border-input { border-color: var(--input); }
+      .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); }
+      .text-ring { color: var(--ring); }
+      .border-ring { border-color: var(--ring); }
+      .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+      @keyframes live-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.8); }
+      }
+      .live-dot { animation: live-dot 1.4s ease-in-out infinite; }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+<header class="sticky top-0 z-50 w-full border-b shadow-sm" style="background-color: rgb(var(--mgt-primary)); border-color: rgb(var(--mgt-primary-700)); box-shadow: var(--mgt-shadow-sm);">
+  <div class="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-3">
+    <a href="./accueil.html" class="flex items-center gap-3 no-underline" style="color: rgb(var(--mgt-primary-foreground));">
+      <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-10 w-10 rounded-md" style="border-radius: var(--mgt-radius-md);">
+      <span class="text-xl font-semibold tracking-tight" style="font-family: var(--mgt-font-sans);">MangooTech</span>
+    </a>
+    <nav class="hidden items-center gap-6 md:flex">
+      <a href="./carte.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Boutique &amp; Prestataires</a>
+      <a href="./lives-en-direct.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Lives en direct</a>
+      <a href="./comparatif-prestataire-boutique.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Comparatif</a>
+      <a href="./accueil.html#a-propos" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">A propos</a>
+      <a href="./auth.html" class="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Connexion</a>
+    </nav>
+  </div>
+</header>
+
+    <main>
+      <!-- ===== HERO ===== -->
+      <section class="w-full" style="background-color: rgb(var(--mgt-primary));">
+        <div class="mx-auto max-w-[1200px] px-6 py-12">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div class="max-w-2xl">
+              <div class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold mb-4" style="background-color: rgb(var(--mgt-primary-600)); color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
+                <span class="live-dot inline-block h-2 w-2 rounded-full" style="background-color: rgb(var(--mgt-primary-foreground));"></span>
+                <span id="hero-live-count">0 lives actifs</span>
+              </div>
+              <h1 class="h1" style="color: rgb(var(--mgt-primary-foreground));">Lives en direct</h1>
+              <p class="body-l mt-3 max-w-2xl" style="color: rgb(var(--mgt-primary-50));">Rejoignez en temps réel vos boutiques et prestataires préférés, posez vos questions et profitez d'offres exclusives. Chaque carte porte l'identité de son vendeur pour que vous sachiez toujours qui anime le direct.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== FILTRES ===== -->
+      <section class="w-full" style="background-color: rgb(var(--mgt-background)); border-bottom: 1px solid rgb(var(--mgt-border));">
+        <div class="mx-auto max-w-[1200px] px-6 py-5 space-y-4">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="relative flex-1 min-w-[240px]">
+              <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none" style="color: rgb(var(--mgt-muted-foreground));"></i>
+              <input id="lives-search" type="text" placeholder="Rechercher un vendeur, une catégorie..." class="pl-9 pr-4 py-2.5 text-sm w-full focus:outline-none focus:ring-2" style="background-color: rgb(var(--mgt-muted)); border: 1px solid rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-foreground)); --tw-ring-color: rgb(var(--mgt-ring) / 0.30);">
+            </div>
+            <div id="seller-type-group" class="inline-flex rounded-lg p-0.5" style="background-color: rgb(var(--mgt-muted)); border: 1px solid rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md);" role="group" aria-label="Type de vendeur">
+              <button data-seller-type="all" class="px-3 py-1.5 text-sm font-semibold transition-colors" style="border-radius: var(--mgt-radius-md);">Tous</button>
+              <button data-seller-type="boutique" class="px-3 py-1.5 text-sm font-semibold transition-colors" style="border-radius: var(--mgt-radius-md);">Boutiques</button>
+              <button data-seller-type="prestataire" class="px-3 py-1.5 text-sm font-semibold transition-colors" style="border-radius: var(--mgt-radius-md);">Prestataires</button>
+            </div>
+            <div class="relative">
+              <i data-lucide="arrow-up-down" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none" style="color: rgb(var(--mgt-muted-foreground));"></i>
+              <select id="lives-sort" class="pl-9 pr-8 py-2.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2" style="background-color: rgb(var(--mgt-muted)); border: 1px solid rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-foreground)); --tw-ring-color: rgb(var(--mgt-ring) / 0.30);">
+                <option value="viewers">Les plus regardés</option>
+                <option value="rating">Meilleures notes</option>
+                <option value="recent">Plus récents</option>
+                <option value="az">Ordre alphabétique</option>
+              </select>
+            </div>
+          </div>
+          <div id="lives-category-chips" class="flex flex-wrap items-center gap-2"></div>
+        </div>
+      </section>
+
+      <!-- ===== GRILLE DES LIVES ===== -->
+      <section class="w-full" style="background-color: rgb(var(--mgt-muted));">
+        <div class="mx-auto max-w-[1200px] px-6 py-10">
+          <div class="flex items-center justify-between gap-3 mb-6">
+            <h2 class="h3" style="color: rgb(var(--mgt-foreground));">Sessions en cours</h2>
+            <button id="btn-reset-filters" class="hidden inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors hover:opacity-80" style="color: rgb(var(--mgt-primary-700)); background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+              <i data-lucide="rotate-ccw" class="h-3.5 w-3.5"></i>Réinitialiser les filtres
+            </button>
+          </div>
+          <div id="lives-loading" class="rounded-xl border border-dashed px-6 py-16 text-center" style="border-color: rgb(var(--mgt-border));">
+            <i data-lucide="loader-2" class="h-8 w-8 mx-auto mb-3 animate-spin" style="color: rgb(var(--mgt-muted-foreground));"></i>
+            <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Chargement des lives en cours...</p>
+          </div>
+          <div id="lives-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
+          <div id="lives-empty" class="hidden rounded-xl border border-dashed px-6 py-16 text-center" style="border-color: rgb(var(--mgt-border));">
+            <i data-lucide="radio" class="h-10 w-10 mx-auto mb-3" style="color: rgb(var(--mgt-muted-foreground));"></i>
+            <p class="h3 mb-1">Aucun live actif</p>
+            <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Aucun direct ne correspond à vos filtres pour le moment. Revenez bientôt, ou élargissez votre recherche.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+<footer class="border-t" style="background-color: rgb(var(--mgt-muted)); border-color: rgb(var(--mgt-border));">
+  <div class="mx-auto max-w-[1200px] px-6 py-14">
+    <div class="grid grid-cols-1 gap-10 md:grid-cols-4">
+      <div class="md:col-span-1">
+        <div class="mb-4 flex items-center gap-3">
+          <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-8 w-8 rounded-md" style="border-radius: var(--mgt-radius-sm);">
+          <span class="text-lg font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">MangooTech</span>
+        </div>
+        <p class="caption mb-4" style="color: rgb(var(--mgt-muted-foreground));">Plateforme e-commerce africaine connectant marchands locaux et clients.</p>
+      </div>
+      <div>
+        <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Plateforme</h4>
+        <ul class="space-y-2.5">
+          <li><a href="./carte.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Carte interactive</a></li>
+          <li><a href="./lives-en-direct.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Lives en direct</a></li>
+          <li><a href="./paiements.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Paiements</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Ressources</h4>
+        <ul class="space-y-2.5">
+          <li><a href="./aide.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Aide et support</a></li>
+          <li><a href="./blog.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Blog</a></li>
+          <li><a href="./faq.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">FAQ</a></li>
+          <li><a href="./contact.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Legal</h4>
+        <ul class="space-y-2.5">
+          <li><a href="./conditions-utilisation.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Conditions d'utilisation</a></li>
+          <li><a href="./confidentialite.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Politique de confidentialité</a></li>
+          <li><a href="./mentions-legales.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Mentions légales</a></li>
+          <li><a href="./cgv.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">CGV</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="mt-12 border-t pt-6 text-center" style="border-color: rgb(var(--mgt-border));">
+      <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">&copy; 2026 MangooTech. Tous droits réservés.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  // Lives en direct — annuaire des sessions actives multi-salles.
+  // Chaque live porte l'identité de son vendeur (vendorId + enseigne) pour
+  // distinguer qui anime chaque direct quand plusieurs sont simultanés.
+  var LIVES = [];
+  var activeCategory = 'all';
+  var activeSellerType = 'all';
+
+  var CATEGORY_LABELS = {
+    'coiffure': 'Coiffure',
+    'beaute': 'Beauté & Soins',
+    'mode': 'Mode & Accessoires',
+    'restaurant': 'Restauration',
+    'epicerie': 'Épicerie & Marché',
+    'artisanat': 'Artisanat',
+    'boutique': 'Boutique',
+    'service': 'Service'
+  };
+
+  var CATEGORY_ICONS = {
+    'coiffure': 'scissors',
+    'beaute': 'sparkles',
+    'mode': 'shirt',
+    'restaurant': 'utensils',
+    'epicerie': 'shopping-basket',
+    'artisanat': 'hammer',
+    'boutique': 'store',
+    'service': 'wrench'
+  };
+
+  function initials(name) {
+    var n = String(name || '').trim();
+    var parts = n.split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  function categoryLabel(cat) {
+    return CATEGORY_LABELS[cat] || (cat ? cat : 'Divers');
+  }
+
+  function categoryIcon(cat) {
+    return CATEGORY_ICONS[cat] || 'tag';
+  }
+
+  function currentVendorId() {
+    try {
+      if (window.MangooVendor && typeof window.MangooVendor.connectedVendorId === 'function') {
+        return window.MangooVendor.connectedVendorId() || null;
+      }
+      var v = (window.MangooVendor && window.MangooVendor.current) ? window.MangooVendor.current() : null;
+      return v ? v.vendorId : null;
+    } catch (e) { return null; }
+  }
+
+  function normalizeRooms(list) {
+    return (list || []).map(function (room) {
+      var cat = room.category || 'boutique';
+      return {
+        roomId: room.roomId || room.id || ('room-' + (room.vendorId || 'x')),
+        vendorId: room.vendorId || room.hostId || null,
+        name: room.vendorName || room.name || 'Vendeur',
+        ini: initials(room.vendorName || room.name),
+        category: cat,
+        categoryLabel: categoryLabel(cat),
+        categoryIcon: categoryIcon(cat),
+        sellerType: room.sellerType || room.type || 'boutique',
+        title: room.title || 'Session en direct',
+        rating: (room.rating != null && room.rating !== '') ? room.rating : '—',
+        viewers: (room.viewers != null) ? room.viewers : 0,
+        thumb: room.thumb || null,
+        startedAt: room.startedAt || null
+      };
+    });
+  }
+
+  function loadLives() {
+    return fetch('/api/lives', { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (data) {
+        var rooms = (data && data.rooms) ? data.rooms : [];
+        LIVES = normalizeRooms(rooms);
+      })
+      .catch(function () {
+        // Repli de démonstration : quelques salles actives simulées quand
+        // l'endpoint /api/lives n'est pas encore déployé.
+        var now = Date.now();
+        LIVES = normalizeRooms([
+          { roomId: 'room-dan', vendorId: 'dan-boutique', vendorName: 'DAN Boutique', sellerType: 'boutique', category: 'coiffure', title: 'Nouveaux soins capillaires en exclusivité', rating: 4.8, viewers: 128, thumb: '../assets/products/soin-capillaire.svg', startedAt: now - 12 * 60000 },
+          { roomId: 'room-awa', vendorId: 'chez-awa', vendorName: 'Chez Awa', sellerType: 'boutique', category: 'restaurant', title: 'Recette du jour : thieboudienne', rating: 4.6, viewers: 87, startedAt: now - 34 * 60000 },
+          { roomId: 'room-fatou', vendorId: 'fatou-style', vendorName: 'Fatou Style', sellerType: 'boutique', category: 'mode', title: 'Collection wax & accessoires', rating: 4.9, viewers: 243, thumb: '../assets/products/coiffure-mariage.svg', startedAt: now - 7 * 60000 },
+          { roomId: 'room-kader', vendorId: 'marche-kader', vendorName: 'Marché Bio de Kader', sellerType: 'prestataire', category: 'epicerie', title: 'Produits frais du jour', rating: 4.7, viewers: 64, startedAt: now - 51 * 60000 },
+          { roomId: 'room-nafi', vendorId: 'atelier-nafi', vendorName: 'Atelier Tissage Nafi', sellerType: 'prestataire', category: 'artisanat', title: 'Démonstration de tissage en direct', rating: 4.5, viewers: 41, thumb: '../assets/products/tresses-senegalaises.svg', startedAt: now - 18 * 60000 },
+          { roomId: 'room-mame', vendorId: 'beaute-mame', vendorName: 'Beauté & Soins de Mame', sellerType: 'prestataire', category: 'beaute', title: 'Routine soin du visage', rating: 4.8, viewers: 156, thumb: '../assets/products/maquillage-professionnel.svg', startedAt: now - 5 * 60000 },
+          { roomId: 'room-sophie', vendorId: 'sophie-nails', vendorName: 'Sophie Nails', sellerType: 'prestataire', category: 'beaute', title: 'Pose de vernis semi-permanent', rating: 4.4, viewers: 39, thumb: '../assets/products/manucure-gel.svg', startedAt: now - 22 * 60000 },
+          { roomId: 'room-lena', vendorId: 'coiffure-lena', vendorName: 'Coiffure Léna', sellerType: 'boutique', category: 'coiffure', title: 'Coiffure enfant en direct', rating: 4.3, viewers: 58, thumb: '../assets/products/coiffure-enfant.svg', startedAt: now - 9 * 60000 }
+        ]);
+      });
+  }
+
+  function populateCategories() {
+    var container = document.getElementById('lives-category-chips');
+    if (!container) return;
+    container.innerHTML = '';
+    var seen = {};
+    // Puce « Toutes »
+    var allChip = document.createElement('button');
+    allChip.setAttribute('data-category', 'all');
+    allChip.textContent = 'Toutes';
+    allChip.className = 'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors';
+    allChip.style.cssText = 'border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);';
+    container.appendChild(allChip);
+
+    LIVES.forEach(function (l) {
+      if (seen[l.category]) return;
+      seen[l.category] = true;
+      var chip = document.createElement('button');
+      chip.setAttribute('data-category', l.category);
+      chip.className = 'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors';
+      chip.style.cssText = 'border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);';
+      chip.innerHTML = '<i data-lucide="' + l.categoryIcon + '" class="h-3.5 w-3.5"></i>' + l.categoryLabel;
+      container.appendChild(chip);
+    });
+    refreshChipStyles();
+  }
+
+  function refreshChipStyles() {
+    document.querySelectorAll('#lives-category-chips [data-category]').forEach(function (chip) {
+      var isActive = chip.getAttribute('data-category') === activeCategory;
+      chip.style.backgroundColor = isActive ? 'rgb(var(--mgt-primary))' : 'rgb(var(--mgt-card))';
+      chip.style.color = isActive ? 'rgb(var(--mgt-primary-foreground))' : 'rgb(var(--mgt-muted-foreground))';
+      chip.style.border = isActive ? '1px solid rgb(var(--mgt-primary))' : '1px solid rgb(var(--mgt-border))';
+    });
+  }
+
+  function refreshSellerTypeStyles() {
+    document.querySelectorAll('#seller-type-group [data-seller-type]').forEach(function (btn) {
+      var isActive = btn.getAttribute('data-seller-type') === activeSellerType;
+      btn.style.backgroundColor = isActive ? 'rgb(var(--mgt-card))' : 'transparent';
+      btn.style.color = isActive ? 'rgb(var(--mgt-primary-700))' : 'rgb(var(--mgt-muted-foreground))';
+      btn.style.boxShadow = isActive ? 'var(--mgt-shadow-sm)' : 'none';
+    });
+  }
+
+  function formatViewers(n) {
+    if (n >= 1000) return (n / 1000).toFixed(1).replace('.', ',') + ' k';
+    return String(n);
+  }
+
+  function durationLabel(startedAt) {
+    if (!startedAt) return null;
+    var mins = Math.max(1, Math.floor((Date.now() - startedAt) / 60000));
+    if (mins < 60) return mins + ' min';
+    var h = Math.floor(mins / 60);
+    var m = mins % 60;
+    return h + ' h ' + (m > 0 ? m + ' min' : '');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function render(list) {
+    var grid = document.getElementById('lives-grid');
+    var empty = document.getElementById('lives-empty');
+    var loading = document.getElementById('lives-loading');
+    var heroCount = document.getElementById('hero-live-count');
+    var resetBtn = document.getElementById('btn-reset-filters');
+    var me = currentVendorId();
+    grid.innerHTML = '';
+    if (loading) loading.classList.add('hidden');
+    if (heroCount) heroCount.textContent = list.length + (list.length > 1 ? ' lives actifs' : ' live actif');
+    if (empty) empty.classList.toggle('hidden', list.length > 0);
+    var hasActiveFilter = activeCategory !== 'all' || activeSellerType !== 'all' || (document.getElementById('lives-search').value || '').trim() !== '';
+    if (resetBtn) resetBtn.classList.toggle('hidden', !hasActiveFilter);
+
+    list.forEach(function (l) {
+      var isYou = me && l.vendorId === me;
+      var identityBadge = isYou
+        ? '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border: 1px solid rgb(var(--mgt-primary-200)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);"><i data-lucide="user" class="h-3 w-3"></i>C\'est vous</span>'
+        : '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold" style="background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-700)); border: 1px solid rgb(var(--mgt-accent-200)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);"><i data-lucide="store" class="h-3 w-3"></i>' + (l.sellerType === 'prestataire' ? 'Prestataire' : 'Boutique') + '</span>';
+
+      var duration = durationLabel(l.startedAt);
+
+      var thumbBlock = l.thumb
+        ? '<img src="' + escapeHtml(l.thumb) + '" alt="" class="h-full w-full object-cover" style="opacity: 0.85;">'
+        : '<div class="absolute inset-0 flex items-center justify-center" style="background: linear-gradient(135deg, rgb(var(--mgt-primary-700)), rgb(var(--mgt-primary-900)));"><i data-lucide="' + l.categoryIcon + '" class="h-12 w-12" style="color: rgb(var(--mgt-primary-200));"></i></div>';
+
+      var durationBadge = duration
+        ? '<span class="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold" style="background-color: rgb(var(--mgt-foreground) / 0.72); color: rgb(var(--mgt-background)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);"><i data-lucide="clock" class="h-3 w-3"></i>' + duration + '</span>'
+        : '';
+
+      var card = document.createElement('div');
+      card.className = 'bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl overflow-hidden shadow-[var(--mgt-shadow-sm)] flex flex-col transition-shadow hover:shadow-[var(--mgt-shadow-md)]';
+      card.innerHTML =
+        '<div class="relative h-32">' +
+          thumbBlock +
+          '<div class="absolute inset-0" style="background: linear-gradient(180deg, rgb(var(--mgt-primary-900) / 0.45) 0%, transparent 55%);"></div>' +
+          '<span class="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold" style="background-color: rgb(var(--mgt-primary-600)); color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">' +
+            '<span class="live-dot inline-block h-2 w-2 rounded-full" style="background-color: rgb(var(--mgt-primary-foreground));"></span>EN DIRECT' +
+          '</span>' +
+          '<span class="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold" style="background-color: rgb(var(--mgt-primary-900) / 0.72); color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">' +
+            '<i data-lucide="eye" class="h-3 w-3"></i><span class="tabular-nums">' + formatViewers(l.viewers) + '</span>' +
+          '</span>' +
+          durationBadge +
+        '</div>' +
+        '<div class="flex flex-col gap-3 p-5 flex-1">' +
+          '<div class="flex items-start gap-3">' +
+            '<div class="relative flex-shrink-0">' +
+              '<div class="flex items-center justify-center w-11 h-11 rounded-full text-white font-semibold text-sm" style="background-color: rgb(var(--mgt-primary));">' + l.ini + '</div>' +
+              '<span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2" style="background-color: rgb(var(--mgt-primary-500)); border-color: rgb(var(--mgt-card));"></span>' +
+            '</div>' +
+            '<div class="flex-1 min-w-0">' +
+              '<div class="flex items-center justify-between gap-2">' +
+                '<p class="text-sm font-semibold truncate" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">' + escapeHtml(l.name) + '</p>' +
+              '</div>' +
+              '<p class="caption truncate" style="color: rgb(var(--mgt-muted-foreground));">' + l.categoryLabel + '</p>' +
+            '</div>' +
+          '</div>' +
+          '<div class="flex items-center justify-between gap-2">' +
+            identityBadge +
+            '<span class="inline-flex items-center gap-1 text-xs font-semibold" style="color: rgb(var(--mgt-foreground));"><i data-lucide="star" class="h-3.5 w-3.5 fill-current" style="color: rgb(var(--mgt-accent-300));"></i>' + l.rating + '</span>' +
+          '</div>' +
+          '<p class="body text-sm flex-1" style="color: rgb(var(--mgt-foreground));">' + escapeHtml(l.title) + '</p>' +
+          '<button data-action="join" class="inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: var(--mgt-shadow-sm);">' +
+            '<i data-lucide="play" class="h-4 w-4"></i>Rejoindre le direct' +
+          '</button>' +
+        '</div>';
+
+      card.querySelector('[data-action="join"]').addEventListener('click', function () {
+        join(l);
+      });
+      grid.appendChild(card);
+    });
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function join(live) {
+    // Ouvre la salle du client en ciblant PRÉCISÉMENT le vendeur choisi :
+    // on transmet vendorId (clé de salle serveur), roomId et le nom pour
+    // l'affichage. Le client rejoint ainsi la bonne salle, pas la première
+    // active par défaut.
+    try {
+      var params = new URLSearchParams();
+      if (live.vendorId) params.set('vendorId', live.vendorId);
+      if (live.roomId) params.set('room', live.roomId);
+      if (live.name) params.set('vendorName', live.name);
+      window.location.href = './live-client.html?' + params.toString();
+    } catch (e) { /* no-op */ }
+  }
+
+  function normalize(s) {
+    return (s || '').toString().toLowerCase()
+      .replace(/[éèêë]/g, 'e')
+      .replace(/[àâä]/g, 'a')
+      .replace(/[ùûü]/g, 'u')
+      .replace(/[ôö]/g, 'o')
+      .replace(/[îï]/g, 'i')
+      .replace(/[ç]/g, 'c');
+  }
+
+  function applyFilter() {
+    var q = normalize(document.getElementById('lives-search').value);
+    var sort = document.getElementById('lives-sort').value;
+
+    var filtered = LIVES.filter(function (l) {
+      if (activeCategory !== 'all' && l.category !== activeCategory) return false;
+      if (activeSellerType !== 'all' && l.sellerType !== activeSellerType) return false;
+      if (q) {
+        var hay = normalize(l.name + ' ' + l.categoryLabel + ' ' + l.title);
+        if (hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+
+    filtered.sort(function (a, b) {
+      if (sort === 'rating') return (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0);
+      if (sort === 'recent') return (b.startedAt || 0) - (a.startedAt || 0);
+      if (sort === 'az') return a.name.localeCompare(b.name);
+      return (b.viewers || 0) - (a.viewers || 0);
+    });
+
+    render(filtered);
+  }
+
+  function resetFilters() {
+    activeCategory = 'all';
+    activeSellerType = 'all';
+    var search = document.getElementById('lives-search');
+    if (search) search.value = '';
+    var sort = document.getElementById('lives-sort');
+    if (sort) sort.value = 'viewers';
+    refreshChipStyles();
+    refreshSellerTypeStyles();
+    applyFilter();
+  }
+
+  var search = document.getElementById('lives-search');
+  var sort = document.getElementById('lives-sort');
+  if (search) search.addEventListener('input', applyFilter);
+  if (sort) sort.addEventListener('change', applyFilter);
+
+  var categoryChips = document.getElementById('lives-category-chips');
+  if (categoryChips) {
+    categoryChips.addEventListener('click', function (e) {
+      var chip = e.target.closest('[data-category]');
+      if (!chip) return;
+      activeCategory = chip.getAttribute('data-category');
+      refreshChipStyles();
+      applyFilter();
+    });
+  }
+
+  var sellerGroup = document.getElementById('seller-type-group');
+  if (sellerGroup) {
+    sellerGroup.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-seller-type]');
+      if (!btn) return;
+      activeSellerType = btn.getAttribute('data-seller-type');
+      refreshSellerTypeStyles();
+      applyFilter();
+    });
+  }
+
+  var resetBtn = document.getElementById('btn-reset-filters');
+  if (resetBtn) resetBtn.addEventListener('click', resetFilters);
+
+  function boot() {
+    loadLives().then(function () {
+      lastCategoryKey = categoryKey();
+      populateCategories();
+      refreshSellerTypeStyles();
+      applyFilter();
+      // Rafraîchissement périodique : les lives terminés disparaissent de la
+      // grille, et les nouveaux apparaissent, sans rechargement manuel.
+      setInterval(refreshLives, 4000);
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) refreshLives();
+      });
+    });
+  }
+
+  // Signature compacte de l'état des lives : permet de ne re-rendre la grille
+  // que si quelque chose a réellement changé (départ/arrêt, spectateurs, durée).
+  function signatureOf(list) {
+    return (list || []).map(function (l) {
+      return [l.vendorId || '', l.roomId || '', l.viewers || 0, l.startedAt || 0].join('~');
+    }).sort().join('|');
+  }
+
+  function categoryKey() {
+    var cats = {};
+    LIVES.forEach(function (l) { cats[l.category] = true; });
+    return Object.keys(cats).sort().join('|');
+  }
+
+  var lastCategoryKey = null;
+  var polling = false;
+
+  function refreshLives() {
+    if (polling) return;
+    polling = true;
+    fetch('/api/lives', { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (data) {
+        polling = false;
+        var next = normalizeRooms((data && data.rooms) ? data.rooms : []);
+        if (signatureOf(next) === signatureOf(LIVES)) return; // rien de changé
+        LIVES = next;
+        var key = categoryKey();
+        if (key !== lastCategoryKey) {
+          lastCategoryKey = key;
+          populateCategories();
+          refreshChipStyles();
+        }
+        applyFilter();
+      })
+      .catch(function () { polling = false; });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Paramètres</title>
+    <style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+/* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
+
+:root {
+  /* --- Radius Scale (root-level for preflight) --- */
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+
+:root,
+html.light {
+  /* --- Brand Primary: Dark Green --- */
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+
+  /* --- Orange Accent (CTAs, highlights) --- */
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+
+  /* --- Neutral Surface & Text Scale --- */
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+
+  /* --- State Colors --- */
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+
+  /* --- Shadows --- */
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+
+  /* --- Typography --- */
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* --- Semantic Tailwind Aliases --- */
+:root {
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
+  --primary: 26 92 42;
+  --primary-foreground: 255 255 255;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 26 92 42;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --state-success: 129 199 134;
+  --state-success-foreground: 255 255 255;
+  --state-warning: 255 183 77;
+  --state-warning-foreground: 15 23 42;
+  --state-error: 239 68 68;
+  --state-error-foreground: 255 255 255;
+  --state-info: 59 130 246;
+  --state-info-foreground: 255 255 255;
+}
+
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+
+  --background: 11 11 15;
+  --foreground: 248 250 252;
+  --card: 20 20 26;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 26;
+  --popover-foreground: 248 250 252;
+  --primary: 76 168 82;
+  --primary-foreground: 255 255 255;
+  --muted: 30 30 38;
+  --muted-foreground: 148 163 184;
+  --border: 40 40 50;
+  --input: 40 40 50;
+  --ring: 76 168 82;
+}
+
+/* --- Typography Classes --- */
+.h-display {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(40px, 6vw, 88px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.h1 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(28px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.h2 {
+  font-family: var(--mgt-font-sans);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h3 {
+  font-family: var(--mgt-font-sans);
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.body-l {
+  font-family: var(--mgt-font-sans);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+.body {
+  font-family: var(--mgt-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--mgt-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --radius-sm: var(--mgt-radius-sm);
+    --radius-md: var(--mgt-radius-md);
+    --radius-lg: var(--mgt-radius-lg);
+  }
+  @layer base {
+    body { background: var(--background); color: var(--foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--background); } .text-background { color: var(--background); } .border-background { border-color: var(--background); } .ring-background { --tw-ring-color: var(--background); }
+      .bg-foreground { background-color: var(--foreground); } .text-foreground { color: var(--foreground); } .border-foreground { border-color: var(--foreground); } .ring-foreground { --tw-ring-color: var(--foreground); }
+      .bg-card { background-color: var(--card); } .text-card { color: var(--card); } .border-card { border-color: var(--card); } .ring-card { --tw-ring-color: var(--card); }
+      .bg-card-foreground { background-color: var(--card-foreground); } .text-card-foreground { color: var(--card-foreground); } .border-card-foreground { border-color: var(--card-foreground); } .ring-card-foreground { --tw-ring-color: var(--card-foreground); }
+      .bg-popover { background-color: var(--popover); } .text-popover { color: var(--popover); } .border-popover { border-color: var(--popover); } .ring-popover { --tw-ring-color: var(--popover); }
+      .bg-popover-foreground { background-color: var(--popover-foreground); } .text-popover-foreground { color: var(--popover-foreground); } .border-popover-foreground { border-color: var(--popover-foreground); } .ring-popover-foreground { --tw-ring-color: var(--popover-foreground); }
+      .bg-primary { background-color: var(--primary); } .text-primary { color: var(--primary); } .border-primary { border-color: var(--primary); } .ring-primary { --tw-ring-color: var(--primary); }
+      .bg-primary-foreground { background-color: var(--primary-foreground); } .text-primary-foreground { color: var(--primary-foreground); } .border-primary-foreground { border-color: var(--primary-foreground); } .ring-primary-foreground { --tw-ring-color: var(--primary-foreground); }
+      .bg-muted { background-color: var(--muted); } .text-muted { color: var(--muted); } .border-muted { border-color: var(--muted); } .ring-muted { --tw-ring-color: var(--muted); }
+      .bg-muted-foreground { background-color: var(--muted-foreground); } .text-muted-foreground { color: var(--muted-foreground); } .border-muted-foreground { border-color: var(--muted-foreground); } .ring-muted-foreground { --tw-ring-color: var(--muted-foreground); }
+      .bg-border { background-color: var(--border); } .text-border { color: var(--border); } .border-border { border-color: var(--border); } .ring-border { --tw-ring-color: var(--border); }
+      .bg-input { background-color: var(--input); } .text-input { color: var(--input); } .border-input { border-color: var(--input); } .ring-input { --tw-ring-color: var(--input); }
+      .bg-ring { background-color: var(--ring); } .text-ring { color: var(--ring); } .border-ring { border-color: var(--ring); } .ring-ring { --tw-ring-color: var(--ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+    <style id="mgt-settings-controls">
+      .mgt-switch { position: relative; width: 44px; height: 24px; border-radius: 9999px; background: rgb(var(--mgt-border)); transition: background .2s; cursor: pointer; border: none; flex-shrink: 0; display: inline-block; }
+      .mgt-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.15); transition: transform .2s; }
+      .mgt-switch.on { background: rgb(var(--mgt-success)); }
+      .mgt-switch.on::after { transform: translateX(20px); }
+      .mgt-input { width: 100%; padding: 10px 12px; border: 1px solid rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); font-size: 14px; font-family: var(--mgt-font-sans); transition: border-color .15s, box-shadow .15s; }
+      .mgt-input:focus { outline: none; border-color: rgb(var(--mgt-ring)); box-shadow: 0 0 0 3px rgba(26,92,42,.15); }
+      .mgt-input[readonly] { background: rgb(var(--mgt-muted)); color: rgb(var(--mgt-muted-foreground)); cursor: default; }
+      .mgt-time { border: 1px solid rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); padding: 7px 10px; font-size: 14px; font-family: var(--mgt-font-sans); color: rgb(var(--mgt-foreground)); background: rgb(var(--mgt-background)); width: 120px; }
+      .mgt-time:focus { outline: none; border-color: rgb(var(--mgt-ring)); }
+      .mgt-time:disabled { opacity: .5; }
+      .day-label { font-weight: 500; color: rgb(var(--mgt-foreground)); }
+      .day-label.off { color: rgb(var(--mgt-muted-foreground)); }
+      .danger-btn { padding: 8px 16px; border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); font-size: 14px; font-weight: 500; cursor: pointer; border: 1px solid rgb(239 68 68); background: #fff; color: rgb(239 68 68); transition: all .15s; white-space: nowrap; }
+      .danger-btn:hover { background: rgb(239 68 68); color: #fff; }
+      .danger-btn.solid { background: rgb(239 68 68); color: #fff; }
+      .danger-btn.solid:hover { background: rgb(220 38 38); }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased flex bg-[rgb(var(--mgt-muted))]">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-[rgb(var(--mgt-primary))] text-[rgb(var(--mgt-primary-foreground))]">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 object-cover" style="border-radius:8px;">
+        <div>
+          <span class="font-semibold text-base tracking-tight">Mangoo</span><span class="font-light text-base tracking-tight text-white/70">Tech</span>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="./dashboard-overview.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          Vue d'ensemble
+        </a>
+        <a href="./dashboard-performance.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4.5 h-4.5"></i>
+          Performance
+        </a>
+        <a href="./dashboard-reviews.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="star" class="w-4.5 h-4.5"></i>
+          Avis clients
+        </a>
+        <a href="./dashboard-agenda.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="calendar-days" class="w-4.5 h-4.5"></i>
+          Rendez-vous
+        </a>
+        <a href="./dashboard-finances.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wallet" class="w-4.5 h-4.5"></i>
+          Finances
+        </a>
+        <a href="./dashboard-notifications.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+          Notifications
+        </a>
+        <a href="./dashboard-orders.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          Commandes
+        </a>
+        <a href="./dashboard-clients.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          Clients
+        </a>
+        <a href="./dashboard-team.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="users-round" class="w-4.5 h-4.5"></i>
+          Équipe
+        </a>
+        <a href="./dashboard-messages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+          Messagerie
+        </a>
+        <a href="./dashboard-live.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="radio" class="w-4.5 h-4.5"></i>
+          Live
+        </a>
+        <a href="./dashboard-services.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="briefcase" class="w-4.5 h-4.5"></i>
+          Prestations
+        </a>
+        <a href="./dashboard-catalogue.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="package" class="w-4.5 h-4.5"></i>
+          Catalogue
+        </a>
+        <a href="./dashboard-inventaire.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="boxes" class="w-4.5 h-4.5"></i>
+          Inventaire
+        </a>
+        <a href="./dashboard-gallery.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="images" class="w-4.5 h-4.5"></i>
+          Galerie
+        </a>
+        <a href="./dashboard-boosters.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="zap" class="w-4.5 h-4.5"></i>
+          Boosters
+        </a>
+        <a href="./dashboard-promotions.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="badge-percent" class="w-4.5 h-4.5"></i>
+          Promotions
+        </a>
+        <a href="./dashboard-fidelite.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="award" class="w-4.5 h-4.5"></i>
+          Fidélité
+        </a>
+        <a href="./dashboard-parrainage.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="gift" class="w-4.5 h-4.5"></i>
+          Parrainage
+        </a>
+        <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="trophy" class="w-4.5 h-4.5"></i>
+          Classement
+        </a>
+        <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="shield-check" class="w-4.5 h-4.5"></i>
+          Vérification
+        </a>
+        <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+          Découverte
+        </a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>
+          Hors-ligne
+        </a>
+        <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+          Rapports
+        </a>
+        <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>
+          Support
+        </a>
+        <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+          Offres & Tarifs
+        </a>
+        <a href="./dashboard-abonnement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors">
+          <i data-lucide="credit-card" class="w-4.5 h-4.5"></i>
+          Abonnement
+        </a>
+        <a href="./dashboard-settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors">
+          <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+          Paramètres
+        </a>
+      </nav>
+      <div class="border-t border-white/10 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
+      <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-4 py-3.5">
+        <div class="flex items-center gap-3">
+          <h1 class="text-lg font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">Paramètres</h1>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="relative hidden sm:block">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+            <input id="topbar-search" type="text" placeholder="Rechercher..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+          </div>
+          <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
+          </button>
+          <button id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] bg-transparent cursor-pointer text-left">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="hidden sm:block text-right">
+              <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
+              <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
+                <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                <span data-vendor-rating>4.8</span>
+              </div>
+            </div>
+          </button>
+        </div>
+      </header>
+
+      <main class="flex-1 p-8 space-y-6">
+        <!-- Profil boutique -->
+        <section class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-2.5">
+              <i data-lucide="store" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+              <h3 class="h3 text-[rgb(var(--mgt-foreground))]">Profil boutique</h3>
+            </div>
+            <button id="btn-edit-profile" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border border-[rgb(var(--mgt-border))] rounded-lg text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] hover:text-[rgb(var(--mgt-foreground))] transition-colors">
+              <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+              <span id="btn-edit-profile-label">Modifier</span>
+            </button>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-5 mb-5">
+            <div class="flex flex-col items-center gap-2 shrink-0">
+              <div id="mgt-logo-wrap" class="w-16 h-16 rounded-xl bg-[rgb(var(--mgt-primary-50))] flex items-center justify-center overflow-hidden relative cursor-pointer" title="Changer la photo" role="button" tabindex="0" aria-label="Changer la photo de profil">
+                <span id="mgt-logo-placeholder" class="w-7 h-7 text-[rgb(var(--mgt-primary-400))]" style="display:inline-flex;">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </span>
+                <img id="mgt-logo-preview" alt="Photo de profil" class="absolute inset-0 w-full h-full object-cover" style="display:none;">
+              </div>
+              <button id="btn-change-photo" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium border border-[rgb(var(--mgt-border))] rounded-lg text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] hover:text-[rgb(var(--mgt-foreground))] transition-colors">
+                <i data-lucide="camera" class="w-3.5 h-3.5"></i>Modifier
+              </button>
+              <input id="mgt-logo-input" type="file" accept="image/*" class="hidden">
+            </div>
+            <div class="flex flex-col gap-1 min-w-0">
+              <p id="mgt-profile-name" class="text-lg font-semibold text-[rgb(var(--mgt-foreground))]">DAN Boutique</p>
+              <p id="mgt-profile-catlabel" class="text-sm text-[rgb(var(--mgt-muted-foreground))]">Salon de coiffure</p>
+              <p id="mgt-profile-desc" class="text-sm text-[rgb(var(--mgt-muted-foreground))]">Salon de coiffure et de beauté au cœur de Dakar.</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Nom de la boutique</label>
+              <input class="mgt-input" type="text" data-profile="enseigne" value="DAN Boutique" readonly>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Catégorie</label>
+              <input class="mgt-input" type="text" data-profile="category" value="Salon de coiffure" readonly>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Téléphone</label>
+              <input class="mgt-input" type="text" data-profile="phone" value="+221 33 821 12 34" readonly>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Email</label>
+              <input class="mgt-input" type="email" data-profile="email" value="contact@chezamina.sn" readonly>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Ville</label>
+              <input class="mgt-input" type="text" data-profile="city" list="mgt-city-suggestions" placeholder="Dakar" readonly>
+              <datalist id="mgt-city-suggestions"></datalist>
+            </div>
+          </div>
+        </section>
+
+        <!-- Horaires d'ouverture -->
+        <section class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center gap-2.5 mb-4">
+            <i data-lucide="clock" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+            <h3 class="h3 text-[rgb(var(--mgt-foreground))]">Horaires d'ouverture</h3>
+          </div>
+          <div class="divide-y divide-[rgb(var(--mgt-border))]">
+            <div class="flex items-center justify-between gap-4 py-3" data-day="lundi">
+              <div class="flex items-center gap-4 flex-1 min-w-0 flex-wrap">
+                <span class="day-label text-sm w-20 shrink-0">Lundi</span>
+                <div class="flex items-center gap-2"><input type="time" class="mgt-time" data-open-time value="09:00"><span class="text-sm text-[rgb(var(--mgt-muted-foreground))]">–</span><input type="time" class="mgt-time" data-close-time value="19:00"></div>
+              </div>
+              <button type="button" class="mgt-switch on" data-day-toggle aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between gap-4 py-3" data-day="mardi">
+              <div class="flex items-center gap-4 flex-1 min-w-0 flex-wrap">
+                <span class="day-label text-sm w-20 shrink-0">Mardi</span>
+                <div class="flex items-center gap-2"><input type="time" class="mgt-time" data-open-time value="09:00"><span class="text-sm text-[rgb(var(--mgt-muted-foreground))]">–</span><input type="time" class="mgt-time" data-close-time value="19:00"></div>
+              </div>
+              <button type="button" class="mgt-switch on" data-day-toggle aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between gap-4 py-3" data-day="mercredi">
+              <div class="flex items-center gap-4 flex-1 min-w-0 flex-wrap">
+                <span class="day-label text-sm w-20 shrink-0">Mercredi</span>
+                <div class="flex items-center gap-2"><input type="time" class="mgt-time" data-open-time value="09:00"><span class="text-sm text-[rgb(var(--mgt-muted-foreground))]">–</span><input type="time" class="mgt-time" data-close-time value="19:00"></div>
+              </div>
+              <button type="button" class="mgt-switch on" data-day-toggle aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between gap-4 py-3" data-day="jeudi">
+              <div class="flex items-center gap-4 flex-1 min-w-0 flex-wrap">
+                <span class="day-label text-sm w-20 shrink-0">Jeudi</span>
+                <div class="flex items-center gap-2"><input type="time" class="mgt-time" data-open-time value="09:00"><span class="text-sm text-[rgb(var(--mgt-muted-foreground))]">–</span><input type="time" class="mgt-time" data-close-time value="19:00"></div>
+              </div>
+              <button type="button" class="mgt-switch on" data-day-toggle aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between gap-4 py-3" data-day="vendredi">
+              <div class="flex items-center gap-4 flex-1 min-w-0 flex-wrap">
+                <span class="day-label text-sm w-20 shrink-0">Vendredi</span>
+                <div class="flex items-center gap-2"><input type="time" class="mgt-time" data-open-time value="09:00"><span class="text-sm text-[rgb(var(--mgt-muted-foreground))]">–</span><input type="time" class="mgt-time" data-close-time value="21:00"></div>
+              </div>
+              <button type="button" class="mgt-switch on" data-day-toggle aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between gap-4 py-3" data-day="samedi">
+              <div class="flex items-center gap-4 flex-1 min-w-0 flex-wrap">
+                <span class="day-label text-sm w-20 shrink-0">Samedi</span>
+                <div class="flex items-center gap-2"><input type="time" class="mgt-time" data-open-time value="10:00"><span class="text-sm text-[rgb(var(--mgt-muted-foreground))]">–</span><input type="time" class="mgt-time" data-close-time value="21:00"></div>
+              </div>
+              <button type="button" class="mgt-switch on" data-day-toggle aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between gap-4 py-3" data-day="dimanche">
+              <div class="flex items-center gap-4 flex-1 min-w-0 flex-wrap">
+                <span class="day-label off text-sm w-20 shrink-0">Dimanche</span>
+                <div class="flex items-center gap-2"><input type="time" class="mgt-time" data-open-time disabled><span class="text-sm text-[rgb(var(--mgt-muted-foreground))]">–</span><input type="time" class="mgt-time" data-close-time disabled></div>
+              </div>
+              <button type="button" class="mgt-switch" data-day-toggle aria-pressed="false"></button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Zone de couverture -->
+        <section class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center gap-2.5 mb-4">
+            <i data-lucide="map-pin" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+            <h3 class="h3 text-[rgb(var(--mgt-foreground))]">Zone de couverture</h3>
+          </div>
+          <div class="mb-5">
+            <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))] mb-2">Villes desservies</p>
+            <div id="mgt-cities" class="flex flex-wrap gap-2 mb-3"></div>
+            <button id="btn-add-city" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border border-[rgb(var(--mgt-border))] rounded-lg text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] hover:text-[rgb(var(--mgt-foreground))] transition-colors">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>Ajouter une ville
+            </button>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Rayon de livraison</span>
+            <input type="number" id="mgt-rayon" class="mgt-input" style="width:90px;text-align:center;" value="25" min="1" max="50">
+            <span class="text-sm text-[rgb(var(--mgt-muted-foreground))]">km</span>
+          </div>
+        </section>
+
+        <!-- Paiements acceptés -->
+        <section class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center gap-2.5 mb-4">
+            <i data-lucide="credit-card" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+            <h3 class="h3 text-[rgb(var(--mgt-foreground))]">Paiements acceptés</h3>
+          </div>
+          <div class="divide-y divide-[rgb(var(--mgt-border))]">
+            <div class="flex items-center justify-between py-3">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Orange Money</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Paiement mobile Orange</span>
+              </div>
+              <button type="button" class="mgt-switch on" data-payment="orange_money" aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between py-3">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Wave</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Paiement mobile Wave</span>
+              </div>
+              <button type="button" class="mgt-switch on" data-payment="wave" aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between py-3">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Espèces</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Paiement à la livraison</span>
+              </div>
+              <button type="button" class="mgt-switch on" data-payment="cash" aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between py-3">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Carte bancaire</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Visa, Mastercard</span>
+              </div>
+              <button type="button" class="mgt-switch" data-payment="card" aria-pressed="false"></button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Notifications -->
+        <section class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center gap-2.5 mb-4">
+            <i data-lucide="bell" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+            <h3 class="h3 text-[rgb(var(--mgt-foreground))]">Notifications</h3>
+          </div>
+          <div class="divide-y divide-[rgb(var(--mgt-border))]">
+            <div class="flex items-center justify-between py-3">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Nouvelles commandes</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Notifications lors de nouvelles commandes</span>
+              </div>
+              <button type="button" class="mgt-switch on" data-notif="newOrder" aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between py-3">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Messages</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Notifications de messages clients</span>
+              </div>
+              <button type="button" class="mgt-switch on" data-notif="messages" aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between py-3">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Avis</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Notifications de nouveaux avis</span>
+              </div>
+              <button type="button" class="mgt-switch on" data-notif="avis" aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between py-3">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Promotions</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Notifications marketing et promotions Mangoo</span>
+              </div>
+              <button type="button" class="mgt-switch on" data-notif="promotions" aria-pressed="true"></button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sécurité (zone sensible) -->
+        <section class="rounded-xl p-6 border" style="background:rgb(var(--mgt-error) / 0.05);border-color:rgb(var(--mgt-error) / 0.18);">
+          <div class="flex items-center gap-2.5 mb-4">
+            <i data-lucide="shield-alert" class="w-5 h-5" style="color:rgb(var(--mgt-error));"></i>
+            <h3 class="h3" style="color:rgb(var(--mgt-error));">Sécurité</h3>
+          </div>
+          <div class="divide-y" style="border-color:rgb(var(--mgt-error) / 0.12);">
+            <div class="flex items-center justify-between gap-4 py-3">
+              <div>
+                <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Changer le mot de passe</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Modifier votre mot de passe actuel</p>
+              </div>
+              <button type="button" class="danger-btn" data-danger-action="password">Modifier</button>
+            </div>
+            <div class="flex items-center justify-between gap-4 py-3">
+              <div>
+                <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Changer le PIN</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Modifier votre code de connexion à 4 chiffres</p>
+              </div>
+              <button type="button" class="danger-btn" id="btn-change-pin">Modifier</button>
+            </div>
+            <div class="flex items-center justify-between gap-4 py-3">
+              <div>
+                <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Désactiver le compte</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Masquer temporairement votre boutique</p>
+              </div>
+              <button type="button" class="danger-btn" data-danger-action="deactivate">Désactiver</button>
+            </div>
+            <div class="flex items-center justify-between gap-4 py-3">
+              <div>
+                <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Supprimer la boutique</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Action irréversible. Toutes vos données seront supprimées.</p>
+              </div>
+              <button type="button" class="danger-btn solid" data-danger-action="delete">Supprimer</button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Sticky Save Bar -->
+      <div class="sticky bottom-0 z-20 bg-[rgb(var(--mgt-background))] border-t border-[rgb(var(--mgt-border))] px-8 py-4 flex justify-end">
+        <button id="btn-save-settings" type="button" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-600))] transition-colors">
+          <i data-lucide="save" class="w-4 h-4"></i>Enregistrer les modifications
+        </button>
+      </div>
+    </div>
+
+    <script>lucide.createIcons();</script>
+    <script>
+    (function(){
+      function __mgtSidebarScrollFix(){
+        var active = document.querySelector('nav a[class*="bg-white/15"]');
+        if (!active) return;
+        var nav = active.closest('nav');
+        if (!nav) return;
+        var navRect = nav.getBoundingClientRect();
+        var linkRect = active.getBoundingClientRect();
+        var target = nav.scrollTop + (linkRect.top - navRect.top) - (navRect.height - linkRect.height) / 2;
+        nav.scrollTop = Math.max(0, target);
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', __mgtSidebarScrollFix);
+      else __mgtSidebarScrollFix();
+    })();
+    </script>
+    <script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+    <script src="../assets/mangoo-vendor-config.js"></script>
+    <script src="../assets/mangoo-dashboard-shell.js"></script>
+    <script>
+    (function(){
+      var JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+      var METHODS = ['orange_money', 'wave', 'cash', 'card'];
+      var NOTIFS = ['newOrder', 'messages', 'avis', 'promotions'];
+      var currentConfig = null;
+      var pendingLogo = '';
+
+      function showToast(message) {
+        var existing = document.getElementById('mgt-toast');
+        if (existing) existing.remove();
+        var toast = document.createElement('div');
+        toast.id = 'mgt-toast';
+        toast.textContent = message;
+        toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:10px 18px;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);font-size:14px;font-weight:500;box-shadow:var(--mgt-shadow-md);z-index:9999;opacity:0;transition:opacity .25s ease;';
+        document.body.appendChild(toast);
+        requestAnimationFrame(function () { toast.style.opacity = '1'; });
+        setTimeout(function () {
+          toast.style.opacity = '0';
+          setTimeout(function () { toast.remove(); }, 300);
+        }, 2600);
+      }
+
+      function categoryLabel(id) {
+        var map = { salon: 'Salon de coiffure', restauration: 'Restauration', boutique: 'Boutique', artisanat: 'Artisanat', service: 'Services', autre: 'Autre' };
+        return map[id] || id || '';
+      }
+
+      function setSwitchState(sw, on) {
+        if (!sw) return;
+        sw.classList.toggle('on', !!on);
+        sw.setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+
+      function renderCities() {
+        var wrap = document.getElementById('mgt-cities');
+        if (!wrap || !currentConfig) return;
+        var villes = (currentConfig.decouverte && currentConfig.decouverte.villes) || [];
+        wrap.innerHTML = villes.map(function (v) {
+          return '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-800))] text-sm font-medium">'
+            + v
+            + '<button type="button" class="city-remove inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-[rgb(var(--mgt-primary-100))] transition-colors" data-city="' + v + '" aria-label="Retirer ' + v + '">&times;</button>'
+            + '</span>';
+        }).join('');
+      }
+
+      function applyLogoPreview(logo) {
+        var img = document.getElementById('mgt-logo-preview');
+        var ph = document.getElementById('mgt-logo-placeholder');
+        var has = !!logo && String(logo).slice(0, 11) === 'data:image/';
+        if (img) {
+          if (has) { img.src = logo; img.style.display = 'block'; }
+          else { img.removeAttribute('src'); img.style.display = 'none'; }
+        }
+        if (ph) ph.style.display = has ? 'none' : 'inline-flex';
+      }
+
+      // Redimensionne et compresse un fichier image vers un data URL compact
+      // (max 512px sur le plus grand côté, JPEG qualité 0.85). Repli sur le
+      // data URL brut si le canvas n'est pas disponible (SVG, etc.).
+      function resizeLogo(file) {
+        return new Promise(function (resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function () {
+            var raw = reader.result;
+            // Les SVG ne passent pas par canvas : on les garde tels quels (déjà
+            // petits en général) mais on contrôle leur taille plus bas.
+            if (file.type === 'image/svg+xml') { resolve(raw); return; }
+            var img = new Image();
+            img.onload = function () {
+              try {
+                var maxSide = 512;
+                var w = img.naturalWidth || img.width;
+                var h = img.naturalHeight || img.height;
+                if (!w || !h) { resolve(raw); return; }
+                var scale = Math.min(1, maxSide / Math.max(w, h));
+                var cw = Math.max(1, Math.round(w * scale));
+                var ch = Math.max(1, Math.round(h * scale));
+                var canvas = document.createElement('canvas');
+                canvas.width = cw; canvas.height = ch;
+                var ctx = canvas.getContext('2d');
+                // Fond blanc pour éviter les bords transparents sur JPEG.
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, cw, ch);
+                ctx.drawImage(img, 0, 0, cw, ch);
+                var out = canvas.toDataURL('image/jpeg', 0.85);
+                resolve(out);
+              } catch (e) { resolve(raw); }
+            };
+            img.onerror = function () { resolve(raw); };
+            img.src = raw;
+          };
+          reader.onerror = function () { reject(new Error('read failed')); };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function hydrate(res) {
+        currentConfig = res.config || {};
+        var p = currentConfig.profile || {};
+
+        document.querySelectorAll('[data-profile]').forEach(function (input) {
+          var key = input.getAttribute('data-profile');
+          if (key === 'category') input.value = categoryLabel(p.category);
+          else if (p[key] != null) input.value = p[key];
+        });
+
+        var nameEl = document.getElementById('mgt-profile-name');
+        if (nameEl && p.enseigne) nameEl.textContent = p.enseigne;
+        var catEl = document.getElementById('mgt-profile-catlabel');
+        if (catEl) catEl.textContent = categoryLabel(p.category);
+        var descEl = document.getElementById('mgt-profile-desc');
+        if (descEl && p.description) descEl.textContent = p.description;
+
+        if (pendingLogo) {
+          currentConfig.profile = currentConfig.profile || {};
+          currentConfig.profile.logo = pendingLogo;
+        }
+        applyLogoPreview((currentConfig.profile && currentConfig.profile.logo) || '');
+
+        var horaires = currentConfig.horaires || {};
+        JOURS.forEach(function (jour) {
+          var row = document.querySelector('[data-day="' + jour + '"]');
+          if (!row) return;
+          var h = horaires[jour] || { open: false, openTime: '', closeTime: '' };
+          setSwitchState(row.querySelector('[data-day-toggle]'), h.open);
+          var label = row.querySelector('.day-label');
+          if (label) label.classList.toggle('off', !h.open);
+          var openInp = row.querySelector('[data-open-time]');
+          var closeInp = row.querySelector('[data-close-time]');
+          if (openInp) { openInp.value = h.openTime || ''; openInp.disabled = !h.open; }
+          if (closeInp) { closeInp.value = h.closeTime || ''; closeInp.disabled = !h.open; }
+        });
+
+        var methods = (currentConfig.paiements && currentConfig.paiements.methods) || [];
+        METHODS.forEach(function (m) {
+          setSwitchState(document.querySelector('[data-payment="' + m + '"]'), methods.indexOf(m) !== -1);
+        });
+
+        var notifs = currentConfig.notifications || {};
+        NOTIFS.forEach(function (n) {
+          setSwitchState(document.querySelector('[data-notif="' + n + '"]'), !!notifs[n]);
+        });
+
+        var radius = document.getElementById('mgt-rayon');
+        if (radius && currentConfig.decouverte) radius.value = currentConfig.decouverte.rayonKm;
+
+        renderCities();
+      }
+
+      function collectAndSave() {
+        if (!currentConfig) return;
+
+        document.querySelectorAll('[data-profile]').forEach(function (input) {
+          var key = input.getAttribute('data-profile');
+          if (key === 'category') return;
+          currentConfig.profile[key] = input.value;
+        });
+
+        currentConfig.horaires = currentConfig.horaires || {};
+        JOURS.forEach(function (jour) {
+          var row = document.querySelector('[data-day="' + jour + '"]');
+          if (!row) return;
+          var sw = row.querySelector('[data-day-toggle]');
+          var open = sw ? sw.classList.contains('on') : false;
+          var openInp = row.querySelector('[data-open-time]');
+          var closeInp = row.querySelector('[data-close-time]');
+          currentConfig.horaires[jour] = {
+            open: open,
+            openTime: open && openInp ? openInp.value : '',
+            closeTime: open && closeInp ? closeInp.value : ''
+          };
+        });
+
+        var methods = [];
+        METHODS.forEach(function (m) {
+          var sw = document.querySelector('[data-payment="' + m + '"]');
+          if (sw && sw.classList.contains('on')) methods.push(m);
+        });
+        currentConfig.paiements = currentConfig.paiements || {};
+        currentConfig.paiements.methods = methods;
+
+        currentConfig.notifications = currentConfig.notifications || {};
+        NOTIFS.forEach(function (n) {
+          var sw = document.querySelector('[data-notif="' + n + '"]');
+          currentConfig.notifications[n] = sw ? sw.classList.contains('on') : false;
+        });
+
+        var radius = document.getElementById('mgt-rayon');
+        if (radius && currentConfig.decouverte) currentConfig.decouverte.rayonKm = parseInt(radius.value, 10) || 25;
+
+        MangooVendorConfig.save(currentConfig).then(function () {
+          syncIdentity();
+          showToast('Paramètres enregistrés');
+        }).catch(function () {
+          showToast('Erreur lors de l\'enregistrement');
+        });
+      }
+
+      // Remplit la liste de suggestions de villes (datalist) depuis /api/cities,
+      // pour aider le vendeur/prestataire à choisir une ville géolocalisable.
+      function loadCitySuggestions() {
+        var dl = document.getElementById('mgt-city-suggestions');
+        if (!dl) return;
+        fetch('/api/cities', { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            var cities = (data && data.cities) ? data.cities : {};
+            // `value` = nom de ville seul (géolocalisable par le serveur),
+            // `label` = « Ville · Pays » pour lever les ambiguïtés à l'écran.
+            var seen = {};
+            dl.innerHTML = Object.keys(cities).map(function (k) {
+              return { city: cities[k].city, country: cities[k].country };
+            }).filter(function (c) {
+              var key = (c.city || '').toLowerCase();
+              if (!key || seen[key]) return false;
+              seen[key] = true;
+              return true;
+            }).sort(function (a, b) { return a.city.localeCompare(b.city, 'fr'); }).map(function (c) {
+              var label = (c.city + ' · ' + c.country).replace(/"/g, '&quot;');
+              return '<option value="' + c.city.replace(/"/g, '&quot;') + '" label="' + label + '"></option>';
+            }).join('');
+          })
+          .catch(function () { /* silencieux : le champ reste un texte libre */ });
+      }
+
+      function syncIdentity() {
+        if (!currentConfig || !currentConfig.profile) return;
+        var email = currentConfig.profile.email || '';
+        var logo = currentConfig.profile.logo || '';
+        var enseigne = currentConfig.profile.enseigne || '';
+        var city = currentConfig.profile.city || '';
+
+        // Met à jour la session réelle (mgt_user), source de vérité de current().
+        try {
+          var raw = localStorage.getItem('mgt_user');
+          var user = raw ? JSON.parse(raw) : null;
+          if (user && (user.role === 'vendeur' || user.role === 'prestataire')) {
+            user.email = email;
+            if (enseigne) user.enseigne = enseigne;
+            if (logo) user.logo = logo;
+            if (city) user.city = city;
+            localStorage.setItem('mgt_user', JSON.stringify(user));
+          }
+        } catch (e) { /* ignore */ }
+
+        // Synchronise l'identité prestataire partagée (mgt_vendor_identity_v1).
+        if (window.MangooVendor && window.MangooVendor.save) {
+          window.MangooVendor.save({ email: email, logo: logo });
+        }
+
+        // Persistance serveur : PATCH /api/auth/me écrit le logo (et l'email /
+        // l'enseigne) dans users.json, pour qu'il survive à une reconnexion ou à
+        // une relance du serveur — même logique que le profil client.
+        var token = null;
+        try { token = localStorage.getItem('mgt_token'); } catch (e) {}
+        if (token) {
+          fetch('/api/auth/me', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ enseigne: enseigne, email: email, logo: logo, city: city })
+          }).then(function (r) {
+            return r.json().catch(function () { return {}; });
+          }).then(function (data) {
+            // Le serveur devient la source de vérité : on réaligne la session
+            // locale sur le profil renvoyé (le logo y est bien inclus).
+            if (data && data.ok && data.user) {
+              try { localStorage.setItem('mgt_user', JSON.stringify(data.user)); } catch (e) { /* ignore */ }
+            }
+          }).catch(function () { /* l'identité locale reste le repli */ });
+        }
+
+        // Rafraîchit la pastille de l'en-tête / sidebar immédiatement.
+        var circles = document.querySelectorAll('[data-vendor-initials]');
+        var hasLogo = !!logo && String(logo).slice(0, 11) === 'data:image/';
+        var ini = window.MangooVendor ? window.MangooVendor.initials(window.MangooVendor.current().name) : '';
+        circles.forEach(function (c) {
+          c.style.overflow = 'hidden';
+          if (hasLogo) {
+            c.innerHTML = '<img src="' + logo + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
+          } else {
+            c.textContent = ini;
+          }
+        });
+      }
+
+      document.addEventListener('click', function (e) {
+        var sw = e.target.closest('.mgt-switch');
+        if (!sw) return;
+        var isOn = sw.classList.toggle('on');
+        sw.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+        if (sw.hasAttribute('data-day-toggle')) {
+          var row = sw.closest('[data-day]');
+          var label = row.querySelector('.day-label');
+          var inputs = row.querySelectorAll('input[type="time"]');
+          if (label) label.classList.toggle('off', !isOn);
+          inputs.forEach(function (i) { i.disabled = !isOn; });
+        }
+      });
+
+      document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.city-remove');
+        if (!btn || !currentConfig) return;
+        var city = btn.getAttribute('data-city');
+        var villes = (currentConfig.decouverte && currentConfig.decouverte.villes) || [];
+        var idx = villes.indexOf(city);
+        if (idx !== -1) villes.splice(idx, 1);
+        currentConfig.decouverte = currentConfig.decouverte || {};
+        currentConfig.decouverte.villes = villes;
+        renderCities();
+        MangooVendorConfig.save(currentConfig).then(function () {
+          showToast('Ville retirée');
+        }).catch(function () {
+          showToast('Erreur lors de l\'enregistrement');
+        });
+      });
+
+      var addCityBtn = document.getElementById('btn-add-city');
+      if (addCityBtn) {
+        addCityBtn.addEventListener('click', function () {
+          if (!currentConfig) return;
+          var name = window.prompt('Nom de la ville à ajouter :');
+          if (!name) return;
+          name = name.trim();
+          if (!name) return;
+          currentConfig.decouverte = currentConfig.decouverte || {};
+          var villes = currentConfig.decouverte.villes || [];
+          if (villes.indexOf(name) !== -1) {
+            showToast('Cette ville est déjà dans la liste');
+            return;
+          }
+          villes.push(name);
+          currentConfig.decouverte.villes = villes;
+          renderCities();
+          MangooVendorConfig.save(currentConfig).then(function () {
+            showToast('Ville ajoutée');
+          }).catch(function () {
+            showToast('Erreur lors de l\'enregistrement');
+          });
+        });
+      }
+
+      var editBtn = document.getElementById('btn-edit-profile');
+      var editLabel = document.getElementById('btn-edit-profile-label');
+      if (editBtn) {
+        editBtn.addEventListener('click', function () {
+          var fields = document.querySelectorAll('[data-profile]');
+          // Le champ « Ville » reste toujours éditable (déverrouillé d'emblée)
+          // pour éviter toute confusion : on l'exclut du basculement
+          // Modifier/Terminé qui ne concerne que les autres champs.
+          var toggleFields = Array.prototype.filter.call(fields, function (f) {
+            return f.getAttribute('data-profile') !== 'city';
+          });
+          var isEditing = false;
+          toggleFields.forEach(function (f) { if (!f.readOnly) isEditing = true; });
+          var next = !isEditing;
+          toggleFields.forEach(function (f) { f.readOnly = !next; });
+          if (editLabel) editLabel.textContent = next ? 'Terminé' : 'Modifier';
+          if (next && toggleFields.length) toggleFields[0].focus();
+        });
+      }
+
+      var saveBtn = document.getElementById('btn-save-settings');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', function () { collectAndSave(); });
+      }
+
+      // Upload / aperçu de la photo de profil.
+      var logoInput = document.getElementById('mgt-logo-input');
+      var changePhotoBtn = document.getElementById('btn-change-photo');
+      var logoWrap = document.getElementById('mgt-logo-wrap');
+      function triggerLogoInput() { if (logoInput) logoInput.click(); }
+      if (logoInput) {
+        logoInput.addEventListener('change', function () {
+          var file = logoInput.files && logoInput.files[0];
+          if (!file) return;
+          if (file.size > 5 * 1024 * 1024) {
+            showToast('Image trop lourde (max 5 Mo)');
+            logoInput.value = '';
+            return;
+          }
+          // Redimensionne et compresse l'image (max 512px, JPEG 0.85) pour que
+          // le data URL reste léger (< 500 Ko), évitant tout dépassement de
+          // stockage dans users.json. Si le canvas échoue, repli sur le fichier brut.
+          resizeLogo(file).then(function (dataUrl) {
+            if (dataUrl.length > 500000) {
+              showToast('Logo trop volumineux après compression (max 500 Ko)');
+              logoInput.value = '';
+              return;
+            }
+            applyLogoPreview(dataUrl);
+            currentConfig = currentConfig || {};
+            currentConfig.profile = currentConfig.profile || {};
+            currentConfig.profile.logo = dataUrl;
+            showToast('Photo mise à jour — pensez à enregistrer');
+          }).catch(function () { showToast('Impossible de lire l\'image'); });
+          logoInput.value = '';
+        });
+      }
+      if (changePhotoBtn) changePhotoBtn.addEventListener('click', triggerLogoInput);
+      if (logoWrap) {
+        logoWrap.addEventListener('click', triggerLogoInput);
+        logoWrap.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); triggerLogoInput(); }
+        });
+      }
+
+      MangooVendorConfig.get().then(function (res) {
+        hydrate(res);
+      }).catch(function () {
+        showToast('Impossible de charger les paramètres');
+      });
+
+      loadCitySuggestions();
+    })();
+    </script>
+
+    <!-- ===== Modale "Changer le PIN" ===== -->
+    <div id="pin-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:10000;align-items:center;justify-content:center;padding:16px;">
+      <div style="background:rgb(var(--mgt-background));border-radius:16px;box-shadow:var(--mgt-shadow-lg);width:100%;max-width:400px;font-family:var(--mgt-font-sans);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgb(var(--mgt-border));">
+          <h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">Changer le PIN</h3>
+          <button id="pin-modal-close" type="button" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:22px;line-height:1;cursor:pointer;">&times;</button>
+        </div>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <label for="pin-current" style="display:block;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin-bottom:6px;">PIN actuel</label>
+            <input id="pin-current" type="password" inputmode="numeric" maxlength="4" class="mgt-input" placeholder="••••" style="letter-spacing:0.4em;font-weight:700;">
+          </div>
+          <div>
+            <label for="pin-new" style="display:block;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin-bottom:6px;">Nouveau PIN</label>
+            <input id="pin-new" type="password" inputmode="numeric" maxlength="4" class="mgt-input" placeholder="••••" style="letter-spacing:0.4em;font-weight:700;">
+          </div>
+          <div>
+            <label for="pin-confirm" style="display:block;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin-bottom:6px;">Confirmer le nouveau PIN</label>
+            <input id="pin-confirm" type="password" inputmode="numeric" maxlength="4" class="mgt-input" placeholder="••••" style="letter-spacing:0.4em;font-weight:700;">
+          </div>
+          <p id="pin-message" style="display:none;font-size:13px;margin:0;"></p>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button id="pin-cancel" type="button" style="padding:10px 16px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>
+            <button id="pin-submit" type="button" style="padding:10px 16px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    (function () {
+      var modal = document.getElementById('pin-modal');
+      var openBtn = document.getElementById('btn-change-pin');
+      var closeBtn = document.getElementById('pin-modal-close');
+      var cancelBtn = document.getElementById('pin-cancel');
+      var submitBtn = document.getElementById('pin-submit');
+      var msgEl = document.getElementById('pin-message');
+
+      function setMsg(text, isError) {
+        if (!msgEl) return;
+        msgEl.textContent = text;
+        msgEl.style.display = text ? 'block' : 'none';
+        msgEl.style.color = isError ? 'rgb(var(--mgt-error))' : 'rgb(var(--mgt-primary))';
+      }
+      function clearFields() {
+        ['pin-current', 'pin-new', 'pin-confirm'].forEach(function (id) {
+          var el = document.getElementById(id); if (el) el.value = '';
+        });
+      }
+      function open() {
+        if (!modal) return;
+        clearFields();
+        setMsg('', false);
+        modal.style.display = 'flex';
+        var cur = document.getElementById('pin-current');
+        if (cur) cur.focus();
+      }
+      function close() { if (modal) modal.style.display = 'none'; }
+
+      if (openBtn) openBtn.addEventListener('click', open);
+      if (closeBtn) closeBtn.addEventListener('click', close);
+      if (cancelBtn) cancelBtn.addEventListener('click', close);
+      if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+
+      if (submitBtn) submitBtn.addEventListener('click', function () {
+        var cur = (document.getElementById('pin-current') || {}).value || '';
+        var nu = (document.getElementById('pin-new') || {}).value || '';
+        var cf = (document.getElementById('pin-confirm') || {}).value || '';
+        if (!/^\d{4}$/.test(cur)) { setMsg('Entrez votre PIN actuel (4 chiffres).', true); return; }
+        if (!/^\d{4}$/.test(nu)) { setMsg('Le nouveau PIN doit contenir exactement 4 chiffres.', true); return; }
+        if (nu !== cf) { setMsg('Les nouveaux PIN ne correspondent pas.', true); return; }
+        setMsg('', false);
+        var token = null;
+        try { token = localStorage.getItem('mgt_token'); } catch (e) {}
+        var headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        fetch('/api/auth/change-pin', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ currentPin: cur, newPin: nu })
+        }).then(function (r) {
+          return r.json().catch(function () { return {}; });
+        }).then(function (d) {
+          if (d && d.ok) {
+            setMsg('PIN mis à jour avec succès.', false);
+            clearFields();
+            setTimeout(close, 900);
+          } else {
+            setMsg((d && d.error) || 'Échec de la mise à jour.', true);
+          }
+        }).catch(function () { setMsg('Erreur réseau.', true); });
+      });
+    })();
+    </script>
+    </body>
+    </html>
