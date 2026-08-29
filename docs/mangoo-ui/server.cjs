@@ -175,7 +175,8 @@ function onlineMessagingSockets(id) {
   if (!list) return [];
   return list.filter(function (c) {
     return c.online && c.ws && c.ws.readyState === 1 &&
-      isMessagingPage(c.ws.meta && c.ws.meta.page);
+      isMessagingPage(c.ws.meta && c.ws.meta.page) &&
+      (c.ws.meta && c.ws.meta.visible !== false);
   });
 }
 
@@ -647,7 +648,7 @@ function sendPushOne(sub, payload) {
     JSON.stringify(p),
     { TTL: payload.ttl || 300 }
   ).then(function () {
-    // OK
+    console.log('[Push] envoi OK', { routingId: sub.routingId, endpoint: String(sub.endpoint || '').slice(-24), title: p.title });
   }).catch(function (err) {
     var sc = err && err.statusCode;
     var body = err && err.body;
@@ -3075,6 +3076,7 @@ function handleMessage(ws, msg) {
   if (!msg || typeof msg.type !== 'string') return;
   switch (msg.type) {
     case 'register': handleRegister(ws, msg); break;
+    case 'presence-page': handlePresencePage(ws, msg); break;
     case 'call-offer': handleCallOffer(ws, msg); break;
     case 'call-answer': handleCallAnswer(ws, msg); break;
     case 'call-reject': handleCallReject(ws, msg); break;
@@ -3105,12 +3107,18 @@ function handleMessage(ws, msg) {
   }
 }
 
+function handlePresencePage(ws, msg) {
+  if (!ws.meta || !ws.meta.id) return;
+  ws.meta.page = String(msg.page || ws.meta.page || '').trim();
+  ws.meta.visible = msg.visible !== false;
+}
+
 function handleRegister(ws, msg) {
   const id = canonicalRoutingId(msg.id || '');
   if (!id) { send(ws, { type: 'register-error', reason: 'id manquant' }); return; }
   const role = String(msg.role || 'client').trim();
   const name = String(msg.name || id || 'Inconnu').trim();
-  ws.meta = { id, role, name, page: String(msg.page || '').trim() };
+  ws.meta = { id, role, name, page: String(msg.page || '').trim(), visible: msg.visible !== false };
   addClient(id, ws, role, name);
   console.log('[WS] register', { id, role, name, time: new Date().toLocaleTimeString() });
   send(ws, { type: 'registered', id, role, name });
@@ -6251,7 +6259,15 @@ function handleHttp(req, res) {
       });
     });
     const online = {};
-    routingIds.forEach(function (rid) { online[rid] = isOnline(rid); });
+    const messaging = {};
+    const sockets = {};
+    routingIds.forEach(function (rid) {
+      online[rid] = isOnline(rid);
+      messaging[rid] = isOnMessaging(rid);
+      sockets[rid] = onlineSockets(rid).map(function (s) {
+        return { page: (s.ws && s.ws.meta && s.ws.meta.page) || '', visible: !!(s.ws && s.ws.meta && s.ws.meta.visible !== false), role: s.role || '', name: s.name || '' };
+      });
+    });
     res.writeHead(200, JSON_HEADERS);
     res.end(JSON.stringify({
       ok: true,
@@ -6261,7 +6277,9 @@ function handleHttp(req, res) {
       subscriptionsByRole: byRole,
       routingIds: routingIds,
       subscriptions: subscriptions,
-      online: online
+      online: online,
+      messaging: messaging,
+      sockets: sockets
     }));
     return;
   }

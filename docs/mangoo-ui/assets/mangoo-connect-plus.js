@@ -404,7 +404,7 @@
     ws.onopen = function () {
       reconnectAttempts = 0; // réinitialise le backoff après une connexion réussie
       setConnState('online');
-      if (identity) sendWS({ type: 'register', role: identity.role, id: identity.id, name: identity.name, page: currentPage() });
+      if (identity) sendWS({ type: 'register', role: identity.role, id: identity.id, name: identity.name, page: currentPage(), visible: !document.hidden });
     };
     ws.onmessage = function (ev) {
       if (ev.data instanceof ArrayBuffer) { onFileChunk(currentFileId, ev.data); return; }
@@ -542,7 +542,7 @@
     }
     ensureWS();
     if (ws && ws.readyState === 1) {
-      sendWS({ type: 'register', role: identity.role, id: identity.id, name: identity.name, page: currentPage() });
+      sendWS({ type: 'register', role: identity.role, id: identity.id, name: identity.name, page: currentPage(), visible: !document.hidden });
     }
     return identity;
   }
@@ -996,7 +996,7 @@
       // onopen de ensureWS() s'en charge (il appelle setConnState('online')
       // puis envoie le register). Ne pas écraser onopen ici.
       if (ws && ws.readyState === 1) {
-        sendWS({ type: 'register', role: identity.role, id: identity.id, name: identity.name, page: currentPage() });
+        sendWS({ type: 'register', role: identity.role, id: identity.id, name: identity.name, page: currentPage(), visible: !document.hidden });
       }
       return identity;
     },
@@ -1353,6 +1353,16 @@
       global.MangooPush.autoSubscribe();
     }
   })();
+
+  // Quand l'onglet passe en arrière-plan (ou est minimisé) puis revient, on
+  // rafraîchit la visibilité de la page de messagerie auprès du serveur. Un
+  // dashboard « fermé » (onglet masqué) ne doit PAS être considéré comme
+  // joignable en temps réel : le serveur enverra alors une notification push.
+  document.addEventListener('visibilitychange', function () {
+    if (ws && ws.readyState === 1 && identity) {
+      sendWS({ type: 'presence-page', page: currentPage(), visible: !document.hidden });
+    }
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', injectLiveBanner);
