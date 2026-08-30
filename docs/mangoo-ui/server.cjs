@@ -215,6 +215,35 @@ function resolvePeer(id) {
   return list[list.length - 1];
 }
 
+// Résout la meilleure socket capable de recevoir un appel entrant.
+// Priorité : socket de live du vendeur (s'il diffuse), socket de live d'un
+// spectateur, sinon socket de messagerie visible. Renvoie null dans les autres
+// cas afin qu'un push soit envoyé (la page cible ne saurait pas afficher
+// l'overlay d'appel, et on évite de détourner le vendeur de sa page Live).
+function callablePeer(id) {
+  const cid = canonicalRoutingId(id);
+  const list = onlineSockets(cid);
+  if (list.length === 0) return null;
+  const room = roomById(cid);
+  if (room && room.active) {
+    const vws = vendorWsOf(room);
+    if (vws) {
+      const found = list.find((c) => c.ws === vws);
+      if (found) return found;
+    }
+  }
+  if (activeRooms().length > 0) {
+    const lws = liveViewerWs(cid);
+    if (lws) {
+      const found = list.find((c) => c.ws === lws);
+      if (found) return found;
+    }
+  }
+  const msgs = onlineMessagingSockets(cid);
+  if (msgs.length > 0) return msgs[msgs.length - 1];
+  return null;
+}
+
 // Diffuse un message à toutes les connexions ouvertes d'une identité.
 function broadcastToPeer(id, obj, exceptWs) {
   onlineSockets(id).forEach((c) => {
@@ -3168,7 +3197,7 @@ function handleRegister(ws, msg) {
 function handleCallOffer(ws, msg) {
   const callId = msg.callId || rand();
   const to = String(msg.to || '').trim();
-  const target = isOnMessaging(to) ? resolvePeer(to) : null;
+  const target = callablePeer(to);
   if (!target || !target.online) {
     // Dashboard fermé (ou hors ligne) : on tente de réveiller le destinataire
     // par notification Web Push native (même sans onglet ouvert).
