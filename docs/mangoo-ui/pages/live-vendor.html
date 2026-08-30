@@ -377,6 +377,7 @@ html.dark {
           case 'live-like': setLikes(msg.likes || 0); break;
           case 'live-chat': appendViewerMessage(msg); break;
           case 'live-chat-edited': updateChatText(msg.msgId, msg.text); break;
+          case 'live-chat-deleted': removeChatMessage(msg.msgId); break;
           case 'live-typing': showTyping(msg.fromName, msg.isTyping); break;
           case 'live-pinned': setPinned({ name: msg.name, price: msg.price, image: msg.image }); break;
           case 'live-order': setOrders(msg.orders != null ? msg.orders : (liveOrders + 1)); appendOrderEvent(msg.fromName, msg.product); break;
@@ -486,7 +487,7 @@ html.dark {
         var div = document.createElement('div');
         div.className = 'flex gap-2 justify-end';
         if (msgId) div.setAttribute('data-msg-id', msgId);
-        div.innerHTML = '<div class="max-w-[75%]"><div class="flex items-end justify-end gap-1"><span class="chat-text px-3 py-2 rounded-lg rounded-tr-sm bg-[rgb(var(--mgt-accent))] text-white text-sm leading-snug">' + escHtml(text) + '</span>' + (msgId ? '<button class="chat-edit-btn text-white/70 hover:text-white" data-msg-id="' + escHtml(msgId) + '" title="Modifier"><i data-lucide="pencil" class="w-3 h-3"></i></button>' : '') + '</div></div>';
+        div.innerHTML = '<div class="max-w-[75%]"><div class="flex items-end justify-end gap-1"><span class="chat-text px-3 py-2 rounded-lg rounded-tr-sm bg-[rgb(var(--mgt-accent))] text-white text-sm leading-snug">' + escHtml(text) + '</span></div>' + (msgId ? '<div class="flex justify-end gap-1.5 mt-1"><button class="chat-edit-btn inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-foreground))]" data-msg-id="' + escHtml(msgId) + '"><i data-lucide="pencil" class="w-3 h-3"></i>Modifier</button><button class="chat-delete-btn inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold bg-[rgb(var(--mgt-muted))] text-red-500" data-msg-id="' + escHtml(msgId) + '"><i data-lucide="trash-2" class="w-3 h-3"></i>Supprimer</button></div>' : '') + '</div>';
         msgs.appendChild(div);
         msgs.scrollTop = msgs.scrollHeight;
         if (window.lucide) lucide.createIcons();
@@ -528,6 +529,18 @@ html.dark {
       function updateChatText(msgId, text) {
         var el = document.querySelector('[data-msg-id="' + msgId + '"] .chat-text');
         if (el) el.textContent = text;
+      }
+
+      function removeChatMessage(msgId) {
+        var el = document.querySelector('[data-msg-id="' + msgId + '"]');
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+      }
+
+      function deleteChat(msgId) {
+        if (!msgId) return;
+        if (!wsReady || !isLive) { toast("Le live n'est pas actif"); return; }
+        send({ type: 'live-chat-delete', msgId: msgId });
+        removeChatMessage(msgId);
       }
 
       function sendTyping(isTyping) {
@@ -1046,8 +1059,12 @@ html.dark {
           if (hasText) typingTimer = setTimeout(function () { sendTyping(false); }, 2500);
         });
         document.addEventListener('click', function (e) {
-          var btn = e.target && e.target.closest ? e.target.closest('.chat-edit-btn') : null;
-          if (btn) startEditChat(btn.getAttribute('data-msg-id'));
+          var t = e.target;
+          if (!t || !t.closest) return;
+          var editBtn = t.closest('.chat-edit-btn');
+          if (editBtn) { startEditChat(editBtn.getAttribute('data-msg-id')); return; }
+          var delBtn = t.closest('.chat-delete-btn');
+          if (delBtn) deleteChat(delBtn.getAttribute('data-msg-id'));
         });
 
         loadLiveProducts();

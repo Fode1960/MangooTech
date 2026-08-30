@@ -3158,6 +3158,7 @@ function handleMessage(ws, msg) {
     case 'live-leave': handleLiveLeave(ws); break;
     case 'live-chat': handleLiveChat(ws, msg); break;
     case 'live-chat-edit': handleLiveChatEdit(ws, msg); break;
+    case 'live-chat-delete': handleLiveChatDelete(ws, msg); break;
     case 'live-typing': handleLiveTyping(ws, msg); break;
     case 'live-pin-product': handleLivePin(ws, msg); break;
     case 'live-order': handleLiveOrder(ws, msg); break;
@@ -3584,6 +3585,25 @@ function handleLiveChatEdit(ws, msg) {
   entry.text = text;
   entry.editedAt = nowIso();
   broadcastToRoom(room, { type: 'live-chat-edited', msgId: entry.msgId, from: entry.from, fromName: entry.fromName, text: entry.text, editedAt: entry.editedAt });
+}
+
+// Suppression d'un message du chat live : auteur uniquement, résolu par msgId.
+function handleLiveChatDelete(ws, msg) {
+  const room = roomForWs(ws);
+  if (!room) return;
+  const from = ws.meta && ws.meta.id;
+  const msgId = String(msg.msgId || '').trim();
+  if (!from || !msgId) {
+    send(ws, { type: 'live-chat-delete-error', msgId, reason: 'paramètres manquants' });
+    return;
+  }
+  const idx = room.chat.findIndex(function (m) { return m.msgId === msgId && m.from === from; });
+  if (idx === -1) {
+    send(ws, { type: 'live-chat-delete-error', msgId, reason: 'message introuvable' });
+    return;
+  }
+  room.chat.splice(idx, 1);
+  broadcastToRoom(room, { type: 'live-chat-deleted', msgId });
 }
 
 // Indicateur « en train d'écrire » dans le chat live.
