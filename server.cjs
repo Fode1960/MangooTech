@@ -126,7 +126,7 @@ const MIME = {
  * ------------------------------------------------------------------ */
 const clients = new Map();        // id -> Array<{ ws, role, name, online, lastSeen }>
 const calls = new Map();          // callId -> { callerId, calleeId, callerWs, calleeWs, mode }
-const chatLog = [];               // { msgId, convId, from, to, text, sentAt }
+let chatLog = [];               // { msgId, convId, from, to, text, sentAt }
 const appointmentLog = [];        // { apptId, from, fromName, to, service, day, time, note, status }
 const fileTransfers = new Map();  // fileId -> { fileId, from, to, name, size, mime, received, createdAt }
 
@@ -417,6 +417,21 @@ function writeJsonAtomic(name, value) {
     return false;
   }
 }
+
+// ---- Persistance de l'historique du chat ----
+// `chatLog` vit normalement en mémoire ; on le persiste dans data/messages.json
+// pour qu'un même compte connecté sur plusieurs appareils (PC + mobile) voie
+// les mêmes conversations, et pour que l'historique survive à un redémarrage
+// du serveur. Chargé au démarrage, réécrit de façon atomique après chaque
+// nouveau message (texte ou pièce jointe) et après toute édition/suppression.
+const CHAT_LOG_FILE = 'messages.json';
+function saveChatLog() {
+  writeJsonAtomic(CHAT_LOG_FILE, chatLog);
+}
+(function loadChatLog() {
+  const arr = readJsonFile(CHAT_LOG_FILE, []);
+  if (Array.isArray(arr)) chatLog = arr;
+})();
 
 // Retourne true si un chemin ne doit JAMAIS être servi comme fichier statique
 // (données applicatives, secrets, code serveur, certificats, fichiers temporaires).
@@ -3279,6 +3294,7 @@ function handleChatMessage(ws, msg) {
     sentAt: nowIso()
   };
   chatLog.push(entry);
+  saveChatLog();
   send(ws, { type: 'chat-ack', msgId: entry.msgId, sentAt: entry.sentAt });
   broadcastToPeer(to, {
     type: 'chat-new', msgId: entry.msgId, convId: entry.convId,
@@ -3327,6 +3343,7 @@ function handleChatEdit(ws, msg) {
   }
   entry.text = text;
   entry.editedAt = nowIso();
+  saveChatLog();
   send(ws, { type: 'chat-edit-ack', msgId, text: entry.text, editedAt: entry.editedAt });
   const evt = {
     type: 'chat-edited', msgId, convId: entry.convId,
@@ -3352,6 +3369,7 @@ function handleChatDelete(ws, msg) {
   }
   const entry = chatLog[idx];
   chatLog.splice(idx, 1);
+  saveChatLog();
   send(ws, { type: 'chat-delete-ack', msgId });
   const evt = { type: 'chat-deleted', msgId, convId: entry.convId, from: entry.from, to: entry.to };
   broadcastToPeer(entry.to, evt);
@@ -3787,6 +3805,7 @@ function handleFileEnd(ws, msg) {
     text: '📎 ' + t.name + ' (' + fmtSize(t.received) + ')',
     sentAt: nowIso(), file: true, fileId: meta.fileId
   });
+  saveChatLog();
 
   send(ws, { type: 'file-done', fileId: meta.fileId, size: t.received });
   fileTransfers.delete(meta.fileId);
