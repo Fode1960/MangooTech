@@ -1111,7 +1111,7 @@ html.dark {
         function cancel() {
           box.remove();
           showOriginal();
-          if (actions) actions.style.display = 'none';
+          if (actions) actions.style.display = 'flex';
         }
         function save() {
           var newText = ta.value.trim();
@@ -1119,6 +1119,7 @@ html.dark {
           if (newText === current) { cancel(); return; }
           box.remove();
           showOriginal();
+          if (actions) actions.style.display = 'flex';
           var peer = activePeer();
           if (peer && window.MangooConnect && typeof window.MangooConnect.editMessage === 'function') {
             window.MangooConnect.editMessage(msgId, peer.id, newText);
@@ -1150,14 +1151,15 @@ html.dark {
         if (!wrap || !msgId) return;
         var actions = document.createElement('div');
         actions.className = 'mgt-msg-actions';
-        actions.style.cssText = 'display:none;gap:4px;align-items:center;';
+        // Toujours visibles : sur Android (tactile), il n'y a pas de survol
+        // (mouseenter/mouseleave), les boutons Modifier/Supprimer restaient donc
+        // invisibles et inutilisables. On les affiche en permanence.
+        actions.style.cssText = 'display:flex;gap:4px;align-items:center;margin-top:2px;';
         function makeBtn(label, color) {
           var b = document.createElement('button');
           b.type = 'button';
           b.textContent = label;
-          b.style.cssText = 'font-size:11px;font-weight:600;color:' + color + ';background:transparent;border:none;cursor:pointer;padding:2px 5px;border-radius:6px;';
-          b.addEventListener('mouseenter', function () { b.style.background = 'rgb(var(--mgt-muted))'; });
-          b.addEventListener('mouseleave', function () { b.style.background = 'transparent'; });
+          b.style.cssText = 'font-size:11px;font-weight:600;color:' + color + ';background:transparent;border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:2px 6px;border-radius:6px;';
           return b;
         }
         var editBtn = makeBtn('Modifier', 'rgb(var(--mgt-muted-foreground))');
@@ -1167,8 +1169,6 @@ html.dark {
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
         wrap.appendChild(actions);
-        wrap.addEventListener('mouseenter', function () { if (!wrap.querySelector('.mgt-edit-box')) actions.style.display = 'flex'; });
-        wrap.addEventListener('mouseleave', function () { actions.style.display = 'none'; });
       }
       function appendVendorBubble(html, attachList, msgId) {
         if (!thread) return null;

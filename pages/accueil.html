@@ -352,11 +352,29 @@ html.dark {
 
   var role = String(user.role || '').toLowerCase();
 
+  // Le service worker mémorise la cible via new URL(...).href : c'est donc une
+  // URL ABSOLUE (ex. https://www.mangoo.tech/pages/dashboard-messages.html?...).
+  // On la ramène à pathname + search si elle est de même origine, sinon on la
+  // rejette (une cible d'une autre origine ne doit pas être rejouée).
+  function normalizeLanding(p) {
+    if (!p) return '';
+    var s = String(p);
+    if (s.indexOf('//') >= 0) {
+      try {
+        var u = new URL(s, location.origin);
+        if (u.origin !== location.origin) return '';
+        s = u.pathname + u.search;
+      } catch (e) { return ''; }
+    }
+    return s;
+  }
+
   function validLanding(p) {
-    if (!p) return false;
-    if (p.indexOf('//') >= 0) return false;
-    if (p.indexOf('/pages/') !== 0) return false;
-    return p.indexOf('.html') !== -1;
+    var s = normalizeLanding(p);
+    if (!s) return false;
+    if (s.indexOf('//') >= 0) return false;
+    if (s.indexOf('/pages/') !== 0) return false;
+    return s.indexOf('.html') !== -1;
   }
 
   // Livreur : renvoie vers son propre espace (aucun landing push spécifique).
@@ -368,11 +386,12 @@ html.dark {
   // 1) Landing push mémorisé par le shell avant une redirection vers la connexion.
   var landing = null;
   try { landing = localStorage.getItem('mgt_push_landing_v1'); } catch (e) {}
+  var landingNorm = normalizeLanding(landing);
   // On n'accepte jamais la page client chat.html pour un professionnel : un
   // vieux landing mémorisé ne doit pas pouvoir renvoyer le pro côté client.
-  if (landing && validLanding(landing) && landing.indexOf('/pages/chat.html') !== 0) {
+  if (landingNorm && validLanding(landingNorm) && landingNorm.indexOf('/pages/chat.html') !== 0) {
     try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
-    location.replace(landing);
+    location.replace(landingNorm);
     return;
   }
   // Nettoie tout de même une valeur invalide / client, pour ne pas la rejouer.
@@ -389,7 +408,7 @@ html.dark {
   function goDefault() { location.replace('/pages/dashboard-messages.html'); }
   function validProLanding(p) {
     if (!validLanding(p)) return false;
-    return p.indexOf('/pages/chat.html') !== 0;
+    return normalizeLanding(p).indexOf('/pages/chat.html') !== 0;
   }
   try {
     caches.open('mgt-push-state').then(function (cache) {
@@ -404,7 +423,8 @@ html.dark {
       // One-shot : on efface immédiatement la cible, qu'elle soit utilisée ou non.
       try { caches.open('mgt-push-state').then(function (c) { return c.delete('/__mgt_last_landing__'); }); } catch (e) {}
       var fresh = (Date.now() - ts) < 120000; // 2 minutes maximum
-      if (fresh && validProLanding(url)) location.replace(url);
+      var urlNorm = normalizeLanding(url);
+      if (fresh && validProLanding(urlNorm)) location.replace(urlNorm);
       else goDefault();
     }).catch(goDefault);
   } catch (e) { goDefault(); }
