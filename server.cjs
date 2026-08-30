@@ -3846,6 +3846,33 @@ function guardProChatAccess(req, res, urlPath) {
   return false;
 }
 
+/* Garde-fou serveur de la page d'accueil publique : un professionnel (vendeur
+ * / prestataire) ou un livreur qui arrive sur / ou /pages/accueil.html
+ * (barre d'adresse, vieux raccourci PWA, autocomplétion Chrome, start_url
+ * périmé) est redirigé CÔTÉ SERVEUR vers son propre espace, avant même que le
+ * routage JS de l'accueil ne s'exécute. S'appuie sur le cookie httpOnly
+ * mgt_session, donc non contournable et indépendant de l'état du service
+ * worker / du localStorage du téléphone. Élimine définitivement la bascule
+ * « bonne page → chat.html » observée sur Chrome PC et le logo PWA Android. */
+function guardProLandingAccess(req, res, urlPath) {
+  // Ne concerne que la racine et l'accueil public (avec ou sans query/hash).
+  if (urlPath !== '/' && urlPath !== '/pages/accueil.html') return false;
+  const user = userFromReq(req);
+  if (!user) return false;
+  const role = String(user.role || '').toLowerCase();
+  if (role === 'vendeur' || role === 'prestataire') {
+    res.writeHead(302, { 'Location': '/pages/dashboard-messages.html', 'Cache-Control': 'no-store' });
+    res.end();
+    return true;
+  }
+  if (role === 'livreur') {
+    res.writeHead(302, { 'Location': '/pages/livreur.html', 'Cache-Control': 'no-store' });
+    res.end();
+    return true;
+  }
+  return false;
+}
+
 /* ------------------------------------------------------------------ *
  *  Handler HTTP
  * ------------------------------------------------------------------ */
@@ -3905,6 +3932,7 @@ function handleHttp(req, res) {
   if (forceHttpsAdmin(req, res, urlPath)) return;
   if (requireAdminSession(req, res, urlPath)) return;
   if (guardProChatAccess(req, res, urlPath)) return;
+  if (guardProLandingAccess(req, res, urlPath)) return;
   if (urlPath === '/health') {
     const h = healthStatus();
     res.writeHead(h.ok ? 200 : 503, { 'Content-Type': 'application/json; charset=utf-8' });
