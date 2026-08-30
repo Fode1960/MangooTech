@@ -4393,7 +4393,8 @@ function handleHttp(req, res) {
           author: String(body.author || 'Vendeur'),
           date: String(body.date || 'À l\'instant'),
           vendorId: String(body.vendorId || ''),
-          vendorName: String(body.vendorName || '')
+          vendorName: String(body.vendorName || ''),
+          image: String(body.image || '')
         };
         if (body.id) {
           const idx = galerie.findIndex(function (x) { return x.id === body.id; });
