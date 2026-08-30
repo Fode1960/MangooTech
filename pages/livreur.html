@@ -164,6 +164,26 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
       </div>
     </div>
 
+    <!-- Récapitulatif profil & gains -->
+    <section class="mb-6 rounded-xl p-5" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border)); box-shadow: var(--mgt-shadow-sm);">
+      <div class="flex items-center gap-4 mb-4">
+        <div id="profile-avatar" class="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">—</div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-lg font-bold" id="profile-name" style="color: rgb(var(--mgt-foreground));">Livreur</h2>
+            <span id="profile-rating" class="hidden text-xs px-2 py-0.5 rounded-full font-semibold" style="background-color: rgb(var(--mgt-warning)/.15); color: rgb(var(--mgt-warning));"></span>
+          </div>
+          <div class="caption mt-0.5" style="color: rgb(var(--mgt-muted-foreground));" id="profile-meta"></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="rounded-lg p-3" style="background-color: rgb(var(--mgt-muted));"><p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Courses livrées</p><p class="text-xl font-bold tabular-nums" id="profile-completed" style="color: rgb(var(--mgt-foreground));">0</p></div>
+        <div class="rounded-lg p-3" style="background-color: rgb(var(--mgt-muted));"><p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Gains totaux</p><p class="text-xl font-bold tabular-nums" id="profile-earnings" style="color: rgb(var(--mgt-accent));">0 FCFA</p></div>
+        <div class="rounded-lg p-3" style="background-color: rgb(var(--mgt-muted));"><p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Téléphone</p><p class="text-sm font-semibold tabular-nums truncate" id="profile-phone" style="color: rgb(var(--mgt-foreground));">—</p></div>
+        <div class="rounded-lg p-3" style="background-color: rgb(var(--mgt-muted));"><p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Véhicule</p><p class="text-sm font-semibold" id="profile-vehicle" style="color: rgb(var(--mgt-foreground));">—</p></div>
+      </div>
+    </section>
+
     <!-- Course en cours -->
     <section id="active-section" class="mb-6 hidden">
       <h2 class="caption font-semibold uppercase tracking-wide mb-3" style="color: rgb(var(--mgt-muted-foreground));">Course en cours</h2>
@@ -382,6 +402,32 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     $('app-meta-vehicle').textContent = VEHICLE_LABELS[me.vehicle] || me.vehicle || '—';
     $('app-meta-zone').textContent = me.zone || me.city || '—';
     $('stat-completed').textContent = num(me.completedDeliveries || 0);
+    renderRecap();
+  }
+
+  function renderRecap() {
+    if (!me) return;
+    $('profile-avatar').textContent = initials(me.name);
+    $('profile-name').textContent = me.name || 'Livreur';
+    var rating = me.rating != null ? Number(me.rating) : NaN;
+    if (!isNaN(rating)) {
+      $('profile-rating').classList.remove('hidden');
+      $('profile-rating').textContent = '\u2605 ' + rating.toFixed(1);
+    } else {
+      $('profile-rating').classList.add('hidden');
+    }
+    var metaParts = [];
+    if (me.email) metaParts.push(me.email);
+    if (me.createdAt) metaParts.push('Membre depuis ' + new Date(me.createdAt).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }));
+    $('profile-meta').textContent = metaParts.join(' · ') || 'Mangoo Express+';
+    $('profile-phone').textContent = me.phone || '—';
+    $('profile-vehicle').textContent = VEHICLE_LABELS[me.vehicle] || me.vehicle || '—';
+
+    var delivered = Object.keys(myDeliveries).map(function (k) { return myDeliveries[k]; })
+      .filter(function (d) { return d.courierId === me.id && d.status === 'delivered'; });
+    var totalEarned = delivered.reduce(function (s, d) { return s + (Number(d.amount) || 0); }, 0);
+    $('profile-completed').textContent = num(me.completedDeliveries || 0);
+    $('profile-earnings').textContent = money(totalEarned);
   }
 
   function renderStatusToggle() {
@@ -511,6 +557,8 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     $('tab-history').innerHTML = history.length
       ? history.map(renderHistoryCard).join('')
       : emptyState('Aucune course terminée.', 'history', 'Vos courses livrées apparaîtront ici.');
+
+    renderRecap();
   }
 
   function renderOfferCard(d) {
