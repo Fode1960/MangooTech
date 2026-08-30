@@ -3987,6 +3987,34 @@ function handleHttp(req, res) {
     res.end(JSON.stringify({ ok: true, contacts: contacts }));
     return;
   }
+  if (urlPath === '/api/messages') {
+    // Historique d'une conversation (messagerie du Dashboard). Renvoie, dans
+    // l'ordre chronologique, les messages échangés entre l'utilisateur connecté
+    // et le pair `peer`. Indispensable pour qu'un professionnel qui ouvre sa
+    // messagerie via une notification (dashboard fermé) voie bien le message qui
+    // a déclenché la notification : le chatLog vit en mémoire du processus et
+    // n'est pas persisté, il faut donc le relire à l'ouverture de la page.
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const user = userByToken(token);
+    if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
+    if (req.method !== 'GET') {
+      res.writeHead(405, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: false, error: 'méthode non autorisée' }));
+      return;
+    }
+    const peer = canonicalRoutingId(queryParam(req, 'peer') || '');
+    if (!peer) {
+      res.writeHead(400, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: false, error: 'pair manquant' }));
+      return;
+    }
+    const myId = routingIdForUser(user);
+    const key = convKey(myId, peer);
+    const messages = chatLog.filter(function (m) { return m && m.convId === key; });
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate' });
+    res.end(JSON.stringify({ ok: true, messages: messages }));
+    return;
+  }
 
   if (urlPath === '/api/cities') {
     // Liste complète des villes (Afrique + Europe test). Source unique partagée
