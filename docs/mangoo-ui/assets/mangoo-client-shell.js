@@ -38,6 +38,30 @@
     if (!ok) { window.location.replace('./' + homeForRole(s.user.role)); return false; }
     return true;
   }
+  // Resynchronise la session locale (localStorage) depuis le cookie httpOnly
+  // `mgt_session` via /api/auth/session, AVANT la garde requireRole(). Sans
+  // cette etape, un client qui rouvre l'appli (mobile/PWA ou nouvel onglet)
+  // est renvoye a tort vers auth.html alors que le cookie serveur reste
+  // valide : localStorage est vide ou appartient a une autre origine
+  // (mangoo.tech vs www.mangoo.tech). XHR synchrone pour garantir que la
+  // resync est terminee avant l'execution de requireRole().
+  function resyncSessionFromCookie() {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/api/auth/session', false);
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.send(null);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        var d = JSON.parse(xhr.responseText);
+        if (d && d.ok && d.token && d.user) {
+          localStorage.setItem('mgt_token', d.token);
+          localStorage.setItem('mgt_user', JSON.stringify(d.user));
+        }
+      }
+    } catch (e) { /* non bloquant : requireRole() gerera l'absence de session */ }
+  }
+  resyncSessionFromCookie();
+
   if (!requireRole('client')) return;
 
   if (global.MangooClientShell && global.MangooClientShell.__ready) return;
