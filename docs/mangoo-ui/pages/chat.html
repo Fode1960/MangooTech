@@ -933,7 +933,9 @@ html.dark {
     if (outgoing && !editing && m.kind !== 'file' && m.kind !== 'appt' && m.msgId) {
       var wrap = el.children[1];
       var actions = document.createElement('div');
-      actions.style.cssText = 'display:flex;align-items:center;gap:4px;margin-top:2px;opacity:0;transition:opacity .15s ease;';
+      // Toujours visibles : sur tactile (Android) il n'y a pas de survol, les
+      // boutons restaient invisibles (opacity:0) et inutilisables.
+      actions.style.cssText = 'display:flex;align-items:center;gap:4px;margin-top:2px;opacity:1;';
       actions.innerHTML =
         '<button type="button" data-msg-act="edit" title="Modifier" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:rgb(var(--mgt-muted-foreground));cursor:pointer;">' +
           '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>' +
@@ -942,8 +944,6 @@ html.dark {
           '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>' +
         '</button>';
       wrap.appendChild(actions);
-      el.addEventListener('mouseenter', function(){ actions.style.opacity = '1'; });
-      el.addEventListener('mouseleave', function(){ actions.style.opacity = '0'; });
       var actBtns = actions.querySelectorAll('button');
       actBtns[0].addEventListener('click', function(e){ e.stopPropagation(); beginEdit(m.msgId); });
       actBtns[1].addEventListener('click', function(e){ e.stopPropagation(); confirmDelete(m.msgId); });
