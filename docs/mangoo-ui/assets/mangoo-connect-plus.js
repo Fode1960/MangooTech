@@ -564,9 +564,17 @@
     return Promise.reject(new Error('media indisponible'));
   }
 
+  // Relais STUN + TURN : un simple STUN suffit sur des reseaux simples (deux
+  // telephones a Paris) mais echoue face au NAT symetrique / CGNAT frequent sur
+  // les reseaux mobiles africains (la negociation ICE n'aboutit jamais =>
+  // "connexion perdue"). Le TURN sert de relais de secours. Fourni par Open
+  // Relay Project (gratuit) ; remplacer par un TURN dedie (coturn) en production.
   function createPC() {
     var RTCPC = global.RTCPeerConnection || global.webkitRTCPeerConnection;
-    var pc = new RTCPC({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    var pc = new RTCPC({ iceServers: [
+        { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
+        { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }
+      ] });
     pc.onicecandidate = function (e) {
       if (e.candidate && callState.callId) {
         sendWS({ type: 'ice-candidate', callId: callState.callId, candidate: e.candidate });
