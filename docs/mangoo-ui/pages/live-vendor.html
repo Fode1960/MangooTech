@@ -211,6 +211,7 @@ html.dark {
                 </div>
                 <div id="chat-messages" class="flex-1 overflow-y-auto px-4 pb-2 space-y-2.5"></div>
                 <div class="shrink-0 px-4 pb-2">
+                    <div id="chat-typing" class="hidden text-xs italic text-[rgb(var(--mgt-muted-foreground))] px-1 pb-1.5"></div>
                     <div class="flex items-center gap-2">
                         <input id="chat-input" type="text" placeholder="Écrivez un message..." class="flex-1 px-3.5 py-2.5 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-full focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
                         <button id="chat-send" class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent))] text-white shrink-0">
@@ -375,6 +376,8 @@ html.dark {
           case 'live-viewers': setViewers(msg.viewers || 0); break;
           case 'live-like': setLikes(msg.likes || 0); break;
           case 'live-chat': appendViewerMessage(msg); break;
+          case 'live-chat-edited': updateChatText(msg.msgId, msg.text); break;
+          case 'live-typing': showTyping(msg.fromName, msg.isTyping); break;
           case 'live-pinned': setPinned({ name: msg.name, price: msg.price, image: msg.image }); break;
           case 'live-order': setOrders(msg.orders != null ? msg.orders : (liveOrders + 1)); appendOrderEvent(msg.fromName, msg.product); break;
           case 'live-viewer-joined': if (msg.viewerId) createViewerOffer(msg.viewerId); break;
@@ -477,14 +480,16 @@ html.dark {
         msgs.scrollTop = msgs.scrollHeight;
       }
 
-      function appendVendorMessage(text) {
+      function appendVendorMessage(text, msgId) {
         var msgs = document.getElementById('chat-messages');
         if (!msgs) return;
         var div = document.createElement('div');
         div.className = 'flex gap-2 justify-end';
-        div.innerHTML = '<div class="max-w-[75%]"><div class="px-3 py-2 rounded-lg rounded-tr-sm bg-[rgb(var(--mgt-accent))] text-white text-sm leading-snug">' + escHtml(text) + '</div></div>';
+        if (msgId) div.setAttribute('data-msg-id', msgId);
+        div.innerHTML = '<div class="max-w-[75%]"><div class="flex items-end justify-end gap-1"><span class="chat-text px-3 py-2 rounded-lg rounded-tr-sm bg-[rgb(var(--mgt-accent))] text-white text-sm leading-snug">' + escHtml(text) + '</span>' + (msgId ? '<button class="chat-edit-btn text-white/70 hover:text-white" data-msg-id="' + escHtml(msgId) + '" title="Modifier"><i data-lucide="pencil" class="w-3 h-3"></i></button>' : '') + '</div></div>';
         msgs.appendChild(div);
         msgs.scrollTop = msgs.scrollHeight;
+        if (window.lucide) lucide.createIcons();
       }
 
       function appendViewerMessage(m) {
@@ -494,10 +499,65 @@ html.dark {
         var initial = name.charAt(0).toUpperCase();
         var div = document.createElement('div');
         div.className = 'flex gap-2';
+        if (m.msgId) div.setAttribute('data-msg-id', m.msgId);
         div.innerHTML = '<div class="flex items-center justify-center w-7 h-7 rounded-full bg-[rgb(var(--mgt-primary))] text-white font-bold text-xs shrink-0">' + escHtml(initial) + '</div>' +
-          '<div class="flex-1 min-w-0"><p class="text-xs font-semibold">' + escHtml(name) + '</p><p class="text-sm leading-snug">' + escHtml(m.text) + '</p></div>';
+          '<div class="flex-1 min-w-0"><p class="text-xs font-semibold">' + escHtml(name) + '</p><p class="text-sm leading-snug"><span class="chat-text">' + escHtml(m.text) + '</span></p></div>';
         msgs.appendChild(div);
         msgs.scrollTop = msgs.scrollHeight;
+      }
+
+      var editingMsgId = null;
+      var typingTimer = null;
+      var typingNames = {};
+
+      function setEditingChat(msgId) {
+        editingMsgId = msgId;
+        var input = document.getElementById('chat-input');
+        if (input) input.placeholder = msgId ? 'Modifiez votre message...' : 'Écrivez un message...';
+      }
+
+      function startEditChat(msgId) {
+        var el = document.querySelector('[data-msg-id="' + msgId + '"] .chat-text');
+        var input = document.getElementById('chat-input');
+        if (!el || !input) return;
+        input.value = el.textContent;
+        setEditingChat(msgId);
+        input.focus();
+      }
+
+      function updateChatText(msgId, text) {
+        var el = document.querySelector('[data-msg-id="' + msgId + '"] .chat-text');
+        if (el) el.textContent = text;
+      }
+
+      function sendTyping(isTyping) {
+        if (!wsReady || !isLive) return;
+        send({ type: 'live-typing', isTyping: isTyping });
+      }
+
+      function showTyping(name, isTyping) {
+        if (!name) return;
+        if (isTyping) typingNames[name] = Date.now();
+        else delete typingNames[name];
+        renderTyping();
+      }
+
+      function renderTyping() {
+        var now = Date.now();
+        var active = [];
+        Object.keys(typingNames).forEach(function (n) {
+          if (now - typingNames[n] < 4000) active.push(n);
+          else delete typingNames[n];
+        });
+        var el = document.getElementById('chat-typing');
+        if (!el) return;
+        if (active.length) {
+          el.textContent = active.length === 1 ? (active[0] + " est en train d'écrire...") : (active.length + " personnes sont en train d'écrire...");
+          el.classList.remove('hidden');
+        } else {
+          el.textContent = '';
+          el.classList.add('hidden');
+        }
       }
 
       function pinProduct(card) {
@@ -961,12 +1021,34 @@ html.dark {
         function sendChat() {
           var text = input ? input.value.trim() : '';
           if (!text) return;
-          if (input) input.value = '';
-          if (wsReady && isLive) { send({ type: 'live-chat', text: text }); appendVendorMessage(text); }
-          else appendVendorMessage(text);
+          if (editingMsgId) {
+            var mid = editingMsgId;
+            if (wsReady && isLive) send({ type: 'live-chat-edit', msgId: mid, text: text });
+            else updateChatText(mid, text);
+            input.value = '';
+            setEditingChat(null);
+            return;
+          }
+          input.value = '';
+          if (wsReady && isLive) {
+            var msgId = 'c' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1e6).toString(36);
+            send({ type: 'live-chat', text: text, msgId: msgId });
+            appendVendorMessage(text, msgId);
+          } else appendVendorMessage(text);
+          sendTyping(false);
         }
         document.getElementById('chat-send').addEventListener('click', sendChat);
         input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); sendChat(); } });
+        input.addEventListener('input', function () {
+          var hasText = this.value.length > 0;
+          sendTyping(hasText);
+          if (typingTimer) clearTimeout(typingTimer);
+          if (hasText) typingTimer = setTimeout(function () { sendTyping(false); }, 2500);
+        });
+        document.addEventListener('click', function (e) {
+          var btn = e.target && e.target.closest ? e.target.closest('.chat-edit-btn') : null;
+          if (btn) startEditChat(btn.getAttribute('data-msg-id'));
+        });
 
         loadLiveProducts();
         connect();

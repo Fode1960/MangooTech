@@ -3157,6 +3157,8 @@ function handleMessage(ws, msg) {
     case 'live-join': handleLiveJoin(ws, msg); break;
     case 'live-leave': handleLiveLeave(ws); break;
     case 'live-chat': handleLiveChat(ws, msg); break;
+    case 'live-chat-edit': handleLiveChatEdit(ws, msg); break;
+    case 'live-typing': handleLiveTyping(ws, msg); break;
     case 'live-pin-product': handleLivePin(ws, msg); break;
     case 'live-order': handleLiveOrder(ws, msg); break;
     case 'live-like': handleLiveLike(ws, msg); break;
@@ -3556,10 +3558,39 @@ function handleLiveChat(ws, msg) {
   if (!room) return;
   const text = String(msg.text || '').slice(0, 1000);
   if (!text) return;
-  const entry = { from: ws.meta.id, fromName: ws.meta.name || 'Spectateur', text, sentAt: nowIso() };
+  const msgId = String(msg.msgId || rand()).trim() || rand();
+  const entry = { msgId, from: ws.meta.id, fromName: ws.meta.name || 'Spectateur', text, sentAt: nowIso() };
   room.chat.push(entry);
   if (room.chat.length > 200) room.chat.shift();
-  broadcastToRoom(room, { type: 'live-chat', from: entry.from, fromName: entry.fromName, text, sentAt: entry.sentAt }, ws);
+  broadcastToRoom(room, { type: 'live-chat', msgId: entry.msgId, from: entry.from, fromName: entry.fromName, text, sentAt: entry.sentAt }, ws);
+}
+
+// Édition d'un message du chat live : auteur uniquement, résolu par msgId.
+function handleLiveChatEdit(ws, msg) {
+  const room = roomForWs(ws);
+  if (!room) return;
+  const from = ws.meta && ws.meta.id;
+  const msgId = String(msg.msgId || '').trim();
+  const text = String(msg.text || '').slice(0, 1000);
+  if (!from || !msgId || !text) {
+    send(ws, { type: 'live-chat-edit-error', msgId, reason: 'paramètres manquants' });
+    return;
+  }
+  const entry = room.chat.find(function (m) { return m.msgId === msgId && m.from === from; });
+  if (!entry) {
+    send(ws, { type: 'live-chat-edit-error', msgId, reason: 'message introuvable' });
+    return;
+  }
+  entry.text = text;
+  entry.editedAt = nowIso();
+  broadcastToRoom(room, { type: 'live-chat-edited', msgId: entry.msgId, from: entry.from, fromName: entry.fromName, text: entry.text, editedAt: entry.editedAt });
+}
+
+// Indicateur « en train d'écrire » dans le chat live.
+function handleLiveTyping(ws, msg) {
+  const room = roomForWs(ws);
+  if (!room) return;
+  broadcastToRoom(room, { type: 'live-typing', from: ws.meta.id, fromName: ws.meta.name, isTyping: !!msg.isTyping }, ws);
 }
 
 function handleLivePin(ws, msg) {

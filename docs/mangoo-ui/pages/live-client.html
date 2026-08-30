@@ -421,6 +421,7 @@ html.dark {
             </div>
           </div>
           <div class="border-t border-[rgb(var(--mgt-border))] px-3 py-2.5 shrink-0">
+            <div id="chat-typing" class="hidden text-xs italic text-[rgb(var(--mgt-muted-foreground))] px-1 pb-1.5"></div>
             <div class="flex items-center gap-2">
               <button id="btn-like" class="flex items-center justify-center w-10 h-10 rounded-full bg-red-50 text-red-500 shrink-0 active:scale-90 transition-transform" title="J'aime">
                 <i data-lucide="heart" class="w-5 h-5"></i>
@@ -644,7 +645,13 @@ html.dark {
           if (msg.fromName === MY_NAME) toast('Commande envoyée : ' + msg.product);
           break;
         case 'live-chat':
-          appendChat(msg.fromName, msg.text, msg.from === MY_ID);
+          appendChat(msg.fromName, msg.text, msg.from === MY_ID, msg.msgId);
+          break;
+        case 'live-chat-edited':
+          updateChatText(msg.msgId, msg.text);
+          break;
+        case 'live-typing':
+          showTyping(msg.fromName, msg.isTyping);
           break;
         case 'live-pinned':
           setPinned({ name: msg.name, price: msg.price, image: msg.image });
@@ -690,7 +697,7 @@ html.dark {
       $('stat-likes').textContent = s.likes;
       $('stat-orders').textContent = s.orders;
       if (s.pinnedProduct && s.pinnedProduct.name) setPinned(s.pinnedProduct);
-      (s.chat || []).forEach(function (m) { appendChat(m.fromName, m.text, m.from === MY_ID); });
+      (s.chat || []).forEach(function (m) { appendChat(m.fromName, m.text, m.from === MY_ID, m.msgId); });
     }
 
     function setVendorName(name) {
@@ -887,19 +894,21 @@ html.dark {
       if (fb) fb.classList.remove('hidden');
     }
 
-    function appendChat(name, text, isSelf) {
+    function appendChat(name, text, isSelf, msgId) {
       var list = $('chat-list');
       if (!list) return;
       var div = document.createElement('div');
       div.className = 'flex gap-2' + (isSelf ? ' justify-end' : '');
+      if (msgId) div.setAttribute('data-msg-id', msgId);
       if (isSelf) {
-        div.innerHTML = '<div class="max-w-[80%]"><p class="text-[11px] font-semibold text-right text-[rgb(var(--mgt-accent-700))] mb-0.5">Vous</p><div class="px-3 py-2 rounded-2xl rounded-tr-sm bg-[rgb(var(--mgt-accent))] text-white text-sm leading-snug">' + escHtml(text) + '</div></div>';
+        div.innerHTML = '<div class="max-w-[80%]"><p class="text-[11px] font-semibold text-right text-[rgb(var(--mgt-accent-700))] mb-0.5">Vous</p><div class="flex items-end justify-end gap-1"><span class="chat-text px-3 py-2 rounded-2xl rounded-tr-sm bg-[rgb(var(--mgt-accent))] text-white text-sm leading-snug">' + escHtml(text) + '</span>' + (msgId ? '<button class="chat-edit-btn text-white/70 hover:text-white" data-msg-id="' + escHtml(msgId) + '" title="Modifier"><i data-lucide="pencil" class="w-3 h-3"></i></button>' : '') + '</div></div>';
       } else {
         var initial = (name || '?').charAt(0).toUpperCase();
-        div.innerHTML = '<div class="flex items-center justify-center w-7 h-7 rounded-full bg-[rgb(var(--mgt-primary))] text-white font-bold text-xs shrink-0">' + escHtml(initial) + '</div><div class="flex-1 min-w-0"><p class="text-[11px] font-semibold text-[rgb(var(--mgt-foreground))]">' + escHtml(name) + '</p><div class="inline-block px-3 py-2 rounded-2xl rounded-tl-sm bg-[rgb(var(--mgt-muted))] text-sm text-[rgb(var(--mgt-foreground))] leading-snug">' + escHtml(text) + '</div></div>';
+        div.innerHTML = '<div class="flex items-center justify-center w-7 h-7 rounded-full bg-[rgb(var(--mgt-primary))] text-white font-bold text-xs shrink-0">' + escHtml(initial) + '</div><div class="flex-1 min-w-0"><p class="text-[11px] font-semibold text-[rgb(var(--mgt-foreground))]">' + escHtml(name) + '</p><div class="inline-block px-3 py-2 rounded-2xl rounded-tl-sm bg-[rgb(var(--mgt-muted))] text-sm text-[rgb(var(--mgt-foreground))] leading-snug"><span class="chat-text">' + escHtml(text) + '</span></div></div>';
       }
       list.appendChild(div);
       list.scrollTop = list.scrollHeight;
+      if (window.lucide) lucide.createIcons();
     }
 
     function appendOrderLine(name, product) {
@@ -912,16 +921,79 @@ html.dark {
       list.scrollTop = list.scrollHeight;
     }
 
+    var editingMsgId = null;
+    var typingTimer = null;
+    var typingNames = {};
+
+    function setEditingChat(msgId) {
+      editingMsgId = msgId;
+      var input = $('chat-input');
+      if (input) input.placeholder = msgId ? 'Modifiez votre message...' : 'Écrivez un message...';
+    }
+
+    function startEditChat(msgId) {
+      var el = document.querySelector('[data-msg-id="' + msgId + '"] .chat-text');
+      var input = $('chat-input');
+      if (!el || !input) return;
+      input.value = el.textContent;
+      setEditingChat(msgId);
+      input.focus();
+    }
+
+    function updateChatText(msgId, text) {
+      var el = document.querySelector('[data-msg-id="' + msgId + '"] .chat-text');
+      if (el) el.textContent = text;
+    }
+
+    function sendTyping(isTyping) {
+      if (!wsReady || !isLive) return;
+      send({ type: 'live-typing', isTyping: isTyping });
+    }
+
+    function showTyping(name, isTyping) {
+      if (!name) return;
+      if (isTyping) typingNames[name] = Date.now();
+      else delete typingNames[name];
+      renderTyping();
+    }
+
+    function renderTyping() {
+      var now = Date.now();
+      var active = [];
+      Object.keys(typingNames).forEach(function (n) {
+        if (now - typingNames[n] < 4000) active.push(n);
+        else delete typingNames[n];
+      });
+      var el = $('chat-typing');
+      if (!el) return;
+      if (active.length) {
+        el.textContent = active.length === 1 ? (active[0] + " est en train d'écrire...") : (active.length + " personnes sont en train d'écrire...");
+        el.classList.remove('hidden');
+      } else {
+        el.textContent = '';
+        el.classList.add('hidden');
+      }
+    }
+
     function sendChat() {
       var input = $('chat-input');
       var text = input ? input.value.trim() : '';
       if (!text) return;
+      if (editingMsgId) {
+        if (!wsReady || !isLive) { toast("Le live n'est pas actif"); return; }
+        send({ type: 'live-chat-edit', msgId: editingMsgId, text: text });
+        input.value = '';
+        setEditingChat(null);
+        return;
+      }
       input.value = '';
       if (wsReady && isLive) {
-        send({ type: 'live-chat', text: text });
-        appendChat(MY_NAME, text, true);
+        var msgId = 'c' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1e6).toString(36);
+        send({ type: 'live-chat', text: text, msgId: msgId });
+        appendChat(MY_NAME, text, true, msgId);
+        sendTyping(false);
       } else {
-        toast('Le live n\'est pas actif');
+        toast("Le live n'est pas actif");
       }
     }
 
@@ -1133,6 +1205,16 @@ html.dark {
       });
       $('chat-input').addEventListener('keydown', function (e) {
         if (e.key === 'Enter') { e.preventDefault(); sendChat(); }
+      });
+      $('chat-input').addEventListener('input', function () {
+        var hasText = this.value.length > 0;
+        sendTyping(hasText);
+        if (typingTimer) clearTimeout(typingTimer);
+        if (hasText) typingTimer = setTimeout(function () { sendTyping(false); }, 2500);
+      });
+      document.addEventListener('click', function (e) {
+        var btn = e.target && e.target.closest ? e.target.closest('.chat-edit-btn') : null;
+        if (btn) startEditChat(btn.getAttribute('data-msg-id'));
       });
 
       $('btn-like').addEventListener('click', function () {
