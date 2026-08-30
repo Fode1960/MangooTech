@@ -638,6 +638,9 @@ html.dark {
         var d = new Date();
         return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
       }
+      function genMsgId() {
+        return 'm' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+      }
       // Identité stable du client Android (chat.html) pour le temps réel.
       var livePeers = [];
       function normalizeName(s) { return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ''); }
@@ -891,9 +894,14 @@ html.dark {
         if (empty) empty.style.display = 'none';
         contacts.forEach(buildContactRow);
         // Ouvre la première conversation (l'annuaire fournit déjà l'id réel via
-        // data-peer-id ; ne plus privilégier un id codé en dur).
+        // data-peer-id ; ne plus privilégier un id codé en dur) — SAUF si un
+        // atterrissage push est en attente : dans ce cas, applyPushLanding() se
+        // chargera de sélectionner la conversation exacte de l'émetteur de la
+        // notification (résolution stricte par data-peer-id). Sélectionner la
+        // première ici écraserait ce ciblage et ouvrirait une conversation « au
+        // hasard ».
         var first = list.querySelector('.msg-conv');
-        if (first) setActive(first);
+        if (first && !pendingPushLanding) setActive(first);
         updateUnreadBadge();
         if (window.lucide) window.lucide.createIcons();
       }
@@ -913,6 +921,26 @@ html.dark {
           applyPushLanding();
         });
       }
+
+      // Resynchronise la session locale (localStorage) depuis le cookie httpOnly
+      // `mgt_session` via /api/auth/session AVANT de charger les contacts. Sans
+      // cela, un pro qui ouvre cette page après un clic sur une notification
+      // (dashboard fermé) a un localStorage vide (ou d'une autre origine
+      // mangoo.tech vs www.mangoo.tech) : /api/contacts partirait sans token et
+      // la conversation / l'overlay d'appel ne s'ouvriraient pas.
+      try {
+        var _sx = new XMLHttpRequest();
+        _sx.open('GET', '/api/auth/session', false);
+        _sx.setRequestHeader('Accept', 'application/json');
+        _sx.send(null);
+        if (_sx.status >= 200 && _sx.status < 300) {
+          var _sd = JSON.parse(_sx.responseText);
+          if (_sd && _sd.ok && _sd.token && _sd.user) {
+            localStorage.setItem('mgt_token', _sd.token);
+            localStorage.setItem('mgt_user', JSON.stringify(_sd.user));
+          }
+        }
+      } catch (e) { /* non bloquant */ }
 
       loadContacts();
 
@@ -1018,7 +1046,131 @@ html.dark {
       var thread = document.getElementById('msg-thread');
       var attachments = document.getElementById('msg-attachments');
 
-      function appendVendorBubble(html, attachList) {
+      // Récupère la bulle d'un message sortant via son identifiant local.
+      function outgoingMsgEl(msgId) {
+        if (!msgId) return null;
+        return document.querySelector('.msg-bubble[data-msg-id="' + msgId + '"]');
+      }
+      // Met à jour le texte d'une bulle sortante (édition optimiste + distante).
+      function updateOutgoingBubble(msgId, newText, markEdited) {
+        var wrap = outgoingMsgEl(msgId);
+        if (!wrap) return;
+        var bubble = wrap.querySelector('.mgt-msg-text');
+        if (!bubble) return;
+        var p = bubble.querySelector('p.text-sm');
+        if (p) { p.style.display = ''; p.textContent = newText; }
+        else { bubble.insertAdjacentHTML('afterbegin', '<p class="text-sm" style="margin:0;word-break:break-word;overflow-wrap:anywhere;">' + esc(newText) + '</p>'); }
+        var time = bubble.querySelector('span');
+        if (time) time.style.display = '';
+        if (markEdited) {
+          var edited = bubble.querySelector('.mgt-msg-edited');
+          if (!edited) {
+            var sp = document.createElement('span');
+            sp.className = 'mgt-msg-edited';
+            sp.style.cssText = 'font-size:10px;color:rgba(255,255,255,.65);margin-left:6px;';
+            sp.textContent = '(modifié)';
+            bubble.appendChild(sp);
+          }
+        }
+        // Met à jour l'aperçu (dernier message) de la conversation active.
+        var conv = currentConv;
+        if (conv) {
+          var last = conv.querySelector('p.truncate');
+          if (last) last.textContent = newText;
+        }
+      }
+      // Commence l'édition inline d'un message sortant (texte uniquement).
+      function beginEditMessage(msgId) {
+        var wrap = outgoingMsgEl(msgId);
+        if (!wrap) return;
+        var bubble = wrap.querySelector('.mgt-msg-text');
+        if (!bubble) return;
+        if (wrap.querySelector('.mgt-edit-box')) return; // déjà en édition
+        var p = bubble.querySelector('p.text-sm');
+        var time = bubble.querySelector('span');
+        var current = p ? p.textContent : '';
+        function showOriginal() { if (p) p.style.display = ''; if (time) time.style.display = ''; }
+        function hideOriginal() { if (p) p.style.display = 'none'; if (time) time.style.display = 'none'; }
+        hideOriginal();
+        var box = document.createElement('div');
+        box.className = 'mgt-edit-box';
+        box.style.cssText = 'display:flex;flex-direction:column;gap:6px;width:100%;min-width:200px;';
+        box.innerHTML =
+          '<textarea rows="2" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);border-radius:8px;color:#fff;font-size:14px;font-family:var(--mgt-font-sans);padding:8px;resize:vertical;outline:none;"></textarea>' +
+          '<div style="display:flex;gap:6px;justify-content:flex-end;">' +
+            '<button type="button" data-edit-act="cancel" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.85);background:transparent;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;">Annuler</button>' +
+            '<button type="button" data-edit-act="save" style="font-size:12px;font-weight:700;color:#fff;background:rgb(var(--mgt-accent));border:none;cursor:pointer;padding:4px 10px;border-radius:6px;">Enregistrer</button>' +
+          '</div>';
+        bubble.appendChild(box);
+        var ta = box.querySelector('textarea');
+        ta.value = current;
+        ta.focus();
+        ta.setSelectionRange(ta.value.length, ta.value.length);
+        var actions = wrap.querySelector('.mgt-msg-actions');
+        if (actions) actions.style.display = 'none';
+        function cancel() {
+          box.remove();
+          showOriginal();
+          if (actions) actions.style.display = 'none';
+        }
+        function save() {
+          var newText = ta.value.trim();
+          if (!newText) { toast('Le message ne peut pas être vide.'); ta.focus(); return; }
+          if (newText === current) { cancel(); return; }
+          box.remove();
+          showOriginal();
+          var peer = activePeer();
+          if (peer && window.MangooConnect && typeof window.MangooConnect.editMessage === 'function') {
+            window.MangooConnect.editMessage(msgId, peer.id, newText);
+          }
+          updateOutgoingBubble(msgId, newText, true);
+          toast('Message modifié.');
+        }
+        box.querySelector('[data-edit-act="cancel"]').addEventListener('click', cancel);
+        box.querySelector('[data-edit-act="save"]').addEventListener('click', save);
+        ta.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); save(); }
+          else if (e.key === 'Escape') { cancel(); }
+        });
+      }
+      // Supprime un message sortant (auteur uniquement, propagé au pair).
+      function confirmDeleteMessage(msgId) {
+        var wrap = outgoingMsgEl(msgId);
+        if (!wrap) return;
+        if (!window.confirm('Supprimer ce message ?')) return;
+        var peer = activePeer();
+        if (peer && window.MangooConnect && typeof window.MangooConnect.deleteMessage === 'function') {
+          window.MangooConnect.deleteMessage(msgId, peer.id);
+        }
+        wrap.remove();
+        toast('Message supprimé.');
+      }
+      // Ajoute les actions Modifier/Supprimer à une bulle texte sortante.
+      function addOutgoingActions(wrap, msgId) {
+        if (!wrap || !msgId) return;
+        var actions = document.createElement('div');
+        actions.className = 'mgt-msg-actions';
+        actions.style.cssText = 'display:none;gap:4px;align-items:center;';
+        function makeBtn(label, color) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = label;
+          b.style.cssText = 'font-size:11px;font-weight:600;color:' + color + ';background:transparent;border:none;cursor:pointer;padding:2px 5px;border-radius:6px;';
+          b.addEventListener('mouseenter', function () { b.style.background = 'rgb(var(--mgt-muted))'; });
+          b.addEventListener('mouseleave', function () { b.style.background = 'transparent'; });
+          return b;
+        }
+        var editBtn = makeBtn('Modifier', 'rgb(var(--mgt-muted-foreground))');
+        editBtn.addEventListener('click', function (e) { e.stopPropagation(); beginEditMessage(msgId); });
+        var delBtn = makeBtn('Supprimer', 'rgb(var(--mgt-error))');
+        delBtn.addEventListener('click', function (e) { e.stopPropagation(); confirmDeleteMessage(msgId); });
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+        wrap.appendChild(actions);
+        wrap.addEventListener('mouseenter', function () { if (!wrap.querySelector('.mgt-edit-box')) actions.style.display = 'flex'; });
+        wrap.addEventListener('mouseleave', function () { actions.style.display = 'none'; });
+      }
+      function appendVendorBubble(html, attachList, msgId) {
         if (!thread) return null;
         var wrap = document.createElement('div');
         wrap.className = 'flex flex-col items-end gap-1.5 max-w-[70%] ml-auto';
@@ -1026,6 +1178,13 @@ html.dark {
         bubble.className = 'bg-[rgb(var(--mgt-primary))] rounded-2xl rounded-br-md px-4 py-2.5 text-white';
         bubble.innerHTML = html;
         wrap.appendChild(bubble);
+        if (msgId) {
+          wrap.setAttribute('data-msg-id', msgId);
+          wrap.classList.add('msg-bubble');
+          bubble.classList.add('mgt-msg-text');
+          // Actions uniquement pour les messages texte (pas les pièces seules).
+          if (html.indexOf('<p class="text-sm">') !== -1) addOutgoingActions(wrap, msgId);
+        }
         thread.appendChild(wrap);
         thread.scrollTop = thread.scrollHeight;
         var filesEl = null;
@@ -1103,7 +1262,8 @@ html.dark {
         var parts = [];
         if (val) parts.push('<p class="text-sm">' + esc(val) + '</p>');
         parts.push('<span class="text-[10px] text-white/70 mt-1 block text-right">' + nowTime() + '</span>');
-        var chipsEl = appendVendorBubble(parts.join(''), pending);
+        var msgId = val ? genMsgId() : null;
+        var chipsEl = appendVendorBubble(parts.join(''), pending, msgId);
         var lastText = val;
         if (!lastText && pending.length) {
           lastText = '📎 ' + pending[0].name + (pending.length > 1 ? ' (+' + (pending.length - 1) + ')' : '');
@@ -1126,7 +1286,7 @@ html.dark {
         var realOnline = rtNow && typeof rtNow.isReal === 'function' && rtNow.isReal();
         var peer = activePeer();
         if (peer && rtNow) {
-          if (val && typeof rtNow.sendMessage === 'function') rtNow.sendMessage(peer.id, val);
+          if (val && typeof rtNow.sendMessage === 'function') rtNow.sendMessage(peer.id, val, msgId);
           if (typeof rtNow.sendFile === 'function') {
             pending.forEach(function (f, i) {
               var fid = rtNow.sendFile(peer.id, f.file);
@@ -1407,9 +1567,11 @@ html.dark {
           var t = document.getElementById('msg-thread');
           if (t) t.innerHTML = '';
 
-          // Ajoute le premier message comme bulle envoyée.
+          // Ajoute le premier message comme bulle envoyée (identifiable pour
+          // pouvoir être modifié/supprimé ensuite).
           if (msg) {
-            appendVendorBubble('<p class="text-sm">' + esc(msg) + '</p><span class="text-[10px] text-white/70 mt-1 block text-right">' + nowTime() + '</span>', []);
+            var nmId = genMsgId();
+            appendVendorBubble('<p class="text-sm">' + esc(msg) + '</p><span class="text-[10px] text-white/70 mt-1 block text-right">' + nowTime() + '</span>', [], nmId);
           }
 
           toast('Conversation créée avec ' + name + '.');
@@ -1520,13 +1682,14 @@ html.dark {
         syncNotifDot();
       }
 
-      function appendIncomingBubble(text) {
+      function appendIncomingBubble(text, msgId) {
         if (!thread) return;
         var emptyEl = document.getElementById('msg-thread-empty');
         if (emptyEl && emptyEl.parentNode) emptyEl.parentNode.removeChild(emptyEl);
         var name = currentConv ? currentConv.getAttribute('data-name') : 'Awa S.';
         var bubble = document.createElement('div');
         bubble.className = 'flex items-end gap-2 max-w-[70%]';
+        if (msgId) { bubble.setAttribute('data-msg-id', msgId); bubble.classList.add('msg-bubble'); }
         bubble.innerHTML =
           '<div class="w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-[10px] flex-shrink-0">' + esc(initials(name)) + '</div>' +
           '<div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-4 py-2.5">' +
@@ -1691,7 +1854,7 @@ html.dark {
           else if (peerId && !conv.getAttribute('data-peer-id')) conv.setAttribute('data-peer-id', peerId);
           return conv;
         }
-        function showIncoming(from, fromName, text) {
+        function showIncoming(from, fromName, text, msgId) {
           var name = convNameForPeer(from, fromName);
           var conv = ensureConversation(name, from);
           // Remonte la conversation en tête de liste (comportement type messagerie).
@@ -1723,7 +1886,7 @@ html.dark {
           );
           if (active) {
             if (currentConv !== conv) setActive(conv);
-            appendIncomingBubble(text);
+            appendIncomingBubble(text, msgId);
             conv.setAttribute('data-unread', 'false');
             updateUnreadBadge();
           } else {
@@ -1739,8 +1902,41 @@ html.dark {
         }
 
         RT.onMessage(function (m) {
-          showIncoming(m.from, m.fromName, m.text);
+          showIncoming(m.from, m.fromName, m.text, m.msgId);
         });
+
+        // Édition / suppression d'un message déjà envoyé (propagation temps réel).
+        // L'auteur reçoit ces événements uniquement sur ses AUTRES onglets (le
+        // serveur exclut la socket émettrice) : la mise à jour optimiste locale a
+        // déjà mis à jour l'onglet courant ; ici on synchronise les autres.
+        // Le destinataire (message entrant) reçoit aussi l'événement : on met à
+        // jour la bulle correspondante, qu'elle soit sortante ou entrante.
+        function applyRemoteEdit(e) {
+          if (!e || !e.msgId) return;
+          var wrap = document.querySelector('.msg-bubble[data-msg-id="' + e.msgId + '"]');
+          if (!wrap) return;
+          if (wrap.querySelector('.mgt-msg-text')) { updateOutgoingBubble(e.msgId, e.text, true); return; }
+          var p = wrap.querySelector('p.text-sm');
+          if (p) p.textContent = e.text;
+          var parent = p ? p.parentElement : wrap;
+          if (parent && !parent.querySelector('.mgt-msg-edited')) {
+            var sp = document.createElement('span');
+            sp.className = 'mgt-msg-edited';
+            sp.style.cssText = 'font-size:10px;opacity:.7;margin-left:6px;';
+            sp.textContent = '(modifié)';
+            parent.appendChild(sp);
+          }
+        }
+        if (typeof RT.onMessageEdited === 'function') {
+          RT.onMessageEdited(applyRemoteEdit);
+        }
+        if (typeof RT.onMessageDeleted === 'function') {
+          RT.onMessageDeleted(function (e) {
+            if (!e || !e.msgId) return;
+            var wrap = document.querySelector('.msg-bubble[data-msg-id="' + e.msgId + '"]');
+            if (wrap) wrap.remove();
+          });
+        }
 
         // ---- Indicateur « en train d'écrire » (bidirectionnel) ----
         var peerTypingTimers = {};
