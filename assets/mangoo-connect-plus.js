@@ -460,7 +460,7 @@
       case 'file-end': onFileEnd(msg); break;
       case 'file-error': emit(fileCbs, { error: true, fileId: msg.fileId, reason: msg.reason }); break;
       case 'live-started': emit(liveCbs, { active: true, vendorId: msg.vendorId, vendorName: msg.vendorName, title: msg.title }); break;
-      case 'live-ended': emit(liveCbs, { active: false }); break;
+      case 'live-ended': emit(liveCbs, { active: false, vendorId: msg.vendorId, vendorName: msg.vendorName, title: msg.title }); break;
       case 'live-state': emit(liveCbs, { active: !!msg.active, vendorId: msg.vendorId, vendorName: msg.vendorName, title: msg.title, rooms: msg.rooms || [] }); break;
       case 'pong': break;
     }

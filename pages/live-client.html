@@ -456,6 +456,7 @@ html.dark {
     let wsReady = false;
     let joined = false;
     let isLive = false;
+    let liveWatchdogTimer = null;
     let currentPinned = null;
 
     // Réception du flux vidéo du vendeur (WebRTC)
@@ -1086,6 +1087,31 @@ html.dark {
       }, 2000);
     }
 
+    // Filet de sécurité : si un « live-ended » WebSocket est manqué (reconnexion,
+    // coupure réseau, onglet en arrière-plan), on détecte l'arrêt du live via
+    // /live-status et on repasse « hors ligne » au lieu de rester bloqué en direct.
+    function startLiveWatchdog() {
+      if (liveWatchdogTimer) return;
+      liveWatchdogTimer = setInterval(function () {
+        if (!isLive) return;
+        fetch('/live-status', { cache: 'no-store' })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (!isLive) return;
+            var stillLive = ((d && d.rooms) || []).some(function (room) {
+              return String(room.vendorId) === String(vendorId);
+            });
+            if (!stillLive) {
+              joined = false;
+              endCall();
+              showOffline();
+              closeVideo();
+            }
+          })
+          .catch(function () { /* réseau indisponible : on retentera au prochain tick */ });
+      }, 3000);
+    }
+
     function init() {
       $('btn-refresh').addEventListener('click', function () {
         showOffline();
@@ -1199,6 +1225,7 @@ html.dark {
       $('delivery-retrait').addEventListener('click', function () { setDelivery('Retrait'); });
 
       connect();
+      startLiveWatchdog();
       setVendorName(TARGET_NAME);
       lucide.createIcons();
     }

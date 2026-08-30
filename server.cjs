@@ -3481,10 +3481,15 @@ function handleLiveStop(ws) {
 function stopRoom(room) {
   room.active = false;
   const endedMsg = { type: 'live-ended', roomId: room.roomId, vendorId: room.vendorId };
-  // 1) Notifie immédiatement le vendeur et CHAQUE spectateur de CETTE salle,
-  //    AVANT de vider/supprimer la salle, pour que personne ne reste bloqué
-  //    sur « EN DIRECT » après l'arrêt du vendeur. La diffusion globale seule
-  //    n'est pas fiable : les spectateurs qui ont rejoint sans passer par
+  // 1) Diffusion globale D'ABORD : elle touche toutes les sockets enregistrées
+  //    (badges sidebar, pages publiques, autres prestataires) et ne peut pas
+  //    être sautée, même si la socket du vendeur est déjà fermée
+  //    (vendorWsOf(room) === null).
+  broadcastLive(endedMsg);
+  // 2) Puis notification ciblée du vendeur et de CHAQUE spectateur de CETTE
+  //    salle, AVANT de vider/supprimer la salle, pour que personne ne reste
+  //    bloqué sur « EN DIRECT » après l'arrêt du vendeur. La diffusion globale
+  //    seule n'est pas fiable : les spectateurs qui ont rejoint sans passer par
   //    « register » ne sont pas dans la map `clients`.
   const vws = vendorWsOf(room);
   if (vws) send(vws, endedMsg);
@@ -3495,8 +3500,6 @@ function stopRoom(room) {
   room.viewers.clear();
   room.vendorWs = null;
   liveRooms.delete(roomKey(room.vendorId));
-  // 2) Diffusion globale de secours (badges sidebar, pages d'accueil, etc.).
-  broadcastLive(endedMsg);
 }
 
 function handleLiveJoin(ws, msg) {
