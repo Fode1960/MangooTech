@@ -321,6 +321,79 @@ html.dark {
   } catch (e) { /* non bloquant */ }
 })();
 </script>
+<script>
+/* Routage PWA conditionnel (professionnel uniquement) : après une notification
+   push reçue par le pro, un clic sur le logo PWA (start_url "/") rejoue la
+   dernière cible de conversation mémorisée par le service worker (cache
+   mgt-push-state) au lieu de retomber sur l'accueil public. On ne redirige QUE
+   si une cible récente (< 2 min) et valide pour un professionnel existe ;
+   sinon on reste sur l'accueil public, comportement inchangé (c80bd12/edb158d). */
+(function () {
+  try {
+    var token = null, user = null;
+    try { token = localStorage.getItem('mgt_token'); } catch (e) {}
+    try { user = JSON.parse(localStorage.getItem('mgt_user') || 'null'); } catch (e) {}
+
+    // Si la session locale est vide (autre origine mangoo.tech vs www.mangoo.tech),
+    // resynchronise depuis le cookie httpOnly `mgt_session` via /api/auth/session.
+    if (!token || !user) {
+      try {
+        var _xhr = new XMLHttpRequest();
+        _xhr.open('GET', '/api/auth/session', false);
+        _xhr.setRequestHeader('Accept', 'application/json');
+        _xhr.send(null);
+        if (_xhr.status >= 200 && _xhr.status < 300) {
+          var _d = JSON.parse(_xhr.responseText);
+          if (_d && _d.ok && _d.token && _d.user) {
+            localStorage.setItem('mgt_token', _d.token);
+            localStorage.setItem('mgt_user', JSON.stringify(_d.user));
+            token = _d.token;
+            user = _d.user;
+          }
+        }
+      } catch (e) { /* non bloquant */ }
+    }
+
+    if (!token || !user) return;
+
+    var role = String(user.role || '').toLowerCase();
+    var isPro = role === 'vendeur' || role === 'prestataire';
+    if (!isPro) return; // client / admin : l'accueil public reste visible.
+
+    function validProLanding(p) {
+      if (!p) return false;
+      if (p.indexOf('//') >= 0) return false;
+      if (p.indexOf('/pages/') !== 0) return false;
+      if (p.indexOf('.html') === -1) return false;
+      // Jamais la page client chat.html pour un professionnel.
+      return p.indexOf('/pages/chat.html') !== 0;
+    }
+
+    // Dernière cible de notification mémorisée par le service worker.
+    // Usage « one-shot » : on efface la cible dès la lecture pour ne pas rejouer
+    // un vieux landing au prochain lancement via le logo.
+    try {
+      caches.open('mgt-push-state').then(function (cache) {
+        return cache.match('/__mgt_last_landing__');
+      }).then(function (resp) {
+        return resp ? resp.text() : '';
+      }).then(function (raw) {
+        var url = raw, ts = 0;
+        if (raw && raw.charAt(0) === '{') {
+          try { var o = JSON.parse(raw); if (o && o.url) { url = o.url; ts = o.ts || 0; } } catch (e) {}
+        }
+        // One-shot : on efface immédiatement la cible, qu'elle soit utilisée ou non.
+        try { caches.open('mgt-push-state').then(function (c) { return c.delete('/__mgt_last_landing__'); }); } catch (e) {}
+        var fresh = (Date.now() - ts) < 120000; // 2 minutes maximum
+        if (fresh && validProLanding(url)) {
+          location.replace(url);
+        }
+        // Sinon : aucune redirection, on reste sur l'accueil public.
+      }).catch(function () { /* aucune redirection */ });
+    } catch (e) { /* aucune redirection */ }
+  } catch (e) { /* non bloquant */ }
+})();
+</script>
 </head>
 <body class="min-h-screen font-sans antialiased">
 
