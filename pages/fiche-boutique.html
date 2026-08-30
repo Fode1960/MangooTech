@@ -1709,6 +1709,26 @@ window.__mgtInitBoutique = function () {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
+  function mgtHashStr(s) {
+    var h = 0;
+    for (var i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; }
+    return Math.abs(h);
+  }
+
+  function placeholderImage(name) {
+    var label = String(name == null ? '' : name).trim();
+    var initial = (label.charAt(0) || 'P').toUpperCase();
+    var hue = mgtHashStr(label || 'Produit') % 360;
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">' +
+      '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0" stop-color="hsl(' + hue + ',68%,60%)"/>' +
+      '<stop offset="1" stop-color="hsl(' + ((hue + 45) % 360) + ',70%,44%)"/>' +
+      '</linearGradient></defs>' +
+      '<rect width="240" height="240" fill="url(#g)"/>' +
+      '<text x="50%" y="52%" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="120" font-weight="700" fill="rgba(255,255,255,0.92)">' + initial + '</text>' +
+      '</svg>';
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  }
 
   function cardHTML(p) {
     var cat = MC.categoryById(p.category);
@@ -1722,8 +1742,8 @@ window.__mgtInitBoutique = function () {
         + '</button>'
       : '';
     return '<div class="group rounded-lg border transition-all hover:translate-y-[-1px] hover:shadow-md" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);" data-stock="' + p.stock + '" data-category="' + esc(p.category) + '" data-id="' + esc(p.id) + '" data-negotiable="' + (p.negotiable === false ? '0' : '1') + '">'
-      + '<div class="flex items-center justify-center rounded-t-md h-48" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md) var(--mgt-radius-md) 0 0;">'
-      + '<i data-lucide="' + esc(icon) + '" class="h-12 w-12" style="color: rgb(var(--mgt-primary-300));"></i>'
+      + '<div class="flex items-center justify-center rounded-t-md h-48 overflow-hidden" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md) var(--mgt-radius-md) 0 0;">'
+      + '<img src="' + esc(p.image || placeholderImage(p.name)) + '" alt="' + esc(p.name) + '" class="h-48 w-full object-cover" loading="lazy">'
       + '</div>'
       + '<div class="p-4">'
       + '<span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium mb-2" style="background-color: ' + b.bg + '; color: ' + b.fg + '; border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">' + b.label + '</span>'
