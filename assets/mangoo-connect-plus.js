@@ -364,6 +364,8 @@
 
   var presenceCbs = [];
   var messageCbs = [];
+  var messageEditedCbs = [];
+  var messageDeletedCbs = [];
   var incomingCallCbs = [];
   var callEndedCbs = [];
   var appointmentCbs = [];
