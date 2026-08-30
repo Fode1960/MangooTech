@@ -254,6 +254,7 @@ function createRoom(vendorId, vendorName, vendorWs) {
     sellerType: 'boutique',
     rating: null,
     thumb: '',
+    vendorLogo: vendorLogoFor(vendorId),
     startedAt: Date.now(),
     viewers: new Set(),   // ws des spectateurs de CETTE salle
     likes: 0,
@@ -1250,6 +1251,19 @@ function vendorConfigFor(vendorId) {
     vendorConfig[id] = blankVendorConfig(id);
   }
   return vendorConfig[id];
+}
+
+// Logo du vendeur : priorité au logo du compte (users.json, data URL), sinon
+// au profil de la boutique (vendor-config.json), sinon chaîne vide. Permet au
+// spectateur d'un live d'afficher la photo du vendeur plutôt qu'une initiale.
+function vendorLogoFor(vendorId) {
+  const id = String(vendorId || '').trim();
+  if (!id) return '';
+  const u = userByRoutingId(id);
+  if (u && u.logo) return String(u.logo);
+  const cfg = vendorConfigFor(id);
+  const profile = (cfg && cfg.profile) || {};
+  return String(profile.logo || profile.cover || '');
 }
 
 function loadVendorConfig() {
@@ -3004,6 +3018,7 @@ function liveSnapshot(room) {
     vendorId: r.vendorId,
     vendorName: r.vendorName,
     title: r.title,
+    vendorLogo: r.vendorLogo || null,
     viewers: r.viewers.size,
     likes: r.likes,
     orders: r.orders,
@@ -3038,6 +3053,7 @@ function roomSnapshot(room) {
     sellerType: room.sellerType || 'boutique',
     rating: (room.rating != null) ? room.rating : null,
     thumb: room.thumb || null,
+    vendorLogo: room.vendorLogo || null,
     startedAt: room.startedAt || null,
     viewers: room.viewers.size,
     likes: room.likes,
@@ -3385,12 +3401,14 @@ function handleLiveStart(ws, msg) {
     existing.sellerType = String(msg.sellerType || msg.type || existing.sellerType);
     existing.rating = (msg.rating != null) ? msg.rating : existing.rating;
     existing.thumb = String(msg.thumb || existing.thumb || '');
+    existing.vendorLogo = vendorLogoFor(vid);
     broadcastLive({
       type: 'live-started',
       roomId: existing.roomId,
       vendorId: existing.vendorId,
       vendorName: existing.vendorName,
       title: existing.title,
+      vendorLogo: existing.vendorLogo || '',
       viewers: existing.viewers.size, likes: existing.likes, orders: existing.orders,
       startedAt: existing.startedAt
     });
@@ -3409,6 +3427,7 @@ function handleLiveStart(ws, msg) {
     vendorId: room.vendorId,
     vendorName: room.vendorName,
     title: room.title,
+    vendorLogo: room.vendorLogo || '',
     viewers: 0, likes: 0, orders: 0,
     startedAt: room.startedAt
   });

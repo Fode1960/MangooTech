@@ -294,7 +294,10 @@ html.dark {
   <div class="mx-auto max-w-md min-h-screen flex flex-col bg-[rgb(var(--mgt-background))] shadow-2xl relative">
     <!-- ===== HEADER ===== -->
     <header class="sticky top-0 z-30 flex items-center gap-3 px-4 py-3 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))]">
-      <div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-bold text-sm shrink-0">CA</div>
+      <div class="relative flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-bold text-sm shrink-0 overflow-hidden">
+        <img id="vendor-logo" src="" alt="" class="absolute inset-0 w-full h-full object-cover hidden">
+        <span id="vendor-logo-fallback">CA</span>
+      </div>
       <div class="flex-1 min-w-0">
         <p id="vendor-name" class="text-sm font-bold text-[rgb(var(--mgt-foreground))] truncate">DAN Boutique</p>
         <p id="live-status-badge" class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex items-center gap-1">
@@ -338,9 +341,10 @@ html.dark {
           <div class="absolute inset-0 opacity-10" style="background-image: repeating-linear-gradient(0deg,#fff,#fff 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,#fff,#fff 1px,transparent 1px,transparent 40px);"></div>
           <video id="remote-video" autoplay playsinline class="absolute inset-0 w-full h-full object-cover hidden"></video>
           <video id="remote-pip" autoplay playsinline class="hidden absolute top-3 right-3 w-28 h-40 object-cover rounded-xl border border-white/25 shadow-lg z-10 bg-black/40"></video>
-          <div id="video-fallback" class="absolute inset-0 flex items-center justify-center">
-            <div class="relative flex items-center justify-center w-24 h-24 rounded-full bg-white/10 border border-white/15 live-ring">
-              <i data-lucide="camera" class="w-9 h-9 text-white/40"></i>
+          <div id="video-fallback" class="absolute inset-0 flex flex-col items-center justify-center gap-3">
+            <div class="relative flex items-center justify-center w-24 h-24 rounded-full bg-white/10 border border-white/15 live-ring overflow-hidden">
+              <img id="video-vendor-logo" src="" alt="" class="absolute inset-0 w-full h-full object-cover hidden">
+              <i id="video-vendor-logo-fallback" data-lucide="camera" class="w-9 h-9 text-white/40"></i>
             </div>
           </div>
           <div class="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-600 text-white text-xs font-bold">
@@ -533,6 +537,30 @@ html.dark {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
       });
     }
+    function productThumb(p) {
+      if (p && p.image) return String(p.image);
+      var name = (p && p.name) ? String(p.name).trim() : '';
+      if (!name) return '';
+      return placeholderImage(name);
+    }
+    function placeholderImage(name) {
+      var initial = (name.charAt(0) || 'P').toUpperCase();
+      var hue = mgtHashStr(name) % 360;
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">' +
+        '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0" stop-color="hsl(' + hue + ',68%,60%)"/>' +
+        '<stop offset="1" stop-color="hsl(' + ((hue + 45) % 360) + ',70%,44%)"/>' +
+        '</linearGradient></defs>' +
+        '<rect width="240" height="240" fill="url(#g)"/>' +
+        '<text x="50%" y="52%" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="120" font-weight="700" fill="rgba(255,255,255,0.92)">' + initial + '</text>' +
+        '</svg>';
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+    function mgtHashStr(s) {
+      var h = 0;
+      for (var i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; }
+      return Math.abs(h);
+    }
 
     function toast(msg) {
       let t = $('live-toast');
@@ -656,6 +684,7 @@ html.dark {
       // pas vers le vendeur codé en dur par défaut.
       if (s.vendorId) vendorId = s.vendorId;
       if (s.vendorName) setVendorName(s.vendorName);
+      if (s.vendorLogo) setVendorLogo(s.vendorLogo);
       setViewers(s.viewers);
       $('stat-likes').textContent = s.likes;
       $('stat-orders').textContent = s.orders;
@@ -670,6 +699,18 @@ html.dark {
       if (h) h.textContent = name;
       var peer = $('call-peer-name');
       if (peer) peer.textContent = name;
+    }
+
+    function setVendorLogo(logo) {
+      if (!logo) return;
+      var img = $('vendor-logo');
+      var fb = $('vendor-logo-fallback');
+      if (img) { img.src = logo; img.classList.remove('hidden'); }
+      if (fb) fb.classList.add('hidden');
+      var stageLogo = $('video-vendor-logo');
+      if (stageLogo) { stageLogo.src = logo; stageLogo.classList.remove('hidden'); }
+      var stageFb = $('video-vendor-logo-fallback');
+      if (stageFb) stageFb.classList.add('hidden');
     }
 
     function showLive() {
@@ -716,7 +757,8 @@ html.dark {
       $('pinned-price').textContent = p.price || '';
       var thumb = $('pinned-image');
       if (thumb) {
-        if (p.image) { thumb.src = p.image; thumb.style.display = ''; }
+        var thumbSrc = productThumb(p);
+        if (thumbSrc) { thumb.src = thumbSrc; thumb.style.display = ''; }
         else { thumb.removeAttribute('src'); thumb.style.display = 'none'; }
       }
       $('pinned-area').classList.remove('hidden');
@@ -727,8 +769,9 @@ html.dark {
         $('product-fullscreen-price').textContent = p.price || '';
         var fsImg = $('product-fullscreen-image');
         if (fsImg) {
-          if (p.image) {
-            fsImg.src = (p.image.indexOf('data:') === 0) ? p.image : p.image + (p.image.indexOf('?') >= 0 ? '&' : '?') + '_v=' + Date.now();
+          var thumbSrc = productThumb(p);
+          if (thumbSrc) {
+            fsImg.src = (thumbSrc.indexOf('data:') === 0) ? thumbSrc : thumbSrc + (thumbSrc.indexOf('?') >= 0 ? '&' : '?') + '_v=' + Date.now();
             fsImg.style.display = '';
           } else {
             fsImg.removeAttribute('src');
