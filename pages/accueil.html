@@ -360,13 +360,22 @@ html.dark {
     var isPro = role === 'vendeur' || role === 'prestataire';
     if (!isPro) return; // client / admin : l'accueil public reste visible.
 
-    function validProLanding(p) {
-      if (!p) return false;
-      if (p.indexOf('//') >= 0) return false;
-      if (p.indexOf('/pages/') !== 0) return false;
-      if (p.indexOf('.html') === -1) return false;
-      // Jamais la page client chat.html pour un professionnel.
-      return p.indexOf('/pages/chat.html') !== 0;
+    // Le service worker mémorise une URL ABSOLUE (resolveUrl -> new URL().href).
+    // On la normalise vers un chemin relatif de MÊME origine, en refusant tout
+    // ce qui est cross-origin ou la page client chat.html.
+    function proLandingTarget(p) {
+      if (!p) return null;
+      var path = p, search = '';
+      try {
+        var u = new URL(p, window.location.origin);
+        if (u.origin !== window.location.origin) return null;
+        path = u.pathname;
+        search = u.search;
+      } catch (e) { return null; }
+      if (path.indexOf('/pages/') !== 0) return null;
+      if (path.indexOf('.html') === -1) return null;
+      if (path.indexOf('/pages/chat.html') === 0) return null; // jamais la page client
+      return path + search;
     }
 
     // Dernière cible de notification mémorisée par le service worker.
@@ -385,8 +394,9 @@ html.dark {
         // One-shot : on efface immédiatement la cible, qu'elle soit utilisée ou non.
         try { caches.open('mgt-push-state').then(function (c) { return c.delete('/__mgt_last_landing__'); }); } catch (e) {}
         var fresh = (Date.now() - ts) < 120000; // 2 minutes maximum
-        if (fresh && validProLanding(url)) {
-          location.replace(url);
+        var target = proLandingTarget(url);
+        if (fresh && target) {
+          location.replace(target);
         }
         // Sinon : aucune redirection, on reste sur l'accueil public.
       }).catch(function () { /* aucune redirection */ });
