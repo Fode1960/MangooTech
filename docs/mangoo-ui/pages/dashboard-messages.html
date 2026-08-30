@@ -784,6 +784,12 @@ html.dark {
           scheduleBtn.style.cursor = 'pointer';
           scheduleBtn.title = 'Planifier un rendez-vous';
         }
+        // Charge l'historique de la conversation sélectionnée : le fil est vidé
+        // puis reconstruit depuis le chatLog serveur. Sans cela, un message reçu
+        // pendant que le dashboard était fermé (notification) n'apparaîtrait pas
+        // dans le fil, même si la conversation cible est bien ouverte.
+        clearThread();
+        loadThreadHistory(conv);
       }
       function markRead(conv, silent) {
         if (conv.getAttribute('data-unread') !== 'true') return;
@@ -1172,6 +1178,8 @@ html.dark {
       }
       function appendVendorBubble(html, attachList, msgId) {
         if (!thread) return null;
+        var emptyEl = document.getElementById('msg-thread-empty');
+        if (emptyEl && emptyEl.parentNode) emptyEl.parentNode.removeChild(emptyEl);
         var wrap = document.createElement('div');
         wrap.className = 'flex flex-col items-end gap-1.5 max-w-[70%] ml-auto';
         var bubble = document.createElement('div');
@@ -1738,6 +1746,70 @@ html.dark {
             conv.style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
           });
         });
+      }
+
+      // ---- Historique d'une conversation (relecture du chatLog serveur) ----
+      function fmtTime(iso) {
+        try {
+          var d = iso ? new Date(iso) : new Date();
+          if (isNaN(d.getTime())) d = new Date();
+          return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        } catch (e) { return nowTime(); }
+      }
+      // Vide le fil de messagerie (bulles + pièces jointes) en restaurant l'état
+      // vide, sans perdre le conteneur `#msg-thread-empty`.
+      function clearThread() {
+        var t = document.getElementById('msg-thread');
+        if (!t) return;
+        var empty = document.getElementById('msg-thread-empty');
+        var kids = Array.prototype.slice.call(t.children);
+        kids.forEach(function (n) { if (n.id !== 'msg-thread-empty') n.remove(); });
+        if (!empty) {
+          empty = document.createElement('div');
+          empty.id = 'msg-thread-empty';
+          empty.className = 'h-full flex flex-col items-center justify-center text-center gap-2';
+          empty.innerHTML = '<i data-lucide="message-square" class="w-10 h-10 text-[rgb(var(--mgt-muted-foreground))]" style="opacity:.5;"></i><p class="text-sm text-[rgb(var(--mgt-muted-foreground))]">Sélectionnez une conversation pour commencer.</p>';
+          t.appendChild(empty);
+          if (window.lucide) window.lucide.createIcons();
+        } else {
+          empty.style.display = '';
+        }
+      }
+      // Recharge et affiche l'historique d'une conversation depuis le serveur.
+      // Appelé à chaque sélection de conversation (setActive), y compris après un
+      // atterrissage push (notification reçue dashboard fermé) : c'est ce qui fait
+      // apparaître le message de l'émetteur dans le fil.
+      function loadThreadHistory(conv) {
+        if (!conv || !thread) return;
+        var peerId = conv.getAttribute('data-peer-id');
+        if (!peerId) return;
+        var token = null;
+        try { token = localStorage.getItem('mgt_token'); } catch (e) {}
+        fetch('/api/messages?peer=' + encodeURIComponent(peerId), {
+          headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+        }).then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (d) {
+          // La conversation a pu changer pendant le fetch : on n'écrase alors rien.
+          if (currentConv !== conv) return;
+          var msgs = (d && d.ok && Array.isArray(d.messages)) ? d.messages : [];
+          clearThread();
+          if (!msgs.length) return;
+          var myId = '';
+          try { myId = connectedVendorIdentity().id || ''; } catch (e) {}
+          msgs.forEach(function (m) {
+            var isMine = m.from === myId;
+            if (isMine) {
+              appendVendorBubble('<p class="text-sm">' + esc(m.text || '') + '</p><span class="text-[10px] text-white/70 mt-1 block text-right">' + fmtTime(m.sentAt) + '</span>', [], m.msgId);
+            } else {
+              appendIncomingBubble(m.text || '', m.msgId);
+            }
+          });
+          // Met à jour l'aperçu (dernier message) dans la liste de conversations.
+          var last = msgs[msgs.length - 1];
+          var p = conv.querySelector('p.truncate');
+          if (p && last) p.textContent = (last.file ? '📎 ' : '') + (last.text || '');
+          if (conv.getAttribute('data-unread') === 'true') markRead(conv, true);
+        }).catch(function () {});
       }
 
       // ---- Temps réel (serveur /webrtc-ws) ----
