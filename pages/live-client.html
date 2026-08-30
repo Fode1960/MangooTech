@@ -1300,6 +1300,14 @@ html.dark {
         else if (btn.id === 'btn-product-fullscreen-order') { orderCurrentProduct(); closeProductFullscreen(); }
       });
 
+      // Échap ferme le plein écran produit s'il est ouvert.
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          var ov = $('product-fullscreen');
+          if (ov && ov.style.display === 'flex') closeProductFullscreen();
+        }
+      });
+
       // Raccourci d'achat : quantité + livraison (pré-remplis, ajustables en un geste)
       $('qty-minus').addEventListener('click', function () { setQuantity(orderQuantity - 1); });
       $('qty-plus').addEventListener('click', function () { setQuantity(orderQuantity + 1); });
@@ -1318,9 +1326,10 @@ html.dark {
   <!-- ===== OVERLAY PRODUIT PLEIN ÉCRAN ===== -->
   <div id="product-fullscreen" class="hidden fixed inset-0 z-[998] bg-black flex flex-col" style="display:none">
     <div class="relative flex-1 flex items-center justify-center overflow-hidden bg-black">
-      <img id="product-fullscreen-image" src="" alt="" class="w-full h-full object-cover">
-      <button id="btn-product-close" class="absolute top-4 left-4 flex items-center justify-center w-10 h-10 rounded-full bg-white/15 text-white backdrop-blur-sm active:scale-90 transition-transform" aria-label="Réduire">
+      <img id="product-fullscreen-image" src="" alt="" class="w-full h-full object-contain">
+      <button id="btn-product-close" class="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 h-10 rounded-full bg-black/60 text-white border border-white/25 backdrop-blur-sm active:scale-95 transition-transform" aria-label="Réduire">
         <i data-lucide="x" class="w-5 h-5"></i>
+        <span class="text-sm font-semibold">Réduire</span>
       </button>
     </div>
     <div class="p-4 bg-[rgb(var(--mgt-background))] text-[rgb(var(--mgt-foreground))]">
