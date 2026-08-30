@@ -768,9 +768,16 @@ html.dark {
             }
           }
         } catch (e) {}
-        // Aucune identité professionnelle fiable : on ne s'enregistre pas sous
-        // un identifiant fantôme. Le shell (mangoo-vendor.js) reprendra
-        // l'enregistrement réel dès que la session sera présente.
+        // Aucune identité professionnelle fiable via la session : on retombe sur
+        // l'identité partagée (mangoo-vendor.js) qui résout le seed/démo
+        // (DAN Boutique -> pro-41cafa4bcb31) sans jamais laisser un id vide,
+        // sinon le live ne peut jamais démarrer côté vendeur.
+        try {
+          if (window.MangooVendor && typeof window.MangooVendor.current === 'function') {
+            var v = window.MangooVendor.current();
+            if (v && v.vendorId) return { id: v.vendorId, name: v.name || v.vendorId };
+          }
+        } catch (e) {}
         return { id: '', name: '' };
       }
       const _me = connectedVendor();
@@ -1028,6 +1035,7 @@ html.dark {
       function startLive() {
         if (isLive) return;
         if (!wsReady) { toast('Connexion au serveur en cours...'); return; }
+        enterLiveState();
         send({ type: 'live-start', title: 'Live Shopping — ' + MY_NAME });
       }
 
