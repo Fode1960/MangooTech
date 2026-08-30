@@ -21,7 +21,7 @@ self.addEventListener('install', function () {
 // purge des anciens caches (dont « mgt-push-state » qui mémorisait un landing de
 // notification). Cela garantit qu'aucun vieux routage — ex. renvoyer un
 // professionnel vers la page client chat.html — n'est rejoué après coup.
-var SW_VERSION = 'mgt-sw-2026-08-29-2';
+var SW_VERSION = 'mgt-sw-2026-08-30-1';
 
 self.addEventListener('activate', function (event) {
   event.waitUntil(
@@ -65,7 +65,7 @@ self.addEventListener('message', function (event) {
 self.addEventListener('fetch', function (event) {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    fetch(event.request).catch(function () {
+    fetch(event.request, { cache: 'no-store' }).catch(function () {
       return caches.match(event.request).then(function (cached) {
         if (cached) return cached;
         return new Response('Hors ligne', {
