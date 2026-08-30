@@ -436,6 +436,7 @@ html.dark {
       function startLive() {
         if (isLive) return;
         if (!wsReady) { toast('Connexion au serveur en cours...'); return; }
+        enterLiveState();
         send({ type: 'live-start', title: 'Live Shopping — ' + MY_NAME });
       }
       function stopLive() { if (wsReady) send({ type: 'live-stop' }); exitLiveState(); }
