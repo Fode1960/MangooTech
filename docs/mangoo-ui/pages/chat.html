@@ -672,6 +672,7 @@ html.dark {
   function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function fmtSize(bytes){ if(!bytes && bytes!==0) return ''; if(bytes<1024) return bytes+' o'; if(bytes<1048576) return (bytes/1024).toFixed(1)+' Ko'; return (bytes/1048576).toFixed(1)+' Mo'; }
   function nowTime(){ var d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+  function timeFromIso(iso){ try { var d=new Date(iso); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); } catch(e){ return nowTime(); } }
 
   // Identité du client : session `mgt_user` (Dida), avec repli si absente.
   function readClient(){
@@ -731,6 +732,54 @@ html.dark {
   }
   function threadOf(id){ return THREADS[id] || (THREADS[id] = []); }
   function pushMsg(id, msg){ threadOf(id).push(msg); saveStore(); }
+  // --- Synchronisation multi-appareils de l'historique ---
+  // Recharge l'historique d'une conversation depuis le serveur (source de
+  // vérité persistée dans data/messages.json) et fusionne les messages
+  // manquants dans THREADS. C'est ce qui permet à un même compte client
+  // connecté sur PC et mobile de retrouver les mêmes conversations sur les
+  // deux supports (les messages ne vivent plus seulement dans localStorage).
+  // Les pièces jointes historiques ne sont pas rejouées (elles exigent le blob
+  // d'origine) ; elles restent visibles via le temps réel.
+  function mergeHistory(vendorId, serverMsgs){
+    if (!Array.isArray(serverMsgs) || !serverMsgs.length) return;
+    var thread = threadOf(vendorId);
+    var have = {};
+    thread.forEach(function(m){ if (m.msgId) have[m.msgId] = 1; });
+    var added = false;
+    serverMsgs.forEach(function(sm){
+      if (!sm || !sm.msgId || have[sm.msgId] || sm.file) return;
+      have[sm.msgId] = 1;
+      thread.push({
+        msgId: sm.msgId,
+        dir: (sm.from === CLIENT.id) ? 'out' : 'in',
+        text: sm.text,
+        time: timeFromIso(sm.sentAt)
+      });
+      added = true;
+    });
+    if (added) saveStore();
+  }
+  function loadHistory(peerId){
+    if (!peerId) return;
+    var token = null;
+    try { token = localStorage.getItem('mgt_token'); } catch(e){}
+    fetch('/api/messages?peer=' + encodeURIComponent(peerId), {
+      headers: token ? { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' } : { 'Accept': 'application/json' },
+      cache: 'no-store'
+    }).then(function(r){ return r.json().catch(function(){ return {}; }); })
+    .then(function(d){
+      if (!d || !d.ok) return;
+      mergeHistory(peerId, d.messages);
+      if (ACTIVE === peerId) renderThread();
+      renderSidebar();
+    }).catch(function(){ /* non bloquant : on conserve l'historique local */ });
+  }
+  // Rafraîchit la conversation active quand l'onglet redevient visible : si
+  // l'utilisateur a discuté sur un autre appareil (PC) puis revient sur le
+  // mobile, l'historique est rechargé sans action manuelle.
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible' && ACTIVE) loadHistory(ACTIVE);
+  });
   function scrollBottom(){ if (threadEl) threadEl.scrollTop = threadEl.scrollHeight; }
 
   // --- Édition / suppression de messages ---
@@ -979,6 +1028,7 @@ html.dark {
     renderThread();
     renderSidebar();
     if (input) setTimeout(function(){ input.focus(); }, 50);
+    loadHistory(vendorId);
   }
 
   // --- Message système (conversation active) ---
