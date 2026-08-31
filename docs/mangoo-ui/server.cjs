@@ -217,9 +217,11 @@ function resolvePeer(id) {
 
 // Résout la meilleure socket capable de recevoir un appel entrant.
 // Priorité : socket de live du vendeur (s'il diffuse), socket de live d'un
-// spectateur, sinon socket de messagerie visible. Renvoie null dans les autres
-// cas afin qu'un push soit envoyé (la page cible ne saurait pas afficher
-// l'overlay d'appel, et on évite de détourner le vendeur de sa page Live).
+// spectateur, sinon toute socket visible (app ouverte = joignable, quelle que
+// soit la page). Renvoie null seulement si aucune socket visible n'existe
+// (app fermée ou onglet en arrière-plan), afin qu'un push soit envoyé. On
+// conserve ainsi la protection des professionnels en Live : ils reçoivent
+// l'appel via leur socket de diffusion dédiée, jamais via une page annexe.
 function callablePeer(id) {
   const cid = canonicalRoutingId(id);
   const list = onlineSockets(cid);
@@ -239,8 +241,14 @@ function callablePeer(id) {
       if (found) return found;
     }
   }
-  const msgs = onlineMessagingSockets(cid);
-  if (msgs.length > 0) return msgs[msgs.length - 1];
+  // Un utilisateur est joignable dès qu'il a l'app ouverte (n'importe quelle
+  // page du site), pas seulement sur sa page Messagerie. On exclut uniquement
+  // les onglets en arrière-plan (visible === false) pour ne pas sonner une
+  // page invisible : dans ce cas, on retombe sur la notification push.
+  const visible = list.filter(function (c) {
+    return c.ws && c.ws.readyState === 1 && (c.ws.meta ? c.ws.meta.visible !== false : true);
+  });
+  if (visible.length > 0) return visible[visible.length - 1];
   return null;
 }
 
