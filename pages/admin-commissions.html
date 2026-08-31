@@ -100,35 +100,22 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
 
     <main class="p-6 space-y-6">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Volume d'affaires</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-primary-50));"><i data-lucide="banknote" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="kpi-ca">—</div><div class="text-xs text-muted-foreground">boutiques + prestataires</div></div>
-        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Commission estimée</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-accent-50));"><i data-lucide="percent" class="w-4 h-4" style="color: rgb(var(--mgt-accent));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-accent));" id="kpi-commission">—</div><div class="text-xs text-muted-foreground">sur le volume enregistré</div></div>
-        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Taux prestataires</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-info) / .12);"><i data-lucide="gauge" class="w-4 h-4" style="color: rgb(var(--mgt-info));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-info));" id="kpi-taux-presta">—</div><div class="text-xs text-muted-foreground">prestataires de service</div></div>
-        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Taux boutiques</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-primary-50));"><i data-lucide="gauge" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="kpi-taux-boutique">—</div><div class="text-xs text-muted-foreground">vendeurs-boutiques</div></div>
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Volume réglé</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-primary-50));"><i data-lucide="banknote" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="kpi-ca">—</div><div class="text-xs text-muted-foreground">ventes réglées (boutiques + prestataires)</div></div>
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Commission réelle</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-accent-50));"><i data-lucide="percent" class="w-4 h-4" style="color: rgb(var(--mgt-accent));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-accent));" id="kpi-commission">—</div><div class="text-xs text-muted-foreground">prélevée sur les règlements</div></div>
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Commission boutiques</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-primary-50));"><i data-lucide="store" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));" id="kpi-comm-boutique">—</div><div class="text-xs text-muted-foreground">vendeurs-boutiques</div></div>
+        <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Commission prestataires</span><span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgb(var(--mgt-accent-50));"><i data-lucide="wrench" class="w-4 h-4" style="color: rgb(var(--mgt-accent));"></i></span></div><div class="text-xl font-bold tabular-nums" style="color: rgb(var(--mgt-accent));" id="kpi-comm-presta">—</div><div class="text-xs text-muted-foreground">prestataires de service</div></div>
       </div>
 
       <div class="grid lg:grid-cols-3 gap-4">
         <div class="bg-card border border-border rounded-xl p-5 lg:col-span-1">
-          <h2 class="font-semibold text-foreground">Configuration des taux</h2>
-          <p class="text-xs text-muted-foreground mb-5">Ces taux s'appliquent au chiffre d'affaires de chaque vente.</p>
-          <div class="space-y-6">
-            <div>
-              <div class="flex items-center justify-between mb-2"><label class="text-sm font-semibold text-foreground">Prestataires de service</label><span class="text-sm font-bold" style="color: rgb(var(--mgt-accent));" id="val-presta">12 %</span></div>
-              <input type="range" id="range-presta" min="0" max="30" step="1" value="12">
-              <div class="flex justify-between text-[11px] text-muted-foreground mt-1"><span>0 %</span><span>30 %</span></div>
-            </div>
-            <div>
-              <div class="flex items-center justify-between mb-2"><label class="text-sm font-semibold text-foreground">Vendeurs-boutiques</label><span class="text-sm font-bold" style="color: rgb(var(--mgt-primary));" id="val-boutique">8 %</span></div>
-              <input type="range" id="range-boutique" min="0" max="30" step="1" value="8">
-              <div class="flex justify-between text-[11px] text-muted-foreground mt-1"><span>0 %</span><span>30 %</span></div>
-            </div>
-          </div>
-          <button id="btn-save" class="mt-6 w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-white text-sm font-semibold transition-colors" style="background-color: rgb(var(--mgt-primary));"><i data-lucide="save" class="w-4 h-4"></i>Enregistrer les taux</button>
-          <p id="save-status" class="text-xs text-muted-foreground text-center mt-2 h-4"></p>
+          <h2 class="font-semibold text-foreground">Barème de commission</h2>
+          <p class="text-xs text-muted-foreground mb-5">La commission dépend du pack d'abonnement du vendeur. Gérez-la depuis <a href="./admin-packs.html" class="font-medium underline" style="color: rgb(var(--mgt-primary));">Packs &amp; Tarifs</a>.</p>
+          <div class="space-y-1" id="plans-list"><p class="text-sm text-muted-foreground py-4">Chargement…</p></div>
         </div>
 
         <div class="bg-card border border-border rounded-xl p-5 lg:col-span-2">
-          <div class="flex items-center justify-between mb-4"><h2 class="font-semibold text-foreground">Simulation des commissions</h2><span class="text-xs text-muted-foreground">Estimation sur le volume enregistré</span></div>
-          <div class="overflow-x-auto"><table class="w-full"><thead><tr class="bg-muted/50"><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Compte</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Volume</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Taux</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Commission</th></tr></thead><tbody class="divide-y divide-border" id="sim-body"><tr><td colspan="5" class="text-center text-muted-foreground py-8">Chargement…</td></tr></tbody><tfoot id="sim-foot"></tfoot></table></div>
+          <div class="flex items-center justify-between mb-4"><h2 class="font-semibold text-foreground">Répartition par type de vendeur</h2><span class="text-xs text-muted-foreground">commission réelle enregistrée</span></div>
+          <div class="overflow-x-auto"><table class="w-full"><thead><tr class="bg-muted/50"><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Volume réglé</th><th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Commission</th></tr></thead><tbody class="divide-y divide-border" id="rep-body"><tr><td colspan="3" class="text-center text-muted-foreground py-8">Chargement…</td></tr></tbody><tfoot id="rep-foot"></tfoot></table></div>
         </div>
       </div>
     </main>
@@ -142,93 +129,63 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
   var token = localStorage.getItem('mgt_token') || '';
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   function money(n) { n = Number(n) || 0; return n.toLocaleString('fr-FR') + ' FCFA'; }
-  function initials(name) { name = String(name || '?').trim(); var p = name.split(/\s+/); return p.length === 1 ? p[0].slice(0, 2).toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase(); }
   function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
 
-  var rangePresta = document.getElementById('range-presta');
-  var rangeBoutique = document.getElementById('range-boutique');
-  var data = { boutiques: [], prestataires: [] };
-  var summary = null; // résumé serveur : volumeBoutiques, volumePrestataires, total
-
-  function api(path, opts) {
-    opts = opts || {};
-    opts.headers = Object.assign({ 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, opts.headers || {});
-    return fetch(path, opts).then(function (r) {
+  function api(path) {
+    var headers = { 'Accept': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    return fetch(path, { headers: headers }).then(function (r) {
       if (!r.ok) return r.json().then(function (j) { throw new Error(j && j.error ? j.error : 'HTTP ' + r.status); });
       return r.json();
     });
   }
 
-  function render() {
-    var tp = Number(rangePresta.value), tb = Number(rangeBoutique.value);
-    setText('val-presta', tp + ' %'); setText('val-boutique', tb + ' %');
-    setText('kpi-taux-presta', tp + ' %'); setText('kpi-taux-boutique', tb + ' %');
-
-    // Volume de référence : transactions complétées côté serveur, sinon somme des comptes.
-    var volumeB = summary ? (Number(summary.volumeBoutiques) || 0) : data.boutiques.reduce(function (s, x) { return s + (Number(x.stats && x.stats.ca) || 0); }, 0);
-    var volumeP = summary ? (Number(summary.volumePrestataires) || 0) : data.prestataires.reduce(function (s, x) { return s + (Number(x.stats && x.stats.ca) || 0); }, 0);
-    var totalCa = volumeB + volumeP;
-    var totalComm = Math.round(volumeB * tb / 100 + volumeP * tp / 100);
-    setText('kpi-ca', money(totalCa));
-    setText('kpi-commission', money(totalComm));
-
-    // Simulation par compte (volume par compte × taux courant).
-    var rows = [];
-    data.prestataires.forEach(function (x) { var ca = Number(x.stats && x.stats.ca) || 0; rows.push({ name: x.name, type: 'Prestataire', ca: ca, commission: ca * tp / 100 }); });
-    data.boutiques.forEach(function (x) { var ca = Number(x.stats && x.stats.ca) || 0; rows.push({ name: x.name, type: 'Boutique', ca: ca, commission: ca * tb / 100 }); });
-
-    var tableCa = rows.reduce(function (s, r) { return s + r.ca; }, 0);
-    var tableComm = rows.reduce(function (s, r) { return s + r.commission; }, 0);
-
-    var body = document.getElementById('sim-body');
-    body.innerHTML = rows.length ? rows.map(function (r) {
-      var badge = r.type === 'Boutique' ? '<span class="inline-flex items-center text-xs font-medium px-2 py-1 rounded-full" style="background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary));">Boutique</span>' : '<span class="inline-flex items-center text-xs font-medium px-2 py-1 rounded-full" style="background:rgb(var(--mgt-accent-50));color:rgb(var(--mgt-accent));">Prestataire</span>';
-      var taux = r.type === 'Boutique' ? tb : tp;
-      return '<tr><td class="px-5 py-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0" style="background:rgb(var(--mgt-muted));color:var(--foreground);">' + esc(initials(r.name)) + '</div><span class="font-semibold text-sm text-foreground">' + esc(r.name) + '</span></div></td>' +
-        '<td class="px-5 py-3">' + badge + '</td>' +
-        '<td class="px-5 py-3 text-muted-foreground">' + money(r.ca) + '</td>' +
-        '<td class="px-5 py-3 font-semibold text-foreground">' + taux + ' %</td>' +
-        '<td class="px-5 py-3 font-bold" style="color: rgb(var(--mgt-primary));">' + money(r.commission) + '</td></tr>';
-    }).join('') : '<tr><td colspan="5" class="text-center text-muted-foreground py-8">Aucun compte enregistré.</td></tr>';
-
-    document.getElementById('sim-foot').innerHTML = '<tr style="background:rgb(var(--mgt-muted));"><td colspan="2" class="px-5 py-3 font-bold text-sm text-foreground">Total</td><td class="px-5 py-3 font-bold text-foreground">' + money(tableCa) + '</td><td class="px-5 py-3"></td><td class="px-5 py-3 font-bold" style="color: rgb(var(--mgt-primary));">' + money(tableComm) + '</td></tr>';
+  // Barème par pack (source de vérité unique : /api/admin/commissions -> plans).
+  function renderPlans(plans) {
+    var list = document.getElementById('plans-list');
+    if (!list) return;
+    if (!Array.isArray(plans) || !plans.length) { list.innerHTML = '<p class="text-sm text-muted-foreground py-4">Aucun pack défini.</p>'; return; }
+    list.innerHTML = plans.map(function (p) {
+      var c = Number(p.commission) || 0;
+      var price = Number(p.price) || 0;
+      return '<div class="flex items-center justify-between py-3 border-b border-border last:border-0">'
+        + '<div><div class="text-sm font-semibold text-foreground">' + esc(p.name) + '</div><div class="text-xs text-muted-foreground">' + (price ? price.toLocaleString('fr-FR') + ' FCFA / mois' : 'Gratuit') + '</div></div>'
+        + '<div class="text-right"><div class="text-sm font-bold" style="color: rgb(var(--mgt-primary));">' + c + ' %</div><div class="text-xs text-muted-foreground">le vendeur garde ' + (100 - c) + ' %</div></div>'
+        + '</div>';
+    }).join('');
   }
 
-  rangePresta.addEventListener('input', render);
-  rangeBoutique.addEventListener('input', render);
+  // Commission réelle = feeAmount des règlements vendeurs, agrégé côté serveur.
+  function renderSummary(summary) {
+    summary = summary || {};
+    var vB = Number(summary.volumeBoutiques) || 0;
+    var vP = Number(summary.volumePrestataires) || 0;
+    var cB = Number(summary.commissionBoutiques) || 0;
+    var cP = Number(summary.commissionPrestataires) || 0;
+    setText('kpi-ca', money(vB + vP));
+    setText('kpi-commission', money(cB + cP));
+    setText('kpi-comm-boutique', money(cB));
+    setText('kpi-comm-presta', money(cP));
 
-  document.getElementById('btn-save').addEventListener('click', function () {
-    var btn = document.getElementById('btn-save');
-    var el = document.getElementById('save-status');
-    btn.disabled = true;
-    el.textContent = 'Enregistrement…';
-    function done() { btn.disabled = false; }
-    api('/api/admin/commissions', { method: 'POST', body: JSON.stringify({ prestataire: Number(rangePresta.value), boutique: Number(rangeBoutique.value) }) })
-      .then(function (res) {
-        summary = res.summary || summary;
-        if (res.rates) { rangePresta.value = res.rates.prestataire; rangeBoutique.value = res.rates.boutique; }
-        render();
-        var who = res.updatedBy ? ' par ' + res.updatedBy : '';
-        el.textContent = 'Taux enregistrés côté serveur' + who + '.';
-        setTimeout(function () { el.textContent = ''; }, 4000);
-        done();
-      })
-      .catch(function (err) { el.textContent = 'Erreur : ' + esc(err.message); done(); });
-  });
+    var rows = [
+      { label: 'Boutiques', badge: '<span class="inline-flex items-center text-xs font-medium px-2 py-1 rounded-full" style="background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary));">Boutique</span>', vol: vB, comm: cB },
+      { label: 'Prestataires', badge: '<span class="inline-flex items-center text-xs font-medium px-2 py-1 rounded-full" style="background:rgb(var(--mgt-accent-50));color:rgb(var(--mgt-accent));">Prestataire</span>', vol: vP, comm: cP }
+    ];
+    document.getElementById('rep-body').innerHTML = rows.map(function (r) {
+      return '<tr><td class="px-5 py-3"><div class="flex items-center gap-2">' + r.badge + '<span class="font-semibold text-sm text-foreground">' + r.label + '</span></div></td>'
+        + '<td class="px-5 py-3 text-muted-foreground">' + money(r.vol) + '</td>'
+        + '<td class="px-5 py-3 font-bold" style="color: rgb(var(--mgt-primary));">' + money(r.comm) + '</td></tr>';
+    }).join('');
+    document.getElementById('rep-foot').innerHTML = '<tr style="background:rgb(var(--mgt-muted));"><td class="px-5 py-3 font-bold text-sm text-foreground">Total</td><td class="px-5 py-3 font-bold text-foreground">' + money(vB + vP) + '</td><td class="px-5 py-3 font-bold" style="color: rgb(var(--mgt-primary));">' + money(cB + cP) + '</td></tr>';
+  }
 
-  // Charge les taux persistés + résumé serveur, puis les comptes pour la simulation.
   api('/api/admin/commissions').then(function (res) {
-    if (res.rates) { rangePresta.value = res.rates.prestataire; rangeBoutique.value = res.rates.boutique; }
-    summary = res.summary || null;
-    return Promise.all([api('/api/admin/boutiques'), api('/api/admin/prestataires')]);
-  }).then(function (res) {
-    data.boutiques = res[0].boutiques || []; data.prestataires = res[1].prestataires || []; render();
+    renderPlans(res.plans);
+    renderSummary(res.summary);
   }).catch(function (err) {
-    document.getElementById('sim-body').innerHTML = '<tr><td colspan="5" class="text-center py-8" style="color:rgb(var(--mgt-error));">Erreur de chargement : ' + esc(err.message) + '</td></tr>';
-    render();
+    var list = document.getElementById('plans-list');
+    if (list) list.innerHTML = '<p class="text-sm py-4" style="color:rgb(var(--mgt-error));">Erreur de chargement : ' + esc(err.message) + '</p>';
   });
-
-  render();
 })();
 </script>
 <script src="../assets/mangoo-admin-shell.js"></script>

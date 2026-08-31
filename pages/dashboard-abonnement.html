@@ -527,7 +527,7 @@ html.dark {
                   <i data-lucide="lock" class="w-3 h-3"></i> Verrouillé
                 </span>
               </div>
-              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-4">Commission 3 % — vous gardez 97 %</p>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-4">Commission 5 % — vous gardez 95 %</p>
               <p class="text-2xl font-bold tabular-nums mb-5 text-[rgb(var(--mgt-muted-foreground))]">5 000 <span class="text-sm font-medium">FCFA</span></p>
               <ul class="space-y-2 text-sm text-[rgb(var(--mgt-muted-foreground))] flex-1">
                 <li>Catalogue 50 produits</li>
@@ -544,7 +544,7 @@ html.dark {
                   <i data-lucide="lock" class="w-3 h-3"></i> Verrouillé
                 </span>
               </div>
-              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-4">Commission 0 % — vous gardez 100 %</p>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-4">Commission 3 % — vous gardez 97 %</p>
               <p class="text-2xl font-bold tabular-nums mb-5 text-[rgb(var(--mgt-muted-foreground))]">10 000 <span class="text-sm font-medium">FCFA</span></p>
               <ul class="space-y-2 text-sm text-[rgb(var(--mgt-muted-foreground))] flex-1">
                 <li>Catalogue illimité</li>
@@ -562,7 +562,7 @@ html.dark {
                   <i data-lucide="lock" class="w-3 h-3"></i> Verrouillé
                 </span>
               </div>
-              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-4">Commission 0 % — vous gardez 100 %</p>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-4">Commission 2 % — vous gardez 98 %</p>
               <p class="text-2xl font-bold tabular-nums mb-5 text-[rgb(var(--mgt-muted-foreground))]">15 000 <span class="text-sm font-medium">FCFA</span></p>
               <ul class="space-y-2 text-sm text-[rgb(var(--mgt-muted-foreground))] flex-1">
                 <li>Tout le plan Professionnel</li>
@@ -685,7 +685,6 @@ html.dark {
 
   function commissionLabel(plan) {
     var c = Number(plan.commission) || 0;
-    if (c === 0) return 'Commission 0 % — vous gardez 100 %';
     return 'Commission ' + c + ' % — vous gardez ' + (100 - c) + ' %';
   }
 
