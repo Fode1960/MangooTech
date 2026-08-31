@@ -127,6 +127,7 @@ const MIME = {
 const clients = new Map();        // id -> Array<{ ws, role, name, online, lastSeen }>
 const calls = new Map();          // callId -> { callerId, calleeId, callerWs, calleeWs, mode }
 let chatLog = [];               // { msgId, convId, from, to, text, sentAt }
+let callLog = [];               // { callId, callerId, calleeId, mode, status, at }
 const appointmentLog = [];        // { apptId, from, fromName, to, service, day, time, note, status }
 const fileTransfers = new Map();  // fileId -> { fileId, from, to, name, size, mime, received, createdAt }
 
@@ -439,6 +440,20 @@ function saveChatLog() {
 (function loadChatLog() {
   const arr = readJsonFile(CHAT_LOG_FILE, []);
   if (Array.isArray(arr)) chatLog = arr;
+})();
+
+// ---- Persistance de l'historique des appels ----
+// Même mécanisme que le chat : chaque appel (offre, réponse, rejet, fin, appel
+// manqué) est journalisé dans data/calls.json pour que l'historique survive à
+// un redémarrage du serveur et reste consultable le lendemain, depuis n'importe
+// quel appareil connecté au même compte.
+const CALL_LOG_FILE = 'calls.json';
+function saveCallLog() {
+  writeJsonAtomic(CALL_LOG_FILE, callLog);
+}
+(function loadCallLog() {
+  const arr = readJsonFile(CALL_LOG_FILE, []);
+  if (Array.isArray(arr)) callLog = arr;
 })();
 
 // Retourne true si un chemin ne doit JAMAIS être servi comme fichier statique
@@ -3220,9 +3235,38 @@ function handleRegister(ws, msg) {
 }
 
 /* --- Appels (signalisation WebRTC) --- */
+// Journalise un appel dans l'historique persistant (data/calls.json). Les
+// identifiants sont ramenés à leur forme canonique (ex. ven-e9e831ccf698 →
+// pro-41cafa4bcb31) pour que l'historique soit cohérent quel que soit le
+// compte dupliqué utilisé pour émettre/recevoir l'appel.
+function recordCall(callId, callerId, calleeId, mode, status, callerName) {
+  const ccaller = canonicalRoutingId(callerId);
+  const ccallee = canonicalRoutingId(calleeId);
+  const callee = userByRoutingId(ccallee);
+  const entry = {
+    callId: callId,
+    callerId: ccaller,
+    calleeId: ccallee,
+    callerName: callerName || displayNameForUser(userByRoutingId(ccaller)) || '',
+    calleeName: callee ? displayNameForUser(callee) : '',
+    mode: mode || 'audio',
+    status: status || 'ringing',
+    at: nowIso()
+  };
+  callLog.push(entry);
+  saveCallLog();
+  return entry;
+}
+function updateCall(callId, patch) {
+  const e = callLog.find(function (x) { return x && x.callId === callId; });
+  if (e) { Object.assign(e, patch); saveCallLog(); }
+  return e;
+}
+
 function handleCallOffer(ws, msg) {
   const callId = msg.callId || rand();
   const to = String(msg.to || '').trim();
+  const cto = canonicalRoutingId(to);
   const target = callablePeer(to);
   if (!target || !target.online) {
     // Dashboard fermé (ou hors ligne) : on tente de réveiller le destinataire
@@ -3237,14 +3281,16 @@ function handleCallOffer(ws, msg) {
       ttl: 60,
       data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode }
     });
+    recordCall(callId, ws.meta.id, cto, callMode, 'missed', (ws.meta && ws.meta.name) || '');
     send(ws, { type: 'call-error', callId, reason: 'offline', pushed: pushed });
     return;
   }
   calls.set(callId, {
-    callerId: ws.meta.id, calleeId: to,
+    callerId: ws.meta.id, calleeId: cto,
     callerWs: ws, calleeWs: target.ws,
     mode: msg.mode || 'audio'
   });
+  recordCall(callId, ws.meta.id, cto, msg.mode || 'audio', 'ringing', (ws.meta && ws.meta.name) || '');
   send(target.ws, {
     type: 'call-ring', callId,
     from: ws.meta.id, fromName: ws.meta.name,
@@ -3255,12 +3301,14 @@ function handleCallOffer(ws, msg) {
 function handleCallAnswer(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
+  updateCall(msg.callId, { status: 'answered' });
   send(c.callerWs, { type: 'call-accepted', callId: msg.callId, sdp: msg.sdp, name: ws.meta.name });
 }
 
 function handleCallReject(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
+  updateCall(msg.callId, { status: 'rejected' });
   send(c.callerWs, { type: 'call-rejected', callId: msg.callId, name: ws.meta.name });
   calls.delete(msg.callId);
 }
@@ -3268,6 +3316,7 @@ function handleCallReject(ws, msg) {
 function handleCallEnd(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
+  updateCall(msg.callId, { status: 'ended' });
   const other = (c.callerWs === ws) ? c.calleeWs : c.callerWs;
   send(other, { type: 'call-ended', callId: msg.callId });
   calls.delete(msg.callId);
@@ -3282,8 +3331,8 @@ function handleIce(ws, msg) {
 
 /* --- Chat --- */
 function handleChatMessage(ws, msg) {
-  const from = ws.meta.id;
-  const to = String(msg.to || '').trim();
+  const from = canonicalRoutingId(ws.meta.id);
+  const to = canonicalRoutingId(String(msg.to || '').trim());
   const text = String(msg.text || '').slice(0, 4000);
   console.log('[WS] chat-message', {
     from: from,
@@ -3385,10 +3434,15 @@ function handleChatDelete(ws, msg) {
 }
 
 function handleChatHistory(ws, msg) {
-  const peer = String(msg.peer || '').trim();
-  const key = peer ? convKey(ws.meta.id, peer) : null;
-  const list = key ? chatLog.filter((m) => m.convId === key) : chatLog;
-  send(ws, { type: 'chat-history', convId: key, peer, messages: list });
+  const peer = canonicalRoutingId(String(msg.peer || '').trim());
+  const key = peer ? convKey(canonicalRoutingId(ws.meta.id), peer) : null;
+  const list = key ? chatLog.filter(function (m) {
+    return m && convKey(canonicalRoutingId(m.from), canonicalRoutingId(m.to)) === key;
+  }) : chatLog;
+  const norm = list.map(function (m) {
+    return Object.assign({}, m, { from: canonicalRoutingId(m.from), to: canonicalRoutingId(m.to) });
+  });
+  send(ws, { type: 'chat-history', convId: key, peer, messages: norm });
 }
 
 /* --- Rendez-vous --- */
@@ -3807,9 +3861,10 @@ function handleFileEnd(ws, msg) {
   }
 
   // On journalise la pièce jointe dans l'historique de la conversation.
+  const fto = canonicalRoutingId(meta.to);
   chatLog.push({
-    msgId: rand(), convId: convKey(ws.meta.id, meta.to),
-    from: ws.meta.id, to: meta.to,
+    msgId: rand(), convId: convKey(ws.meta.id, fto),
+    from: ws.meta.id, to: fto,
     text: '📎 ' + t.name + ' (' + fmtSize(t.received) + ')',
     sentAt: nowIso(), file: true, fileId: meta.fileId
   });
@@ -4139,9 +4194,51 @@ function handleHttp(req, res) {
     }
     const myId = routingIdForUser(user);
     const key = convKey(myId, peer);
-    const messages = chatLog.filter(function (m) { return m && m.convId === key; });
+    // Filtre sur la forme canonique des identifiants (alias de comptes pro
+    // dupliqués réconciliés) et renvoie chaque message avec son `from`/`to`
+    // canonique + un booléen `mine` calculé côté serveur. C'est ce qui garantit
+    // qu'un message envoyé par le professionnel est bien affiché à droite (vert)
+    // quelle que soit l'identité (seed pro-41cafa4bcb31 ou compte réel
+    // ven-e9e831ccf698) sous laquelle il a été enregistré.
+    const messages = chatLog.filter(function (m) {
+      return m && convKey(canonicalRoutingId(m.from), canonicalRoutingId(m.to)) === key;
+    }).map(function (m) {
+      const cfrom = canonicalRoutingId(m.from);
+      const cto = canonicalRoutingId(m.to);
+      return Object.assign({}, m, { from: cfrom, to: cto, convId: convKey(cfrom, cto), mine: cfrom === myId });
+    });
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate' });
     res.end(JSON.stringify({ ok: true, messages: messages }));
+    return;
+  }
+
+  if (urlPath === '/api/calls') {
+    // Historique des appels (entrants/sortants/manqués) du compte connecté.
+    // Persisté dans data/calls.json : il survit au redémarrage du serveur et
+    // est partagé entre les appareils du même compte (PC + mobile). Comparé sous
+    // forme canonique (alias de comptes pro dupliqués réconciliés).
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const user = userByToken(token);
+    if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
+    if (req.method !== 'GET') {
+      res.writeHead(405, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: false, error: 'méthode non autorisée' }));
+      return;
+    }
+    const myId = routingIdForUser(user);
+    const list = callLog
+      .filter(function (c) {
+        if (!c) return false;
+        return canonicalRoutingId(c.callerId) === myId || canonicalRoutingId(c.calleeId) === myId;
+      })
+      .map(function (c) {
+        // `direction` indique si le compte connecté est l'appelant (out) ou
+        // l'appelé (in), calculé sur l'id canonique (alias réconciliés).
+        return Object.assign({}, c, { direction: canonicalRoutingId(c.callerId) === myId ? 'out' : 'in' });
+      })
+      .sort(function (a, b) { return String(b.at || '').localeCompare(String(a.at || '')); });
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate' });
+    res.end(JSON.stringify({ ok: true, calls: list }));
     return;
   }
 
