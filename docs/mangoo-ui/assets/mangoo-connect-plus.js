@@ -824,7 +824,7 @@
 
   function onChatNew(msg) {
     var text = String(msg.text || '');
-    emit(messageCbs, { from: msg.from, fromName: msg.fromName, text: text, sentAt: msg.sentAt, msgId: msg.msgId, convId: msg.convId });
+    emit(messageCbs, { from: msg.from, fromName: msg.fromName, text: text, sentAt: msg.sentAt, msgId: msg.msgId, convId: msg.convId, replyTo: msg.replyTo, replyPreview: msg.replyPreview });
     if (!text) return;
     var isCurrent = chatTarget && targetId(chatTarget) === String(msg.from || '');
     if (chatEl.classList.contains('open') && isCurrent) {
@@ -1048,9 +1048,10 @@
     onFile: function (cb) { fileCbs.push(cb); },
     onFileProgress: function (cb) { fileProgressCbs.push(cb); },
     onFileSendProgress: function (cb) { fileSendProgressCbs.push(cb); },
-    sendMessage: function (to, text, msgId) {
+    sendMessage: function (to, text, msgId, replyTo) {
       var payload = { type: 'chat-message', to: to, text: String(text || '') };
       if (msgId) payload.msgId = String(msgId);
+      if (replyTo) payload.replyTo = String(replyTo);
       return enqueueOutbox(function () { sendWS(payload); });
     },
     // Modifie un message déjà envoyé (auteur uniquement, résolu par msgId côté
