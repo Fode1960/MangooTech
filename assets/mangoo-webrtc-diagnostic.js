@@ -1,10 +1,15 @@
 /* =========================================================================
- * Mangoo Tech — Diagnostic WebRTC (TURN relay)
+ * Mangoo Tech — Diagnostic WebRTC (TURN relay) + journal téléchargeable
  * -------------------------------------------------------------------------
  * Affiche en direct, pendant un appel, si le flux audio/vidéo passe par :
  *   - le TURN dédié turn.mangoo.tech  →  « TURN OK » (vert)
  *   - un repli (openrelay / autre)    →  « TURN (repli) » (orange)
  *   - ou en direct P2P (host/srflx)   →  « Direct (P2P) » (bleu)
+ *
+ * Journal : enregistre en continu, avec horodatage, chaque paire de candidats
+ * ICE et son évolution (état, sélection/nomination). Un bouton « Télécharger »
+ * exporte l'historique complet au format JSON (et une variante texte) pour
+ * documenter le test d'appel.
  *
  * INACTIF PAR DÉFAUT : sans effet sur les utilisateurs finaux.
  * Activation (pour le test d'appel) :
@@ -36,10 +41,23 @@
   }
   log('Diagnostic activé. Repli relais attendu :', KNOWN_RELAY_HOST, '(' + KNOWN_RELAY_IP + ')');
 
+  // --- Journal horodaté --------------------------------------------------
+  var SESSION_START = Date.now();
+  var history = []; // { t, ts, kind, ... }
+  function iso(ms) {
+    return new Date(ms || Date.now()).toISOString();
+  }
+  function addEvent(kind, data) {
+    var e = { t: iso(), ts: Date.now() - SESSION_START, kind: kind };
+    for (var k in data) e[k] = data[k];
+    history.push(e);
+  }
+  addEvent('session-start', { url: location.href, ua: navigator.userAgent });
+
   // --- Patch global RTCPeerConnection ------------------------------------
   // On intercepte TOUTES les connexions WebRTC créées après chargement de ce
   // script (appel sortant, appel entrant, écran live, etc.).
-  var observed = []; // { pc, id, latest: {...} }
+  var observed = []; // { pc, id, latest: {...}, sig: <dernier snapshot> }
 
   var NativePC = window.RTCPeerConnection || window.webkitRTCPeerConnection;
 
@@ -49,8 +67,20 @@
       var pc;
       try { pc = new Native(config, constraints); }
       catch (e) { pc = new Native(); }
-      observed.push({ pc: pc, id: 'pc-' + (observed.length + 1), latest: null });
-      log('Nouvelle connexion WebRTC observée :', observed[observed.length - 1].id);
+      var entry = { pc: pc, id: 'pc-' + (observed.length + 1), latest: null, sig: '' };
+      observed.push(entry);
+      log('Nouvelle connexion WebRTC observée :', entry.id);
+      try { addEvent('pc-created', { id: entry.id, iceServers: config && config.iceServers ? config.iceServers : null }); } catch (e) {}
+      try {
+        pc.addEventListener('connectionstatechange', function () {
+          var st = pc.connectionState || 'unknown';
+          addEvent('connection-state', { id: entry.id, state: st });
+        });
+        pc.addEventListener('iceconnectionstatechange', function () {
+          var st = pc.iceConnectionState || 'unknown';
+          addEvent('ice-state', { id: entry.id, state: st });
+        });
+      } catch (e) { /* ignore */ }
       return pc;
     }
     Wrapped.prototype = Native.prototype;
@@ -78,11 +108,40 @@
     } catch (e) { /* ignore */ }
     return '';
   }
+  function portOf(cand) {
+    if (!cand) return null;
+    if (cand.port) return cand.port;
+    try {
+      var m = (cand.candidate || '').match(/(\d{1,3}(?:\.\d{1,3}){3})\s+(\d+)\s+typ\s+(\w+)/);
+      if (m) return parseInt(m[2], 10);
+    } catch (e) { /* ignore */ }
+    return null;
+  }
+  function desc(cand) {
+    if (!cand) return null;
+    return {
+      type: cand.candidateType || null,
+      protocol: cand.relayProtocol || cand.protocol || null,
+      address: ipOf(cand) || null,
+      port: portOf(cand),
+      priority: cand.priority != null ? cand.priority : null
+    };
+  }
 
-  function findSelectedPair(report) {
+  function collectPairs(report) {
     var pairs = [];
     report.forEach(function (r) {
-      if (r.type === 'candidate-pair') pairs.push(r);
+      if (r.type === 'candidate-pair') {
+        pairs.push({
+          id: r.id,
+          local: desc(report.get(r.localCandidateId)),
+          remote: desc(report.get(r.remoteCandidateId)),
+          state: r.state || null,
+          nominated: !!r.nominated,
+          selected: !!r.selected,
+          writable: r.writable != null ? !!r.writable : null
+        });
+      }
     });
     pairs.sort(function (a, b) {
       var sa = a.selected ? 1 : 0, sb = b.selected ? 1 : 0;
@@ -90,20 +149,21 @@
       var na = a.nominated ? 1 : 0, nb = b.nominated ? 1 : 0;
       return nb - na;
     });
+    return pairs;
+  }
+
+  function findSelectedPair(pairs) {
     return pairs[0] || null;
   }
 
-  function classify(pc, pair, report) {
+  function classify(pc, pair) {
     var ice = pc.iceConnectionState || 'new';
-    var conn = pc.connectionState || 'new';
-    var local = pair ? report.get(pair.localCandidateId) : null;
-    var remote = pair ? report.get(pair.remoteCandidateId) : null;
-    var lType = local ? local.candidateType : null;
-    var rType = remote ? remote.candidateType : null;
-    var lIp = ipOf(local);
-
     if (ice === 'failed') return { state: 'failed', label: 'Échec ICE', ice: ice };
-    if (!local) return { state: 'connecting', label: 'Connexion…', ice: ice };
+    if (!pair || !pair.local) return { state: 'connecting', label: 'Connexion…', ice: ice };
+
+    var lType = pair.local.type;
+    var rType = pair.remote ? pair.remote.type : null;
+    var lIp = pair.local.address || '';
 
     if (lType === 'relay') {
       var ours = lIp.indexOf(KNOWN_RELAY_IP) >= 0;
@@ -111,7 +171,7 @@
         state: ours ? 'turn-ok' : 'turn-fallback',
         label: ours ? ('TURN OK — ' + KNOWN_RELAY_HOST) : 'TURN (repli)',
         ip: lIp,
-        protocol: local.relayProtocol || '',
+        protocol: pair.local.protocol || '',
         lType: lType,
         rType: rType,
         ice: ice
@@ -129,15 +189,19 @@
     var css = document.createElement('style');
     css.id = STYLE_ID;
     css.textContent = [
-      '#mgt-diag-badge{position:fixed;top:14px;right:14px;z-index:999999;max-width:340px;',
+      '#mgt-diag-badge{position:fixed;top:14px;right:14px;z-index:999999;max-width:360px;',
       'font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.45;',
       'background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:10px;',
       'box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden;}',
       '#mgt-diag-badge .hd{display:flex;align-items:center;gap:8px;padding:8px 12px;',
       'background:#1e293b;border-bottom:1px solid #334155;cursor:default;}',
       '#mgt-diag-badge .hd b{font-size:12px;letter-spacing:.03em;}',
-      '#mgt-diag-badge .hd .close{margin-left:auto;cursor:pointer;color:#94a3b8;',
-      'background:none;border:0;font-size:16px;line-height:1;padding:0 2px;}',
+      '#mgt-diag-badge .hd .actions{margin-left:auto;display:flex;gap:6px;}',
+      '#mgt-diag-badge .hd .act{cursor:pointer;color:#94a3b8;background:none;border:0;',
+      'font-size:11px;line-height:1;padding:2px 4px;border-radius:4px;}',
+      '#mgt-diag-badge .hd .act:hover{color:#fff;background:#334155;}',
+      '#mgt-diag-badge .hd .close{cursor:pointer;color:#94a3b8;background:none;border:0;',
+      'font-size:16px;line-height:1;padding:0 2px;}',
       '#mgt-diag-badge .hd .close:hover{color:#fff;}',
       '#mgt-diag-badge .body{padding:8px 12px;}',
       '#mgt-diag-badge .row{display:flex;align-items:center;gap:7px;}',
@@ -162,6 +226,10 @@
   badge.id = 'mgt-diag-badge';
   badge.innerHTML =
     '<div class="hd"><b>Diagnostic WebRTC</b>' +
+    '<span class="actions">' +
+      '<button class="act" data-dl="json" title="Télécharger le journal (JSON)">⤓ JSON</button>' +
+      '<button class="act" data-dl="txt" title="Télécharger le journal (texte)">⤓ TXT</button>' +
+    '</span>' +
     '<button class="close" title="Fermer">×</button></div>' +
     '<div class="body">' +
       '<div class="row"><span class="dot conn"></span><span class="lbl">En attente d\'un appel…</span></div>' +
@@ -179,6 +247,66 @@
   detBtn.addEventListener('click', function () {
     detList.classList.toggle('open');
     detBtn.textContent = detList.classList.contains('open') ? 'Détails ▴' : 'Détails ▾';
+  });
+
+  // --- Téléchargement du journal -----------------------------------------
+  function downloadJournal(format) {
+    var stamp = iso().replace(/[:.]/g, '-');
+    var fname = 'mangoo-webrtc-journal-' + stamp;
+    var blob, mime;
+    if (format === 'txt') {
+      mime = 'text/plain;charset=utf-8';
+      fname += '.txt';
+      var lines = ['Mangoo Tech — Journal diagnostic WebRTC',
+        'Session: ' + iso(SESSION_START) + ' · ' + (location.href || ''),
+        'TURN dédié attendu: ' + KNOWN_RELAY_HOST + ' (' + KNOWN_RELAY_IP + ')',
+        '---'];
+      history.forEach(function (e) {
+        if (e.kind === 'pairs') {
+          lines.push(e.t + '  [' + e.id + '] paires de candidats:');
+          e.pairs.forEach(function (p) {
+            lines.push('    ' + (p.selected ? '*' : ' ') + (p.nominated ? 'N ' : '  ') +
+              'local=' + (p.local ? p.local.type + '/' + (p.local.protocol || '-') + ' ' + p.local.address + ':' + p.local.port : '—') +
+              '  remote=' + (p.remote ? p.remote.type + '/' + (p.remote.protocol || '-') + ' ' + p.remote.address + ':' + p.remote.port : '—') +
+              '  state=' + (p.state || '-') + ' writable=' + p.writable);
+          });
+        } else {
+          lines.push(e.t + '  [' + (e.id || '-') + '] ' + e.kind +
+            (e.state ? ' state=' + e.state : '') +
+            (e.label ? ' label=' + e.label : ''));
+        }
+      });
+      blob = new Blob([lines.join('\r\n')], { type: mime });
+    } else {
+      mime = 'application/json;charset=utf-8';
+      fname += '.json';
+      var doc = {
+        session: iso(SESSION_START),
+        url: location.href,
+        userAgent: navigator.userAgent,
+        knownRelayHost: KNOWN_RELAY_HOST,
+        knownRelayIp: KNOWN_RELAY_IP,
+        events: history
+      };
+      blob = new Blob([JSON.stringify(doc, null, 2)], { type: mime });
+    }
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () {
+      URL.revokeObjectURL(a.href);
+      a.remove();
+    }, 300);
+    addEvent('journal-download', { format: format });
+    log('Journal téléchargé (' + format + ').');
+  }
+
+  Array.prototype.forEach.call(badge.querySelectorAll('.act[data-dl]'), function (btn) {
+    btn.addEventListener('click', function () {
+      downloadJournal(btn.getAttribute('data-dl'));
+    });
   });
 
   function setDot(cls) {
@@ -202,6 +330,14 @@
     'other': 'conn'
   };
 
+  function pairSignature(pairs) {
+    return pairs.map(function (p) {
+      return (p.local ? p.local.type + '/' + (p.local.protocol || '-') + '/' + p.local.address : '—') +
+        '>' + (p.remote ? p.remote.type + '/' + (p.remote.protocol || '-') + '/' + p.remote.address : '—') +
+        ':' + (p.state || '-') + (p.selected ? 'S' : '') + (p.nominated ? 'N' : '');
+    }).join('|');
+  }
+
   function pollOnce() {
     var active = observed.filter(function (o) { return o.pc; });
     if (!active.length) {
@@ -218,19 +354,26 @@
     active.forEach(function (o) {
       var pc = o.pc;
       var done = function (report) {
-        var pair = findSelectedPair(report);
-        var c = classify(pc, pair, report);
+        var pairs = collectPairs(report);
+        var sig = pairSignature(pairs);
+        // Journalise seulement quand l'ensemble des paires a changé (évite le spam).
+        if (sig && sig !== o.sig) {
+          o.sig = sig;
+          addEvent('pairs', { id: o.id, pairs: pairs });
+        }
+        var pair = findSelectedPair(pairs);
+        var c = classify(pc, pair);
         o.latest = c;
         results.push(c);
-        var lc = pair ? report.get(pair.localCandidateId) : null;
-        var rc = pair ? report.get(pair.remoteCandidateId) : null;
+        var lc = pair ? pair.local : null;
+        var rc = pair ? pair.remote : null;
         rows.push({
           id: o.id,
           ice: pc.iceConnectionState,
           conn: pc.connectionState,
-          l: lc ? lc.candidateType : '—',
-          r: rc ? rc.candidateType : '—',
-          lIp: ipOf(lc), rIp: ipOf(rc)
+          l: lc ? lc.type : '—',
+          r: rc ? rc.type : '—',
+          lIp: lc ? lc.address : '', rIp: rc ? rc.address : ''
         });
         pending--;
         if (pending === 0) render(results, rows, active.length);
@@ -257,7 +400,6 @@
   }
 
   function render(results, rows, count) {
-    // Priorité d'affichage : relay dédié > relay repli > p2p > failed > connecting
     var order = { 'turn-ok': 0, 'turn-fallback': 1, 'p2p': 2, 'other': 3, 'failed': 4, 'connecting': 5 };
     var best = null;
     results.forEach(function (r) {
@@ -273,6 +415,7 @@
     if (best.protocol) metaParts.push((best.protocol || '').toUpperCase());
     if (best.lType) metaParts.push('local=' + best.lType + (best.rType ? ' · distant=' + best.rType : ''));
     metaParts.push(count + ' connexion' + (count > 1 ? 's' : ''));
+    metaParts.push(history.length + ' év.');
     setMeta(metaParts.join(' · '));
 
     detList.innerHTML = '';
@@ -285,10 +428,14 @@
       detList.appendChild(div);
     });
 
-    // Journal console compact pour le débogage profond.
     log('État ICE :', best.state, best.label, metaParts.join(' | '));
   }
 
-  setInterval(pollOnce, 1200);
+  setInterval(pollOnce, 1000);
   pollOnce();
+
+  // --- Sécurité : purge automatique du journal si trop volumineux ---------
+  setInterval(function () {
+    if (history.length > 5000) history.splice(0, history.length - 5000);
+  }, 30000);
 })();
