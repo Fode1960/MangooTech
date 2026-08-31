@@ -542,6 +542,15 @@ html.dark {
 
           <!-- Zone de saisie -->
           <div class="p-4 border-t border-[rgb(var(--mgt-border))]">
+            <!-- Barre « Répondre à » (citation inline) -->
+            <div id="msg-reply-bar" class="mb-2" style="display:none;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;border-left:3px solid rgb(var(--mgt-primary));background:rgb(var(--mgt-muted));">
+              <i data-lucide="reply" class="w-4 h-4 shrink-0" style="color:rgb(var(--mgt-primary));"></i>
+              <div style="flex:1;min-width:0;">
+                <p id="msg-reply-name" style="margin:0;font-size:11px;font-weight:600;color:rgb(var(--mgt-primary));">Répondre à …</p>
+                <p id="msg-reply-text" style="margin:0;font-size:12px;color:rgb(var(--mgt-muted-foreground));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></p>
+              </div>
+              <button id="msg-reply-cancel" type="button" title="Annuler la réponse" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:rgb(var(--mgt-muted-foreground));padding:2px;"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
             <div id="msg-attachments" class="flex flex-wrap gap-2 mb-2"></div>
             <div class="flex items-end gap-3">
               <button id="btn-attach" title="Joindre un fichier" class="p-2.5 rounded-lg hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
@@ -1186,10 +1195,12 @@ html.dark {
         actions.appendChild(delBtn);
         wrap.appendChild(actions);
       }
-      function appendVendorBubble(html, attachList, msgId) {
+      function appendVendorBubble(html, attachList, msgId, replyPreview) {
         if (!thread) return null;
         var emptyEl = document.getElementById('msg-thread-empty');
         if (emptyEl && emptyEl.parentNode) emptyEl.parentNode.removeChild(emptyEl);
+        var quote = quoteHtml(replyPreview, true);
+        if (quote) html = quote + html;
         var wrap = document.createElement('div');
         wrap.className = 'flex flex-col items-end gap-1.5 max-w-[70%] ml-auto';
         var bubble = document.createElement('div');
@@ -1277,11 +1288,13 @@ html.dark {
         var val = input.value.trim();
         var pending = pendingFiles.slice();
         if (!val && !pending.length) return;
+        var replyPreview = replyToMsg ? { from: replyToMsg.from, text: replyToMsg.text } : null;
+        var replyToId = replyToMsg ? replyToMsg.msgId : null;
         var parts = [];
         if (val) parts.push('<p class="text-sm">' + esc(val) + '</p>');
         parts.push('<span class="text-[10px] text-white/70 mt-1 block text-right">' + nowTime() + '</span>');
         var msgId = val ? genMsgId() : null;
-        var chipsEl = appendVendorBubble(parts.join(''), pending, msgId);
+        var chipsEl = appendVendorBubble(parts.join(''), pending, msgId, replyPreview);
         var lastText = val;
         if (!lastText && pending.length) {
           lastText = '📎 ' + pending[0].name + (pending.length > 1 ? ' (+' + (pending.length - 1) + ')' : '');
@@ -1294,6 +1307,7 @@ html.dark {
         }
         input.value = '';
         clearAttachments();
+        cancelReply();
         input.focus();
         // Envoi temps réel vers le client connecté (serveur /webrtc-ws).
         // L'appel est systématique : le module met l'envoi en file tant que
@@ -1304,7 +1318,7 @@ html.dark {
         var realOnline = rtNow && typeof rtNow.isReal === 'function' && rtNow.isReal();
         var peer = activePeer();
         if (peer && rtNow) {
-          if (val && typeof rtNow.sendMessage === 'function') rtNow.sendMessage(peer.id, val, msgId);
+          if (val && typeof rtNow.sendMessage === 'function') rtNow.sendMessage(peer.id, val, msgId, replyToId);
           if (typeof rtNow.sendFile === 'function') {
             pending.forEach(function (f, i) {
               var fid = rtNow.sendFile(peer.id, f.file);
@@ -1331,6 +1345,73 @@ html.dark {
       if (input) input.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
       });
+
+      // ---- Réponse à un message précis (citation inline) ----
+      // `replyToMsg` = { msgId, from, text } du message cité. `setReplyTo` affiche
+      // la barre « Répondre à … » au-dessus de la zone de saisie ; `cancelReply`
+      // la masque. À l'envoi, on attache le msgId cité + un instantané lisible.
+      var replyToMsg = null;
+      var replyBarEl = document.getElementById('msg-reply-bar');
+      var replyNameEl = document.getElementById('msg-reply-name');
+      var replyTextEl = document.getElementById('msg-reply-text');
+      var replyCancelEl = document.getElementById('msg-reply-cancel');
+      function myCanonicalId() {
+        try { return connectedVendorIdentity().id || ''; } catch (e) { return ''; }
+      }
+      function replyAuthorName(fromId) {
+        var myId = myCanonicalId();
+        if (fromId && myId && fromId === myId) return 'Vous';
+        var peerId = currentConv ? currentConv.getAttribute('data-peer-id') : '';
+        if (fromId && peerId && fromId === peerId) {
+          return (currentConv && currentConv.getAttribute('data-name')) || 'Correspondant';
+        }
+        return (currentConv && currentConv.getAttribute('data-name')) || 'Correspondant';
+      }
+      function setReplyTo(msgId, fromId, text) {
+        replyToMsg = { msgId: msgId, from: fromId, text: text };
+        if (replyNameEl) replyNameEl.textContent = 'Répondre à ' + replyAuthorName(fromId);
+        if (replyTextEl) replyTextEl.textContent = text || '';
+        if (replyBarEl) replyBarEl.style.display = 'flex';
+        if (input) input.focus();
+        if (window.lucide) window.lucide.createIcons();
+      }
+      function cancelReply() {
+        replyToMsg = null;
+        if (replyBarEl) replyBarEl.style.display = 'none';
+      }
+      if (replyCancelEl) replyCancelEl.addEventListener('click', cancelReply);
+      // Bloc de citation affiché en tête d'une bulle (entrante ou sortante).
+      function quoteHtml(replyPreview, isMine) {
+        if (!replyPreview || !replyPreview.text) return '';
+        var name = replyAuthorName(replyPreview.from);
+        var border = isMine ? 'rgba(255,255,255,.55)' : 'rgb(var(--mgt-primary))';
+        var bg = isMine ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.05)';
+        var nameColor = isMine ? 'rgba(255,255,255,.85)' : 'rgb(var(--mgt-primary))';
+        var textColor = isMine ? 'rgba(255,255,255,.78)' : 'rgb(var(--mgt-muted-foreground))';
+        return '<div style="margin:0 0 6px;padding:6px 8px;border-left:2px solid ' + border + ';border-radius:8px;background:' + bg + ';text-align:left;">' +
+          '<p style="margin:0;font-size:11px;font-weight:600;color:' + nameColor + ';">' + esc(name) + '</p>' +
+          '<p style="margin:2px 0 0;font-size:12px;line-height:1.35;color:' + textColor + ';overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + esc(replyPreview.text) + '</p>' +
+        '</div>';
+      }
+      // Clic sur une bulle : on l'utilise comme cible de réponse (hors boutons).
+      if (thread) {
+        thread.addEventListener('click', function (e) {
+          if (e.target && e.target.closest && e.target.closest('.mgt-msg-actions, textarea, input, button, a')) return;
+          var el = e.target;
+          var wrap = null;
+          while (el && el !== thread) {
+            if (el.classList && el.classList.contains('msg-bubble')) { wrap = el; break; }
+            el = el.parentNode;
+          }
+          if (!wrap) return;
+          var msgId = wrap.getAttribute('data-msg-id');
+          if (!msgId) return;
+          var p = wrap.querySelector('p.text-sm');
+          var text = p ? (p.textContent || '') : '';
+          var fromId = wrap.querySelector('.mgt-msg-text') ? myCanonicalId() : (currentConv ? currentConv.getAttribute('data-peer-id') : '');
+          setReplyTo(msgId, fromId, text);
+        });
+      }
 
       // ---- Pièce jointe ----
       var attachBtn = document.getElementById('btn-attach');
@@ -1700,17 +1781,19 @@ html.dark {
         syncNotifDot();
       }
 
-      function appendIncomingBubble(text, msgId) {
+      function appendIncomingBubble(text, msgId, replyPreview) {
         if (!thread) return;
         var emptyEl = document.getElementById('msg-thread-empty');
         if (emptyEl && emptyEl.parentNode) emptyEl.parentNode.removeChild(emptyEl);
         var name = currentConv ? currentConv.getAttribute('data-name') : 'Awa S.';
+        var quote = quoteHtml(replyPreview, false);
         var bubble = document.createElement('div');
         bubble.className = 'flex items-end gap-2 max-w-[70%]';
         if (msgId) { bubble.setAttribute('data-msg-id', msgId); bubble.classList.add('msg-bubble'); }
         bubble.innerHTML =
           '<div class="w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-[10px] flex-shrink-0">' + esc(initials(name)) + '</div>' +
           '<div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-4 py-2.5">' +
+            quote +
             '<p class="text-sm text-[rgb(var(--mgt-foreground))]">' + esc(text) + '</p>' +
             '<span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))] mt-1 block">' + nowTime() + '</span>' +
           '</div>';
@@ -1813,9 +1896,9 @@ html.dark {
             // pour les réponses non enrichies.
             var isMine = (m.mine === true) || (m.from === myId);
             if (isMine) {
-              appendVendorBubble('<p class="text-sm">' + esc(m.text || '') + '</p><span class="text-[10px] text-white/70 mt-1 block text-right">' + fmtTime(m.sentAt) + '</span>', [], m.msgId);
+              appendVendorBubble('<p class="text-sm">' + esc(m.text || '') + '</p><span class="text-[10px] text-white/70 mt-1 block text-right">' + fmtTime(m.sentAt) + '</span>', [], m.msgId, m.replyPreview);
             } else {
-              appendIncomingBubble(m.text || '', m.msgId);
+              appendIncomingBubble(m.text || '', m.msgId, m.replyPreview);
             }
           });
           // Met à jour l'aperçu (dernier message) dans la liste de conversations.
@@ -2025,7 +2108,7 @@ html.dark {
           else if (peerId && !conv.getAttribute('data-peer-id')) conv.setAttribute('data-peer-id', peerId);
           return conv;
         }
-        function showIncoming(from, fromName, text, msgId) {
+        function showIncoming(from, fromName, text, msgId, replyPreview) {
           var name = convNameForPeer(from, fromName);
           var conv = ensureConversation(name, from);
           // Remonte la conversation en tête de liste (comportement type messagerie).
@@ -2057,7 +2140,7 @@ html.dark {
           );
           if (active) {
             if (currentConv !== conv) setActive(conv);
-            appendIncomingBubble(text, msgId);
+            appendIncomingBubble(text, msgId, replyPreview);
             conv.setAttribute('data-unread', 'false');
             updateUnreadBadge();
           } else {
@@ -2073,7 +2156,7 @@ html.dark {
         }
 
         RT.onMessage(function (m) {
-          showIncoming(m.from, m.fromName, m.text, m.msgId);
+          showIncoming(m.from, m.fromName, m.text, m.msgId, m.replyPreview);
         });
 
         // Édition / suppression d'un message déjà envoyé (propagation temps réel).

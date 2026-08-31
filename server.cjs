@@ -3334,10 +3334,17 @@ function handleChatMessage(ws, msg) {
   const from = canonicalRoutingId(ws.meta.id);
   const to = canonicalRoutingId(String(msg.to || '').trim());
   const text = String(msg.text || '').slice(0, 4000);
+  // Réponse à un message précis (citation inline) : on mémorise l'identifiant
+  // du message cité et un instantané (auteur canonique + texte tronqué) pour que
+  // la citation reste lisible même si le message d'origine est ensuite modifié
+  // ou supprimé (comportement type WhatsApp/Telegram).
+  const replyTo = String(msg.replyTo || '').trim();
+  const replied = replyTo ? chatLog.find((m) => m && m.msgId === replyTo) : null;
   console.log('[WS] chat-message', {
     from: from,
     to: to,
     text: text.slice(0, 40),
+    replyTo: replyTo || undefined,
     toOnline: isOnline(to),
     toMessaging: isOnMessaging(to),
     toSockets: onlineSockets(to).length,
@@ -3350,12 +3357,23 @@ function handleChatMessage(ws, msg) {
     from, to, text,
     sentAt: nowIso()
   };
+  if (replyTo) {
+    entry.replyTo = replyTo;
+    if (replied) {
+      entry.replyPreview = {
+        from: canonicalRoutingId(replied.from),
+        text: String(replied.text || '').slice(0, 200)
+      };
+    }
+  }
   chatLog.push(entry);
   saveChatLog();
   send(ws, { type: 'chat-ack', msgId: entry.msgId, sentAt: entry.sentAt });
   broadcastToPeer(to, {
     type: 'chat-new', msgId: entry.msgId, convId: entry.convId,
-    from, fromName: ws.meta.name, text, sentAt: entry.sentAt
+    from, fromName: ws.meta.name, text, sentAt: entry.sentAt,
+    replyTo: entry.replyTo,
+    replyPreview: entry.replyPreview
   });
   // Destinataire absent de sa page de messagerie (dashboard fermé, ou simple
   // page Mangoo ouverte ailleurs) : notification Web Push native.
