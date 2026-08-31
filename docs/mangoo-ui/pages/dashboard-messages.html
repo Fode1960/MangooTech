@@ -2,7 +2,7 @@
 <html lang="fr" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Dashboard - Messagerie</title>
     <style id="theme-vars">
 /* ===== MangooTech Brand Design Tokens ===== */
@@ -541,7 +541,7 @@ html.dark {
           </div>
 
           <!-- Zone de saisie -->
-          <div class="p-4 border-t border-[rgb(var(--mgt-border))]">
+          <div id="msg-input-wrap" class="p-4 border-t border-[rgb(var(--mgt-border))]" style="flex-shrink:0;">
             <!-- Barre « Répondre à » (citation inline) -->
             <div id="msg-reply-bar" class="mb-2" style="display:none;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;border-left:3px solid rgb(var(--mgt-primary));background:rgb(var(--mgt-muted));">
               <i data-lucide="reply" class="w-4 h-4 shrink-0" style="color:rgb(var(--mgt-primary));"></i>
@@ -557,9 +557,9 @@ html.dark {
               <input id="input-file" type="file" multiple class="hidden">
               <div class="flex-1 relative">
                 <textarea id="msg-input" rows="1" placeholder="Écrivez votre message…" class="w-full resize-none rounded-lg border border-[rgb(var(--mgt-input))] px-4 py-2.5 text-sm text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring))]/30 focus:border-[rgb(var(--mgt-ring))]"></textarea>
-                <button id="btn-emoji" title="Insérer un émoji" class="absolute right-2 bottom-2 p-1.5 rounded-md hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="smile" class="w-4.5 h-4.5"></i></button>
+                <button id="btn-emoji" type="button" title="Insérer un émoji" class="absolute right-2 bottom-2 p-1.5 rounded-md hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="smile" class="w-4.5 h-4.5"></i></button>
               </div>
-              <button id="msg-send" title="Envoyer" class="p-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white hover:bg-[rgb(var(--mgt-primary-700))] transition-colors"><i data-lucide="send" class="w-5 h-5"></i></button>
+              <button id="msg-send" type="button" title="Envoyer" class="inline-flex items-center gap-1.5 p-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white hover:bg-[rgb(var(--mgt-primary-700))] transition-colors flex-shrink-0"><i data-lucide="send" class="w-5 h-5"></i><span class="hidden sm:inline text-sm font-semibold">Envoyer</span></button>
             </div>
           </div>
         </div>
@@ -569,12 +569,20 @@ html.dark {
     <script>lucide.createIcons();</script>
 
     <style id="mgt-dash-mobile">
+      /* Hauteur dynamique : évite que le clavier mobile (lors de la saisie d'une
+         réponse) ne pousse la zone d'envoi hors de l'écran. `100dvh` s'ajuste à
+         la barre d'outils/clavier ; `100vh` reste en repli pour les anciens
+         navigateurs. */
+      body { height: 100vh; height: 100dvh; }
+      /* Empêche tout débordement horizontal dans le fil de discussion. */
       #msg-thread { overflow-x: hidden; overflow-y: auto; box-sizing: border-box; }
-      #msg-thread p { overflow-wrap: anywhere; word-break: break-word; }
-      #msg-thread .msg-bubble { max-width: 100% !important; }
-      .msg-bubble, .msg-bubble > div { min-width: 0; box-sizing: border-box; }
-      .mgt-msg-quote { min-width: 0; max-width: 100%; box-sizing: border-box; }
-      .mgt-msg-text { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+      #msg-thread > * { max-width: 100%; box-sizing: border-box; }
+      #msg-thread p, #msg-thread span { overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+      .msg-bubble, .msg-bubble > div { min-width: 0; max-width: 100%; box-sizing: border-box; }
+      .mgt-msg-quote, .mgt-msg-text { min-width: 0; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+      .mgt-msg-actions { max-width: 100%; }
+      /* Zone de saisie : ne se réduit jamais, reste visible au-dessus du clavier. */
+      #msg-input-wrap { flex-shrink: 0; }
       .mobile-menu-btn { display: none; }
       .msg-back-btn { display: none; }
       .app-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 35; }
@@ -1080,6 +1088,28 @@ html.dark {
       var thread = document.getElementById('msg-thread');
       var attachments = document.getElementById('msg-attachments');
 
+      // Agrandit automatiquement la zone de saisie avec le texte (jusqu'à ~6
+      // lignes) pour que la réponse complète reste visible, puis la rétrécit à
+      // l'envoi. Évite le sentiment de texte « coupé » lors d'une réponse longue.
+      function autoGrowInput() {
+        if (!input) return;
+        input.style.height = 'auto';
+        var max = 160;
+        input.style.height = Math.min(input.scrollHeight, max) + 'px';
+      }
+      if (input) {
+        input.addEventListener('input', autoGrowInput);
+        input.addEventListener('keydown', function (e) {
+          // Entrée = nouvelle ligne ; Maj+Entrée = envoyer.
+          if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); sendMessage(); }
+        });
+        input.addEventListener('keyup', autoGrowInput);
+      }
+      function resetInputHeight() {
+        if (!input) return;
+        input.style.height = 'auto';
+      }
+
       // Récupère la bulle d'un message sortant via son identifiant local.
       function outgoingMsgEl(msgId) {
         if (!msgId) return null;
@@ -1441,6 +1471,7 @@ html.dark {
         input.value = '';
         clearAttachments();
         cancelReply();
+        resetInputHeight();
         input.focus();
         // Envoi temps réel vers le client connecté (serveur /webrtc-ws).
         // L'appel est systématique : le module met l'envoi en file tant que
@@ -1475,11 +1506,6 @@ html.dark {
         }
       }
       if (sendBtn) sendBtn.addEventListener('click', sendMessage);
-      if (input) input.addEventListener('keydown', function (e) {
-        // Entrée = nouvelle ligne (comportement standard d'un champ texte) ;
-        // Maj+Entrée = envoyer. Le bouton d'envoi reste également disponible.
-        if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); sendMessage(); }
-      });
 
       // ---- Réponse à un message précis (citation inline) ----
       // `replyToMsg` = { msgId, from, text } du message cité. `setReplyTo` affiche
