@@ -546,7 +546,7 @@ html.dark {
             <div id="msg-reply-bar" class="mb-2" style="display:none;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;border-left:3px solid rgb(var(--mgt-primary));background:rgb(var(--mgt-muted));">
               <i data-lucide="reply" class="w-4 h-4 shrink-0" style="color:rgb(var(--mgt-primary));"></i>
               <div style="flex:1;min-width:0;">
-                <p id="msg-reply-name" style="margin:0;font-size:11px;font-weight:600;color:rgb(var(--mgt-primary));">Répondre à …</p>
+                <p id="msg-reply-name" style="margin:0;font-size:11px;font-weight:600;color:rgb(var(--mgt-primary));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">Répondre à …</p>
                 <p id="msg-reply-text" style="margin:0;font-size:12px;color:rgb(var(--mgt-muted-foreground));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></p>
               </div>
               <button id="msg-reply-cancel" type="button" title="Annuler la réponse" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:rgb(var(--mgt-muted-foreground));padding:2px;"><i data-lucide="x" class="w-4 h-4"></i></button>
@@ -569,6 +569,10 @@ html.dark {
     <script>lucide.createIcons();</script>
 
     <style id="mgt-dash-mobile">
+      #msg-thread { overflow-x: hidden; }
+      #msg-thread p { overflow-wrap: anywhere; word-break: break-word; }
+      .msg-bubble > div { min-width: 0; max-width: 100%; }
+      .mgt-msg-quote { min-width: 0; max-width: 100%; box-sizing: border-box; }
       .mobile-menu-btn { display: none; }
       .msg-back-btn { display: none; }
       .app-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 35; }
@@ -766,6 +770,9 @@ html.dark {
         conv.classList.add('border-l-2', 'border-[rgb(var(--mgt-primary))]', 'bg-[rgb(var(--mgt-primary-50))]');
         conv.setAttribute('data-active', 'true');
         currentConv = conv;
+        // Réinitialise la barre « Répondre à » (sinon une citation reste affichée
+        // après être revenu à la liste puis rouvert une conversation).
+        cancelReply();
         var layout = document.getElementById('msg-layout');
         if (layout) layout.classList.add('thread-open');
         var name = conv.getAttribute('data-name') || 'Awa S.';
@@ -1171,7 +1178,32 @@ html.dark {
         wrap.remove();
         toast('Message supprimé.');
       }
-      // Ajoute les actions Modifier/Supprimer à une bulle texte sortante.
+      // Copie un texte dans le presse-papiers (API moderne + repli execCommand).
+      function copyTextToClipboard(text) {
+        function done() { toast('Message copié.'); }
+        function fail() { toast('Copie impossible.'); }
+        function legacy() {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly', '');
+          ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); done(); } catch (e) { fail(); }
+          document.body.removeChild(ta);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, legacy);
+        } else {
+          legacy();
+        }
+      }
+      // Texte brut d'une bulle (message, hors citation et horodatage).
+      function messageTextOf(wrap) {
+        var p = wrap ? wrap.querySelector('p.text-sm') : null;
+        return p ? (p.textContent || '').trim() : '';
+      }
+      // Ajoute les actions Copier/Modifier/Supprimer à une bulle sortante.
       function addOutgoingActions(wrap, msgId) {
         if (!wrap || !msgId) return;
         var actions = document.createElement('div');
@@ -1187,13 +1219,40 @@ html.dark {
           b.style.cssText = 'font-size:11px;font-weight:600;color:' + color + ';background:transparent;border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:2px 6px;border-radius:6px;';
           return b;
         }
+        var copyBtn = makeBtn('Copier', 'rgb(var(--mgt-muted-foreground))');
+        copyBtn.addEventListener('click', function (e) { e.stopPropagation(); copyTextToClipboard(messageTextOf(wrap)); });
         var editBtn = makeBtn('Modifier', 'rgb(var(--mgt-muted-foreground))');
         editBtn.addEventListener('click', function (e) { e.stopPropagation(); beginEditMessage(msgId); });
         var delBtn = makeBtn('Supprimer', 'rgb(var(--mgt-error))');
         delBtn.addEventListener('click', function (e) { e.stopPropagation(); confirmDeleteMessage(msgId); });
+        actions.appendChild(copyBtn);
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
         wrap.appendChild(actions);
+      }
+      // Actions Copier/Répondre pour une bulle entrante.
+      function addIncomingActions(greyBubble, msgId) {
+        if (!greyBubble || !msgId) return;
+        var actions = document.createElement('div');
+        actions.className = 'mgt-msg-actions';
+        actions.style.cssText = 'display:flex;gap:4px;align-items:center;margin-top:2px;';
+        function makeBtn(label, color) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = label;
+          b.style.cssText = 'font-size:11px;font-weight:600;color:' + color + ';background:transparent;border:1px solid rgb(var(--mgt-border));cursor:pointer;padding:2px 6px;border-radius:6px;';
+          return b;
+        }
+        var copyBtn = makeBtn('Copier', 'rgb(var(--mgt-muted-foreground))');
+        copyBtn.addEventListener('click', function (e) { e.stopPropagation(); copyTextToClipboard(messageTextOf(greyBubble)); });
+        var replyBtn = makeBtn('Répondre', 'rgb(var(--mgt-primary))');
+        replyBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          setReplyTo(msgId, (currentConv ? currentConv.getAttribute('data-peer-id') : ''), messageTextOf(greyBubble));
+        });
+        actions.appendChild(copyBtn);
+        actions.appendChild(replyBtn);
+        greyBubble.appendChild(actions);
       }
       function appendVendorBubble(html, attachList, msgId, replyPreview) {
         if (!thread) return null;
@@ -1205,6 +1264,7 @@ html.dark {
         wrap.className = 'flex flex-col items-end gap-1.5 max-w-[70%] ml-auto';
         var bubble = document.createElement('div');
         bubble.className = 'bg-[rgb(var(--mgt-primary))] rounded-2xl rounded-br-md px-4 py-2.5 text-white';
+        bubble.style.cssText = 'min-width:0;max-width:100%;';
         bubble.innerHTML = html;
         wrap.appendChild(bubble);
         if (msgId) {
@@ -1343,7 +1403,9 @@ html.dark {
       }
       if (sendBtn) sendBtn.addEventListener('click', sendMessage);
       if (input) input.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        // Entrée = nouvelle ligne (comportement standard d'un champ texte) ;
+        // Maj+Entrée = envoyer. Le bouton d'envoi reste également disponible.
+        if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); sendMessage(); }
       });
 
       // ---- Réponse à un message précis (citation inline) ----
@@ -1388,15 +1450,20 @@ html.dark {
         var bg = isMine ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.05)';
         var nameColor = isMine ? 'rgba(255,255,255,.85)' : 'rgb(var(--mgt-primary))';
         var textColor = isMine ? 'rgba(255,255,255,.78)' : 'rgb(var(--mgt-muted-foreground))';
-        return '<div style="margin:0 0 6px;padding:6px 8px;border-left:2px solid ' + border + ';border-radius:8px;background:' + bg + ';text-align:left;">' +
-          '<p style="margin:0;font-size:11px;font-weight:600;color:' + nameColor + ';">' + esc(name) + '</p>' +
-          '<p style="margin:2px 0 0;font-size:12px;line-height:1.35;color:' + textColor + ';overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + esc(replyPreview.text) + '</p>' +
+        return '<div class="mgt-msg-quote" style="margin:0 0 6px;padding:6px 8px;border-left:2px solid ' + border + ';border-radius:8px;background:' + bg + ';text-align:left;min-width:0;max-width:100%;box-sizing:border-box;">' +
+          '<p style="margin:0;font-size:11px;font-weight:600;color:' + nameColor + ';overflow-wrap:anywhere;word-break:break-word;">' + esc(name) + '</p>' +
+          '<p style="margin:2px 0 0;font-size:12px;line-height:1.35;color:' + textColor + ';overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;word-break:break-word;">' + esc(replyPreview.text) + '</p>' +
         '</div>';
       }
       // Clic sur une bulle : on l'utilise comme cible de réponse (hors boutons).
       if (thread) {
         thread.addEventListener('click', function (e) {
           if (e.target && e.target.closest && e.target.closest('.mgt-msg-actions, textarea, input, button, a')) return;
+          // L'utilisateur est en train de sélectionner du texte pour le copier :
+          // on ne déclenche pas la réponse (sinon le focus volé annulerait la
+          // sélection et la copie deviendrait impossible).
+          var sel = (window.getSelection && window.getSelection()) || null;
+          if (sel && String(sel.toString() || '').trim()) return;
           var el = e.target;
           var wrap = null;
           while (el && el !== thread) {
@@ -1792,11 +1859,15 @@ html.dark {
         if (msgId) { bubble.setAttribute('data-msg-id', msgId); bubble.classList.add('msg-bubble'); }
         bubble.innerHTML =
           '<div class="w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-[10px] flex-shrink-0">' + esc(initials(name)) + '</div>' +
-          '<div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-4 py-2.5">' +
+          '<div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-4 py-2.5" style="min-width:0;max-width:100%;">' +
             quote +
             '<p class="text-sm text-[rgb(var(--mgt-foreground))]">' + esc(text) + '</p>' +
             '<span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))] mt-1 block">' + nowTime() + '</span>' +
           '</div>';
+        if (msgId) {
+          var grey = bubble.lastElementChild;
+          if (grey) addIncomingActions(grey, msgId);
+        }
         thread.appendChild(bubble);
         thread.scrollTop = thread.scrollHeight;
         // Fiabilise le défilement (les polices/images peuvent modifier la hauteur après coup).
