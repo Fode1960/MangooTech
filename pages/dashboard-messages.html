@@ -583,6 +583,17 @@ html.dark {
       .mgt-msg-actions { max-width: 100%; }
       /* Zone de saisie : ne se réduit jamais, reste visible au-dessus du clavier. */
       #msg-input-wrap { flex-shrink: 0; }
+      /* PC / desktop : dans le conteneur flex horizontal (liste + fil côte à côte),
+         un élément flex refuse par défaut de devenir plus étroit que son contenu
+         (min-width:auto). Sans min-width:0, le fil s'étire au-delà de l'écran et
+         pousse les messages envoyés ainsi que le bouton « Envoyer » hors champ à
+         droite. On force la réduction des éléments flex pour rester dans l'écran. */
+      #msg-layout > * { min-width: 0; }
+      #msg-thread-wrap { min-width: 0; }
+      #msg-thread { min-width: 0; }
+      #msg-list { flex-shrink: 0; }
+      #msg-input-wrap > .flex { min-width: 0; }
+      #msg-input-wrap .flex-1 { min-width: 0; }
       .mobile-menu-btn { display: none; }
       .msg-back-btn { display: none; }
       .app-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 35; }
