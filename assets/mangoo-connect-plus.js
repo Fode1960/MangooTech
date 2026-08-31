@@ -11,6 +11,19 @@
    En l'absence de serveur ou de caméra/micro, il dégrade proprement vers une
    simulation (même comportement visuel qu'en production).
    ========================================================================= */
+/* Diagnostic WebRTC (TURN relay) — chargé à la demande uniquement (test d'appel). */
+(function () {
+  try {
+    var on = (location.search || '').indexOf('diagnostic=1') >= 0 ||
+             localStorage.getItem('mgt-webrtc-diagnostic') === '1';
+    if (on && !document.getElementById('mgt-webrtc-diagnostic')) {
+      var s = document.createElement('script');
+      s.id = 'mgt-webrtc-diagnostic';
+      s.src = '/assets/mangoo-webrtc-diagnostic.js';
+      document.head.appendChild(s);
+    }
+  } catch (e) { /* ignore */ }
+})();
 (function (global) {
   'use strict';
 
@@ -460,7 +473,7 @@
       case 'file-end': onFileEnd(msg); break;
       case 'file-error': emit(fileCbs, { error: true, fileId: msg.fileId, reason: msg.reason }); break;
       case 'live-started': emit(liveCbs, { active: true, vendorId: msg.vendorId, vendorName: msg.vendorName, title: msg.title }); break;
-      case 'live-ended': emit(liveCbs, { active: false, vendorId: msg.vendorId, vendorName: msg.vendorName, title: msg.title }); break;
+      case 'live-ended': emit(liveCbs, { active: false }); break;
       case 'live-state': emit(liveCbs, { active: !!msg.active, vendorId: msg.vendorId, vendorName: msg.vendorName, title: msg.title, rooms: msg.rooms || [] }); break;
       case 'pong': break;
     }
@@ -564,18 +577,9 @@
     return Promise.reject(new Error('media indisponible'));
   }
 
-  // Relais STUN + TURN : un simple STUN suffit sur des reseaux simples (deux
-  // telephones a Paris) mais echoue face au NAT symetrique / CGNAT frequent sur
-  // les reseaux mobiles africains (la negociation ICE n'aboutit jamais =>
-  // "connexion perdue"). Le TURN sert de relais de secours. Fourni par Open
-  // Relay Project (gratuit) ; remplacer par un TURN dedie (coturn) en production.
   function createPC() {
     var RTCPC = global.RTCPeerConnection || global.webkitRTCPeerConnection;
-    var pc = new RTCPC({ iceServers: [
-        { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
-        { urls: ['turn:turn.mangoo.tech:3478', 'turn:turn.mangoo.tech:3478?transport=tcp', 'turns:turn.mangoo.tech:5349?transport=tcp'], username: 'mangoo', credential: 'MangooTurn2026_AQIz4jqmFwgZGV8DEuOLrA' },
-        { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }
-      ] });
+    var pc = new RTCPC({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
     pc.onicecandidate = function (e) {
       if (e.candidate && callState.callId) {
         sendWS({ type: 'ice-candidate', callId: callState.callId, candidate: e.candidate });
