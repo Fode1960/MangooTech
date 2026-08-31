@@ -4694,6 +4694,10 @@ function handleHttp(req, res) {
       const pin = String(body.pin || '').trim();
       const email = String(body.email || '').trim().toLowerCase();
       const password = String(body.password || '');
+      // Pack choisi à l'inscription (défaut : Découverte, gratuit). Seuls les
+      // comptes prestataire / vendeur en tiennent compte (voir plus bas).
+      const plan = String(body.plan || '').trim() || 'decouverte';
+      const chosenPlan = ['decouverte', 'visibilite', 'professionnel', 'premium'].includes(plan) ? plan : 'decouverte';
 
       if (!name) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Le nom est requis.' })); return; }
       if (!phone) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Le numéro de téléphone est requis.' })); return; }
@@ -4742,6 +4746,7 @@ function handleHttp(req, res) {
         vendorConfigFor(userId);
         const doc = vendorConfig[userId];
         doc.vendorName = enseigne;
+        doc.subscription = Object.assign({}, doc.subscription || {}, { plan: chosenPlan, status: 'actif', startedAt: nowIso() });
         doc.profile = Object.assign({}, doc.profile, {
           ownerName: name, email: email || '', phone: phone,
           enseigne: enseigne, category: category, city: city, logo: logo,

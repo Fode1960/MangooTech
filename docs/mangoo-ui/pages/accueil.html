@@ -321,89 +321,6 @@ html.dark {
   } catch (e) { /* non bloquant */ }
 })();
 </script>
-<script>
-/* Routage PWA conditionnel (professionnel uniquement) : après une notification
-   push reçue par le pro, un clic sur le logo PWA (start_url "/") rejoue la
-   dernière cible de conversation mémorisée par le service worker (cache
-   mgt-push-state) au lieu de retomber sur l'accueil public. On ne redirige QUE
-   si une cible récente (< 2 min) et valide pour un professionnel existe ;
-   sinon on reste sur l'accueil public, comportement inchangé (c80bd12/edb158d). */
-(function () {
-  try {
-    var token = null, user = null;
-    try { token = localStorage.getItem('mgt_token'); } catch (e) {}
-    try { user = JSON.parse(localStorage.getItem('mgt_user') || 'null'); } catch (e) {}
-
-    // Si la session locale est vide (autre origine mangoo.tech vs www.mangoo.tech),
-    // resynchronise depuis le cookie httpOnly `mgt_session` via /api/auth/session.
-    if (!token || !user) {
-      try {
-        var _xhr = new XMLHttpRequest();
-        _xhr.open('GET', '/api/auth/session', false);
-        _xhr.setRequestHeader('Accept', 'application/json');
-        _xhr.send(null);
-        if (_xhr.status >= 200 && _xhr.status < 300) {
-          var _d = JSON.parse(_xhr.responseText);
-          if (_d && _d.ok && _d.token && _d.user) {
-            localStorage.setItem('mgt_token', _d.token);
-            localStorage.setItem('mgt_user', JSON.stringify(_d.user));
-            token = _d.token;
-            user = _d.user;
-          }
-        }
-      } catch (e) { /* non bloquant */ }
-    }
-
-    if (!token || !user) return;
-
-    var role = String(user.role || '').toLowerCase();
-    var isPro = role === 'vendeur' || role === 'prestataire';
-    if (!isPro) return; // client / admin : l'accueil public reste visible.
-
-    // Le service worker mémorise une URL ABSOLUE (resolveUrl -> new URL().href).
-    // On la normalise vers un chemin relatif de MÊME origine, en refusant tout
-    // ce qui est cross-origin ou la page client chat.html.
-    function proLandingTarget(p) {
-      if (!p) return null;
-      var path = p, search = '';
-      try {
-        var u = new URL(p, window.location.origin);
-        if (u.origin !== window.location.origin) return null;
-        path = u.pathname;
-        search = u.search;
-      } catch (e) { return null; }
-      if (path.indexOf('/pages/') !== 0) return null;
-      if (path.indexOf('.html') === -1) return null;
-      if (path.indexOf('/pages/chat.html') === 0) return null; // jamais la page client
-      return path + search;
-    }
-
-    // Dernière cible de notification mémorisée par le service worker.
-    // Usage « one-shot » : on efface la cible dès la lecture pour ne pas rejouer
-    // un vieux landing au prochain lancement via le logo.
-    try {
-      caches.open('mgt-push-state').then(function (cache) {
-        return cache.match('/__mgt_last_landing__');
-      }).then(function (resp) {
-        return resp ? resp.text() : '';
-      }).then(function (raw) {
-        var url = raw, ts = 0;
-        if (raw && raw.charAt(0) === '{') {
-          try { var o = JSON.parse(raw); if (o && o.url) { url = o.url; ts = o.ts || 0; } } catch (e) {}
-        }
-        // One-shot : on efface immédiatement la cible, qu'elle soit utilisée ou non.
-        try { caches.open('mgt-push-state').then(function (c) { return c.delete('/__mgt_last_landing__'); }); } catch (e) {}
-        var fresh = (Date.now() - ts) < 120000; // 2 minutes maximum
-        var target = proLandingTarget(url);
-        if (fresh && target) {
-          location.replace(target);
-        }
-        // Sinon : aucune redirection, on reste sur l'accueil public.
-      }).catch(function () { /* aucune redirection */ });
-    } catch (e) { /* aucune redirection */ }
-  } catch (e) { /* non bloquant */ }
-})();
-</script>
 </head>
 <body class="min-h-screen font-sans antialiased">
 
@@ -652,62 +569,71 @@ html.dark {
         <div class="relative flex flex-col rounded-lg border p-7 transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
           <h3 class="h3 mb-1" style="color: rgb(var(--mgt-foreground));">Pack Découverte</h3>
           <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">Nouveaux artisans</p>
-          <div class="flex items-baseline gap-1 mb-6">
+          <div class="flex items-baseline gap-1 mb-2">
             <span class="tabular-nums text-4xl font-bold" style="color: rgb(var(--mgt-primary));">0</span>
             <span class="caption font-medium" style="color: rgb(var(--mgt-muted-foreground));">FCFA / mois</span>
           </div>
+          <p class="caption mb-6" style="color: rgb(var(--mgt-accent-700));">Commission 8 % — vous gardez 92 %</p>
           <ul class="space-y-2.5 mb-7 flex-1">
-            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Fiche boutique de base</li>
-            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Presence sur la carte Local+</li>
-            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Messagerie Connect+</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Fiche en ligne</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Catalogue 3 produits</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Badge de base</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Messagerie</li>
           </ul>
-          <a href="./auth.html" class="w-full rounded-md border py-2.5 text-center text-sm font-semibold transition-colors hover:bg-muted" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Commencer gratuitement</a>
+          <a href="./auth.html?plan=decouverte" class="w-full rounded-md border py-2.5 text-center text-sm font-semibold transition-colors hover:bg-muted" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Commencer gratuitement</a>
         </div>
         <!-- Pack Visibilite (populaire) -->
         <div class="relative flex flex-col rounded-lg border-2 p-7" style="border-color: rgb(var(--mgt-primary)); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-md);">
           <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-full);">Populaire</span>
           <h3 class="h3 mb-1" style="color: rgb(var(--mgt-foreground));">Pack Visibilité</h3>
           <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">Artisans en croissance</p>
-          <div class="flex items-baseline gap-1 mb-6">
+          <div class="flex items-baseline gap-1 mb-2">
             <span class="tabular-nums text-4xl font-bold" style="color: rgb(var(--mgt-accent));">5 000</span>
             <span class="caption font-medium" style="color: rgb(var(--mgt-muted-foreground));">FCFA / mois</span>
           </div>
+          <p class="caption mb-6" style="color: rgb(var(--mgt-accent-700));">Commission 3 % — vous gardez 97 %</p>
           <ul class="space-y-2.5 mb-7 flex-1">
-            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Tout le Pack Découverte</li>
-            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Badge « Sponsorise » inclus</li>
-            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Statistiques de visibilite</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Catalogue 50 produits</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Boosters</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Badge Promo</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Statistiques simples</li>
           </ul>
-          <a href="./auth.html" class="w-full rounded-md py-2.5 text-center text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Choisir Visibilite</a>
+          <a href="./auth.html?plan=visibilite" class="w-full rounded-md py-2.5 text-center text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Choisir Visibilite</a>
         </div>
         <!-- Pack Professionnel -->
         <div class="relative flex flex-col rounded-lg border p-7 transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
           <h3 class="h3 mb-1" style="color: rgb(var(--mgt-foreground));">Pack Professionnel</h3>
           <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">Artisans organises, PME</p>
-          <div class="flex items-baseline gap-1 mb-6">
+          <div class="flex items-baseline gap-1 mb-2">
             <span class="tabular-nums text-4xl font-bold" style="color: rgb(var(--mgt-primary));">10 000</span>
             <span class="caption font-medium" style="color: rgb(var(--mgt-muted-foreground));">FCFA / mois</span>
           </div>
+          <p class="caption mb-6" style="color: rgb(var(--mgt-accent-700));">Commission 0 % — vous gardez 100 %</p>
           <ul class="space-y-2.5 mb-7 flex-1">
-            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Tout le Pack Visibilite</li>
-            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Gestion multi-produits</li>
-            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Support prioritaire</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Catalogue illimité</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Fidélité</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Parrainage</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Rapports avancés</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Classement local</li>
           </ul>
-          <a href="./auth.html" class="w-full rounded-md border py-2.5 text-center text-sm font-semibold transition-colors hover:bg-muted" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Choisir Professionnel</a>
+          <a href="./auth.html?plan=professionnel" class="w-full rounded-md border py-2.5 text-center text-sm font-semibold transition-colors hover:bg-muted" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Choisir Professionnel</a>
         </div>
         <!-- Pack Premium -->
         <div class="relative flex flex-col rounded-lg border p-7 transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
           <h3 class="h3 mb-1" style="color: rgb(var(--mgt-foreground));">Pack Premium</h3>
           <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">PME structurees</p>
-          <div class="flex items-baseline gap-1 mb-6">
+          <div class="flex items-baseline gap-1 mb-2">
             <span class="tabular-nums text-4xl font-bold" style="color: rgb(var(--mgt-primary));">15 000</span>
             <span class="caption font-medium" style="color: rgb(var(--mgt-muted-foreground));">FCFA / mois</span>
           </div>
+          <p class="caption mb-6" style="color: rgb(var(--mgt-accent-700));">Commission 0 % — vous gardez 100 %</p>
           <ul class="space-y-2.5 mb-7 flex-1">
-            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Tout le Pack Professionnel</li>
-            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Featured sur la plateforme</li>
-            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Accompagnement dedie</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Tout le plan Professionnel</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Multi-vendeurs</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Support prioritaire</li>
+            <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>API & intégrations</li>
           </ul>
-          <a href="./auth.html" class="w-full rounded-md border py-2.5 text-center text-sm font-semibold transition-colors hover:bg-muted" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Choisir Premium</a>
+          <a href="./auth.html?plan=premium" class="w-full rounded-md border py-2.5 text-center text-sm font-semibold transition-colors hover:bg-muted" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Choisir Premium</a>
         </div>
       </div>
     </div>
