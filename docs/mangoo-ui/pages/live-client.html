@@ -194,6 +194,21 @@ html.dark {
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
     <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <script>
+    /* Diagnostic WebRTC (TURN relay) — chargé à la demande uniquement (test d'appel). */
+    (function () {
+      try {
+        var on = (location.search || '').indexOf('diagnostic=1') >= 0 ||
+                 localStorage.getItem('mgt-webrtc-diagnostic') === '1';
+        if (on && !document.getElementById('mgt-webrtc-diagnostic')) {
+          var s = document.createElement('script');
+          s.id = 'mgt-webrtc-diagnostic';
+          s.src = '/assets/mangoo-webrtc-diagnostic.js';
+          document.head.appendChild(s);
+        }
+      } catch (e) { /* ignore */ }
+    })();
+    </script>
     <style type="text/tailwindcss">
   @theme inline {
     --color-background: var(--background);
@@ -294,10 +309,7 @@ html.dark {
   <div class="mx-auto max-w-md min-h-screen flex flex-col bg-[rgb(var(--mgt-background))] shadow-2xl relative">
     <!-- ===== HEADER ===== -->
     <header class="sticky top-0 z-30 flex items-center gap-3 px-4 py-3 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))]">
-      <div class="relative flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-bold text-sm shrink-0 overflow-hidden">
-        <img id="vendor-logo" src="" alt="" class="absolute inset-0 w-full h-full object-cover hidden">
-        <span id="vendor-logo-fallback">CA</span>
-      </div>
+      <div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-bold text-sm shrink-0">CA</div>
       <div class="flex-1 min-w-0">
         <p id="vendor-name" class="text-sm font-bold text-[rgb(var(--mgt-foreground))] truncate">DAN Boutique</p>
         <p id="live-status-badge" class="text-xs text-[rgb(var(--mgt-muted-foreground))] flex items-center gap-1">
@@ -331,10 +343,6 @@ html.dark {
           <i data-lucide="refresh-cw" class="w-4 h-4"></i>
           Actualiser
         </button>
-        <a href="./client-dashboard.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-foreground))] font-semibold text-sm mt-3">
-          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-          Retour au Dashboard
-        </a>
       </div>
 
       <!-- ETAT EN DIRECT -->
@@ -343,12 +351,11 @@ html.dark {
         <div id="video-stage" class="relative w-full h-[52vh] min-h-[300px] max-h-[560px] bg-gray-900 overflow-hidden">
           <div class="absolute inset-0 bg-gradient-to-br from-emerald-800 via-green-900 to-gray-950"></div>
           <div class="absolute inset-0 opacity-10" style="background-image: repeating-linear-gradient(0deg,#fff,#fff 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,#fff,#fff 1px,transparent 1px,transparent 40px);"></div>
-          <video id="remote-video" autoplay playsinline class="absolute inset-0 w-full h-full object-contain hidden"></video>
+          <video id="remote-video" autoplay playsinline class="absolute inset-0 w-full h-full object-cover hidden"></video>
           <video id="remote-pip" autoplay playsinline class="hidden absolute top-3 right-3 w-28 h-40 object-cover rounded-xl border border-white/25 shadow-lg z-10 bg-black/40"></video>
-          <div id="video-fallback" class="absolute inset-0 flex flex-col items-center justify-center gap-3">
-            <div class="relative flex items-center justify-center w-24 h-24 rounded-full bg-white/10 border border-white/15 live-ring overflow-hidden">
-              <img id="video-vendor-logo" src="" alt="" class="absolute inset-0 w-full h-full object-cover hidden">
-              <i id="video-vendor-logo-fallback" data-lucide="camera" class="w-9 h-9 text-white/40"></i>
+          <div id="video-fallback" class="absolute inset-0 flex items-center justify-center">
+            <div class="relative flex items-center justify-center w-24 h-24 rounded-full bg-white/10 border border-white/15 live-ring">
+              <i data-lucide="camera" class="w-9 h-9 text-white/40"></i>
             </div>
           </div>
           <div class="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-600 text-white text-xs font-bold">
@@ -425,7 +432,6 @@ html.dark {
             </div>
           </div>
           <div class="border-t border-[rgb(var(--mgt-border))] px-3 py-2.5 shrink-0">
-            <div id="chat-typing" class="hidden text-xs italic text-[rgb(var(--mgt-muted-foreground))] px-1 pb-1.5"></div>
             <div class="flex items-center gap-2">
               <button id="btn-like" class="flex items-center justify-center w-10 h-10 rounded-full bg-red-50 text-red-500 shrink-0 active:scale-90 transition-transform" title="J'aime">
                 <i data-lucide="heart" class="w-5 h-5"></i>
@@ -461,16 +467,11 @@ html.dark {
     let wsReady = false;
     let joined = false;
     let isLive = false;
-    let liveWatchdogTimer = null;
     let currentPinned = null;
 
     // Réception du flux vidéo du vendeur (WebRTC)
     let pc = null;
-    const RTC_CONFIG = { iceServers: [
-        { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
-        { urls: ['turn:turn.mangoo.tech:3478', 'turn:turn.mangoo.tech:3478?transport=tcp', 'turns:turn.mangoo.tech:5349?transport=tcp'], username: 'mangoo', credential: 'MangooTurn2026_AQIz4jqmFwgZGV8DEuOLrA' },
-        { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }
-      ] };
+    const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
     let screenStream = null;
     let cameraStream = null;
 
@@ -546,30 +547,6 @@ html.dark {
       return String(s).replace(/[&<>"']/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
       });
-    }
-    function productThumb(p) {
-      if (p && p.image) return String(p.image);
-      var name = (p && p.name) ? String(p.name).trim() : '';
-      if (!name) return '';
-      return placeholderImage(name);
-    }
-    function placeholderImage(name) {
-      var initial = (name.charAt(0) || 'P').toUpperCase();
-      var hue = mgtHashStr(name) % 360;
-      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">' +
-        '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
-        '<stop offset="0" stop-color="hsl(' + hue + ',68%,60%)"/>' +
-        '<stop offset="1" stop-color="hsl(' + ((hue + 45) % 360) + ',70%,44%)"/>' +
-        '</linearGradient></defs>' +
-        '<rect width="240" height="240" fill="url(#g)"/>' +
-        '<text x="50%" y="52%" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="120" font-weight="700" fill="rgba(255,255,255,0.92)">' + initial + '</text>' +
-        '</svg>';
-      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
-    }
-    function mgtHashStr(s) {
-      var h = 0;
-      for (var i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; }
-      return Math.abs(h);
     }
 
     function toast(msg) {
@@ -653,16 +630,7 @@ html.dark {
           if (msg.fromName === MY_NAME) toast('Commande envoyée : ' + msg.product);
           break;
         case 'live-chat':
-          appendChat(msg.fromName, msg.text, msg.from === MY_ID, msg.msgId);
-          break;
-        case 'live-chat-edited':
-          updateChatText(msg.msgId, msg.text);
-          break;
-        case 'live-chat-deleted':
-          removeChatMessage(msg.msgId);
-          break;
-        case 'live-typing':
-          showTyping(msg.fromName, msg.isTyping);
+          appendChat(msg.fromName, msg.text, msg.from === MY_ID);
           break;
         case 'live-pinned':
           setPinned({ name: msg.name, price: msg.price, image: msg.image });
@@ -703,12 +671,11 @@ html.dark {
       // pas vers le vendeur codé en dur par défaut.
       if (s.vendorId) vendorId = s.vendorId;
       if (s.vendorName) setVendorName(s.vendorName);
-      if (s.vendorLogo) setVendorLogo(s.vendorLogo);
       setViewers(s.viewers);
       $('stat-likes').textContent = s.likes;
       $('stat-orders').textContent = s.orders;
       if (s.pinnedProduct && s.pinnedProduct.name) setPinned(s.pinnedProduct);
-      (s.chat || []).forEach(function (m) { appendChat(m.fromName, m.text, m.from === MY_ID, m.msgId); });
+      (s.chat || []).forEach(function (m) { appendChat(m.fromName, m.text, m.from === MY_ID); });
     }
 
     function setVendorName(name) {
@@ -718,18 +685,6 @@ html.dark {
       if (h) h.textContent = name;
       var peer = $('call-peer-name');
       if (peer) peer.textContent = name;
-    }
-
-    function setVendorLogo(logo) {
-      if (!logo) return;
-      var img = $('vendor-logo');
-      var fb = $('vendor-logo-fallback');
-      if (img) { img.src = logo; img.classList.remove('hidden'); }
-      if (fb) fb.classList.add('hidden');
-      var stageLogo = $('video-vendor-logo');
-      if (stageLogo) { stageLogo.src = logo; stageLogo.classList.remove('hidden'); }
-      var stageFb = $('video-vendor-logo-fallback');
-      if (stageFb) stageFb.classList.add('hidden');
     }
 
     function showLive() {
@@ -761,7 +716,6 @@ html.dark {
       $('btn-call-vendor').classList.add('hidden');
       $('pinned-area').classList.add('hidden');
       currentPinned = null;
-      closeProductFullscreen();
       lucide.createIcons();
     }
 
@@ -777,8 +731,7 @@ html.dark {
       $('pinned-price').textContent = p.price || '';
       var thumb = $('pinned-image');
       if (thumb) {
-        var thumbSrc = productThumb(p);
-        if (thumbSrc) { thumb.src = thumbSrc; thumb.style.display = ''; }
+        if (p.image) { thumb.src = p.image; thumb.style.display = ''; }
         else { thumb.removeAttribute('src'); thumb.style.display = 'none'; }
       }
       $('pinned-area').classList.remove('hidden');
@@ -789,9 +742,8 @@ html.dark {
         $('product-fullscreen-price').textContent = p.price || '';
         var fsImg = $('product-fullscreen-image');
         if (fsImg) {
-          var thumbSrc = productThumb(p);
-          if (thumbSrc) {
-            fsImg.src = (thumbSrc.indexOf('data:') === 0) ? thumbSrc : thumbSrc + (thumbSrc.indexOf('?') >= 0 ? '&' : '?') + '_v=' + Date.now();
+          if (p.image) {
+            fsImg.src = (p.image.indexOf('data:') === 0) ? p.image : p.image + (p.image.indexOf('?') >= 0 ? '&' : '?') + '_v=' + Date.now();
             fsImg.style.display = '';
           } else {
             fsImg.removeAttribute('src');
@@ -906,21 +858,19 @@ html.dark {
       if (fb) fb.classList.remove('hidden');
     }
 
-    function appendChat(name, text, isSelf, msgId) {
+    function appendChat(name, text, isSelf) {
       var list = $('chat-list');
       if (!list) return;
       var div = document.createElement('div');
       div.className = 'flex gap-2' + (isSelf ? ' justify-end' : '');
-      if (msgId) div.setAttribute('data-msg-id', msgId);
       if (isSelf) {
-        div.innerHTML = '<div class="max-w-[80%]"><p class="text-[11px] font-semibold text-right text-[rgb(var(--mgt-accent-700))] mb-0.5">Vous</p><div class="flex items-end justify-end gap-1"><span class="chat-text px-3 py-2 rounded-2xl rounded-tr-sm bg-[rgb(var(--mgt-accent))] text-white text-sm leading-snug">' + escHtml(text) + '</span></div>' + (msgId ? '<div class="flex justify-end gap-1.5 mt-1"><button class="chat-edit-btn inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-border))]" data-msg-id="' + escHtml(msgId) + '"><i data-lucide="pencil" class="w-3 h-3"></i>Modifier</button><button class="chat-delete-btn inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold bg-[rgb(var(--mgt-muted))] text-red-500 hover:bg-red-50" data-msg-id="' + escHtml(msgId) + '"><i data-lucide="trash-2" class="w-3 h-3"></i>Supprimer</button></div>' : '') + '</div>';
+        div.innerHTML = '<div class="max-w-[80%]"><p class="text-[11px] font-semibold text-right text-[rgb(var(--mgt-accent-700))] mb-0.5">Vous</p><div class="px-3 py-2 rounded-2xl rounded-tr-sm bg-[rgb(var(--mgt-accent))] text-white text-sm leading-snug">' + escHtml(text) + '</div></div>';
       } else {
         var initial = (name || '?').charAt(0).toUpperCase();
-        div.innerHTML = '<div class="flex items-center justify-center w-7 h-7 rounded-full bg-[rgb(var(--mgt-primary))] text-white font-bold text-xs shrink-0">' + escHtml(initial) + '</div><div class="flex-1 min-w-0"><p class="text-[11px] font-semibold text-[rgb(var(--mgt-foreground))]">' + escHtml(name) + '</p><div class="inline-block px-3 py-2 rounded-2xl rounded-tl-sm bg-[rgb(var(--mgt-muted))] text-sm text-[rgb(var(--mgt-foreground))] leading-snug"><span class="chat-text">' + escHtml(text) + '</span></div></div>';
+        div.innerHTML = '<div class="flex items-center justify-center w-7 h-7 rounded-full bg-[rgb(var(--mgt-primary))] text-white font-bold text-xs shrink-0">' + escHtml(initial) + '</div><div class="flex-1 min-w-0"><p class="text-[11px] font-semibold text-[rgb(var(--mgt-foreground))]">' + escHtml(name) + '</p><div class="inline-block px-3 py-2 rounded-2xl rounded-tl-sm bg-[rgb(var(--mgt-muted))] text-sm text-[rgb(var(--mgt-foreground))] leading-snug">' + escHtml(text) + '</div></div>';
       }
       list.appendChild(div);
       list.scrollTop = list.scrollHeight;
-      if (window.lucide) lucide.createIcons();
     }
 
     function appendOrderLine(name, product) {
@@ -933,91 +883,16 @@ html.dark {
       list.scrollTop = list.scrollHeight;
     }
 
-    var editingMsgId = null;
-    var typingTimer = null;
-    var typingNames = {};
-
-    function setEditingChat(msgId) {
-      editingMsgId = msgId;
-      var input = $('chat-input');
-      if (input) input.placeholder = msgId ? 'Modifiez votre message...' : 'Écrivez un message...';
-    }
-
-    function startEditChat(msgId) {
-      var el = document.querySelector('[data-msg-id="' + msgId + '"] .chat-text');
-      var input = $('chat-input');
-      if (!el || !input) return;
-      input.value = el.textContent;
-      setEditingChat(msgId);
-      input.focus();
-    }
-
-    function updateChatText(msgId, text) {
-      var el = document.querySelector('[data-msg-id="' + msgId + '"] .chat-text');
-      if (el) el.textContent = text;
-    }
-
-    function removeChatMessage(msgId) {
-      var el = document.querySelector('[data-msg-id="' + msgId + '"]');
-      if (el && el.parentNode) el.parentNode.removeChild(el);
-    }
-
-    function deleteChat(msgId) {
-      if (!msgId) return;
-      if (!wsReady || !isLive) { toast("Le live n'est pas actif"); return; }
-      send({ type: 'live-chat-delete', msgId: msgId });
-      removeChatMessage(msgId);
-    }
-
-    function sendTyping(isTyping) {
-      if (!wsReady || !isLive) return;
-      send({ type: 'live-typing', isTyping: isTyping });
-    }
-
-    function showTyping(name, isTyping) {
-      if (!name) return;
-      if (isTyping) typingNames[name] = Date.now();
-      else delete typingNames[name];
-      renderTyping();
-    }
-
-    function renderTyping() {
-      var now = Date.now();
-      var active = [];
-      Object.keys(typingNames).forEach(function (n) {
-        if (now - typingNames[n] < 4000) active.push(n);
-        else delete typingNames[n];
-      });
-      var el = $('chat-typing');
-      if (!el) return;
-      if (active.length) {
-        el.textContent = active.length === 1 ? (active[0] + " est en train d'écrire...") : (active.length + " personnes sont en train d'écrire...");
-        el.classList.remove('hidden');
-      } else {
-        el.textContent = '';
-        el.classList.add('hidden');
-      }
-    }
-
     function sendChat() {
       var input = $('chat-input');
       var text = input ? input.value.trim() : '';
       if (!text) return;
-      if (editingMsgId) {
-        if (!wsReady || !isLive) { toast("Le live n'est pas actif"); return; }
-        send({ type: 'live-chat-edit', msgId: editingMsgId, text: text });
-        input.value = '';
-        setEditingChat(null);
-        return;
-      }
       input.value = '';
       if (wsReady && isLive) {
-        var msgId = 'c' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1e6).toString(36);
-        send({ type: 'live-chat', text: text, msgId: msgId });
-        appendChat(MY_NAME, text, true, msgId);
-        sendTyping(false);
+        send({ type: 'live-chat', text: text });
+        appendChat(MY_NAME, text, true);
       } else {
-        toast("Le live n'est pas actif");
+        toast('Le live n\'est pas actif');
       }
     }
 
@@ -1183,31 +1058,6 @@ html.dark {
       }, 2000);
     }
 
-    // Filet de sécurité : si un « live-ended » WebSocket est manqué (reconnexion,
-    // coupure réseau, onglet en arrière-plan), on détecte l'arrêt du live via
-    // /live-status et on repasse « hors ligne » au lieu de rester bloqué en direct.
-    function startLiveWatchdog() {
-      if (liveWatchdogTimer) return;
-      liveWatchdogTimer = setInterval(function () {
-        if (!isLive) return;
-        fetch('/live-status', { cache: 'no-store' })
-          .then(function (r) { return r.json(); })
-          .then(function (d) {
-            if (!isLive) return;
-            var stillLive = ((d && d.rooms) || []).some(function (room) {
-              return String(room.vendorId) === String(vendorId);
-            });
-            if (!stillLive) {
-              joined = false;
-              endCall();
-              showOffline();
-              closeVideo();
-            }
-          })
-          .catch(function () { /* réseau indisponible : on retentera au prochain tick */ });
-      }, 3000);
-    }
-
     function init() {
       $('btn-refresh').addEventListener('click', function () {
         showOffline();
@@ -1229,20 +1079,6 @@ html.dark {
       });
       $('chat-input').addEventListener('keydown', function (e) {
         if (e.key === 'Enter') { e.preventDefault(); sendChat(); }
-      });
-      $('chat-input').addEventListener('input', function () {
-        var hasText = this.value.length > 0;
-        sendTyping(hasText);
-        if (typingTimer) clearTimeout(typingTimer);
-        if (hasText) typingTimer = setTimeout(function () { sendTyping(false); }, 2500);
-      });
-      document.addEventListener('click', function (e) {
-        var t = e.target;
-        if (!t || !t.closest) return;
-        var editBtn = t.closest('.chat-edit-btn');
-        if (editBtn) { startEditChat(editBtn.getAttribute('data-msg-id')); return; }
-        var delBtn = t.closest('.chat-delete-btn');
-        if (delBtn) deleteChat(delBtn.getAttribute('data-msg-id'));
       });
 
       $('btn-like').addEventListener('click', function () {
@@ -1328,14 +1164,6 @@ html.dark {
         else if (btn.id === 'btn-product-fullscreen-order') { orderCurrentProduct(); closeProductFullscreen(); }
       });
 
-      // Échap ferme le plein écran produit s'il est ouvert.
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-          var ov = $('product-fullscreen');
-          if (ov && ov.style.display === 'flex') closeProductFullscreen();
-        }
-      });
-
       // Raccourci d'achat : quantité + livraison (pré-remplis, ajustables en un geste)
       $('qty-minus').addEventListener('click', function () { setQuantity(orderQuantity - 1); });
       $('qty-plus').addEventListener('click', function () { setQuantity(orderQuantity + 1); });
@@ -1343,7 +1171,6 @@ html.dark {
       $('delivery-retrait').addEventListener('click', function () { setDelivery('Retrait'); });
 
       connect();
-      startLiveWatchdog();
       setVendorName(TARGET_NAME);
       lucide.createIcons();
     }
@@ -1354,10 +1181,9 @@ html.dark {
   <!-- ===== OVERLAY PRODUIT PLEIN ÉCRAN ===== -->
   <div id="product-fullscreen" class="hidden fixed inset-0 z-[998] bg-black flex flex-col" style="display:none">
     <div class="relative flex-1 flex items-center justify-center overflow-hidden bg-black">
-      <img id="product-fullscreen-image" src="" alt="" class="w-full h-full object-contain">
-      <button id="btn-product-close" class="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 h-10 rounded-full bg-black/60 text-white border border-white/25 backdrop-blur-sm active:scale-95 transition-transform" aria-label="Réduire">
+      <img id="product-fullscreen-image" src="" alt="" class="w-full h-full object-cover">
+      <button id="btn-product-close" class="absolute top-4 left-4 flex items-center justify-center w-10 h-10 rounded-full bg-white/15 text-white backdrop-blur-sm active:scale-90 transition-transform" aria-label="Réduire">
         <i data-lucide="x" class="w-5 h-5"></i>
-        <span class="text-sm font-semibold">Réduire</span>
       </button>
     </div>
     <div class="p-4 bg-[rgb(var(--mgt-background))] text-[rgb(var(--mgt-foreground))]">
