@@ -494,14 +494,14 @@ html.dark {
             <div class="kpi-icon" style="background:rgb(232,245,233)">
               <i data-lucide="check-circle" style="width:20px;height:20px;color:rgb(var(--mgt-success))"></i>
             </div>
-            <p class="kpi-label">Livrees</p>
+            <p class="kpi-label">Livrées</p>
             <p class="kpi-value">0</p>
           </div>
           <div class="kpi-card">
             <div class="kpi-icon" style="background:rgb(254,242,242)">
               <i data-lucide="x-circle" style="width:20px;height:20px;color:rgb(var(--mgt-error))"></i>
             </div>
-            <p class="kpi-label">Annulees</p>
+            <p class="kpi-label">Annulées</p>
             <p class="kpi-value">0</p>
           </div>
           <div class="kpi-card">
@@ -519,15 +519,15 @@ html.dark {
           <div class="filter-group">
             <button class="filter-chip active" onclick="filterOrders('all', this)">Toutes</button>
             <button class="filter-chip" onclick="filterOrders('en-cours', this)">En cours</button>
-            <button class="filter-chip" onclick="filterOrders('livree', this)">Livrees</button>
-            <button class="filter-chip" onclick="filterOrders('annulee', this)">Annulees</button>
+            <button class="filter-chip" onclick="filterOrders('livree', this)">Livrées</button>
+            <button class="filter-chip" onclick="filterOrders('annulee', this)">Annulées</button>
           </div>
           <span class="filter-divider"></span>
           <span class="caption text-[rgb(var(--mgt-muted-foreground))]" style="margin-right:4px">Periode</span>
           <div class="filter-group">
             <button class="filter-chip active" onclick="filterPeriod(this)">Ce mois</button>
             <button class="filter-chip" onclick="filterPeriod(this)">3 mois</button>
-            <button class="filter-chip" onclick="filterPeriod(this)">Cette annee</button>
+            <button class="filter-chip" onclick="filterPeriod(this)">Cette année</button>
           </div>
           <span class="filter-divider"></span>
           <div class="filter-search">
@@ -715,7 +715,7 @@ html.dark {
         if (data.status === 'livree') {
           statusBadge.classList.add('badge-livree');
           statusBadge.querySelector('.badge-dot').className = 'badge-dot badge-dot-livree';
-          statusText.textContent = 'Livree';
+          statusText.textContent = 'Livrée';
         } else if (data.status === 'en-cours') {
           statusBadge.classList.add('badge-en-cours');
           statusBadge.querySelector('.badge-dot').className = 'badge-dot badge-dot-en-cours';
@@ -723,7 +723,7 @@ html.dark {
         } else {
           statusBadge.classList.add('badge-annulee');
           statusBadge.querySelector('.badge-dot').className = 'badge-dot badge-dot-annulee';
-          statusText.textContent = 'Annulee';
+          statusText.textContent = 'Annulée';
         }
 
         // Timeline
@@ -871,7 +871,7 @@ html.dark {
     var activeChip = document.querySelector('.filter-group .filter-chip.active');
     if (!activeChip) return;
     var text = activeChip.textContent.trim();
-    var map = { 'Toutes': 'all', 'En cours': 'en-cours', 'Livrees': 'livree', 'Annulees': 'annulee' };
+    var map = { 'Toutes': 'all', 'En cours': 'en-cours', 'Livrées': 'livree', 'Annulées': 'annulee' };
     if (typeof filterOrders === 'function' && map[text]) {
       filterOrders(map[text], activeChip);
     }
@@ -970,8 +970,8 @@ html.dark {
     });
   }
   function orderStatusMeta(status) {
-    if (status === 'livree') return { cls: 'badge-livree', dot: 'badge-dot-livree', text: 'Livree' };
-    if (status === 'annulee') return { cls: 'badge-annulee', dot: 'badge-dot-annulee', text: 'Annulee' };
+    if (status === 'livree') return { cls: 'badge-livree', dot: 'badge-dot-livree', text: 'Livrée' };
+    if (status === 'annulee') return { cls: 'badge-annulee', dot: 'badge-dot-annulee', text: 'Annulée' };
     return { cls: 'badge-en-cours', dot: 'badge-dot-en-cours', text: 'En cours' };
   }
   function storeOrderRow(o) {
@@ -982,7 +982,7 @@ html.dark {
     var service = escHtml(o.service || '');
     var amount = escHtml(o.amount || '0 FCFA');
     var date = escHtml(o.date || '');
-    var note = o.status === 'annulee' ? 'Annulee par le client' : (o.status === 'livree' ? '—' : 'En attente');
+    var note = o.status === 'annulee' ? 'Annulée par le client' : (o.status === 'livree' ? '—' : 'En attente');
     var actions = '<div class="flex items-center gap-2"><button class="action-btn" onclick="openDrawer(\'' + id + '\')"><i data-lucide="eye" style="width:13px;height:13px"></i>Detail</button></div>';
     return '<tr data-status="' + escHtml(o.status || 'en-cours') + '">' +
       '<td><span class="font-medium tabular-nums">#' + escHtml(id) + '</span></td>' +
@@ -1011,8 +1011,8 @@ html.dark {
       payment: pay,
       paymentDate: o.date || '',
       timeline: [
-        { date: (o.date || '') + ' - ' + time, title: 'Commande passee', current: true },
-        { date: (o.date || '') + ' - ' + time, title: 'Paiement confirme (' + pay + ')' }
+        { date: (o.date || '') + ' - ' + time, title: 'Commande passée', current: true },
+        { date: (o.date || '') + ' - ' + time, title: 'Paiement confirmé (' + pay + ')' }
       ]
     };
   }
@@ -1154,8 +1154,8 @@ html.dark {
     try { return window.MangooClient.getMyOrders(); } catch (e) { return []; }
   }
   function statusMeta(status) {
-    if (status === 'livree') return { cls: 'badge-livree', dot: 'badge-dot-livree', text: 'Livree' };
-    if (status === 'annulee') return { cls: 'badge-annulee', dot: 'badge-dot-annulee', text: 'Annulee' };
+    if (status === 'livree') return { cls: 'badge-livree', dot: 'badge-dot-livree', text: 'Livrée' };
+    if (status === 'annulee') return { cls: 'badge-annulee', dot: 'badge-dot-annulee', text: 'Annulée' };
     return { cls: 'badge-en-cours', dot: 'badge-dot-en-cours', text: 'En cours' };
   }
   function amountText(o) {
@@ -1222,7 +1222,7 @@ html.dark {
 
   function activeStatus() {
     var chip = document.querySelector('.filter-group .filter-chip.active');
-    var map = { 'Toutes': 'all', 'En cours': 'en-cours', 'Livrees': 'livree', 'Annulees': 'annulee' };
+    var map = { 'Toutes': 'all', 'En cours': 'en-cours', 'Livrées': 'livree', 'Annulées': 'annulee' };
     var t = chip ? chip.textContent.trim() : 'Toutes';
     return map[t] || 'all';
   }
@@ -1235,7 +1235,7 @@ html.dark {
     if (!ts) return true;
     var d = new Date(ts);
     var now = new Date();
-    if (period === 'Cette annee') return d.getFullYear() === now.getFullYear();
+    if (period === 'Cette année') return d.getFullYear() === now.getFullYear();
     if (period === '3 mois') {
       var cut = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
       return d >= cut;
