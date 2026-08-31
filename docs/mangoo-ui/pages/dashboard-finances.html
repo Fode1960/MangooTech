@@ -490,9 +490,10 @@ html.dark {
             <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
               <div class="flex items-center justify-between mb-3">
                 <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Commissions MangooTech</p>
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]">8 %</span>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]" id="commission-rate">8 %</span>
               </div>
               <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">33 000 <span class="text-sm font-semibold text-[rgb(var(--mgt-muted-foreground))]">FCFA</span></p>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]" id="commission-keep">vous gardez 92 %</p>
             </div>
             <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
               <div class="flex items-center justify-between mb-3">
@@ -555,7 +556,7 @@ html.dark {
                   <td class="px-4 py-3 text-xs text-[rgb(var(--mgt-muted-foreground))] tabular-nums">11 août</td>
                   <td class="px-4 py-3">
                     <p class="font-medium text-[rgb(var(--mgt-foreground))]">Commission plateforme</p>
-                    <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">8 % · 3 commandes</p>
+                    <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Selon votre pack d'abonnement</p>
                   </td>
                   <td class="px-4 py-3 text-xs text-[rgb(var(--mgt-muted-foreground))]">COM-089</td>
                   <td class="px-4 py-3 text-right font-semibold tabular-nums text-[rgb(var(--mgt-accent-700))]">-4 400</td>
@@ -1335,6 +1336,37 @@ html.dark {
   // Charge l'historique réel (recharges + paiements Offre du jour) au démarrage.
   setPayoutDate();
   loadWallet();
+})();
+</script>
+<script>
+(function () {
+  // Affiche le taux de commission réel du vendeur, dérivé de son PACK
+  // d'abonnement (source de vérité unique), au lieu d'une valeur codée en dur.
+  function currentVendorId() {
+    var mv = window.MangooVendor;
+    if (mv && typeof mv.connectedVendorId === 'function') {
+      var id = mv.connectedVendorId();
+      if (id) return id;
+    }
+    if (mv && mv.current) { var c = mv.current(); if (c && c.vendorId) return c.vendorId; }
+    return '';
+  }
+  function setText(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; }
+  var id = currentVendorId();
+  if (!id) return;
+  fetch('/api/vendor-config?vendor=' + encodeURIComponent(id), { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      if (!res || !res.ok || !Array.isArray(res.plans)) return;
+      var cfg = res.config || {};
+      var planId = (cfg.subscription && cfg.subscription.plan) || 'decouverte';
+      var plan = res.plans.filter(function (p) { return p.id === planId; })[0] || res.plans[0];
+      if (!plan) return;
+      var c = Number(plan.commission) || 0;
+      setText('commission-rate', c + ' %');
+      setText('commission-keep', 'vous gardez ' + (100 - c) + ' %');
+    })
+    .catch(function () { /* conserve l'état par défaut si l'API est indisponible */ });
 })();
 </script>
 </body>

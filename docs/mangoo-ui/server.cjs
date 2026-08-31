@@ -1027,9 +1027,9 @@ let vendorConfig = {};      // { [vendorId]: configDoc }
 
 const ABONNEMENT_PLANS = [
   { id: 'decouverte', name: 'Découverte', price: 0, priceLabel: 'FCFA / mois', icon: 'sprout', commission: 8, features: ['Fiche en ligne', 'Catalogue 3 produits', 'Badge de base', 'Messagerie'] },
-  { id: 'visibilite', name: 'Visibilité', price: 5000, priceLabel: 'FCFA / mois', icon: 'eye', commission: 3, features: ['Catalogue 50 produits', 'Boosters', 'Badge Promo', 'Statistiques simples'] },
-  { id: 'professionnel', name: 'Professionnel', price: 10000, priceLabel: 'FCFA / mois', icon: 'badge-check', recommended: true, commission: 0, features: ['Catalogue illimité', 'Fidélité', 'Parrainage', 'Rapports avancés', 'Classement local'] },
-  { id: 'premium', name: 'Premium', price: 15000, priceLabel: 'FCFA / mois', icon: 'building-2', commission: 0, features: ['Tout le plan Professionnel', 'Multi-vendeurs', 'Support prioritaire', 'API & intégrations'] }
+  { id: 'visibilite', name: 'Visibilité', price: 5000, priceLabel: 'FCFA / mois', icon: 'eye', commission: 5, features: ['Catalogue 50 produits', 'Boosters', 'Badge Promo', 'Statistiques simples'] },
+  { id: 'professionnel', name: 'Professionnel', price: 10000, priceLabel: 'FCFA / mois', icon: 'badge-check', recommended: true, commission: 3, features: ['Catalogue illimité', 'Fidélité', 'Parrainage', 'Rapports avancés', 'Classement local'] },
+  { id: 'premium', name: 'Premium', price: 15000, priceLabel: 'FCFA / mois', icon: 'building-2', commission: 2, features: ['Tout le plan Professionnel', 'Multi-vendeurs', 'Support prioritaire', 'API & intégrations'] }
 ];
 
 function seedVendorConfig() {
@@ -1318,6 +1318,17 @@ function vendorConfigFor(vendorId) {
     vendorConfig[id] = blankVendorConfig(id);
   }
   return vendorConfig[id];
+}
+
+// Commission plateforme d'un vendeur, dérivée de son PACK d'abonnement
+// (source de vérité unique). Le rôle (prestataire/boutique) n'entre plus
+// en jeu. Échelle dégressive : Découverte 8%, Visibilité 5%,
+// Professionnel 3%, Premium 2%. Valeur de repli : Découverte (8%).
+function planCommissionFor(vendorId) {
+  const cfg = vendorConfigFor(vendorId);
+  const planId = (cfg && cfg.subscription && cfg.subscription.plan) || 'decouverte';
+  const plan = ABONNEMENT_PLANS.find(function (p) { return p.id === planId; }) || ABONNEMENT_PLANS[0];
+  return Number(plan.commission) || 0;
 }
 
 // Logo du vendeur : priorité au logo du compte (users.json, data URL), sinon
@@ -2420,13 +2431,13 @@ function buildNegoMessage(nego, result) {
 // Règlement portefeuille vendeur après paiement d'une négociation.
 // Crédite le vendeur du montant net (prix convenu moins commission plateforme)
 // et enregistre une transaction de règlement côté vendeur (stats admin + solde).
-// La commission dépend du rôle : vendeur -> boutique, prestataire -> prestataire.
+// La commission dépend du PACK d'abonnement du vendeur (Découverte 8%,
+// Visibilité 5%, Professionnel 3%, Premium 2%).
 function settleNegotiationToVendor(nego) {
   const gross = Math.round(Number(nego.agreedPrice) || 0);
   const vendor = users.find(function (u) { return u.id === nego.vendorId; });
   const role = vendor ? vendor.role : 'vendeur';
-  const rateKey = role === 'prestataire' ? 'prestataire' : 'boutique';
-  const rate = Number(adminConfig.commissionRates && adminConfig.commissionRates[rateKey]) || 0;
+  const rate = planCommissionFor(nego.vendorId);
   const commission = Math.round(gross * rate / 100);
   const net = gross - commission;
 
@@ -5551,35 +5562,42 @@ function handleHttp(req, res) {
     if (req.method !== 'GET') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
 
     const days = Math.min(90, Math.max(7, parseInt(queryParam(req, 'days') || '30', 10) || 30));
-    const r = adminConfig.commissionRates;
-    const tb = Number(r.boutique) || 0;
-    const tp = Number(r.prestataire) || 0;
     const now = new Date();
     function dayKey(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 
     const buckets = {};
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-      buckets[dayKey(d)] = { date: dayKey(d), volume: 0, boutiques: 0, prestataires: 0, commission: 0 };
+      buckets[dayKey(d)] = { date: dayKey(d), volume: 0, boutiques: 0, prestataires: 0, commission: 0, commissionBoutiques: 0, commissionPrestataires: 0 };
     }
 
+    // Seules les transactions de règlement vendeur portent la commission
+    // plateforme (feeAmount réel). On agrège donc le volume réglé + la
+    // commission effectivement prélevée, sans re-calculer un taux fictif.
     transactions.forEach(function (t) {
       if (t.status !== 'completed') return;
+      if (t.kind !== 'negotiation-settlement') return;
       const d = new Date(t.paidAt || t.createdAt);
       if (isNaN(d)) return;
       const key = dayKey(d);
       const bucket = buckets[key];
       if (!bucket) return;
       const vol = Number(t.total) || Number(t.amount) || 0;
+      const fee = Number(t.feeAmount) || 0;
       bucket.volume += vol;
-      if (t.userType === 'vendeur') { bucket.boutiques += vol; bucket.commission += vol * tb / 100; }
-      else if (t.userType === 'prestataire') { bucket.prestataires += vol; bucket.commission += vol * tp / 100; }
+      bucket.commission += fee;
+      if (t.userType === 'prestataire') { bucket.prestataires += vol; bucket.commissionPrestataires += fee; }
+      else { bucket.boutiques += vol; bucket.commissionBoutiques += fee; }
     });
 
     const series = Object.keys(buckets).map(function (k) { return buckets[k]; });
-    series.forEach(function (p) { p.commission = Math.round(p.commission); });
+    series.forEach(function (p) {
+      p.commission = Math.round(p.commission);
+      p.commissionBoutiques = Math.round(p.commissionBoutiques);
+      p.commissionPrestataires = Math.round(p.commissionPrestataires);
+    });
     res.writeHead(200, JSON_HEADERS);
-    res.end(JSON.stringify({ ok: true, days: days, rates: r, series: series }));
+    res.end(JSON.stringify({ ok: true, days: days, plans: ABONNEMENT_PLANS, series: series }));
     return;
   }
 
@@ -5594,38 +5612,32 @@ function handleHttp(req, res) {
     }
 
     function completedVolumeForRole(role) {
-      return transactions.filter(function (t) { return t.userType === role && t.status === 'completed'; }).reduce(function (s, t) { return s + (Number(t.total) || Number(t.amount) || 0); }, 0);
+      return transactions.filter(function (t) { return t.kind === 'negotiation-settlement' && t.userType === role && t.status === 'completed'; }).reduce(function (s, t) { return s + (Number(t.total) || Number(t.amount) || 0); }, 0);
     }
+    function completedFeesForRole(role) {
+      return transactions.filter(function (t) { return t.kind === 'negotiation-settlement' && t.userType === role && t.status === 'completed'; }).reduce(function (s, t) { return s + (Number(t.feeAmount) || 0); }, 0);
+    }
+    // Commission réelle = feeAmount des transactions de règlement vendeur.
+    // Plus de taux par rôle : la commission provient du PACK du vendeur.
     function commissionSummary() {
       const vB = completedVolumeForRole('vendeur');
       const vP = completedVolumeForRole('prestataire');
-      const r = adminConfig.commissionRates;
-      const cB = Math.round(vB * (Number(r.boutique) || 0) / 100);
-      const cP = Math.round(vP * (Number(r.prestataire) || 0) / 100);
+      const cB = completedFeesForRole('vendeur');
+      const cP = completedFeesForRole('prestataire');
       return { volumeBoutiques: vB, volumePrestataires: vP, commissionBoutiques: cB, commissionPrestataires: cP, total: cB + cP };
     }
 
     if (req.method === 'GET') {
       res.writeHead(200, JSON_HEADERS);
-      res.end(JSON.stringify({ ok: true, rates: adminConfig.commissionRates, updatedAt: adminConfig.updatedAt, updatedBy: adminConfig.updatedBy, summary: commissionSummary() }));
+      res.end(JSON.stringify({ ok: true, plans: ABONNEMENT_PLANS, updatedAt: adminConfig.updatedAt, updatedBy: adminConfig.updatedBy, summary: commissionSummary() }));
       return;
     }
 
     if (req.method === 'POST') {
-      readJsonBody(req, function (err, body) {
-        if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
-        body = body || {};
-        const next = {};
-        if (typeof body.prestataire === 'number' || typeof body.prestataire === 'string') next.prestataire = Math.min(100, Math.max(0, Math.round(Number(body.prestataire) || 0)));
-        if (typeof body.boutique === 'number' || typeof body.boutique === 'string') next.boutique = Math.min(100, Math.max(0, Math.round(Number(body.boutique) || 0)));
-        if (Object.keys(next).length === 0) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Aucun taux fourni.' })); return; }
-        adminConfig.commissionRates = Object.assign({}, adminConfig.commissionRates, next);
-        adminConfig.updatedAt = new Date().toISOString();
-        adminConfig.updatedBy = adminUser.name || 'Administrateur';
-        saveAdminConfig();
-        res.writeHead(200, JSON_HEADERS);
-        res.end(JSON.stringify({ ok: true, rates: adminConfig.commissionRates, updatedAt: adminConfig.updatedAt, updatedBy: adminConfig.updatedBy, summary: commissionSummary() }));
-      });
+      // Les commissions ne sont plus modifiables par rôle : elles sont définies
+      // par les packs d'abonnement (voir /api/admin/packs et admin-packs.html).
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, plans: ABONNEMENT_PLANS, summary: commissionSummary(), note: 'Les commissions sont définies par pack d\'abonnement.' }));
       return;
     }
 
