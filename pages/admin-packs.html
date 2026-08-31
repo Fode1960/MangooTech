@@ -403,6 +403,7 @@ html.dark {
                                 <tr class="bg-muted/50">
                                     <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pack</th>
                                     <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Prix / mois</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Commission</th>
                                     <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Inclus</th>
                                     <th class="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Abonnés</th>
                                     <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
@@ -455,10 +456,10 @@ html.dark {
       var PACKS_KEY = 'mgt_admin_packs_v1';
       var packs = [];
       var PACKS_SEED = [
-        { id: 'decouverte', name: 'Découverte', price: 0, features: ['Fiche en ligne', 'Catalogue 3 produits', 'Badge de base', 'Messagerie'], subscribers: 0, active: true },
-        { id: 'visibilite', name: 'Visibilité', price: 5000, features: ['Catalogue 50 produits', 'Boosters', 'Badge Promo', 'Statistiques simples'], subscribers: 0, active: true },
-        { id: 'professionnel', name: 'Professionnel', price: 10000, features: ['Catalogue illimité', 'Fidélité', 'Parrainage', 'Rapports avancés'], subscribers: 0, active: true },
-        { id: 'premium', name: 'Premium', price: 15000, features: ['Tout le plan Professionnel', 'Multi-vendeurs', 'Support prioritaire', 'API & intégrations'], subscribers: 0, active: true }
+        { id: 'decouverte', name: 'Découverte', price: 0, commission: 8, features: ['Fiche en ligne', 'Catalogue 3 produits', 'Badge de base', 'Messagerie'], subscribers: 0, active: true },
+        { id: 'visibilite', name: 'Visibilité', price: 5000, commission: 3, features: ['Catalogue 50 produits', 'Boosters', 'Badge Promo', 'Statistiques simples'], subscribers: 0, active: true },
+        { id: 'professionnel', name: 'Professionnel', price: 10000, commission: 0, features: ['Catalogue illimité', 'Fidélité', 'Parrainage', 'Rapports avancés', 'Classement local'], subscribers: 0, active: true },
+        { id: 'premium', name: 'Premium', price: 15000, commission: 0, features: ['Tout le plan Professionnel', 'Multi-vendeurs', 'Support prioritaire', 'API & intégrations'], subscribers: 0, active: true }
       ];
 
       var editingId = null;
@@ -492,6 +493,7 @@ html.dark {
                 id: p.id,
                 name: p.name,
                 price: Number(p.price) || 0,
+                commission: Number(p.commission) || 0,
                 features: Array.isArray(p.features) ? p.features : [],
                 subscribers: existing ? Number(existing.subscribers) || 0 : 0,
                 active: existing ? existing.active !== false : true
@@ -533,6 +535,11 @@ html.dark {
         return n === 0 ? 'Gratuit' : n.toLocaleString('fr-FR') + ' FCFA';
       }
 
+      function commissionLabel(p) {
+        var c = Number(p.commission) || 0;
+        return c === 0 ? '0 % (garde 100 %)' : c + ' % (garde ' + (100 - c) + ' %)';
+      }
+
       function featuresHtml(p) {
         return p.features.map(function (f) {
           return '<span class="inline-flex items-center gap-1 text-xs text-muted-foreground mr-2 mb-1"><i data-lucide="check" class="w-3 h-3" style="color:rgb(var(--mgt-success))"></i>' + esc(f) + '</span>';
@@ -546,6 +553,7 @@ html.dark {
           return '<tr class="hover:bg-muted/30 transition-colors">'
             + '<td class="px-5 py-4"><span class="text-sm font-semibold text-foreground">' + esc(p.name) + '</span></td>'
             + '<td class="px-5 py-4 text-sm font-semibold tabular-nums" style="color:' + (p.price === 0 ? 'rgb(var(--mgt-muted-foreground))' : 'rgb(var(--mgt-accent))') + '">' + fmtPrice(p.price) + '</td>'
+            + '<td class="px-5 py-4 text-sm text-muted-foreground">' + commissionLabel(p) + '</td>'
             + '<td class="px-5 py-4"><div class="flex flex-wrap items-center">' + featuresHtml(p) + '</div></td>'
             + '<td class="px-5 py-4 text-right text-sm font-semibold tabular-nums" style="color:' + subColor + '">' + p.subscribers + '</td>'
             + '<td class="px-5 py-4"><span class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style="background-color:' + (p.active ? 'rgb(var(--mgt-success) / .15)' : 'rgb(100 116 139 / .1)') + ';color:' + (p.active ? 'rgb(var(--mgt-success))' : 'rgb(100 116 139)') + '"><span class="w-1.5 h-1.5 rounded-full" style="background-color:' + (p.active ? 'rgb(var(--mgt-success))' : 'rgb(100 116 139)') + '"></span>' + (p.active ? 'Actif' : 'Inactif') + '</span></td>'
