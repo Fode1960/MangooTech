@@ -569,10 +569,12 @@ html.dark {
     <script>lucide.createIcons();</script>
 
     <style id="mgt-dash-mobile">
-      #msg-thread { overflow-x: hidden; }
+      #msg-thread { overflow-x: hidden; overflow-y: auto; box-sizing: border-box; }
       #msg-thread p { overflow-wrap: anywhere; word-break: break-word; }
-      .msg-bubble > div { min-width: 0; max-width: 100%; }
+      #msg-thread .msg-bubble { max-width: 100% !important; }
+      .msg-bubble, .msg-bubble > div { min-width: 0; box-sizing: border-box; }
       .mgt-msg-quote { min-width: 0; max-width: 100%; box-sizing: border-box; }
+      .mgt-msg-text { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
       .mobile-menu-btn { display: none; }
       .msg-back-btn { display: none; }
       .app-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 35; }
@@ -1203,6 +1205,62 @@ html.dark {
         var p = wrap ? wrap.querySelector('p.text-sm') : null;
         return p ? (p.textContent || '').trim() : '';
       }
+      // Ouvre la fenêtre « Transférer » : liste les autres conversations et
+      // envoie le texte choisi vers la destination sélectionnée.
+      function openForwardModal(text) {
+        var existing = document.getElementById('modal-forward');
+        if (existing) existing.remove();
+        var overlay = document.createElement('div');
+        overlay.id = 'modal-forward';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:9001;display:flex;align-items:center;justify-content:center;padding:16px;';
+        var panel = document.createElement('div');
+        panel.style.cssText = 'background:rgb(var(--mgt-background));border-radius:16px;box-shadow:var(--mgt-shadow-lg);width:100%;max-width:440px;max-height:80vh;display:flex;flex-direction:column;font-family:var(--mgt-font-sans);';
+        panel.innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgb(var(--mgt-border));">' +
+            '<h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">Transférer le message</h3>' +
+            '<button data-fw-close type="button" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:22px;line-height:1;cursor:pointer;">&times;</button>' +
+          '</div>' +
+          '<div style="padding:12px 20px;font-size:13px;color:rgb(var(--mgt-muted-foreground));border-bottom:1px solid rgb(var(--mgt-border));overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;word-break:break-word;">' + esc(text) + '</div>' +
+          '<div data-fw-list style="flex:1;overflow-y:auto;padding:8px;"></div>';
+        var closeBtn = panel.querySelector('[data-fw-close]');
+        if (closeBtn) closeBtn.addEventListener('click', function () { overlay.remove(); });
+        overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+        var list = panel.querySelector('[data-fw-list]');
+        var currentPeer = currentConv ? currentConv.getAttribute('data-peer-id') : '';
+        var count = 0;
+        liveConvs().forEach(function (conv) {
+          var pid = conv.getAttribute('data-peer-id') || '';
+          if (pid && pid === currentPeer) return;
+          var name = conv.getAttribute('data-name') || pid || 'Contact';
+          var role = roleLabel(conv.getAttribute('data-role') || 'client');
+          var row = document.createElement('button');
+          row.type = 'button';
+          row.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:none;background:transparent;cursor:pointer;border-radius:10px;text-align:left;';
+          row.innerHTML =
+            '<div style="width:40px;height:40px;border-radius:50%;background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary-700));display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0;">' + esc(initials(name)) + '</div>' +
+            '<div style="min-width:0;flex:1;">' +
+              '<p style="margin:0;font-size:14px;font-weight:600;color:rgb(var(--mgt-foreground));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(name) + '</p>' +
+              '<p style="margin:2px 0 0;font-size:12px;color:rgb(var(--mgt-muted-foreground));">' + esc(role) + '</p>' +
+            '</div>';
+          row.addEventListener('click', function () {
+            overlay.remove();
+            var rtNow = window.MangooConnect;
+            if (rtNow && typeof rtNow.sendMessage === 'function') {
+              rtNow.sendMessage(pid, text);
+            }
+            toast('Message transféré à ' + name + '.');
+            var target = pushFindConv(name, pid);
+            if (target) setActive(target);
+          });
+          list.appendChild(row);
+          count++;
+        });
+        if (!count) {
+          list.innerHTML = '<p style="padding:16px;text-align:center;font-size:13px;color:rgb(var(--mgt-muted-foreground));">Aucune autre conversation à qui transférer.</p>';
+        }
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+      }
       // Ajoute les actions Copier/Modifier/Supprimer à une bulle sortante.
       function addOutgoingActions(wrap, msgId) {
         if (!wrap || !msgId) return;
@@ -1225,17 +1283,24 @@ html.dark {
         editBtn.addEventListener('click', function (e) { e.stopPropagation(); beginEditMessage(msgId); });
         var delBtn = makeBtn('Supprimer', 'rgb(var(--mgt-error))');
         delBtn.addEventListener('click', function (e) { e.stopPropagation(); confirmDeleteMessage(msgId); });
+        var fwdBtn = document.createElement('button');
+        fwdBtn.type = 'button';
+        fwdBtn.title = 'Transférer';
+        fwdBtn.style.cssText = 'font-size:11px;font-weight:600;color:rgba(255,255,255,.85);background:transparent;border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:2px 6px;border-radius:6px;display:inline-flex;align-items:center;gap:3px;';
+        fwdBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>Transférer';
+        fwdBtn.addEventListener('click', function (e) { e.stopPropagation(); openForwardModal(messageTextOf(wrap)); });
         actions.appendChild(copyBtn);
+        actions.appendChild(fwdBtn);
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
         wrap.appendChild(actions);
       }
-      // Actions Copier/Répondre pour une bulle entrante.
+      // Actions Copier/Répondre/Transférer pour une bulle entrante.
       function addIncomingActions(greyBubble, msgId) {
         if (!greyBubble || !msgId) return;
         var actions = document.createElement('div');
         actions.className = 'mgt-msg-actions';
-        actions.style.cssText = 'display:flex;gap:4px;align-items:center;margin-top:2px;';
+        actions.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:2px;';
         function makeBtn(label, color) {
           var b = document.createElement('button');
           b.type = 'button';
@@ -1250,7 +1315,14 @@ html.dark {
           e.stopPropagation();
           setReplyTo(msgId, (currentConv ? currentConv.getAttribute('data-peer-id') : ''), messageTextOf(greyBubble));
         });
+        var fwdBtn = document.createElement('button');
+        fwdBtn.type = 'button';
+        fwdBtn.title = 'Transférer';
+        fwdBtn.style.cssText = 'font-size:11px;font-weight:600;color:rgb(var(--mgt-muted-foreground));background:transparent;border:1px solid rgb(var(--mgt-border));cursor:pointer;padding:2px 6px;border-radius:6px;display:inline-flex;align-items:center;gap:3px;';
+        fwdBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>Transférer';
+        fwdBtn.addEventListener('click', function (e) { e.stopPropagation(); openForwardModal(messageTextOf(greyBubble)); });
         actions.appendChild(copyBtn);
+        actions.appendChild(fwdBtn);
         actions.appendChild(replyBtn);
         greyBubble.appendChild(actions);
       }
@@ -1262,9 +1334,10 @@ html.dark {
         if (quote) html = quote + html;
         var wrap = document.createElement('div');
         wrap.className = 'flex flex-col items-end gap-1.5 max-w-[70%] ml-auto';
+        wrap.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:75%;margin-left:auto;box-sizing:border-box;min-width:0;';
         var bubble = document.createElement('div');
         bubble.className = 'bg-[rgb(var(--mgt-primary))] rounded-2xl rounded-br-md px-4 py-2.5 text-white';
-        bubble.style.cssText = 'min-width:0;max-width:100%;';
+        bubble.style.cssText = 'min-width:0;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;';
         bubble.innerHTML = html;
         wrap.appendChild(bubble);
         if (msgId) {
@@ -1856,10 +1929,11 @@ html.dark {
         var quote = quoteHtml(replyPreview, false);
         var bubble = document.createElement('div');
         bubble.className = 'flex items-end gap-2 max-w-[70%]';
+        bubble.style.cssText = 'display:flex;align-items:flex-end;gap:8px;max-width:75%;box-sizing:border-box;min-width:0;';
         if (msgId) { bubble.setAttribute('data-msg-id', msgId); bubble.classList.add('msg-bubble'); }
         bubble.innerHTML =
           '<div class="w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-[10px] flex-shrink-0">' + esc(initials(name)) + '</div>' +
-          '<div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-4 py-2.5" style="min-width:0;max-width:100%;">' +
+          '<div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-4 py-2.5" style="min-width:0;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;">' +
             quote +
             '<p class="text-sm text-[rgb(var(--mgt-foreground))]">' + esc(text) + '</p>' +
             '<span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))] mt-1 block">' + nowTime() + '</span>' +
