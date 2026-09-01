@@ -21,7 +21,7 @@ self.addEventListener('install', function () {
 // purge des anciens caches (dont « mgt-push-state » qui mémorisait un landing de
 // notification). Cela garantit qu'aucun vieux routage — ex. renvoyer un
 // professionnel vers la page client chat.html — n'est rejoué après coup.
-var SW_VERSION = 'mgt-sw-2026-08-30-1';
+var SW_VERSION = 'mgt-sw-2026-09-01-1';
 
 self.addEventListener('activate', function (event) {
   event.waitUntil(
@@ -52,10 +52,28 @@ self.addEventListener('activate', function (event) {
 // (utilisé par l'auto-mise à jour de mangoo-push.js). Sans cela, un worker
 // « waiting » pourrait rester inactif jusqu'à la fermeture de tous les onglets.
 self.addEventListener('message', function (event) {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  var data = event.data || {};
+  if (data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  } else if (data.type === 'CLEAR_NOTIFICATIONS') {
+    // Demande émise par mangoo-push.js (ex. après une redirection landing) :
+    // on ferme TOUTES les notifications système encore affichées afin qu'une
+    // seconde notification ne reste pas à l'écran une fois la première consultée.
+    event.waitUntil(closeAllNotifications());
   }
 });
+
+// Ferme toutes les notifications actives, quel que soit leur `tag`. C'est le
+// comportement attendu : consulter une notification doit purger l'écran (évite
+// qu'une 2ᵉ notification reste perçue comme nouvelle).
+function closeAllNotifications() {
+  if (!self.registration || !self.registration.getNotifications) {
+    return Promise.resolve();
+  }
+  return self.registration.getNotifications().then(function (list) {
+    (list || []).forEach(function (n) { try { n.close(); } catch (e) {} });
+  }).catch(function () { /* ignore */ });
+}
 
 // Gestionnaire fetch minimal — requis par Chrome pour rendre l'app installable
 // (déclenchement de `beforeinstallprompt`) et pour fournir un repli hors-ligne
@@ -159,29 +177,12 @@ self.addEventListener('notificationclick', function (event) {
     target = '/';
   }
 
-  // Déduplication : la même notification peut être affichée en double (ex. deux
-  // abonnements sur le même appareil). Au premier clic, on ferme TOUTES les
-  // notifications qui partagent le même `tag` afin qu'il ne reste pas une
-  // « seconde notification » encore perçue comme nouvelle.
-  var tag = '';
-  try { tag = event.notification.tag || ''; } catch (e) {}
-
-  function closeTagSiblings(tag) {
-    if (!self.registration || !self.registration.getNotifications) return Promise.resolve();
-    return self.registration.getNotifications({ tag: tag }).then(function (list) {
-      (list || []).forEach(function (n) { try { n.close(); } catch (e) {} });
-    }).catch(function () {
-      // Repli : filtre manuel si le filtre `{tag}` n'est pas supporté.
-      return self.registration.getNotifications().then(function (list) {
-        (list || []).forEach(function (n) {
-          try { if (n.tag === tag) n.close(); } catch (e) {}
-        });
-      }).catch(function () {});
-    });
-  }
-
+  // Déduplication : au premier clic on ferme TOUTES les notifications actives
+  // (message, appel, live…) — pas seulement celles du même `tag` — afin qu'une
+  // seconde notification ne reste pas à l'écran et ne soit plus perçue comme
+  // nouvelle après consultation de la première.
   event.waitUntil(
-    closeTagSiblings(tag).then(function () {
+    closeAllNotifications().then(function () {
       return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     }).then(function (clientList) {
       for (var i = 0; i < clientList.length; i++) {

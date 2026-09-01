@@ -563,6 +563,7 @@ html.dark {
                 <textarea id="msg-input" rows="1" placeholder="Écrivez votre message…" class="w-full resize-none rounded-lg border border-[rgb(var(--mgt-input))] px-4 py-2.5 text-sm text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring))]/30 focus:border-[rgb(var(--mgt-ring))]"></textarea>
                 <button id="btn-emoji" type="button" title="Insérer un émoji" class="absolute right-2 bottom-2 p-1.5 rounded-md hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="smile" class="w-4.5 h-4.5"></i></button>
               </div>
+              <button id="msg-save" type="button" title="Enregistrer le dernier message" class="inline-flex items-center justify-center p-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors flex-shrink-0" style="opacity:.45;pointer-events:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg></button>
               <button id="msg-send" type="button" title="Envoyer" class="inline-flex items-center gap-1.5 p-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white hover:bg-[rgb(var(--mgt-primary-700))] transition-colors flex-shrink-0"><i data-lucide="send" class="w-5 h-5"></i><span class="hidden sm:inline text-sm font-semibold">Envoyer</span></button>
             </div>
           </div>
@@ -1104,6 +1105,7 @@ html.dark {
       // ---- Envoi de message ----
       var input = document.getElementById('msg-input');
       var sendBtn = document.getElementById('msg-send');
+      var saveBtn = document.getElementById('msg-save');
       var thread = document.getElementById('msg-thread');
       var attachments = document.getElementById('msg-attachments');
 
@@ -1324,7 +1326,27 @@ html.dark {
           b.textContent = saveBtnLabel(!!SAVED[msgId]);
           b.style.color = SAVED[msgId] ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
         });
+        refreshSaveButton();
         toast(SAVED[msgId] ? 'Message enregistré.' : 'Message retiré des enregistrés.');
+      }
+      // Dernier message « enregistrable » de la conversation active (dernière
+      // bulle portant un identifiant dans le fil), et synchronisation du bouton
+      // « Enregistrer » placé en bas, à côté d'« Envoyer ».
+      function lastMsgId() {
+        if (!thread) return null;
+        var els = thread.querySelectorAll('.msg-bubble[data-msg-id]');
+        return els.length ? els[els.length - 1].getAttribute('data-msg-id') : null;
+      }
+      function refreshSaveButton() {
+        if (!saveBtn) return;
+        var id = lastMsgId();
+        var saved = id ? !!SAVED[id] : false;
+        var svg = saveBtn.querySelector('svg');
+        if (svg) svg.setAttribute('fill', saved ? 'currentColor' : 'none');
+        saveBtn.style.color = saved ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
+        saveBtn.style.opacity = id ? '1' : '0.45';
+        saveBtn.style.pointerEvents = id ? 'auto' : 'none';
+        saveBtn.setAttribute('title', id ? (saved ? 'Retirer des enregistrés' : 'Enregistrer le dernier message') : 'Aucun message');
       }
       function addSaveButton(container, msgId, forOutgoing) {
         if (!container || !msgId) return;
@@ -1405,15 +1427,43 @@ html.dark {
             body.appendChild(row);
           });
         }
-        if (window.MangooConnect && typeof window.MangooConnect.getSavedMessages === 'function') {
-          try {
-            window.MangooConnect.getSavedMessages(renderList);
-          } catch (e) {
-            body.innerHTML = '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));text-align:center;padding:32px 12px;margin:0;">Impossible de charger les messages enregistrés.</p>';
-          }
-        } else {
-          renderList([]);
+        // Chargement robuste : on privilégie l'API REST /api/saved-messages
+        // (fiable même si le WebSocket n'est pas encore enregistré), avec repli sur
+        // le canal temps réel et un garde-fou (timeout) pour ne jamais laisser
+        // l'overlay bloqué sur « Chargement… » ni afficher une erreur erronée.
+        var done = false;
+        var timer = null;
+        function finish(list) {
+          if (done) return;
+          done = true;
+          if (timer) { clearTimeout(timer); timer = null; }
+          renderList(list);
         }
+        function loadViaWs() {
+          try {
+            if (window.MangooConnect && typeof window.MangooConnect.getSavedMessages === 'function') {
+              window.MangooConnect.getSavedMessages(finish);
+              return true;
+            }
+          } catch (e) {}
+          return false;
+        }
+        timer = setTimeout(function () {
+          if (done) return;
+          done = true;
+          renderList([]);
+        }, 4000);
+        var token = null;
+        try { token = localStorage.getItem('mgt_token'); } catch (e) {}
+        fetch('/api/saved-messages', {
+          headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+        }).then(function (r) { return r.json().catch(function () { return null; }); })
+        .then(function (d) {
+          if (d && d.ok && Array.isArray(d.messages)) { finish(d.messages); }
+          else if (!loadViaWs()) { finish([]); }
+        }).catch(function () {
+          if (!loadViaWs()) { finish([]); }
+        });
       }
       var savedBtn = document.getElementById('btn-saved-messages');
       if (savedBtn) savedBtn.addEventListener('click', openSavedMessages);
@@ -1635,6 +1685,21 @@ html.dark {
         }
       }
       if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+      // Bouton « Enregistrer » en bas : cible le dernier message de la
+      // conversation active (comme le bouton par bulle, mais plus accessible).
+      if (saveBtn) saveBtn.addEventListener('click', function () {
+        var id = lastMsgId();
+        if (id) toggleSaved(id);
+      });
+      // Le fil est reconstruit de façon asynchrone (chargement d'historique,
+      // messages temps réel, suppressions…) : on observe ses enfants pour
+      // garder le bouton « Enregistrer » synchronisé avec le dernier message.
+      if (thread && typeof MutationObserver === 'function') {
+        try {
+          var saveObs = new MutationObserver(function () { refreshSaveButton(); });
+          saveObs.observe(thread, { childList: true });
+        } catch (e) {}
+      }
 
       // ---- Réponse à un message précis (citation inline) ----
       // `replyToMsg` = { msgId, from, text } du message cité. `setReplyTo` affiche
@@ -2505,6 +2570,7 @@ html.dark {
               b.textContent = saveBtnLabel(!!e.saved);
               b.style.color = e.saved ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
             });
+            refreshSaveButton();
           });
         }
         if (typeof RT.getSavedMessages === 'function') {
@@ -2517,6 +2583,7 @@ html.dark {
               b.textContent = saveBtnLabel(on);
               b.style.color = on ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
             });
+            refreshSaveButton();
           });
         }
 

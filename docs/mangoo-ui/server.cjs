@@ -4288,6 +4288,31 @@ function handleHttp(req, res) {
     return;
   }
 
+  if (urlPath === '/api/saved-messages') {
+    // Liste des messages enregistrés par le compte connecté, toutes conversations
+    // confondues (vue « Messages enregistrés » du Dashboard). Repli REST au canal
+    // temps réel `chat-saved-list` : garantit l'affichage même si le WebSocket
+    // n'est pas encore enregistré au moment du clic sur « Enregistrés ».
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const user = userByToken(token);
+    if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
+    if (req.method !== 'GET') {
+      res.writeHead(405, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: false, error: 'méthode non autorisée' }));
+      return;
+    }
+    const myId = routingIdForUser(user);
+    const list = chatLog.filter(function (m) {
+      return m && Array.isArray(m.savedBy) && m.savedBy.indexOf(myId) >= 0;
+    }).map(function (m) {
+      const cfrom = canonicalRoutingId(m.from);
+      return Object.assign({}, m, { from: cfrom, to: canonicalRoutingId(m.to), mine: cfrom === myId });
+    });
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate' });
+    res.end(JSON.stringify({ ok: true, messages: list }));
+    return;
+  }
+
   if (urlPath === '/api/calls') {
     // Historique des appels (entrants/sortants/manqués) du compte connecté.
     // Persisté dans data/calls.json : il survit au redémarrage du serveur et
