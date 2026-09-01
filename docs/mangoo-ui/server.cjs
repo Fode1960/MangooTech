@@ -6888,6 +6888,7 @@ loadBoosters();
 loadBoosterStats();
 loadVendorConfig();
 loadUsers();
+ensureSeedVendorUsers();
 loadSessions();
 normalizeVendorCities();
 loadPaymentMethods();

@@ -1631,6 +1631,7 @@ html.dark {
       .then(function(r){ return r.json(); })
       .then(function(data){
         var list = (data && data.vendors) || [];
+        if (!list.length) list = FALLBACK_CONTACTS;
         CONVERSATIONS = list.map(function(v){
           return { vendorId: String(v.vendorId || v.id || ''), name: v.name || 'Professionnel', img: v.img || '', type: v.type || '', category: v.category || '' };
         }).filter(function(c){ return c.vendorId; });
