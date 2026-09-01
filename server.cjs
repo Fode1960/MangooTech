@@ -1914,6 +1914,19 @@ function normalizeVendorCities() {
   }
 }
 
+// Assainit un logo avant exposition dans /api/carte : une image data-URL
+// surdimensionnée (plusieurs centaines de Ko, ex. logo vendeur mal compressé)
+// gonfle la réponse JSON et fige le rendu des cartes côté client (page lente,
+// cartes apparemment inopérantes). Au-delà du seuil, on renvoie une chaîne
+// vide : le client affiche alors l'avatar à initiale, léger et fiable.
+const MAX_LOGO_CHARS = 150000; // ~150 Ko en base64
+function safeLogo(logo) {
+  const s = typeof logo === 'string' ? logo.trim() : '';
+  if (!s) return '';
+  if (s.indexOf('data:') === 0 && s.length > MAX_LOGO_CHARS) return '';
+  return s;
+}
+
 function carteVendors() {
   // Réconcilie l'état des boosters (expiration des badges échus) avant de
   // construire l'annuaire, afin que la carte reflète les badges actifs en
@@ -1979,7 +1992,7 @@ function carteVendors() {
       price: '$$',
       live: isVendorLive(u.vendorId || u.id),
       desc: profile.description || '',
-      img: profile.logo || profile.cover || '',
+      img: safeLogo(profile.logo || profile.cover || ''),
       phone: profile.phone || u.phone || '',
       boosts: activeBoostsFor(u.vendorId || u.id)
     });
