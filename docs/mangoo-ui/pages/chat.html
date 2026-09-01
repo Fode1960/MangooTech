@@ -364,7 +364,7 @@ html.dark {
             <button id="btn-my-agenda" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors" title="Mes rendez-vous" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12);">
               <i data-lucide="calendar-days" class="w-4 h-4"></i>
             </button>
-            <button id="btn-saved-messages" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors" title="Messages enregistrés" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12);">
+            <button id="btn-saved-messages" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors" title="Messages favoris" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12);">
               <i data-lucide="bookmark" class="w-4 h-4"></i>
             </button>
           </div>
@@ -786,7 +786,7 @@ html.dark {
   // --- Enregistrer un message et le Consulter ---
   function saveButtonHtml(saved){
     var color = saved ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
-    return '<button type="button" data-msg-act="save" title="' + (saved ? 'Retirer des enregistrés' : 'Enregistrer ce message') + '" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:' + color + ';cursor:pointer;">' +
+    return '<button type="button" data-msg-act="save" title="' + (saved ? 'Retirer des favoris' : 'Mettre en favori') + '" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:' + color + ';cursor:pointer;">' +
       '<svg width="13" height="13" viewBox="0 0 24 24" fill="' + (saved ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>' +
     '</button>';
   }
@@ -1109,7 +1109,7 @@ html.dark {
           '<textarea data-edit-input style="width:100%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.45);border-radius:8px;padding:6px 8px;color:#fff;font-size:14px;line-height:1.4;resize:none;min-height:46px;box-sizing:border-box;">'+esc(m.text)+'</textarea>' +
           '<div style="display:flex;justify-content:flex-end;gap:6px;margin-top:6px;">' +
             '<button type="button" data-edit-cancel style="font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;">Annuler</button>' +
-            '<button type="button" data-edit-save style="font-size:12px;font-weight:600;border:none;background:#fff;color:rgb(var(--mgt-primary));border-radius:6px;padding:4px 12px;cursor:pointer;">Enregistrer</button>' +
+            '<button type="button" data-edit-save style="font-size:12px;font-weight:600;border:none;background:#fff;color:rgb(var(--mgt-primary));border-radius:6px;padding:4px 12px;cursor:pointer;">Sauvegarder</button>' +
           '</div>' +
         '</div>';
     } else {
@@ -1445,13 +1445,13 @@ html.dark {
     var head = document.createElement('div');
     head.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgb(var(--mgt-border));';
     head.innerHTML =
-      '<h3 style="font-size:16px;font-weight:700;color:rgb(var(--mgt-foreground));margin:0;">Messages enregistrés</h3>' +
+      '<h3 style="font-size:16px;font-weight:700;color:rgb(var(--mgt-foreground));margin:0;">Messages favoris</h3>' +
       '<button data-sv-close type="button" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:24px;line-height:1;cursor:pointer;">&times;</button>';
     box.appendChild(head);
     var body = document.createElement('div');
     body.style.cssText = 'flex:1;overflow-y:auto;padding:12px;';
     if (!list.length){
-      body.innerHTML = '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));text-align:center;padding:32px 12px;margin:0;">Aucun message enregistré. Touchez l\'icône signet d\'un message pour le retrouver ici.</p>';
+      body.innerHTML = '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));text-align:center;padding:32px 12px;margin:0;">Aucun favori. Touchez l\'icône signet d\'un message pour le retrouver ici.</p>';
     } else {
       list.forEach(function(it){
         var row = document.createElement('button');
