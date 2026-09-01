@@ -180,7 +180,8 @@
   }
 
   function attach(textarea, hostEl) {
-    if (!textarea || !hostEl) return;
+    if (!textarea || textarea.__mgtCorrected) return;
+    textarea.__mgtCorrected = true;
     // Active aussi le correcteur natif (soulignement rouge + suggestions du
     // navigateur) sur les terminaux qui le supportent.
     textarea.setAttribute('spellcheck', 'true');
@@ -189,10 +190,64 @@
     textarea.setAttribute('autocapitalize', 'sentences');
 
     var bar = buildBar();
-    hostEl.appendChild(bar);
+    if (hostEl) {
+      hostEl.appendChild(bar);
+    } else if (textarea.parentNode) {
+      textarea.parentNode.insertBefore(bar, textarea.nextSibling);
+    }
 
     textarea.addEventListener('input', function () { refresh(textarea, bar); });
+    refresh(textarea, bar);
   }
 
-  global.MangooCorrector = { attach: attach, findMistakes: findMistakes };
+  // Active le correcteur natif sur un champ, et le correcteur complet (barre de
+  // suggestions) s'il porte l'attribut `data-autocorrect`.
+  function enhanceField(el) {
+    if (!el || el.nodeType !== 1) return;
+    var tag = (el.tagName || '').toLowerCase();
+    var isTextInput = tag === 'textarea' ||
+      (tag === 'input' && /^(text|email|search|url|tel)$/.test(el.getAttribute('type') || 'text')) ||
+      el.isContentEditable;
+    if (isTextInput) {
+      el.setAttribute('spellcheck', 'true');
+      el.setAttribute('lang', 'fr');
+      el.setAttribute('autocorrect', 'on');
+      el.setAttribute('autocapitalize', 'sentences');
+    }
+    if (el.hasAttribute && el.hasAttribute('data-autocorrect')) {
+      attach(el, null);
+    }
+  }
+
+  function enhance(root) {
+    if (!root || !root.querySelectorAll) return;
+    var els = root.querySelectorAll('textarea, input, [contenteditable], [data-autocorrect]');
+    for (var i = 0; i < els.length; i++) enhanceField(els[i]);
+  }
+
+  function autoInit() {
+    enhance(document);
+    if (typeof MutationObserver !== 'undefined') {
+      var mo = new MutationObserver(function (muts) {
+        for (var i = 0; i < muts.length; i++) {
+          var added = muts[i].addedNodes;
+          for (var j = 0; j < added.length; j++) {
+            var n = added[j];
+            if (!n || n.nodeType !== 1) continue;
+            enhanceField(n);
+            if (n.querySelectorAll) enhance(n);
+          }
+        }
+      });
+      mo.observe(document.documentElement, { childList: true, subtree: true });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoInit);
+  } else {
+    autoInit();
+  }
+
+  global.MangooCorrector = { attach: attach, enhance: enhance, findMistakes: findMistakes };
 })(window);
