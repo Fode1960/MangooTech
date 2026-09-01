@@ -393,6 +393,20 @@ html.dark {
 
         <!-- Chat Input Bar -->
         <div id="chat-input" class="border-t border-border bg-card px-4 py-3 shrink-0">
+          <!-- Barre d'enregistrement vocal (visible pendant l'enregistrement) -->
+          <div id="chat-rec-bar" style="display:none;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;">
+            <span style="width:10px;height:10px;border-radius:50%;background:#ef4444;flex-shrink:0;animation:mgtpulse 1s infinite;"></span>
+            <span id="chat-rec-timer" style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));">0:00</span>
+            <span style="font-size:12px;color:rgb(var(--mgt-muted-foreground));flex:1;">Relâchez pour arrêter</span>
+          </div>
+          <!-- Aperçu du message vocal avant envoi -->
+          <div id="chat-rec-preview" style="display:none;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;">
+            <button type="button" data-voice-preview-play style="width:34px;height:34px;border-radius:50%;border:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgb(var(--mgt-accent));color:#fff;cursor:pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+            <span data-voice-preview-dur style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));">0:00</span>
+            <button type="button" data-voice-rerecord style="font-size:12px;font-weight:600;color:rgb(var(--mgt-primary));border:none;background:transparent;cursor:pointer;">Réenregistrer</button>
+            <button type="button" data-voice-cancel style="font-size:12px;font-weight:600;color:rgb(var(--mgt-error));border:none;background:transparent;cursor:pointer;">Supprimer</button>
+            <button type="button" data-voice-send style="margin-left:auto;font-size:12px;font-weight:700;color:#fff;background:rgb(var(--mgt-accent));border:none;border-radius:999px;padding:6px 14px;cursor:pointer;">Envoyer</button>
+          </div>
           <div class="flex items-end gap-2">
             <!-- Attachment Button -->
             <button id="btn-attach" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0" title="Joindre un fichier">
@@ -405,9 +419,9 @@ html.dark {
               <textarea id="chat-input-text" rows="1" placeholder="Écrivez votre message..." class="w-full resize-none rounded-2xl border border-border bg-muted px-4 py-2.5 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring))] focus:border-transparent transition-shadow" style="min-height: 42px; max-height: 120px;" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';"></textarea>
             </div>
 
-            <!-- Save Button -->
-            <button id="btn-save" type="button" class="w-10 h-10 flex items-center justify-center rounded-full border shrink-0 transition-all hover:opacity-90 active:scale-95" style="background-color: rgb(var(--mgt-card));border-color: rgb(var(--mgt-border));color: rgb(var(--mgt-muted-foreground));" title="Enregistrer le dernier message">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+            <!-- Micro Button -->
+            <button id="btn-mic" type="button" class="w-10 h-10 flex items-center justify-center rounded-full border shrink-0 transition-all hover:opacity-90 active:scale-95" style="background-color: rgb(var(--mgt-card));border-color: rgb(var(--mgt-border));color: rgb(var(--mgt-muted-foreground));touch-action:none;user-select:none;-webkit-user-select:none;" title="Maintenir pour enregistrer un message vocal">
+              <i data-lucide="mic" class="w-5 h-5"></i>
             </button>
 
             <!-- Send Button -->
@@ -721,7 +735,7 @@ html.dark {
   var threadEl = document.getElementById('chat-messages');
   var input = document.getElementById('chat-input-text');
   var sendBtn = document.getElementById('btn-send');
-  var saveBtn = document.getElementById('btn-save');
+  var micBtn = document.getElementById('btn-mic');
   var statusEl = document.getElementById('chat-peer-status');
   var convListNav = document.querySelector('#conversation-list nav');
   var searchQ = '';
@@ -785,30 +799,155 @@ html.dark {
     if (RT && typeof RT.toggleSavedMessage === 'function') RT.toggleSavedMessage(msgId, PEER.id);
   }
 
-  // Dernier message « enregistrable » de la conversation active : on remonte le
-  // fil depuis la fin et on s'arrête au premier message réel (hors système).
-  function lastSaveableMsg(){
-    var t = ACTIVE ? threadOf(ACTIVE) : [];
-    for (var i=t.length-1;i>=0;i--){
-      var m = t[i];
-      if (m.dir !== 'sys' && m.msgId) return m;
+  // ===== Messages vocaux (notes audio type WhatsApp) =====
+  function toast(msg){
+    var t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;z-index:9999;max-width:82vw;text-align:center;';
+    document.body.appendChild(t);
+    setTimeout(function(){ if (t.parentNode) t.parentNode.removeChild(t); }, 2600);
+  }
+  function ensureVoiceStyle(){
+    if (document.getElementById('mgt-voice-style')) return;
+    var s = document.createElement('style');
+    s.id = 'mgt-voice-style';
+    s.textContent = '@keyframes mgtvoice{0%,100%{transform:scaleY(.55)}50%{transform:scaleY(1)}}@keyframes mgtpulse{0%,100%{opacity:1}50%{opacity:.35}}.voice-bars{display:inline-flex;align-items:center;gap:2px;}.voice-bars i{transform-origin:center;display:inline-block;}.voice-bars.playing i{animation:mgtvoice 1s ease-in-out infinite;}.voice-bars.playing i:nth-child(2){animation-delay:.15s;}.voice-bars.playing i:nth-child(3){animation-delay:.3s;}.voice-bars.playing i:nth-child(4){animation-delay:.45s;}';
+    document.head.appendChild(s);
+  }
+  ensureVoiceStyle();
+
+  function fmtDur(sec){
+    sec = Math.max(0, Math.round(Number(sec) || 0));
+    var m = Math.floor(sec / 60), s = sec % 60;
+    return m + ':' + ('0' + s).slice(-2);
+  }
+  function pickAudioMime(){
+    if (window.MediaRecorder && typeof MediaRecorder.isTypeSupported === 'function'){
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) return 'audio/webm;codecs=opus';
+      if (MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
+      if (MediaRecorder.isTypeSupported('audio/mp4')) return 'audio/mp4';
     }
-    return null;
+    return '';
+  }
+  function voiceBarsHtml(){
+    var h = [10, 16, 8, 14];
+    return '<span class="voice-bars" style="opacity:.8;">' + h.map(function(x){ return '<i style="width:3px;height:'+x+'px;border-radius:2px;background:currentColor;"></i>'; }).join('') + '</span>';
+  }
+  function voiceBubbleInner(m, outgoing){
+    var btnBg = outgoing ? 'rgba(255,255,255,.22)' : 'rgb(var(--mgt-accent))';
+    return '<div style="display:flex;align-items:center;gap:10px;">' +
+      '<button type="button" data-voice-play style="width:34px;height:34px;border-radius:50%;border:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:'+btnBg+';color:#fff;cursor:pointer;">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>' +
+      '</button>' +
+      voiceBarsHtml() +
+      '<span style="font-size:12px;font-weight:600;'+(outgoing?'opacity:.9;':'color:rgb(var(--mgt-muted-foreground));')+'">'+fmtDur(m.duration)+'</span>' +
+    '</div>';
   }
 
-  // Synchronise le bouton « Enregistrer » en bas de la barre de saisie sur
-  // l'état du dernier message : icône pleine + couleur d'accent quand il est
-  // enregistré, grisée quand aucun message n'est disponible.
-  function refreshSaveButton(){
-    if (!saveBtn) return;
-    var m = lastSaveableMsg();
-    var saved = m ? !!m.saved : false;
-    var svg = saveBtn.querySelector('svg');
-    if (svg) svg.setAttribute('fill', saved ? 'currentColor' : 'none');
-    saveBtn.style.color = saved ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
-    saveBtn.style.opacity = m ? '1' : '0.45';
-    saveBtn.style.pointerEvents = m ? 'auto' : 'none';
-    saveBtn.setAttribute('title', m ? (saved ? 'Retirer des enregistrés' : 'Enregistrer le dernier message') : 'Aucun message');
+  var mediaRecorder = null;
+  var audioChunks = [];
+  var recStream = null;
+  var recStartAt = 0;
+  var recTimerId = null;
+  var pendingVoice = null;      // { audio: dataURL, duration, mime }
+  var voicePlayer = { audio: null, btn: null };
+  var recBar = document.getElementById('chat-rec-bar');
+  var recPreview = document.getElementById('chat-rec-preview');
+  var recTimerEl = document.getElementById('chat-rec-timer');
+
+  function setVoicePlaying(btn, playing){
+    var icon = btn && btn.querySelector('svg');
+    if (icon){
+      icon.innerHTML = playing
+        ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'
+        : '<path d="M8 5v14l11-7z"/>';
+    }
+    var bars = btn && btn.parentNode && btn.parentNode.querySelector('.voice-bars');
+    if (bars) bars.classList.toggle('playing', playing);
+  }
+  function toggleVoicePlay(btn, src){
+    if (!btn || !src) return;
+    if (voicePlayer.btn === btn && voicePlayer.audio){
+      try { voicePlayer.audio.pause(); } catch(e){}
+      return;
+    }
+    if (voicePlayer.audio){ try { voicePlayer.audio.pause(); } catch(e){} }
+    var a = new Audio(src);
+    a.onplay = function(){ setVoicePlaying(btn, true); };
+    a.onpause = function(){ setVoicePlaying(btn, false); };
+    a.onended = function(){
+      setVoicePlaying(btn, false);
+      if (voicePlayer.audio === a){ voicePlayer.audio = null; voicePlayer.btn = null; }
+    };
+    voicePlayer.audio = a; voicePlayer.btn = btn;
+    a.play().catch(function(){ setVoicePlaying(btn, false); });
+  }
+
+  function updateRecTimer(){
+    var sec = Math.floor((Date.now() - recStartAt) / 1000);
+    if (recTimerEl) recTimerEl.textContent = fmtDur(sec);
+  }
+  function startVoiceRecord(){
+    if (mediaRecorder && mediaRecorder.state === 'recording') return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder){
+      toast('Enregistrement vocal non supporté sur cet appareil.');
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
+      recStream = stream;
+      var mime = pickAudioMime();
+      var mr;
+      try { mr = new MediaRecorder(stream, mime ? { mimeType: mime } : {}); }
+      catch(e){ mr = new MediaRecorder(stream); }
+      audioChunks = [];
+      mr.ondataavailable = function(e){ if (e.data && e.data.size) audioChunks.push(e.data); };
+      mr.onstop = function(){
+        if (recStream){ recStream.getTracks().forEach(function(t){ t.stop(); }); recStream = null; }
+        var type = mr.mimeType || mime || 'audio/webm';
+        var blob = new Blob(audioChunks, { type: type });
+        var dur = Math.max(1, Math.round((Date.now() - recStartAt) / 1000));
+        var reader = new FileReader();
+        reader.onloadend = function(){
+          pendingVoice = { audio: reader.result, duration: dur, mime: type };
+          showRecPreview();
+        };
+        reader.readAsDataURL(blob);
+      };
+      mediaRecorder = mr;
+      mr.start(1000);
+      recStartAt = Date.now();
+      if (recBar) recBar.style.display = 'flex';
+      if (recPreview) recPreview.style.display = 'none';
+      updateRecTimer();
+      recTimerId = setInterval(updateRecTimer, 500);
+    }).catch(function(){
+      toast('Micro inaccessible. Autorisez l\'accès au micro puis réessayez.');
+    });
+  }
+  function stopVoiceRecord(){
+    if (mediaRecorder && mediaRecorder.state === 'recording'){ try { mediaRecorder.stop(); } catch(e){} }
+    if (recTimerId){ clearInterval(recTimerId); recTimerId = null; }
+    if (recBar) recBar.style.display = 'none';
+  }
+  function showRecPreview(){
+    if (!recPreview || !pendingVoice) return;
+    var durEl = recPreview.querySelector('[data-voice-preview-dur]');
+    if (durEl) durEl.textContent = fmtDur(pendingVoice.duration);
+    recPreview.style.display = 'flex';
+  }
+  function hideRecPreview(){
+    pendingVoice = null;
+    if (recPreview) recPreview.style.display = 'none';
+  }
+  function sendVoice(){
+    if (!pendingVoice || !ACTIVE) return;
+    var msgId = genMsgId();
+    var data = pendingVoice;
+    pushMsg(ACTIVE, { dir:'out', kind:'audio', audio:data.audio, duration:data.duration, mime:data.mime, time:nowTime(), msgId: msgId });
+    hideRecPreview();
+    renderThread();
+    renderSidebar();
+    if (RT && typeof RT.sendAudioMessage === 'function') RT.sendAudioMessage(PEER.id, data.audio, data.duration, data.mime, msgId);
   }
 
   function lastPreviewOf(id){
@@ -817,6 +956,7 @@ html.dark {
       var m = t[i];
       if (m.dir === 'sys') continue;
       if (m.kind === 'file') return '📎 ' + (m.name || 'Fichier');
+      if (m.kind === 'audio') return '🎤 Message vocal';
       return m.text || '';
     }
     return '';
@@ -898,7 +1038,6 @@ html.dark {
   // --- Rendu des messages (conversation active) ---
   function renderThread(){
     if (!threadEl) return;
-    refreshSaveButton();
     threadEl.innerHTML = '';
     var list = ACTIVE ? threadOf(ACTIVE) : [];
     if (!ACTIVE || !list.length){
@@ -959,6 +1098,11 @@ html.dark {
               '</div>'
             : '<p class="text-xs mt-1.5 text-foreground">'+(m.status==='accepted'?'Rendez-vous accepté ✓':'Rendez-vous refusé')+'</p>') +
         '</div>';
+    } else if (m.kind === 'audio'){
+      body =
+        '<div class="'+(outgoing?'bg-[rgb(var(--mgt-primary))] text-white rounded-2xl rounded-br-sm':'bg-white rounded-2xl rounded-bl-sm shadow-sm')+' px-3 py-2.5" style="min-width:180px;max-width:260px;">' +
+          voiceBubbleInner(m, outgoing) +
+        '</div>';
     } else if (editing){
       body =
         '<div class="bg-[rgb(var(--mgt-primary))] text-white rounded-2xl rounded-br-sm px-3 py-2.5" style="min-width:220px;">' +
@@ -983,7 +1127,7 @@ html.dark {
 
     // Menu d'actions (enregistrer / modifier / supprimer) sur les messages texte
     // sortants.
-    if (outgoing && !editing && m.kind !== 'file' && m.kind !== 'appt' && m.msgId) {
+    if (outgoing && !editing && m.kind !== 'file' && m.kind !== 'appt' && m.kind !== 'audio' && m.msgId) {
       var wrap = el.children[1];
       var actions = document.createElement('div');
       // Toujours visibles : sur tactile (Android) il n'y a pas de survol, les
@@ -1004,8 +1148,23 @@ html.dark {
       actBtns[2].addEventListener('click', function(e){ e.stopPropagation(); confirmDelete(m.msgId); });
     }
 
+    // Message vocal sortant : bouton « Supprimer » dédié (consulter se fait via
+    // le bouton lecture de la bulle ; il n'y a pas d'édition pour un audio).
+    if (outgoing && m.kind === 'audio' && m.msgId) {
+      var awrap = el.children[1];
+      var aacts = document.createElement('div');
+      aacts.style.cssText = 'display:flex;align-items:center;gap:4px;margin-top:2px;opacity:1;';
+      aacts.innerHTML =
+        '<button type="button" data-msg-act="delete" title="Supprimer" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:rgb(var(--mgt-muted-foreground));cursor:pointer;">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>' +
+        '</button>';
+      awrap.appendChild(aacts);
+      var adel = aacts.querySelector('[data-msg-act="delete"]');
+      if (adel) adel.addEventListener('click', function(e){ e.stopPropagation(); confirmDelete(m.msgId); });
+    }
+
     // Bouton « Enregistrer » sur les messages texte entrants.
-    if (!outgoing && !editing && m.kind !== 'file' && m.kind !== 'appt' && m.dir !== 'sys' && m.msgId) {
+    if (!outgoing && !editing && m.kind !== 'file' && m.kind !== 'appt' && m.kind !== 'audio' && m.dir !== 'sys' && m.msgId) {
       var inCol = el.children[1];
       if (inCol) {
         var inSave = document.createElement('div');
@@ -1025,6 +1184,10 @@ html.dark {
       if (cancel) cancel.addEventListener('click', function(){ cancelEdit(); });
       if (ta) { ta.focus(); var len = ta.value.length; ta.setSelectionRange(len, len); }
     }
+
+    // Lecture du message vocal.
+    var vPlay = el.querySelector('[data-voice-play]');
+    if (vPlay) vPlay.addEventListener('click', function(e){ e.stopPropagation(); toggleVoicePlay(vPlay, m.audio); });
 
     return el;
   }
@@ -1069,7 +1232,24 @@ html.dark {
 
   if (sendBtn) sendBtn.addEventListener('click', send);
   if (input) input.addEventListener('keydown', function(e){ if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); } });
-  if (saveBtn) saveBtn.addEventListener('click', function(){ var m = lastSaveableMsg(); if (m) toggleSave(m.msgId); });
+
+  // Micro : maintenir pour enregistrer, relâcher pour arrêter puis prévisualiser.
+  if (micBtn){
+    micBtn.addEventListener('pointerdown', function(e){ e.preventDefault(); startVoiceRecord(); });
+    micBtn.addEventListener('pointerup', function(){ stopVoiceRecord(); });
+    micBtn.addEventListener('pointercancel', function(){ stopVoiceRecord(); });
+  }
+  // Aperçu du message vocal : lecture, réenregistrement, suppression, envoi.
+  if (recPreview){
+    var vpPlay = recPreview.querySelector('[data-voice-preview-play]');
+    var vpRerecord = recPreview.querySelector('[data-voice-rerecord]');
+    var vpCancel = recPreview.querySelector('[data-voice-cancel]');
+    var vpSend = recPreview.querySelector('[data-voice-send]');
+    if (vpPlay) vpPlay.addEventListener('click', function(){ if (pendingVoice) toggleVoicePlay(vpPlay, pendingVoice.audio); });
+    if (vpRerecord) vpRerecord.addEventListener('click', function(){ hideRecPreview(); startVoiceRecord(); });
+    if (vpCancel) vpCancel.addEventListener('click', function(){ hideRecPreview(); });
+    if (vpSend) vpSend.addEventListener('click', sendVoice);
+  }
 
   // --- Indicateur « en train d'écrire » ---
   var typingIndicator = document.getElementById('typing-indicator');
@@ -1326,7 +1506,9 @@ html.dark {
     RT.onMessage(function(m){
       var from = m.from || '';
       if (!from) return;
-      pushMsg(from, { dir:'in', text:m.text, time:nowTime(), name:m.fromName, msgId:m.msgId });
+      var msgObj = { dir:'in', text:m.text || '', time:nowTime(), name:m.fromName, msgId:m.msgId };
+      if (m.kind === 'audio'){ msgObj.kind = 'audio'; msgObj.audio = m.audio; msgObj.duration = m.duration; msgObj.mime = m.mime; }
+      pushMsg(from, msgObj);
       if (from !== ACTIVE) UNREAD[from] = (UNREAD[from]||0)+1;
       if (from === ACTIVE) renderThread();
       renderSidebar();

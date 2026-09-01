@@ -556,6 +556,20 @@ html.dark {
               <button id="msg-reply-cancel" type="button" title="Annuler la réponse" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:rgb(var(--mgt-muted-foreground));padding:2px;"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
             <div id="msg-attachments" class="flex flex-wrap gap-2 mb-2"></div>
+            <!-- Barre d'enregistrement vocal -->
+            <div id="msg-rec-bar" style="display:none;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#ef4444;flex-shrink:0;animation:mgtpulse 1s infinite;"></span>
+              <span id="msg-rec-timer" style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));">0:00</span>
+              <span style="font-size:12px;color:rgb(var(--mgt-muted-foreground));flex:1;">Relâchez pour arrêter</span>
+            </div>
+            <!-- Aperçu du message vocal avant envoi -->
+            <div id="msg-rec-preview" style="display:none;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;">
+              <button type="button" data-voice-preview-play style="width:34px;height:34px;border-radius:50%;border:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgb(var(--mgt-primary));color:#fff;cursor:pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+              <span data-voice-preview-dur style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));">0:00</span>
+              <button type="button" data-voice-rerecord style="font-size:12px;font-weight:600;color:rgb(var(--mgt-primary));border:none;background:transparent;cursor:pointer;">Réenregistrer</button>
+              <button type="button" data-voice-cancel style="font-size:12px;font-weight:600;color:rgb(var(--mgt-error));border:none;background:transparent;cursor:pointer;">Supprimer</button>
+              <button type="button" data-voice-send style="margin-left:auto;font-size:12px;font-weight:700;color:#fff;background:rgb(var(--mgt-primary));border:none;border-radius:999px;padding:6px 14px;cursor:pointer;">Envoyer</button>
+            </div>
             <div class="flex items-end gap-3">
               <button id="btn-attach" title="Joindre un fichier" class="p-2.5 rounded-lg hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
               <input id="input-file" type="file" multiple class="hidden">
@@ -563,7 +577,7 @@ html.dark {
                 <textarea id="msg-input" rows="1" placeholder="Écrivez votre message…" class="w-full resize-none rounded-lg border border-[rgb(var(--mgt-input))] px-4 py-2.5 text-sm text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring))]/30 focus:border-[rgb(var(--mgt-ring))]"></textarea>
                 <button id="btn-emoji" type="button" title="Insérer un émoji" class="absolute right-2 bottom-2 p-1.5 rounded-md hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="smile" class="w-4.5 h-4.5"></i></button>
               </div>
-              <button id="msg-save" type="button" title="Enregistrer le dernier message" class="inline-flex items-center justify-center p-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors flex-shrink-0" style="opacity:.45;pointer-events:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg></button>
+              <button id="msg-mic" type="button" title="Maintenir pour enregistrer un message vocal" class="inline-flex items-center justify-center p-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors flex-shrink-0" style="touch-action:none;user-select:none;-webkit-user-select:none;"><i data-lucide="mic" class="w-5 h-5"></i></button>
               <button id="msg-send" type="button" title="Envoyer" class="inline-flex items-center gap-1.5 p-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white hover:bg-[rgb(var(--mgt-primary-700))] transition-colors flex-shrink-0"><i data-lucide="send" class="w-5 h-5"></i><span class="hidden sm:inline text-sm font-semibold">Envoyer</span></button>
             </div>
           </div>
@@ -1105,7 +1119,7 @@ html.dark {
       // ---- Envoi de message ----
       var input = document.getElementById('msg-input');
       var sendBtn = document.getElementById('msg-send');
-      var saveBtn = document.getElementById('msg-save');
+      var micBtn = document.getElementById('msg-mic');
       var thread = document.getElementById('msg-thread');
       var attachments = document.getElementById('msg-attachments');
 
@@ -1326,27 +1340,7 @@ html.dark {
           b.textContent = saveBtnLabel(!!SAVED[msgId]);
           b.style.color = SAVED[msgId] ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
         });
-        refreshSaveButton();
         toast(SAVED[msgId] ? 'Message enregistré.' : 'Message retiré des enregistrés.');
-      }
-      // Dernier message « enregistrable » de la conversation active (dernière
-      // bulle portant un identifiant dans le fil), et synchronisation du bouton
-      // « Enregistrer » placé en bas, à côté d'« Envoyer ».
-      function lastMsgId() {
-        if (!thread) return null;
-        var els = thread.querySelectorAll('.msg-bubble[data-msg-id]');
-        return els.length ? els[els.length - 1].getAttribute('data-msg-id') : null;
-      }
-      function refreshSaveButton() {
-        if (!saveBtn) return;
-        var id = lastMsgId();
-        var saved = id ? !!SAVED[id] : false;
-        var svg = saveBtn.querySelector('svg');
-        if (svg) svg.setAttribute('fill', saved ? 'currentColor' : 'none');
-        saveBtn.style.color = saved ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
-        saveBtn.style.opacity = id ? '1' : '0.45';
-        saveBtn.style.pointerEvents = id ? 'auto' : 'none';
-        saveBtn.setAttribute('title', id ? (saved ? 'Retirer des enregistrés' : 'Enregistrer le dernier message') : 'Aucun message');
       }
       function addSaveButton(container, msgId, forOutgoing) {
         if (!container || !msgId) return;
@@ -1685,20 +1679,240 @@ html.dark {
         }
       }
       if (sendBtn) sendBtn.addEventListener('click', sendMessage);
-      // Bouton « Enregistrer » en bas : cible le dernier message de la
-      // conversation active (comme le bouton par bulle, mais plus accessible).
-      if (saveBtn) saveBtn.addEventListener('click', function () {
-        var id = lastMsgId();
-        if (id) toggleSaved(id);
-      });
-      // Le fil est reconstruit de façon asynchrone (chargement d'historique,
-      // messages temps réel, suppressions…) : on observe ses enfants pour
-      // garder le bouton « Enregistrer » synchronisé avec le dernier message.
-      if (thread && typeof MutationObserver === 'function') {
-        try {
-          var saveObs = new MutationObserver(function () { refreshSaveButton(); });
-          saveObs.observe(thread, { childList: true });
-        } catch (e) {}
+
+      // ===== Messages vocaux (notes audio type WhatsApp) =====
+      // Le micro remplace l'ancien bouton signet « Enregistrer » placé en bas :
+      // il sert désormais à enregistrer un message vocal (consulter, réenregistrer,
+      // supprimer avant envoi, puis envoyer).
+      function ensureVoiceStyle() {
+        if (document.getElementById('mgt-msg-voice-style')) return;
+        var s = document.createElement('style');
+        s.id = 'mgt-msg-voice-style';
+        s.textContent = '@keyframes mgtpulse{0%,100%{opacity:1}50%{opacity:.35}}@keyframes mgtmsgvoice{0%,100%{transform:scaleY(.55)}50%{transform:scaleY(1)}}.msg-voice-bars{display:inline-flex;align-items:center;gap:2px;}.msg-voice-bars i{transform-origin:center;display:inline-block;}.msg-voice-bars.playing i{animation:mgtmsgvoice 1s ease-in-out infinite;}.msg-voice-bars.playing i:nth-child(2){animation-delay:.15s;}.msg-voice-bars.playing i:nth-child(3){animation-delay:.3s;}.msg-voice-bars.playing i:nth-child(4){animation-delay:.45s;}';
+        document.head.appendChild(s);
+      }
+      ensureVoiceStyle();
+
+      function fmtDur(sec) {
+        sec = Math.max(0, Math.round(Number(sec) || 0));
+        var m = Math.floor(sec / 60), s = sec % 60;
+        return m + ':' + ('0' + s).slice(-2);
+      }
+      function pickAudioMime() {
+        if (window.MediaRecorder && typeof MediaRecorder.isTypeSupported === 'function') {
+          if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) return 'audio/webm;codecs=opus';
+          if (MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
+          if (MediaRecorder.isTypeSupported('audio/mp4')) return 'audio/mp4';
+        }
+        return '';
+      }
+      function voiceBarsHtml() {
+        var h = [10, 16, 8, 14];
+        return '<span class="msg-voice-bars" style="opacity:.8;">' + h.map(function (x) { return '<i style="width:3px;height:' + x + 'px;border-radius:2px;background:currentColor;"></i>'; }).join('') + '</span>';
+      }
+      function voiceBubbleInner(duration, outgoing) {
+        var btnBg = outgoing ? 'rgba(255,255,255,.22)' : 'rgb(var(--mgt-primary))';
+        return '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<button type="button" data-voice-play style="width:34px;height:34px;border-radius:50%;border:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:' + btnBg + ';color:#fff;cursor:pointer;">' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>' +
+          '</button>' +
+          voiceBarsHtml() +
+          '<span style="font-size:12px;font-weight:600;' + (outgoing ? 'opacity:.9;' : 'color:rgb(var(--mgt-muted-foreground));') + '">' + fmtDur(duration) + '</span>' +
+        '</div>';
+      }
+
+      var mediaRecorder = null;
+      var audioChunks = [];
+      var recStream = null;
+      var recStartAt = 0;
+      var recTimerId = null;
+      var pendingVoice = null;      // { audio: dataURL, duration, mime }
+      var voicePlayer = { audio: null, btn: null };
+      var recBar = document.getElementById('msg-rec-bar');
+      var recPreview = document.getElementById('msg-rec-preview');
+      var recTimerEl = document.getElementById('msg-rec-timer');
+
+      function setVoicePlaying(btn, playing) {
+        var icon = btn && btn.querySelector('svg');
+        if (icon) {
+          icon.innerHTML = playing
+            ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'
+            : '<path d="M8 5v14l11-7z"/>';
+        }
+        var bars = btn && btn.parentNode && btn.parentNode.querySelector('.msg-voice-bars');
+        if (bars) bars.classList.toggle('playing', playing);
+      }
+      function toggleVoicePlay(btn, src) {
+        if (!btn || !src) return;
+        if (voicePlayer.btn === btn && voicePlayer.audio) {
+          try { voicePlayer.audio.pause(); } catch (e) {}
+          return;
+        }
+        if (voicePlayer.audio) { try { voicePlayer.audio.pause(); } catch (e) {} }
+        var a = new Audio(src);
+        a.onplay = function () { setVoicePlaying(btn, true); };
+        a.onpause = function () { setVoicePlaying(btn, false); };
+        a.onended = function () {
+          setVoicePlaying(btn, false);
+          if (voicePlayer.audio === a) { voicePlayer.audio = null; voicePlayer.btn = null; }
+        };
+        voicePlayer.audio = a; voicePlayer.btn = btn;
+        a.play().catch(function () { setVoicePlaying(btn, false); });
+      }
+
+      function updateRecTimer() {
+        var sec = Math.floor((Date.now() - recStartAt) / 1000);
+        if (recTimerEl) recTimerEl.textContent = fmtDur(sec);
+      }
+      function startVoiceRecord() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') return;
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+          toast('Enregistrement vocal non supporté sur cet appareil.');
+          return;
+        }
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+          recStream = stream;
+          var mime = pickAudioMime();
+          var mr;
+          try { mr = new MediaRecorder(stream, mime ? { mimeType: mime } : {}); }
+          catch (e) { mr = new MediaRecorder(stream); }
+          audioChunks = [];
+          mr.ondataavailable = function (e) { if (e.data && e.data.size) audioChunks.push(e.data); };
+          mr.onstop = function () {
+            if (recStream) { recStream.getTracks().forEach(function (t) { t.stop(); }); recStream = null; }
+            var type = mr.mimeType || mime || 'audio/webm';
+            var blob = new Blob(audioChunks, { type: type });
+            var dur = Math.max(1, Math.round((Date.now() - recStartAt) / 1000));
+            var reader = new FileReader();
+            reader.onloadend = function () {
+              pendingVoice = { audio: reader.result, duration: dur, mime: type };
+              showRecPreview();
+            };
+            reader.readAsDataURL(blob);
+          };
+          mediaRecorder = mr;
+          mr.start(1000);
+          recStartAt = Date.now();
+          if (recBar) recBar.style.display = 'flex';
+          if (recPreview) recPreview.style.display = 'none';
+          updateRecTimer();
+          recTimerId = setInterval(updateRecTimer, 500);
+        }).catch(function () {
+          toast('Micro inaccessible. Autorisez l\'accès au micro puis réessayez.');
+        });
+      }
+      function stopVoiceRecord() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') { try { mediaRecorder.stop(); } catch (e) {} }
+        if (recTimerId) { clearInterval(recTimerId); recTimerId = null; }
+        if (recBar) recBar.style.display = 'none';
+      }
+      function showRecPreview() {
+        if (!recPreview || !pendingVoice) return;
+        var durEl = recPreview.querySelector('[data-voice-preview-dur]');
+        if (durEl) durEl.textContent = fmtDur(pendingVoice.duration);
+        recPreview.style.display = 'flex';
+      }
+      function hideRecPreview() {
+        pendingVoice = null;
+        if (recPreview) recPreview.style.display = 'none';
+      }
+
+      // Bulle de message vocal sortant (professionnel, à droite).
+      function appendVendorVoice(audio, duration, msgId) {
+        if (!thread) return null;
+        var emptyEl = document.getElementById('msg-thread-empty');
+        if (emptyEl && emptyEl.parentNode) emptyEl.parentNode.removeChild(emptyEl);
+        var wrap = document.createElement('div');
+        wrap.className = 'flex flex-col items-end gap-1.5 max-w-[70%] ml-auto';
+        wrap.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:75%;margin-left:auto;box-sizing:border-box;min-width:0;';
+        var bubble = document.createElement('div');
+        bubble.className = 'bg-[rgb(var(--mgt-primary))] rounded-2xl rounded-br-md px-3 py-2.5 text-white';
+        bubble.style.cssText = 'min-width:180px;max-width:260px;box-sizing:border-box;';
+        bubble.innerHTML = voiceBubbleInner(duration, true);
+        wrap.appendChild(bubble);
+        if (msgId) {
+          wrap.setAttribute('data-msg-id', msgId);
+          wrap.classList.add('msg-bubble');
+          // Bouton « Supprimer » dédié : un audio ne s'édite pas, il se consulte
+          // via le bouton lecture et se supprime via cette action.
+          var actions = document.createElement('div');
+          actions.className = 'mgt-msg-actions';
+          actions.style.cssText = 'display:flex;gap:4px;align-items:center;margin-top:2px;';
+          var delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.textContent = 'Supprimer';
+          delBtn.style.cssText = 'font-size:11px;font-weight:600;color:rgb(var(--mgt-error));background:transparent;border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:2px 6px;border-radius:6px;';
+          delBtn.addEventListener('click', function (e) { e.stopPropagation(); confirmDeleteMessage(msgId); });
+          actions.appendChild(delBtn);
+          wrap.appendChild(actions);
+        }
+        thread.appendChild(wrap);
+        thread.scrollTop = thread.scrollHeight;
+        var play = wrap.querySelector('[data-voice-play]');
+        if (play) play.addEventListener('click', function (e) { e.stopPropagation(); toggleVoicePlay(play, audio); });
+        if (window.lucide) window.lucide.createIcons();
+        return wrap;
+      }
+      // Bulle de message vocal entrant (client, à gauche).
+      function appendIncomingVoice(audio, duration, msgId) {
+        if (!thread) return;
+        var emptyEl = document.getElementById('msg-thread-empty');
+        if (emptyEl && emptyEl.parentNode) emptyEl.parentNode.removeChild(emptyEl);
+        var name = currentConv ? currentConv.getAttribute('data-name') : 'Client';
+        var bubble = document.createElement('div');
+        bubble.className = 'flex items-end gap-2 max-w-[70%]';
+        bubble.style.cssText = 'display:flex;align-items:flex-end;gap:8px;max-width:75%;box-sizing:border-box;min-width:0;';
+        if (msgId) { bubble.setAttribute('data-msg-id', msgId); bubble.classList.add('msg-bubble'); }
+        bubble.innerHTML =
+          '<div class="w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-[10px] flex-shrink-0">' + esc(initials(name)) + '</div>' +
+          '<div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-3 py-2.5" style="min-width:180px;max-width:260px;box-sizing:border-box;">' +
+            voiceBubbleInner(duration, false) +
+          '</div>';
+        thread.appendChild(bubble);
+        thread.scrollTop = thread.scrollHeight;
+        var play = bubble.querySelector('[data-voice-play]');
+        if (play) play.addEventListener('click', function (e) { e.stopPropagation(); toggleVoicePlay(play, audio); });
+        if (window.lucide) window.lucide.createIcons();
+        requestAnimationFrame(function () { thread.scrollTop = thread.scrollHeight; });
+        return bubble;
+      }
+
+      function sendVoice() {
+        if (!pendingVoice) return;
+        var peer = activePeer();
+        if (!peer || !peer.id) { toast('Sélectionnez une conversation.'); return; }
+        var msgId = genMsgId();
+        var data = pendingVoice;
+        appendVendorVoice(data.audio, data.duration, msgId);
+        hideRecPreview();
+        if (currentConv) {
+          var last = currentConv.querySelector('p.truncate');
+          if (last) last.textContent = '🎤 Message vocal';
+          var time = currentConv.querySelector('.flex.items-center.justify-between span');
+          if (time) time.textContent = nowTime();
+        }
+        var rtNow = window.MangooConnect;
+        if (rtNow && typeof rtNow.sendAudioMessage === 'function') {
+          rtNow.sendAudioMessage(peer.id, data.audio, data.duration, data.mime, msgId);
+        }
+      }
+
+      // Micro : maintenir pour enregistrer, relâcher pour arrêter puis prévisualiser.
+      if (micBtn) {
+        micBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); startVoiceRecord(); });
+        micBtn.addEventListener('pointerup', function () { stopVoiceRecord(); });
+        micBtn.addEventListener('pointercancel', function () { stopVoiceRecord(); });
+      }
+      // Aperçu du message vocal : lecture, réenregistrement, suppression, envoi.
+      if (recPreview) {
+        var vpPlay = recPreview.querySelector('[data-voice-preview-play]');
+        var vpRerecord = recPreview.querySelector('[data-voice-rerecord]');
+        var vpCancel = recPreview.querySelector('[data-voice-cancel]');
+        var vpSend = recPreview.querySelector('[data-voice-send]');
+        if (vpPlay) vpPlay.addEventListener('click', function () { if (pendingVoice) toggleVoicePlay(vpPlay, pendingVoice.audio); });
+        if (vpRerecord) vpRerecord.addEventListener('click', function () { hideRecPreview(); startVoiceRecord(); });
+        if (vpCancel) vpCancel.addEventListener('click', function () { hideRecPreview(); });
+        if (vpSend) vpSend.addEventListener('click', sendVoice);
       }
 
       // ---- Réponse à un message précis (citation inline) ----
@@ -2263,7 +2477,10 @@ html.dark {
             // (ven-…) diffère du seed (pro-…). Repli sur la comparaison directe
             // pour les réponses non enrichies.
             var isMine = (m.mine === true) || (m.from === myId);
-            if (isMine) {
+            if (m.kind === 'audio') {
+              if (isMine) appendVendorVoice(m.audio, m.duration, m.msgId);
+              else appendIncomingVoice(m.audio, m.duration, m.msgId);
+            } else if (isMine) {
               appendVendorBubble('<p class="text-sm">' + esc(m.text || '') + '</p><span class="text-[10px] text-white/70 mt-1 block text-right">' + fmtTime(m.sentAt) + '</span>', [], m.msgId, m.replyPreview);
             } else {
               appendIncomingBubble(m.text || '', m.msgId, m.replyPreview);
@@ -2272,7 +2489,7 @@ html.dark {
           // Met à jour l'aperçu (dernier message) dans la liste de conversations.
           var last = msgs[msgs.length - 1];
           var p = conv.querySelector('p.truncate');
-          if (p && last) p.textContent = (last.file ? '📎 ' : '') + (last.text || '');
+          if (p && last) p.textContent = last.kind === 'audio' ? '🎤 Message vocal' : ((last.file ? '📎 ' : '') + (last.text || ''));
           if (conv.getAttribute('data-unread') === 'true') markRead(conv, true);
         }).catch(function () {});
       }
@@ -2524,6 +2741,36 @@ html.dark {
         }
 
         RT.onMessage(function (m) {
+          if (m && m.kind === 'audio') {
+            // Message vocal entrant : même logique que showIncoming, mais avec
+            // une bulle audio (lecture + durée) au lieu d'un texte.
+            var name = convNameForPeer(m.from, m.fromName);
+            var conv = ensureConversation(name, m.from);
+            var list = document.getElementById('msg-conv-list');
+            if (list && conv.parentNode === list && list.firstElementChild !== conv) {
+              list.insertBefore(conv, list.firstElementChild);
+            }
+            var active = currentConv && (
+              currentConv === conv ||
+              (m.from && currentConv.getAttribute('data-peer-id') === m.from)
+            );
+            if (active) {
+              if (currentConv !== conv) setActive(conv);
+              appendIncomingVoice(m.audio, m.duration, m.msgId);
+              conv.setAttribute('data-unread', 'false');
+              updateUnreadBadge();
+            } else {
+              conv.setAttribute('data-unread', 'true');
+              addUnreadBadge(conv);
+              var vtime = conv.querySelector('.flex.items-center.justify-between span');
+              if (vtime) vtime.textContent = nowTime();
+              updateUnreadBadge();
+              toast('Nouveau message vocal de ' + name);
+            }
+            var vlast = conv.querySelector('p.truncate');
+            if (vlast) vlast.textContent = '🎤 Message vocal';
+            return;
+          }
           showIncoming(m.from, m.fromName, m.text, m.msgId, m.replyPreview);
         });
 
@@ -2570,7 +2817,6 @@ html.dark {
               b.textContent = saveBtnLabel(!!e.saved);
               b.style.color = e.saved ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
             });
-            refreshSaveButton();
           });
         }
         if (typeof RT.getSavedMessages === 'function') {
@@ -2583,7 +2829,6 @@ html.dark {
               b.textContent = saveBtnLabel(on);
               b.style.color = on ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
             });
-            refreshSaveButton();
           });
         }
 
