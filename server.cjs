@@ -3195,6 +3195,8 @@ function handleMessage(ws, msg) {
     case 'chat-edit': handleChatEdit(ws, msg); break;
     case 'chat-delete': handleChatDelete(ws, msg); break;
     case 'chat-history': handleChatHistory(ws, msg); break;
+    case 'chat-save-toggle': handleChatSaveToggle(ws, msg); break;
+    case 'chat-saved-list': handleChatSavedList(ws, msg); break;
     case 'typing': handleTyping(ws, msg); break;
     case 'appointment-request': handleApptRequest(ws, msg); break;
     case 'appointment-confirm':
@@ -3472,6 +3474,47 @@ function handleChatHistory(ws, msg) {
     return Object.assign({}, m, { from: canonicalRoutingId(m.from), to: canonicalRoutingId(m.to) });
   });
   send(ws, { type: 'chat-history', convId: key, peer, messages: norm });
+}
+
+// « Enregistrer un message et le Consulter » : bascule l'état « enregistré » d'un
+// message pour l'utilisateur connecté. Action strictement personnelle (le pair ne
+// reçoit rien) : on mémorise l'identifiant canonique dans `savedBy` de l'entrée,
+// on ack l'émetteur et on synchronise ses autres onglets.
+function handleChatSaveToggle(ws, msg) {
+  const from = canonicalRoutingId(ws.meta && ws.meta.id);
+  const msgId = String(msg.msgId || '').trim();
+  if (!from || !msgId) {
+    send(ws, { type: 'chat-save-error', msgId, reason: 'paramètres manquants' });
+    return;
+  }
+  const entry = chatLog.find(function (m) { return m && m.msgId === msgId; });
+  if (!entry) {
+    send(ws, { type: 'chat-save-error', msgId, reason: 'message introuvable' });
+    return;
+  }
+  if (!Array.isArray(entry.savedBy)) entry.savedBy = [];
+  const idx = entry.savedBy.indexOf(from);
+  let saved;
+  if (idx >= 0) { entry.savedBy.splice(idx, 1); saved = false; }
+  else { entry.savedBy.push(from); saved = true; }
+  saveChatLog();
+  send(ws, { type: 'chat-save-ack', msgId, saved });
+  broadcastToPeer(from, { type: 'chat-saved', msgId, convId: entry.convId, saved: saved }, ws);
+}
+
+// Liste des messages enregistrés par l'utilisateur connecté, toutes conversations
+// confondues (vue « Messages enregistrés »). Renvoie chaque entrée avec ses
+// identifiants canonisés, comme `chat-history`.
+function handleChatSavedList(ws, msg) {
+  const from = canonicalRoutingId(ws.meta && ws.meta.id);
+  if (!from) { send(ws, { type: 'chat-saved-list', messages: [] }); return; }
+  const list = chatLog.filter(function (m) {
+    return m && Array.isArray(m.savedBy) && m.savedBy.indexOf(from) >= 0;
+  }).map(function (m) {
+    const cfrom = canonicalRoutingId(m.from);
+    return Object.assign({}, m, { from: cfrom, to: canonicalRoutingId(m.to), mine: cfrom === from });
+  });
+  send(ws, { type: 'chat-saved-list', messages: list });
 }
 
 /* --- Rendez-vous --- */
@@ -4234,7 +4277,11 @@ function handleHttp(req, res) {
     }).map(function (m) {
       const cfrom = canonicalRoutingId(m.from);
       const cto = canonicalRoutingId(m.to);
-      return Object.assign({}, m, { from: cfrom, to: cto, convId: convKey(cfrom, cto), mine: cfrom === myId });
+      return Object.assign({}, m, {
+        from: cfrom, to: cto, convId: convKey(cfrom, cto),
+        mine: cfrom === myId,
+        saved: Array.isArray(m.savedBy) && m.savedBy.indexOf(myId) >= 0
+      });
     });
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate' });
     res.end(JSON.stringify({ ok: true, messages: messages }));

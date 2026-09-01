@@ -765,8 +765,94 @@
     document.body.appendChild(bar);
   }
 
+  // --- Ouverture de la PWA via le logo (start_url = accueil) ---
+  // Quand une notification arrive alors que le Dashboard est fermé, le service
+  // worker mémorise sa cible (cache « mgt-push-state »). Si l'utilisateur ouvre
+  // ensuite la PWA via son icône/logo — et non en cliquant sur la notification —
+  // on le redirige vers le chat / l'overlay d'appel concerné, au lieu de le
+  // laisser sur la page d'accueil.
+  function readLastLanding() {
+    try {
+      if (!global.caches) return Promise.resolve(null);
+      return global.caches.open('mgt-push-state').then(function (cache) {
+        return cache.match('/__mgt_last_landing__');
+      }).then(function (resp) {
+        if (!resp) return null;
+        return resp.json().catch(function () { return null; });
+      }).catch(function () { return null; });
+    } catch (e) { return Promise.resolve(null); }
+  }
+
+  function clearLastLandingCache() {
+    try {
+      if (!global.caches) return Promise.resolve();
+      return global.caches.open('mgt-push-state').then(function (cache) {
+        return cache.delete('/__mgt_last_landing__');
+      }).catch(function () { /* ignore */ });
+    } catch (e) { return Promise.resolve(); }
+  }
+
+  function clearAppBadge() {
+    try {
+      if (global.navigator && typeof global.navigator.clearAppBadge === 'function') {
+        global.navigator.clearAppBadge().catch(function () { /* ignore */ });
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  function postClearNotifications() {
+    try {
+      if (!('serviceWorker' in navigator)) return;
+      var sw = navigator.serviceWorker.controller || null;
+      if (sw) { sw.postMessage({ type: 'CLEAR_NOTIFICATIONS' }); return; }
+      navigator.serviceWorker.ready.then(function (reg) {
+        if (reg && reg.active) reg.active.postMessage({ type: 'CLEAR_NOTIFICATIONS' });
+      }).catch(function () { /* ignore */ });
+    } catch (e) { /* ignore */ }
+  }
+
+  function maybeRedirectFromLanding() {
+    var path = (location.pathname || '').toLowerCase();
+    var isEntry = path === '/' || /(^|\/)(index|accueil)\.html$/.test(path);
+    if (!isEntry) { clearAppBadge(); return; }
+    if (global.__mgtLandingRedirected) return;
+
+    readLastLanding().then(function (landing) {
+      if (!landing || !landing.url) return;
+      // Ignore un landing périmé (plus de 4 minutes).
+      if (landing.ts && (Date.now() - Number(landing.ts)) > 240000) {
+        clearLastLandingCache();
+        return;
+      }
+      var target, tp;
+      try {
+        target = new URL(landing.url, location.origin).href;
+        tp = new URL(target, location.origin).pathname.toLowerCase();
+      } catch (e) { return; }
+      // Pas de redirection vers l'accueil / une page racine (évite toute boucle).
+      if (tp === path || tp === '/' || /(^|\/)(index|accueil)\.html$/.test(tp)) {
+        clearLastLandingCache();
+        return;
+      }
+      // Cohérence du rôle : un client va vers chat.html, un pro vers sa messagerie.
+      var u = readUser();
+      var role = u ? String(u.role || '').toLowerCase() : '';
+      var isPro = (role === 'vendeur' || role === 'prestataire' || role === 'livreur');
+      var isClient = (role === 'client' || role === 'cliente');
+      if (/chat\.html/.test(tp) && !isClient) { clearLastLandingCache(); return; }
+      if (/dashboard-messages\.html/.test(tp) && !isPro) { clearLastLandingCache(); return; }
+
+      global.__mgtLandingRedirected = true;
+      clearLastLandingCache();
+      postClearNotifications();
+      location.replace(target);
+    });
+  }
+
   // Injection automatique des métadonnées PWA + bandeau iOS (une fois).
   injectPwaMeta();
+  clearAppBadge();
+  maybeRedirectFromLanding();
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       maybeShowIosInstallBanner();
