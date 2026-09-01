@@ -264,9 +264,16 @@ function broadcastToPeer(id, obj, exceptWs) {
 function peersList() {
   const peers = [];
   clients.forEach((list, id) => {
-    const online = list.filter((c) => c.online);
-    if (online.length === 0) return;
-    const last = online[online.length - 1];
+    // La présence reflète la joignabilité réelle en messagerie : on ne retient
+    // que les identités ayant une socket ouverte sur une page de messagerie
+    // (chat client ou dashboard pro). Une socket ouverte ailleurs (accueil,
+    // carte, live) via autoRegisterClient ne doit pas faire apparaître
+    // l'utilisateur « en ligne » côté messagerie, sinon la présence devient
+    // asymétrique entre le client et le professionnel.
+    if (!isOnMessaging(id)) return;
+    const msgs = onlineMessagingSockets(id);
+    if (msgs.length === 0) return;
+    const last = msgs[msgs.length - 1];
     peers.push({ id, role: last.role, name: last.name });
   });
   return peers;
@@ -304,6 +311,14 @@ function createRoom(vendorId, vendorName, vendorWs) {
 }
 
 function roomById(vendorId) { return liveRooms.get(roomKey(vendorId)) || null; }
+
+// Un vendeur est « en live » si une salle active existe pour son id canonique.
+// Utilisé par /api/carte pour exposer un état live réel (au lieu du false codé
+// en dur) et garder cohérents les statuts entre la carte et la messagerie.
+function isVendorLive(vendorId) {
+  const r = roomById(canonicalRoutingId(vendorId));
+  return !!(r && r.active);
+}
 
 // Accepte indifféremment un vendorId brut (« dan-boutique ») ou un roomId
 // préfixé (« room-dan-boutique ») : l'annuaire transmet un roomId, les clients
@@ -1917,9 +1932,13 @@ function carteVendors() {
     const profile = (cfg && cfg.profile) || {};
     const type = u.role === 'vendeur' ? 'boutique' : 'prestataire';
     const category = carteCategory(profile.category || u.category || (type === 'boutique' ? 'boutique' : 'service'));
-    const rating = (cfg && cfg.rating != null)
+    const rawRating = (cfg && cfg.rating != null)
       ? Number(cfg.rating)
       : ((cfg && cfg.ranking && cfg.ranking.score != null) ? Number((cfg.ranking.score / 20).toFixed(1)) : 4.5);
+    // Ne jamais exposer une note nulle : une note absente ou égale à 0 est
+    // ramenée à la note par défaut (4.5). Corrige les cartes « ★ 0 » vues en
+    // production lorsque vendor-config.json enregistre rating:0.
+    const rating = (Number.isFinite(rawRating) && rawRating > 0) ? rawRating : 4.5;
 
     // Coordonnées + ville normalisées : les comptes « other » (ancienne option
     // « Autre ») sont ré-affectés à une vraie ville pour ne pas disparaître de
@@ -1958,7 +1977,7 @@ function carteVendors() {
       lng: lng,
       rating: rating,
       price: '$$',
-      live: false,
+      live: isVendorLive(u.vendorId || u.id),
       desc: profile.description || '',
       img: profile.logo || profile.cover || '',
       phone: profile.phone || u.phone || '',
