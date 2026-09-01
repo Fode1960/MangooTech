@@ -374,6 +374,7 @@
   var connState = 'offline';
   var reconnectAttempts = 0; // compteur de tentatives (backoff progressif)
   var reconnectTimer = null; // timer de reconnexion différée
+  var savedListPending = null; // callback en attente de la liste des messages enregistrés
 
   var presenceCbs = [];
   var messageCbs = [];
