@@ -351,11 +351,11 @@ html.dark {
               <span id="chat-peer-initial">DB</span>
               <img id="chat-peer-img" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
             </div>
-            <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2" style="background-color: rgb(var(--mgt-success)); border-color: rgb(var(--mgt-primary-700));"></span>
+            <span id="chat-peer-dot" class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2" style="background-color: rgb(var(--mgt-muted-foreground)); border-color: rgb(var(--mgt-primary-700));"></span>
           </div>
           <div class="flex-1 min-w-0">
             <h3 class="font-semibold text-sm truncate" id="chat-peer-name" style="color: rgb(var(--mgt-primary-50));">DAN Boutique</h3>
-            <p class="text-xs font-medium" id="chat-peer-status" style="color: rgb(var(--mgt-primary-100));">En ligne</p>
+            <p class="text-xs font-medium" id="chat-peer-status" style="color: rgb(var(--mgt-primary-200));">Hors ligne</p>
           </div>
           <div class="flex items-center gap-1">
             <button id="btn-call-audio" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors" title="Appel vocal" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12);">
@@ -970,6 +970,7 @@ html.dark {
     renderThread();
     renderSidebar();
     if (RT && typeof RT.sendAudioMessage === 'function') RT.sendAudioMessage(PEER.id, data.audio, data.duration, data.mime, msgId);
+    scheduleAutoReply(ACTIVE, PEER.name);
   }
 
   function lastPreviewOf(id){
@@ -1023,9 +1024,14 @@ html.dark {
 
   // --- Rendu en-tête ---
   function updateStatusEl(online){
-    if (!statusEl) return;
-    statusEl.textContent = online ? 'En ligne' : 'Hors ligne';
-    statusEl.style.color = online ? '#86efac' : 'rgb(var(--mgt-primary-200))';
+    if (statusEl){
+      statusEl.textContent = online ? 'En ligne' : 'Hors ligne';
+      statusEl.style.color = online ? '#86efac' : 'rgb(var(--mgt-primary-200))';
+    }
+    var dot = document.getElementById('chat-peer-dot');
+    if (dot){
+      dot.style.backgroundColor = online ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-muted-foreground))';
+    }
   }
   function renderHeader(){
     var c = convById(ACTIVE);
@@ -1239,6 +1245,41 @@ html.dark {
     renderSidebar();
   }
 
+  // --- Réponse automatique de démonstration ---
+  // Quand le professionnel destinataire n'est pas connecté en temps réel, aucune
+  // vraie réponse ne revient jamais vers le client (Dida) : son message part
+  // bien, mais reste sans accusé visible. Pour que la messagerie reste
+  // démontrable, on simule un « écrit… » puis une réponse automatique quelques
+  // instants après l'envoi, UNIQUEMENT si le pair est hors ligne (aucun risque
+  // de doublon avec une vraie réponse) et une seule fois par conversation.
+  var autoReplyPending = {};   // vendorId -> timeout id
+  function hasAutoReply(id){
+    var t = threadOf(id);
+    for (var i=0;i<t.length;i++) if (t[i].auto) return true;
+    return false;
+  }
+  function scheduleAutoReply(vendorId, peerName){
+    if (!vendorId) return;
+    if (ONLINE[vendorId]) return;           // le pro est connecté : il répondra lui-même
+    if (hasAutoReply(vendorId)) return;     // un accusé auto existe déjà ici
+    if (autoReplyPending[vendorId]) return;
+    var typingName = peerName || 'Le professionnel';
+    showTypingFor(typingName);
+    autoReplyPending[vendorId] = setTimeout(function(){
+      delete autoReplyPending[vendorId];
+      hideTyping();
+      if (!ACTIVE || ACTIVE !== vendorId) return;
+      var replies = [
+        'Merci pour votre message ! Nous sommes actuellement indisponibles, mais nous vous répondrons dès que possible. Vous pouvez aussi réserver un créneau directement depuis notre page Boutique.',
+        'Bien reçu ✅. Un conseiller revient vers vous très vite. En attendant, vous pouvez prendre rendez-vous depuis notre page Boutique.'
+      ];
+      var reply = replies[Math.floor(Math.random() * replies.length)];
+      pushMsg(vendorId, { dir:'in', text:reply, time:nowTime(), name: typingName, msgId: genMsgId(), auto: true });
+      renderThread();
+      renderSidebar();
+    }, 1600);
+  }
+
   // --- Envoi ---
   function send(){
     var text = input && input.value.trim();
@@ -1250,6 +1291,7 @@ html.dark {
     renderThread();
     renderSidebar();
     if (RT && typeof RT.sendMessage === 'function') RT.sendMessage(PEER.id, text, msgId);
+    scheduleAutoReply(ACTIVE, PEER.name);
   }
 
   if (sendBtn) sendBtn.addEventListener('click', send);
