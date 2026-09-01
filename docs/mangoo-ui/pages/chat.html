@@ -640,6 +640,17 @@ html.dark {
 </div>
 
 <script src="../assets/mangoo-connect-plus.js"></script>
+<script src="../assets/mangoo-autocorrect.js"></script>
+<script>
+(function () {
+  if (window.MangooCorrector) {
+    MangooCorrector.attach(
+      document.getElementById('chat-input-text'),
+      document.getElementById('chat-input')
+    );
+  }
+})();
+</script>
 <script>
 (function () {
   // Garde-fou : cette page est réservée aux clients. Si un professionnel
