@@ -832,11 +832,16 @@
 
   function onChatNew(msg) {
     var text = String(msg.text || '');
-    emit(messageCbs, { from: msg.from, fromName: msg.fromName, text: text, sentAt: msg.sentAt, msgId: msg.msgId, convId: msg.convId, replyTo: msg.replyTo, replyPreview: msg.replyPreview });
-    if (!text) return;
+    emit(messageCbs, {
+      from: msg.from, fromName: msg.fromName, text: text, sentAt: msg.sentAt,
+      msgId: msg.msgId, convId: msg.convId, replyTo: msg.replyTo, replyPreview: msg.replyPreview,
+      kind: msg.kind || 'text', audio: msg.audio, duration: msg.duration, mime: msg.mime
+    });
+    if (!text && msg.kind !== 'audio') return;
+    var display = msg.kind === 'audio' ? ('🎤 Message vocal (' + Math.max(1, Math.round(msg.duration || 0)) + ' s)') : text;
     var isCurrent = chatTarget && targetId(chatTarget) === String(msg.from || '');
     if (chatEl.classList.contains('open') && isCurrent) {
-      appendMsg('in', text);
+      appendMsg('in', display);
       return;
     }
     // Les pages qui affichent déjà leur propre fil (ex. chat.html) désactivent
@@ -846,7 +851,7 @@
     // discussion n'est pas ouverte (ou pas sur ce pair), on l'ouvre pour
     // afficher le texte immédiatement au lieu de le laisser « invisible ».
     openChat({ vendorId: msg.from, id: msg.from, name: msg.fromName || msg.from });
-    appendMsg('in', text);
+    appendMsg('in', display);
   }
 
   /* Indicateur « en train d'écrire » côté discussion (overlay). */
@@ -1060,6 +1065,17 @@
       var payload = { type: 'chat-message', to: to, text: String(text || '') };
       if (msgId) payload.msgId = String(msgId);
       if (replyTo) payload.replyTo = String(replyTo);
+      return enqueueOutbox(function () { sendWS(payload); });
+    },
+    // Envoie un message vocal (note audio) : `audio` est une data URL base64,
+    // `duration` la durée en secondes, `mime` le type MIME de l'enregistrement.
+    sendAudioMessage: function (to, audio, duration, mime, msgId) {
+      if (!to || !audio) return false;
+      var payload = {
+        type: 'chat-audio', to: to, audio: String(audio),
+        duration: Number(duration) || 0, mime: String(mime || 'audio/webm')
+      };
+      if (msgId) payload.msgId = String(msgId);
       return enqueueOutbox(function () { sendWS(payload); });
     },
     // Modifie un message déjà envoyé (auteur uniquement, résolu par msgId côté

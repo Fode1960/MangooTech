@@ -3192,6 +3192,7 @@ function handleMessage(ws, msg) {
     case 'call-end': handleCallEnd(ws, msg); break;
     case 'ice-candidate': handleIce(ws, msg); break;
     case 'chat-message': handleChatMessage(ws, msg); break;
+    case 'chat-audio': handleChatAudio(ws, msg); break;
     case 'chat-edit': handleChatEdit(ws, msg); break;
     case 'chat-delete': handleChatDelete(ws, msg); break;
     case 'chat-history': handleChatHistory(ws, msg); break;
@@ -3409,6 +3410,54 @@ function handleTyping(ws, msg) {
   broadcastToPeer(to, {
     type: 'typing', from, fromName: ws.meta.name, isTyping: !!msg.isTyping
   });
+}
+
+// Message vocal (note audio type WhatsApp). L'audio est transmis en base64
+// (data URL) via le canal WebSocket, stocké dans le chatLog pour survivre au
+// redémarrage, puis diffusé au destinataire sous `chat-new` avec `kind: 'audio'`.
+// Borné en taille (≈4 Mo base64, soit quelques minutes de voix en opus) pour
+// éviter de gonfler messages.json de façon abusive.
+const MAX_AUDIO_B64 = 4 * 1024 * 1024;
+function handleChatAudio(ws, msg) {
+  const from = canonicalRoutingId(ws.meta.id);
+  const to = canonicalRoutingId(String(msg.to || '').trim());
+  const audio = String(msg.audio || '');
+  const duration = Number(msg.duration) || 0;
+  const mime = String(msg.mime || 'audio/webm').slice(0, 80);
+  if (!from || !to || !audio || audio.length > MAX_AUDIO_B64) {
+    send(ws, { type: 'chat-audio-error', reason: 'audio invalide ou trop volumineux' });
+    return;
+  }
+  const entry = {
+    msgId: msg.msgId || rand(),
+    convId: convKey(from, to),
+    from, to,
+    kind: 'audio',
+    audio: audio,
+    duration: duration,
+    mime: mime,
+    sentAt: nowIso()
+  };
+  chatLog.push(entry);
+  saveChatLog();
+  send(ws, { type: 'chat-ack', msgId: entry.msgId, sentAt: entry.sentAt });
+  broadcastToPeer(to, {
+    type: 'chat-new', msgId: entry.msgId, convId: entry.convId,
+    from, fromName: ws.meta.name,
+    kind: 'audio', audio: entry.audio, duration: entry.duration, mime: entry.mime,
+    text: '', sentAt: entry.sentAt
+  });
+  // Destinataire absent de sa messagerie : notification Web Push native.
+  if (!isOnMessaging(to)) {
+    const fromName = (ws.meta && ws.meta.name) || '';
+    sendPush(to, {
+      title: fromName || 'Nouveau message',
+      body: '🎤 Message vocal (' + Math.max(1, Math.round(duration)) + ' s)',
+      url: pushLandingUrl({ routingId: to, kind: 'message', from: from, fromName: fromName, convId: entry.convId }),
+      tag: 'msg-' + entry.msgId,
+      data: { kind: 'message', from: from, fromName: fromName, convId: entry.convId }
+    });
+  }
 }
 
 // Édition d'un message déjà envoyé. Seul l'auteur peut modifier son message :
