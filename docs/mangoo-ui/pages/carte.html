@@ -303,7 +303,7 @@ html.dark {
       <a href="carte.html" class="text-sm font-medium border-b-2 pb-0.5 transition-opacity" style="color: rgb(var(--mgt-accent)); border-color: rgb(var(--mgt-accent)); font-family: var(--mgt-font-sans);">Boutique &amp; Prestataires</a>
       <a href="./comparatif-prestataire-boutique.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Comparatif</a>
       <a href="accueil.html#a-propos" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">A propos</a>
-      <a href="./auth.html" class="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Connexion</a>
+      <a href="./auth.html" id="nav-auth-btn" class="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Connexion</a>
     </nav>
     <button id="mobile-menu-toggle" class="block md:hidden p-2 rounded-md" style="color: rgb(var(--mgt-primary-foreground));" aria-label="Menu">
       <i data-lucide="menu" class="h-6 w-6"></i>
@@ -2423,6 +2423,36 @@ html.dark {
   var toggle=document.getElementById('mobile-menu-toggle');
   if(toggle){toggle.addEventListener('click',function(){drawer.classList.contains('open')?close():open();});}
   if(window.lucide)lucide.createIcons();
+})();
+</script>
+<script>
+(function(){
+  // Adapte le bouton d'en-tête à la session courante : si un utilisateur est
+  // connecté (client ou professionnel), on remplace « Connexion » par un accès
+  // direct à son espace ; sinon on conserve le lien de connexion.
+  function roleOf(u){ return String((u && u.role) || '').toLowerCase(); }
+  function apply(){
+    var btn = document.getElementById('nav-auth-btn');
+    if (!btn) return;
+    var u = null;
+    try { u = JSON.parse(localStorage.getItem('mgt_user') || 'null'); } catch (e) { u = null; }
+    var role = roleOf(u);
+    if (role === 'client' || role === 'cliente') {
+      btn.setAttribute('href', './client-dashboard.html');
+      btn.textContent = 'Mon espace';
+    } else if (role === 'prestataire' || role === 'vendeur' || role === 'livreur') {
+      btn.setAttribute('href', './dashboard-overview.html');
+      btn.textContent = 'Mon dashboard';
+    } else {
+      btn.setAttribute('href', './auth.html');
+      btn.textContent = 'Connexion';
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', apply);
+  } else {
+    apply();
+  }
 })();
 </script>
 <script src="../assets/mangoo-connect-plus.js"></script>
