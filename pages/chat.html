@@ -754,6 +754,14 @@ html.dark {
   var convListNav = document.querySelector('#conversation-list nav');
   var searchQ = '';
 
+  // Repli défensif : si l'annuaire /api/carte renvoie une liste vide (ex. base
+  // users non encore réconciliée côté serveur), le client conserve au moins le
+  // contact de démonstration DAN Boutique comme destinataire, afin que l'envoi,
+  // la réception et les appels ne restent jamais bloqués faute de conversation.
+  var FALLBACK_CONTACTS = [
+    { vendorId: 'pro-41cafa4bcb31', name: 'DAN Boutique', img: '', type: 'boutique', category: 'commerce' }
+  ];
+
   function convById(id){ for (var i=0;i<CONVERSATIONS.length;i++) if (CONVERSATIONS[i].vendorId===id) return CONVERSATIONS[i]; return null; }
 
   // Rejoue un état de présence (liste de peers) sur les conversations chargées.
