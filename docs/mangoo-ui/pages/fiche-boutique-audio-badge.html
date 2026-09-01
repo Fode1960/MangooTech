@@ -950,16 +950,16 @@ window.__mgtInitBoutique = function () {
 
   var ORDER_STEPS = {
     livraison: [
-      { label: 'Commande recue', desc: 'Votre commande a bien ete enregistree', icon: 'receipt' },
-      { label: 'En preparation', desc: 'Votre commande est en cours de preparation', icon: 'package' },
+      { label: 'Commande reçue', desc: 'Votre commande a bien été enregistrée', icon: 'receipt' },
+      { label: 'En préparation', desc: 'Votre commande est en cours de préparation', icon: 'package' },
       { label: 'En cours de livraison', desc: 'Le livreur est en route vers vous', icon: 'bike' },
-      { label: 'Livree', desc: 'Merci pour votre commande !', icon: 'check-circle-2' }
+      { label: 'Livrée', desc: 'Merci pour votre commande !', icon: 'check-circle-2' }
     ],
     retrait: [
-      { label: 'Commande recue', desc: 'Votre commande a bien ete enregistree', icon: 'receipt' },
-      { label: 'En preparation', desc: 'Votre commande est en cours de preparation', icon: 'package' },
-      { label: 'Prete au retrait', desc: 'Recuperez votre commande en boutique', icon: 'store' },
-      { label: 'Recuperee', desc: 'Merci de votre visite !', icon: 'check-circle-2' }
+      { label: 'Commande reçue', desc: 'Votre commande a bien été enregistrée', icon: 'receipt' },
+      { label: 'En préparation', desc: 'Votre commande est en cours de préparation', icon: 'package' },
+      { label: 'Prête au retrait', desc: 'Récupérez votre commande en boutique', icon: 'store' },
+      { label: 'Récupérée', desc: 'Merci de votre visite !', icon: 'check-circle-2' }
     ]
   };
 
@@ -1132,7 +1132,7 @@ window.__mgtInitBoutique = function () {
     var done = lastOrder.statusIndex >= steps.length - 1;
     trackFab.classList.remove('hidden');
     trackFab.classList.add('flex');
-    trackFabLabel.textContent = done ? 'Commande ' + (lastOrder.fulfillment === 'retrait' ? 'recuperee' : 'livree') : 'Suivre ma commande';
+    trackFabLabel.textContent = done ? 'Commande ' + (lastOrder.fulfillment === 'retrait' ? 'récupérée' : 'livrée') : 'Suivre ma commande';
     if (trackFabDot) trackFabDot.style.backgroundColor = done ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-warning))';
   }
 
@@ -1171,7 +1171,7 @@ window.__mgtInitBoutique = function () {
       trackingHeader.innerHTML = '<div class="flex items-center justify-between gap-3">' +
         '<div class="min-w-0">' +
           '<p class="caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">Commande ' + lastOrder.orderNo + '</p>' +
-          '<p class="body font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">' + (lastOrder.fulfillment === 'retrait' ? 'Retrait en boutique' : 'Livraison a domicile') + '</p>' +
+          '<p class="body font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">' + (lastOrder.fulfillment === 'retrait' ? 'Retrait en boutique' : 'Livraison à domicile') + '</p>' +
         '</div>' +
         '<span class="rounded-full px-3 py-1 text-xs font-bold" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">' + formatFCFA(lastOrder.total) + '</span>' +
       '</div>';
@@ -1205,7 +1205,7 @@ window.__mgtInitBoutique = function () {
 
     if (trackingEta) {
       if (done) {
-        trackingEta.innerHTML = '<div class="flex items-center gap-2 text-sm font-semibold" style="color: rgb(var(--mgt-success)); font-family: var(--mgt-font-sans);"><i data-lucide="check-circle-2" class="h-4 w-4"></i>Commande ' + (lastOrder.fulfillment === 'retrait' ? 'recuperee' : 'livree') + '. Merci !</div>';
+        trackingEta.innerHTML = '<div class="flex items-center gap-2 text-sm font-semibold" style="color: rgb(var(--mgt-success)); font-family: var(--mgt-font-sans);"><i data-lucide="check-circle-2" class="h-4 w-4"></i>Commande ' + (lastOrder.fulfillment === 'retrait' ? 'récupérée' : 'livrée') + '. Merci !</div>';
       } else {
         var currentStep = steps[cur];
         trackingEta.innerHTML = '<div class="flex items-center justify-between gap-2">' +
@@ -1332,13 +1332,13 @@ window.__mgtInitBoutique = function () {
         '<div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full" style="background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-full);">' +
           '<i data-lucide="check-circle-2" class="h-9 w-9" style="color: rgb(var(--mgt-primary));"></i>' +
         '</div>' +
-        '<h3 class="h3 mb-2" style="color: rgb(var(--mgt-foreground));">Commande confirmee !</h3>' +
+        '<h3 class="h3 mb-2" style="color: rgb(var(--mgt-foreground));">Commande confirmée !</h3>' +
         '<p class="body mb-1" style="color: rgb(var(--mgt-muted-foreground));">Merci pour votre commande chez ' + (window._mcpVendor && window._mcpVendor.name ? window._mcpVendor.name : 'cette boutique') + '.</p>' +
         '<p class="body font-semibold mb-4" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">' + orderNo + '</p>' +
         '<div class="mb-6 rounded-md p-3 text-left" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md);">' +
-          '<p class="caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">' + (lastOrder.fulfillment === 'retrait' ? 'Retrait en boutique' : 'Livraison a domicile') + '</p>' +
+          '<p class="caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">' + (lastOrder.fulfillment === 'retrait' ? 'Retrait en boutique' : 'Livraison à domicile') + '</p>' +
           '<p class="caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">' + orderItems.length + ' article(s) — Total : ' + formatFCFA(lastOrder.total) + '</p>' +
-          '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Delai estime : ' + (lastOrder.fulfillment === 'retrait' ? '20-30 min' : '35-50 min') + '</p>' +
+          '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Délai estimé : ' + (lastOrder.fulfillment === 'retrait' ? '20-30 min' : '35-50 min') + '</p>' +
         '</div>' +
         '<div class="space-y-2">' +
           '<button id="checkout-track" class="w-full rounded-md px-6 py-3 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">Suivre la livraison</button>' +
@@ -1387,7 +1387,7 @@ window.__mgtInitBoutique = function () {
     var savedSelectHtml = '';
     if (savedAddresses.length) {
       var def = window.MangooClient.getDefaultAddress();
-      savedSelectHtml = '<div class="mb-2"><p class="caption mb-1.5 font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Choisir une adresse enregistree</p>' +
+      savedSelectHtml = '<div class="mb-2"><p class="caption mb-1.5 font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Choisir une adresse enregistrée</p>' +
         '<select id="checkout-saved-address" class="w-full rounded-md border px-3 py-2.5 text-sm" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">' +
         '<option value="">— Saisir une nouvelle adresse —</option>' +
         savedAddresses.map(function (a) {
