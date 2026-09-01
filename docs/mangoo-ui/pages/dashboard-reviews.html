@@ -714,7 +714,7 @@ html.dark {
               </div>
             </div>
             <label class="block text-xs font-medium text-[rgb(var(--mgt-foreground))] mb-1.5">Message personnalisé (optionnel)</label>
-            <textarea id="reminder-message" rows="3" placeholder="Laissez vide pour envoyer le message par défaut." style="width:100%;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:13px;outline:none;resize:vertical;font-family:var(--mgt-font-sans);"></textarea>
+            <textarea id="reminder-message" rows="3" data-autocorrect placeholder="Laissez vide pour envoyer le message par défaut." style="width:100%;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:13px;outline:none;resize:vertical;font-family:var(--mgt-font-sans);"></textarea>
             <div class="flex items-center justify-end gap-3 mt-5">
               <button id="reminder-cancel" class="px-4 py-2 rounded-lg text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">Annuler</button>
               <button id="reminder-confirm" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-600))] transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
@@ -763,7 +763,7 @@ html.dark {
         var form = document.createElement('div');
         form.className = 'js-reply-form mt-2';
         form.innerHTML =
-          '<textarea class="js-reply-text" placeholder="Rédigez votre réponse..." style="width:100%;min-height:72px;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:13px;outline:none;resize:vertical;font-family:var(--mgt-font-sans);"></textarea>' +
+          '<textarea class="js-reply-text" data-autocorrect placeholder="Rédigez votre réponse..." style="width:100%;min-height:72px;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:13px;outline:none;resize:vertical;font-family:var(--mgt-font-sans);"></textarea>' +
           '<div style="display:flex;gap:8px;margin-top:8px;">' +
           '<button class="js-reply-cancel" style="flex:1;height:36px;border:1px solid rgb(var(--mgt-border));border-radius:9px;background:transparent;color:rgb(var(--mgt-foreground));font-size:13px;font-weight:600;cursor:pointer;">Annuler</button>' +
           '<button class="js-reply-send" style="flex:1;height:36px;border:none;border-radius:9px;background:rgb(var(--mgt-primary));color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Envoyer</button></div>';
@@ -918,5 +918,6 @@ html.dark {
 
 <script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
 <script src="../assets/mangoo-dashboard-shell.js"></script>
+<script src="../assets/mangoo-autocorrect.js"></script>
 </body>
 </html>

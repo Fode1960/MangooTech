@@ -64,6 +64,17 @@
       b.setAttribute('href', href);
       b.textContent = label;
     }
+
+    // Bouton « Retour au dashboard » : affiché uniquement pour un professionnel
+    // connecté (ou en mode démo pro), à côté de la navigation principale.
+    var backs = document.querySelectorAll('[data-nav-back-dashboard]');
+    var showBack = isPro() || !!demoRole();
+    for (var k = 0; k < backs.length; k++) {
+      var bk = backs[k];
+      bk.style.display = showBack ? '' : 'none';
+      if (showBack && isClient()) bk.setAttribute('href', './client-dashboard.html');
+      else if (showBack) bk.setAttribute('href', './dashboard-overview.html' + (demoRole() ? '?demo=' + demoRole() : ''));
+    }
   }
 
   // Si la session locale est vide (localStorage nettoyé, autre onglet, cookie
