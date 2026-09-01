@@ -881,7 +881,8 @@ html.dark {
     var label = isBoutique ? 'Boutique' : 'Prestataire';
     var cta = isBoutique ? 'Voir la boutique' : 'Voir la fiche';
     var href = (isBoutique ? 'fiche-boutique.html' : 'fiche.html') + '?vendorId=' + encodeURIComponent(v.vendorId);
-    var logo = (typeof v.img === 'string' && v.img.trim()) ? v.img : '';
+    var rawImg = (typeof v.img === 'string') ? v.img : '';
+    var logo = (rawImg.trim() && !(rawImg.indexOf('data:') === 0 && rawImg.length > 150000)) ? rawImg : '';
     var avatar = logo
       ? '<img src="' + escHtml(logo) + '" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:var(--mgt-radius-sm);display:block;">'
       : '<div style="width:44px;height:44px;border-radius:var(--mgt-radius-sm);background:rgb(var(--mgt-primary));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;">' + escHtml(String(v.name || '?').charAt(0).toUpperCase()) + '</div>';
@@ -910,21 +911,23 @@ html.dark {
         var commerces = list.filter(function (v) { return v && (v.type === 'boutique' || v.type === 'prestataire'); });
         if (!commerces.length) return;
         scroll.innerHTML = commerces.map(commerceCard).join('');
-        if (window.lucide) window.lucide.createIcons();
-        // « Contacter » ouvre la messagerie interne (reste dans l'app) vers le bon
-        // prestataire, résolu par son vendorId réel (DAN Coiffure inclus).
-        scroll.querySelectorAll('[data-action="contact"]').forEach(function (btn) {
-          btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var card = btn.closest('.favorites-card');
-            var vid = card ? card.getAttribute('data-vendor-id') : '';
-            location.href = './chat.html' + (vid ? '?vendorId=' + encodeURIComponent(vid) : '');
-          });
-        });
+        try { if (window.lucide) window.lucide.createIcons(); } catch (e) {}
       })
       .catch(function () { /* silencieux : l'état vide reste affiché */ });
   }
+
+  // Délégation « Contacter » : un seul écouteur global gère les clics sur les
+  // cartes commerce, y compris injectées dynamiquement. Plus robuste qu'un
+  // attachement par bouton après chaque re-rendu.
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    var btn = (t && t.closest) ? t.closest('[data-action="contact"]') : null;
+    if (!btn) return;
+    e.preventDefault();
+    var card = btn.closest('.favorites-card');
+    var vid = card ? card.getAttribute('data-vendor-id') : '';
+    location.href = './chat.html' + (vid ? '?vendorId=' + encodeURIComponent(vid) : '');
+  });
 
   syncStoreKpis();
   syncIdentity();

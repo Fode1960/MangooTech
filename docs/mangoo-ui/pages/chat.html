@@ -1253,7 +1253,6 @@ html.dark {
   function scheduleAutoReply(vendorId, peerName){
     if (!vendorId) return;
     if (ONLINE[vendorId]) return;           // le pro est connecté : il répondra lui-même
-    if (hasAutoReply(vendorId)) return;     // un accusé auto existe déjà ici
     if (autoReplyPending[vendorId]) return;
     var typingName = peerName || 'Le professionnel';
     showTypingFor(typingName);
