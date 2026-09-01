@@ -1667,8 +1667,74 @@ html.dark {
     if (typeof RT.register === 'function') RT.register('client', CLIENT.id, CLIENT.name);
   }
 
+  // --- Annuaire résilient : garantit qu'un contact est toujours présent ---
+  // Ajoute (sans doublon) une conversation pour un pair donné. Un contact ciblé
+  // via l'URL (vendorId/from) ou déjà présent dans l'historique local (THREADS)
+  // doit rester sélectionnable même si /api/carte échoue ou ne le référence pas
+  // (ex. compte vendeur absent de users). Sinon ACTIVE reste null et l'envoi
+  // (bouton Envoyez) est silencieusement bloqué par la garde `if (!ACTIVE)`.
+  function upsertConversation(vendorId, name, img, type, category){
+    vendorId = String(vendorId || '').trim();
+    if (!vendorId) return null;
+    var existing = convById(vendorId);
+    if (existing) return existing;
+    var c = { vendorId: vendorId, name: name || vendorId, img: img || '', type: type || '', category: category || '' };
+    CONVERSATIONS.push(c);
+    return c;
+  }
+  // Nom d'un pair déduit de son historique local (dernier message entrant).
+  function peerNameFromThread(id){
+    var t = THREADS[id] || [];
+    for (var i=t.length-1;i>=0;i--){ if (t[i] && t[i].name) return t[i].name; }
+    return '';
+  }
+  // Reconstruit les conversations depuis l'historique local (THREADS) : tout
+  // pair avec qui on a déjà échangé reste joignable, même hors annuaire.
+  function mergeThreadsIntoConversations(){
+    Object.keys(THREADS).forEach(function(id){
+      if (convById(id)) return;
+      upsertConversation(id, peerNameFromThread(id) || id, '');
+    });
+  }
+  // Détermine la conversation à ouvrir en priorité (cible URL, sinon première).
+  function resolveInitialTarget(qp, hasLanding){
+    var wantVid = qp.get('vendorId') || qp.get('from');
+    var wantName = qp.get('to') || qp.get('fromName');
+    if (wantVid && convById(wantVid)) return wantVid;
+    if (wantName){
+      var norm = String(wantName).trim().toLowerCase();
+      for (var i=0;i<CONVERSATIONS.length;i++){
+        var n = String(CONVERSATIONS[i].name||'').trim().toLowerCase();
+        if (n && (n===norm || n.indexOf(norm)===0 || norm.indexOf(n)===0)) return CONVERSATIONS[i].vendorId;
+      }
+    }
+    if (!hasLanding && CONVERSATIONS.length) return CONVERSATIONS[0].vendorId;
+    return null;
+  }
+  // Finalise le chargement : garantit la cible URL, sélectionne un contact et
+  // met à jour la présence, le panneau latéral, l'en-tête et le fil.
+  function finishConversationLoad(qp){
+    var wantVid = qp.get('vendorId') || qp.get('from');
+    var wantName = qp.get('to') || qp.get('fromName');
+    if (wantVid) upsertConversation(wantVid, wantName || wantVid, '');
+    var hasLanding = !!(qp.get('vendorId') || qp.get('from') || qp.get('to') || qp.get('fromName') || qp.get('kind'));
+    var initial = resolveInitialTarget(qp, hasLanding);
+    applyPresence(LAST_PEERS);
+    renderSidebar();
+    if (initial) {
+      selectConversation(initial);
+      if (qp.get('kind') === 'call') {
+        showCallPushOverlay(qp.get('fromName') || wantName || 'Professionnel', qp.get('mode') || 'audio');
+      }
+    } else {
+      renderHeader();
+      renderThread();
+    }
+  }
+
   // --- Chargement de l'annuaire et sélection initiale ---
   function loadConversations(){
+    var qp = new URLSearchParams(location.search);
     fetch('/api/carte', { headers: { 'Accept': 'application/json' } })
       .then(function(r){ return r.json(); })
       .then(function(data){
@@ -1676,42 +1742,15 @@ html.dark {
         CONVERSATIONS = list.map(function(v){
           return { vendorId: String(v.vendorId || v.id || ''), name: v.name || 'Professionnel', img: v.img || '', type: v.type || '', category: v.category || '' };
         }).filter(function(c){ return c.vendorId; });
-
-        var qp = new URLSearchParams(location.search);
-        // L'émetteur de la notification est identifié par `vendorId` (côté client)
-        // ou `from` (repli, même valeur). `to`/`fromName` servent de repli par nom.
-        var wantVid = qp.get('vendorId') || qp.get('from');
-        var wantName = qp.get('to') || qp.get('fromName');
-        // Un atterrissage push est « demandé » dès qu'un paramètre de ciblage est
-        // présent : on ne doit alors PAS retomber sur la première conversation
-        // (comportement « au hasard ») si l'émetteur n'est pas trouvé.
-        var hasLanding = !!(qp.get('vendorId') || qp.get('from') || qp.get('to') || qp.get('fromName') || qp.get('kind'));
-        var initial = null;
-        if (wantVid){
-          for (var i=0;i<CONVERSATIONS.length;i++) if (CONVERSATIONS[i].vendorId === wantVid){ initial = wantVid; break; }
-        }
-        if (!initial && wantName){
-          var norm = wantName.trim().toLowerCase();
-          for (var j=0;j<CONVERSATIONS.length;j++){
-            var n = String(CONVERSATIONS[j].name||'').trim().toLowerCase();
-            if (n && (n===norm || n.indexOf(norm)===0 || norm.indexOf(n)===0)){ initial = CONVERSATIONS[j].vendorId; break; }
-          }
-        }
-        if (!initial && !hasLanding && CONVERSATIONS.length) initial = CONVERSATIONS[0].vendorId;
-        applyPresence(LAST_PEERS);
-        renderSidebar();
-        if (initial) {
-          selectConversation(initial);
-          if (qp.get('kind') === 'call') {
-            showCallPushOverlay(qp.get('fromName') || wantName || 'Professionnel', qp.get('mode') || 'audio');
-          }
-        }
-        else { renderHeader(); renderThread(); }
+        mergeThreadsIntoConversations();
+        finishConversationLoad(qp);
       })
       .catch(function(){
-        renderSidebar();
-        renderHeader();
-        renderThread();
+        // Échec réseau / annuaire indisponible : on reconstruit un annuaire
+        // minimal depuis l'historique local et la cible URL, puis on sélectionne
+        // un contact pour que la messagerie reste utilisable (envoi possible).
+        mergeThreadsIntoConversations();
+        finishConversationLoad(qp);
       });
   }
   loadConversations();
