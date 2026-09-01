@@ -405,6 +405,11 @@ html.dark {
               <textarea id="chat-input-text" rows="1" placeholder="Écrivez votre message..." class="w-full resize-none rounded-2xl border border-border bg-muted px-4 py-2.5 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring))] focus:border-transparent transition-shadow" style="min-height: 42px; max-height: 120px;" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';"></textarea>
             </div>
 
+            <!-- Save Button -->
+            <button id="btn-save" type="button" class="w-10 h-10 flex items-center justify-center rounded-full border shrink-0 transition-all hover:opacity-90 active:scale-95" style="background-color: rgb(var(--mgt-card));border-color: rgb(var(--mgt-border));color: rgb(var(--mgt-muted-foreground));" title="Enregistrer le dernier message">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+            </button>
+
             <!-- Send Button -->
             <button id="btn-send" class="w-10 h-10 flex items-center justify-center rounded-full text-white shrink-0 transition-all hover:opacity-90 active:scale-95" style="background-color: rgb(var(--mgt-accent));" title="Envoyer">
               <i data-lucide="send" class="w-4 h-4"></i>
@@ -716,6 +721,7 @@ html.dark {
   var threadEl = document.getElementById('chat-messages');
   var input = document.getElementById('chat-input-text');
   var sendBtn = document.getElementById('btn-send');
+  var saveBtn = document.getElementById('btn-save');
   var statusEl = document.getElementById('chat-peer-status');
   var convListNav = document.querySelector('#conversation-list nav');
   var searchQ = '';
@@ -777,6 +783,32 @@ html.dark {
     saveStore();
     renderThread();
     if (RT && typeof RT.toggleSavedMessage === 'function') RT.toggleSavedMessage(msgId, PEER.id);
+  }
+
+  // Dernier message « enregistrable » de la conversation active : on remonte le
+  // fil depuis la fin et on s'arrête au premier message réel (hors système).
+  function lastSaveableMsg(){
+    var t = ACTIVE ? threadOf(ACTIVE) : [];
+    for (var i=t.length-1;i>=0;i--){
+      var m = t[i];
+      if (m.dir !== 'sys' && m.msgId) return m;
+    }
+    return null;
+  }
+
+  // Synchronise le bouton « Enregistrer » en bas de la barre de saisie sur
+  // l'état du dernier message : icône pleine + couleur d'accent quand il est
+  // enregistré, grisée quand aucun message n'est disponible.
+  function refreshSaveButton(){
+    if (!saveBtn) return;
+    var m = lastSaveableMsg();
+    var saved = m ? !!m.saved : false;
+    var svg = saveBtn.querySelector('svg');
+    if (svg) svg.setAttribute('fill', saved ? 'currentColor' : 'none');
+    saveBtn.style.color = saved ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
+    saveBtn.style.opacity = m ? '1' : '0.45';
+    saveBtn.style.pointerEvents = m ? 'auto' : 'none';
+    saveBtn.setAttribute('title', m ? (saved ? 'Retirer des enregistrés' : 'Enregistrer le dernier message') : 'Aucun message');
   }
 
   function lastPreviewOf(id){
@@ -866,6 +898,7 @@ html.dark {
   // --- Rendu des messages (conversation active) ---
   function renderThread(){
     if (!threadEl) return;
+    refreshSaveButton();
     threadEl.innerHTML = '';
     var list = ACTIVE ? threadOf(ACTIVE) : [];
     if (!ACTIVE || !list.length){
@@ -1036,6 +1069,7 @@ html.dark {
 
   if (sendBtn) sendBtn.addEventListener('click', send);
   if (input) input.addEventListener('keydown', function(e){ if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); } });
+  if (saveBtn) saveBtn.addEventListener('click', function(){ var m = lastSaveableMsg(); if (m) toggleSave(m.msgId); });
 
   // --- Indicateur « en train d'écrire » ---
   var typingIndicator = document.getElementById('typing-indicator');
