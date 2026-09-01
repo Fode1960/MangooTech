@@ -1577,6 +1577,50 @@ function saveUsers() {
   writeJsonAtomic('users.json', users);
 }
 
+// Le compte « seed » de démonstration DAN Boutique (pro-41cafa4bcb31) existe dans
+// vendor-config.json et alimente le catalogue / l'inventaire / la galerie, mais il
+// n'a AUCUN compte utilisateur dans users.json (seul l'admin y est créé). Or
+// /api/carte ne lit QUE `users` : sans compte vendeur, l'annuaire renvoie vide,
+// la carte Local+ est déserte ET la messagerie client (chat.html) n'a aucun contact
+// (ACTIVE reste null → envoi, réception et appels bloqués). On réconcilie donc ici
+// ce compte au démarrage, sans jamais écraser un compte existant ni seed de secret.
+function ensureSeedVendorUsers() {
+  const seeds = [
+    {
+      id: 'pro-41cafa4bcb31',
+      vendorId: 'pro-41cafa4bcb31',
+      role: 'vendeur',
+      name: 'DANSOKO Fodé',
+      enseigne: 'DAN Boutique',
+      email: 'dan@exemple.com',
+      phone: '+336423456789',
+      category: 'commerce',
+      city: 'Dakar',
+      country: 'Senegal',
+      lat: 14.7167,
+      lng: -17.4677,
+      logo: ''
+    }
+  ];
+  let changed = false;
+  seeds.forEach(function (seed) {
+    const exists = users.some(function (u) {
+      return u && (canonicalRoutingId(u.id) === seed.id || canonicalRoutingId(u.vendorId) === seed.vendorId);
+    });
+    if (exists) return;
+    users.push(Object.assign({}, seed, {
+      pinHash: null,
+      passwordHash: null,
+      createdAt: new Date().toISOString()
+    }));
+    changed = true;
+  });
+  if (changed) {
+    saveUsers();
+    console.log('[Auth] compte vendeur seed réconcilié (DAN Boutique).');
+  }
+}
+
 /* ------------------------------------------------------------------ *
  *  Annuaire public (Local+ / carte)
  * ------------------------------------------------------------------ *
