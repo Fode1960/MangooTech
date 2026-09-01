@@ -2987,5 +2987,16 @@ html.dark {
 
 <script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
 <script src="../assets/mangoo-dashboard-shell.js"></script>
+<script src="../assets/mangoo-autocorrect.js"></script>
+<script>
+(function () {
+  if (window.MangooCorrector) {
+    MangooCorrector.attach(
+      document.getElementById('msg-input'),
+      document.getElementById('msg-input-wrap')
+    );
+  }
+})();
+</script>
 </body>
 </html>
