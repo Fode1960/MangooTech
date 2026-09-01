@@ -159,8 +159,31 @@ self.addEventListener('notificationclick', function (event) {
     target = '/';
   }
 
+  // Déduplication : la même notification peut être affichée en double (ex. deux
+  // abonnements sur le même appareil). Au premier clic, on ferme TOUTES les
+  // notifications qui partagent le même `tag` afin qu'il ne reste pas une
+  // « seconde notification » encore perçue comme nouvelle.
+  var tag = '';
+  try { tag = event.notification.tag || ''; } catch (e) {}
+
+  function closeTagSiblings(tag) {
+    if (!self.registration || !self.registration.getNotifications) return Promise.resolve();
+    return self.registration.getNotifications({ tag: tag }).then(function (list) {
+      (list || []).forEach(function (n) { try { n.close(); } catch (e) {} });
+    }).catch(function () {
+      // Repli : filtre manuel si le filtre `{tag}` n'est pas supporté.
+      return self.registration.getNotifications().then(function (list) {
+        (list || []).forEach(function (n) {
+          try { if (n.tag === tag) n.close(); } catch (e) {}
+        });
+      }).catch(function () {});
+    });
+  }
+
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
+    closeTagSiblings(tag).then(function () {
+      return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    }).then(function (clientList) {
       for (var i = 0; i < clientList.length; i++) {
         var client = clientList[i];
         if (client.url === target || (client.url && client.url.indexOf(target) === 0)) {

@@ -340,9 +340,6 @@ html.dark {
           <button id="btn-nav-menu" class="nav-menu-btn shrink-0" title="Menu" aria-label="Ouvrir le menu" style="color: rgb(var(--mgt-primary-foreground));">
             <i data-lucide="menu" class="w-5 h-5"></i>
           </button>
-          <a href="./client-dashboard.html" id="btn-dashboard-home" class="back-dashboard-btn shrink-0" title="Retour au Dashboard" aria-label="Retour au Dashboard" style="color: rgb(var(--mgt-primary-foreground)); text-decoration: none;">
-            <i data-lucide="home" class="w-5 h-5"></i>
-          </a>
           <button id="btn-back-list" class="mobile-back-btn shrink-0" title="Retour aux conversations" aria-label="Retour aux conversations" style="color: rgb(var(--mgt-primary-foreground));">
             <i data-lucide="arrow-left" class="w-5 h-5"></i>
           </button>
@@ -366,6 +363,9 @@ html.dark {
             </button>
             <button id="btn-my-agenda" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors" title="Mes rendez-vous" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12);">
               <i data-lucide="calendar-days" class="w-4 h-4"></i>
+            </button>
+            <button id="btn-saved-messages" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors" title="Messages enregistrés" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12);">
+              <i data-lucide="bookmark" class="w-4 h-4"></i>
             </button>
           </div>
         </header>
@@ -672,7 +672,6 @@ html.dark {
   function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function fmtSize(bytes){ if(!bytes && bytes!==0) return ''; if(bytes<1024) return bytes+' o'; if(bytes<1048576) return (bytes/1024).toFixed(1)+' Ko'; return (bytes/1048576).toFixed(1)+' Mo'; }
   function nowTime(){ var d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
-  function timeFromIso(iso){ try { var d=new Date(iso); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); } catch(e){ return nowTime(); } }
 
   // Identité du client : session `mgt_user` (Dida), avec repli si absente.
   function readClient(){
@@ -732,54 +731,6 @@ html.dark {
   }
   function threadOf(id){ return THREADS[id] || (THREADS[id] = []); }
   function pushMsg(id, msg){ threadOf(id).push(msg); saveStore(); }
-  // --- Synchronisation multi-appareils de l'historique ---
-  // Recharge l'historique d'une conversation depuis le serveur (source de
-  // vérité persistée dans data/messages.json) et fusionne les messages
-  // manquants dans THREADS. C'est ce qui permet à un même compte client
-  // connecté sur PC et mobile de retrouver les mêmes conversations sur les
-  // deux supports (les messages ne vivent plus seulement dans localStorage).
-  // Les pièces jointes historiques ne sont pas rejouées (elles exigent le blob
-  // d'origine) ; elles restent visibles via le temps réel.
-  function mergeHistory(vendorId, serverMsgs){
-    if (!Array.isArray(serverMsgs) || !serverMsgs.length) return;
-    var thread = threadOf(vendorId);
-    var have = {};
-    thread.forEach(function(m){ if (m.msgId) have[m.msgId] = 1; });
-    var added = false;
-    serverMsgs.forEach(function(sm){
-      if (!sm || !sm.msgId || have[sm.msgId] || sm.file) return;
-      have[sm.msgId] = 1;
-      thread.push({
-        msgId: sm.msgId,
-        dir: (sm.from === CLIENT.id) ? 'out' : 'in',
-        text: sm.text,
-        time: timeFromIso(sm.sentAt)
-      });
-      added = true;
-    });
-    if (added) saveStore();
-  }
-  function loadHistory(peerId){
-    if (!peerId) return;
-    var token = null;
-    try { token = localStorage.getItem('mgt_token'); } catch(e){}
-    fetch('/api/messages?peer=' + encodeURIComponent(peerId), {
-      headers: token ? { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' } : { 'Accept': 'application/json' },
-      cache: 'no-store'
-    }).then(function(r){ return r.json().catch(function(){ return {}; }); })
-    .then(function(d){
-      if (!d || !d.ok) return;
-      mergeHistory(peerId, d.messages);
-      if (ACTIVE === peerId) renderThread();
-      renderSidebar();
-    }).catch(function(){ /* non bloquant : on conserve l'historique local */ });
-  }
-  // Rafraîchit la conversation active quand l'onglet redevient visible : si
-  // l'utilisateur a discuté sur un autre appareil (PC) puis revient sur le
-  // mobile, l'historique est rechargé sans action manuelle.
-  document.addEventListener('visibilitychange', function(){
-    if (document.visibilityState === 'visible' && ACTIVE) loadHistory(ACTIVE);
-  });
   function scrollBottom(){ if (threadEl) threadEl.scrollTop = threadEl.scrollHeight; }
 
   // --- Édition / suppression de messages ---
@@ -810,6 +761,22 @@ html.dark {
     renderThread();
     renderSidebar();
     if (RT && typeof RT.deleteMessage === 'function') RT.deleteMessage(msgId, PEER.id);
+  }
+
+  // --- Enregistrer un message et le Consulter ---
+  function saveButtonHtml(saved){
+    var color = saved ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
+    return '<button type="button" data-msg-act="save" title="' + (saved ? 'Retirer des enregistrés' : 'Enregistrer ce message') + '" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:' + color + ';cursor:pointer;">' +
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="' + (saved ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>' +
+    '</button>';
+  }
+  function toggleSave(msgId){
+    var m = findMsg(msgId);
+    if (!m) return;
+    m.saved = !m.saved;
+    saveStore();
+    renderThread();
+    if (RT && typeof RT.toggleSavedMessage === 'function') RT.toggleSavedMessage(msgId, PEER.id);
   }
 
   function lastPreviewOf(id){
@@ -981,7 +948,8 @@ html.dark {
     var p = el.querySelector('p');
     if (p && m.kind !== 'file' && m.kind !== 'appt' && !editing) p.textContent = m.text || '';
 
-    // Menu d'actions (modifier / supprimer) sur les messages texte sortants.
+    // Menu d'actions (enregistrer / modifier / supprimer) sur les messages texte
+    // sortants.
     if (outgoing && !editing && m.kind !== 'file' && m.kind !== 'appt' && m.msgId) {
       var wrap = el.children[1];
       var actions = document.createElement('div');
@@ -989,6 +957,7 @@ html.dark {
       // boutons restaient invisibles (opacity:0) et inutilisables.
       actions.style.cssText = 'display:flex;align-items:center;gap:4px;margin-top:2px;opacity:1;';
       actions.innerHTML =
+        saveButtonHtml(!!m.saved) +
         '<button type="button" data-msg-act="edit" title="Modifier" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:rgb(var(--mgt-muted-foreground));cursor:pointer;">' +
           '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>' +
         '</button>' +
@@ -996,9 +965,23 @@ html.dark {
           '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>' +
         '</button>';
       wrap.appendChild(actions);
-      var actBtns = actions.querySelectorAll('button');
-      actBtns[0].addEventListener('click', function(e){ e.stopPropagation(); beginEdit(m.msgId); });
-      actBtns[1].addEventListener('click', function(e){ e.stopPropagation(); confirmDelete(m.msgId); });
+      var actBtns = actions.querySelectorAll('button[data-msg-act]');
+      actBtns[0].addEventListener('click', function(e){ e.stopPropagation(); toggleSave(m.msgId); });
+      actBtns[1].addEventListener('click', function(e){ e.stopPropagation(); beginEdit(m.msgId); });
+      actBtns[2].addEventListener('click', function(e){ e.stopPropagation(); confirmDelete(m.msgId); });
+    }
+
+    // Bouton « Enregistrer » sur les messages texte entrants.
+    if (!outgoing && !editing && m.kind !== 'file' && m.kind !== 'appt' && m.dir !== 'sys' && m.msgId) {
+      var inCol = el.children[1];
+      if (inCol) {
+        var inSave = document.createElement('div');
+        inSave.style.cssText = 'display:flex;margin-top:2px;opacity:1;';
+        inSave.innerHTML = saveButtonHtml(!!m.saved);
+        inCol.appendChild(inSave);
+        var isb = inSave.querySelector('[data-msg-act="save"]');
+        if (isb) isb.addEventListener('click', function(e){ e.stopPropagation(); toggleSave(m.msgId); });
+      }
     }
 
     if (editing) {
@@ -1028,7 +1011,6 @@ html.dark {
     renderThread();
     renderSidebar();
     if (input) setTimeout(function(){ input.focus(); }, 50);
-    loadHistory(vendorId);
   }
 
   // --- Message système (conversation active) ---
@@ -1226,6 +1208,61 @@ html.dark {
   if (myAgendaBtn) myAgendaBtn.addEventListener('click', agOpen);
   if (location.hash === '#rdv'){ setTimeout(agOpen, 0); history.replaceState(null, '', location.pathname + location.search); }
 
+  // --- Messages enregistrés (consulter) ---
+  function savedMessagesList(){
+    var out = [];
+    Object.keys(THREADS).forEach(function(id){
+      var c = convById(id);
+      (THREADS[id]||[]).forEach(function(m){
+        if (m.saved && m.text) out.push({ peerId: id, peerName: c ? c.name : id, text: m.text, time: m.time || '', dir: m.dir });
+      });
+    });
+    return out;
+  }
+  function openSavedMessages(){
+    var existing = document.getElementById('mgt-saved-overlay');
+    if (existing) existing.remove();
+    var list = savedMessagesList();
+    var ov = document.createElement('div');
+    ov.id = 'mgt-saved-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:2147483600;display:flex;align-items:center;justify-content:center;padding:20px;';
+    var box = document.createElement('div');
+    box.style.cssText = 'background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:440px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4);';
+    var head = document.createElement('div');
+    head.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgb(var(--mgt-border));';
+    head.innerHTML =
+      '<h3 style="font-size:16px;font-weight:700;color:rgb(var(--mgt-foreground));margin:0;">Messages enregistrés</h3>' +
+      '<button data-sv-close type="button" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:24px;line-height:1;cursor:pointer;">&times;</button>';
+    box.appendChild(head);
+    var body = document.createElement('div');
+    body.style.cssText = 'flex:1;overflow-y:auto;padding:12px;';
+    if (!list.length){
+      body.innerHTML = '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));text-align:center;padding:32px 12px;margin:0;">Aucun message enregistré. Touchez l\'icône signet d\'un message pour le retrouver ici.</p>';
+    } else {
+      list.forEach(function(it){
+        var row = document.createElement('button');
+        row.type = 'button';
+        row.style.cssText = 'display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%;text-align:left;padding:12px;border:1px solid rgb(var(--mgt-border));border-radius:12px;background:rgb(var(--mgt-background));cursor:pointer;margin-bottom:8px;';
+        row.innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+            '<span style="font-size:13px;font-weight:600;color:rgb(var(--mgt-primary));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(it.peerName)+'</span>' +
+            '<span style="font-size:11px;color:rgb(var(--mgt-muted-foreground));flex-shrink:0;">'+esc(it.time)+'</span>' +
+          '</div>' +
+          '<span style="font-size:13px;color:rgb(var(--mgt-foreground));line-height:1.45;word-break:break-word;overflow-wrap:anywhere;">'+esc(it.text)+'</span>';
+        row.addEventListener('click', function(){ ov.remove(); selectConversation(it.peerId); });
+        body.appendChild(row);
+      });
+    }
+    box.appendChild(body);
+    ov.appendChild(box);
+    document.body.appendChild(ov);
+    var closeBtn = box.querySelector('[data-sv-close]');
+    if (closeBtn) closeBtn.addEventListener('click', function(){ ov.remove(); });
+    ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
+  }
+  var savedBtn = document.getElementById('btn-saved-messages');
+  if (savedBtn) savedBtn.addEventListener('click', openSavedMessages);
+
   // --- Délégation accept/refus d'un rendez-vous reçu ---
   if (threadEl){
     threadEl.addEventListener('click', function(e){
@@ -1278,6 +1315,33 @@ html.dark {
       if (from === ACTIVE) renderThread();
       renderSidebar();
     });
+    // « Enregistrer un message et le Consulter » : synchronise l'état enregistré
+    // d'un message (émetteur via ack, ou autres onglets via chat-saved).
+    if (typeof RT.onMessageSaved === 'function'){
+      RT.onMessageSaved(function(e){
+        if (!e || !e.msgId) return;
+        Object.keys(THREADS).forEach(function(id){
+          (THREADS[id]||[]).forEach(function(m){ if (m.msgId === e.msgId) m.saved = !!e.saved; });
+        });
+        saveStore();
+        renderThread();
+      });
+    }
+    // Recharge l'état enregistré depuis le serveur (source de vérité) au chargement.
+    if (typeof RT.getSavedMessages === 'function'){
+      RT.getSavedMessages(function(list){
+        var savedIds = {};
+        (list||[]).forEach(function(sm){ if (sm && sm.msgId) savedIds[sm.msgId] = true; });
+        var changed = false;
+        Object.keys(THREADS).forEach(function(id){
+          (THREADS[id]||[]).forEach(function(m){
+            var want = !!savedIds[m.msgId];
+            if (m.saved !== want){ m.saved = want; changed = true; }
+          });
+        });
+        if (changed){ saveStore(); renderThread(); }
+      });
+    }
     RT.onTyping(function(t){ receiveTyping(t); });
     RT.onFile(function(f){
       if (f && f.error){
@@ -1418,9 +1482,6 @@ html.dark {
 <style id="mgt-client-nav">
   .nav-menu-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: pointer; color: var(--foreground); border-radius: 10px; flex-shrink: 0; }
   .nav-menu-btn:active { background: rgb(var(--mgt-muted)); }
-  .back-dashboard-btn { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; }
-  .back-dashboard-btn:hover { background: rgba(255,255,255,.12); }
-  .back-dashboard-btn:active { background: rgba(255,255,255,.18); }
   .client-nav-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 80; }
   .client-nav-overlay.show { display: block; }
   .client-nav-drawer {

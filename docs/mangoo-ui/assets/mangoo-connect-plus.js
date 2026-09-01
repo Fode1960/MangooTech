@@ -463,6 +463,14 @@
       case 'chat-new': onChatNew(msg); break;
       case 'chat-edited': emit(messageEditedCbs, msg); break;
       case 'chat-deleted': emit(messageDeletedCbs, msg); break;
+      case 'chat-saved':
+      case 'chat-save-ack': emit(messageSavedCbs, { msgId: msg.msgId, saved: msg.saved, convId: msg.convId }); break;
+      case 'chat-saved-list':
+        if (savedListPending) {
+          var cb = savedListPending; savedListPending = null;
+          try { cb(msg.messages || []); } catch (e) {}
+        }
+        break;
       case 'chat-ack': break;
       case 'typing': onTypingInternal(msg); emit(typingCbs, { from: msg.from, fromName: msg.fromName, isTyping: msg.isTyping }); break;
       case 'chat-history': break;
@@ -1069,6 +1077,22 @@
       return enqueueOutbox(function () {
         sendWS({ type: 'chat-delete', msgId: String(msgId), to: String(to) });
       });
+    },
+    // « Enregistrer un message et le Consulter » : bascule l'état enregistré d'un
+    // message pour l'utilisateur courant (action personnelle, non diffusée au pair).
+    // Le résultat revient via `chat-save-ack` (émetteur) ou `chat-saved` (autres
+    // onglets), écoutable avec onMessageSaved.
+    toggleSavedMessage: function (msgId, to) {
+      if (!msgId) return false;
+      return enqueueOutbox(function () {
+        sendWS({ type: 'chat-save-toggle', msgId: String(msgId), to: String(to || '') });
+      });
+    },
+    // Récupère la liste des messages enregistrés par l'utilisateur courant. Le
+    // callback reçoit un tableau de messages (from, to, text, sentAt, msgId…).
+    getSavedMessages: function (cb) {
+      savedListPending = (typeof cb === 'function') ? cb : null;
+      return enqueueOutbox(function () { sendWS({ type: 'chat-saved-list' }); });
     },
     sendTyping: function (to, isTyping) {
       if (!to) return false;

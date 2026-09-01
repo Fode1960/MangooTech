@@ -455,6 +455,10 @@ html.dark {
             <i data-lucide="pen-square" class="w-4 h-4"></i>
             Nouveau message
           </button>
+          <button id="btn-saved-messages" title="Messages enregistrés" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgb(var(--mgt-border))] bg-transparent text-sm font-semibold text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">
+            <i data-lucide="bookmark" class="w-4 h-4"></i>
+            Enregistrés
+          </button>
           <button id="btn-notifications" class="relative p-2 rounded-lg hover:bg-[rgb(var(--mgt-muted))] transition-colors text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-foreground))]" aria-label="Notifications">
             <i data-lucide="bell" class="w-5 h-5"></i>
             <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
@@ -762,6 +766,10 @@ html.dark {
       // ---- État conversation active ----
       var convo = document.querySelectorAll('.msg-conv');
       var currentConv = null;
+      // Messages enregistrés (« Enregistrer un message et le Consulter ») :
+      // msgId -> true. Source de vérité côté serveur (savedBy), rechargée via
+      // getSavedMessages() et /api/messages (champ `saved`).
+      var SAVED = {};
 
       function initials(name) {
         var parts = (name || '').trim().split(/\s+/);
@@ -1302,6 +1310,114 @@ html.dark {
         overlay.appendChild(panel);
         document.body.appendChild(overlay);
       }
+      // ---- « Enregistrer un message et le Consulter » ----
+      function saveBtnLabel(on) { return on ? 'Enregistré ✓' : 'Enregistrer'; }
+      function toggleSaved(msgId) {
+        if (!msgId) return;
+        SAVED[msgId] = !SAVED[msgId];
+        var MC = window.MangooConnect;
+        if (MC && typeof MC.toggleSavedMessage === 'function') {
+          var peerId = currentConv ? currentConv.getAttribute('data-peer-id') : '';
+          MC.toggleSavedMessage(msgId, peerId);
+        }
+        document.querySelectorAll('[data-save-msg="' + msgId + '"]').forEach(function (b) {
+          b.textContent = saveBtnLabel(!!SAVED[msgId]);
+          b.style.color = SAVED[msgId] ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
+        });
+        toast(SAVED[msgId] ? 'Message enregistré.' : 'Message retiré des enregistrés.');
+      }
+      function addSaveButton(container, msgId, forOutgoing) {
+        if (!container || !msgId) return;
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.setAttribute('data-save-msg', msgId);
+        b.textContent = saveBtnLabel(!!SAVED[msgId]);
+        var border = forOutgoing ? 'rgba(255,255,255,.25)' : 'rgb(var(--mgt-border))';
+        b.style.cssText = 'font-size:11px;font-weight:600;color:' + (SAVED[msgId] ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))') + ';background:transparent;border:1px solid ' + border + ';cursor:pointer;padding:2px 6px;border-radius:6px;';
+        b.addEventListener('click', function (e) { e.stopPropagation(); toggleSaved(msgId); });
+        container.appendChild(b);
+      }
+      // ---- Consultation des messages enregistrés ----
+      function peerNameById(id) {
+        if (!id) return 'Client';
+        var convs = document.querySelectorAll('.msg-conv');
+        for (var i = 0; i < convs.length; i++) {
+          if (convs[i].getAttribute('data-peer-id') === id) {
+            return convs[i].getAttribute('data-name') || id;
+          }
+        }
+        return id;
+      }
+      function openConvByPeerId(peerId, peerName) {
+        if (!peerId) return;
+        var convs = document.querySelectorAll('.msg-conv');
+        var conv = null;
+        for (var i = 0; i < convs.length; i++) {
+          if (convs[i].getAttribute('data-peer-id') === peerId) { conv = convs[i]; break; }
+        }
+        if (!conv && typeof ensureConversation === 'function') {
+          conv = ensureConversation(peerName || peerId, peerId);
+        }
+        if (conv) { setActive(conv); markRead(conv, false); }
+      }
+      function openSavedMessages() {
+        var existing = document.getElementById('mgt-saved-overlay');
+        if (existing) existing.remove();
+        var ov = document.createElement('div');
+        ov.id = 'mgt-saved-overlay';
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:9400;display:flex;align-items:center;justify-content:center;padding:20px;';
+        var box = document.createElement('div');
+        box.style.cssText = 'background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4);font-family:var(--mgt-font-sans);';
+        var head = document.createElement('div');
+        head.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgb(var(--mgt-border));';
+        head.innerHTML =
+          '<h3 style="font-size:16px;font-weight:700;color:rgb(var(--mgt-foreground));margin:0;">Messages enregistrés</h3>' +
+          '<button data-sv-close type="button" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:24px;line-height:1;cursor:pointer;">&times;</button>';
+        box.appendChild(head);
+        var body = document.createElement('div');
+        body.style.cssText = 'flex:1;overflow-y:auto;padding:12px;';
+        body.innerHTML = '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));text-align:center;padding:32px 12px;margin:0;">Chargement…</p>';
+        box.appendChild(body);
+        ov.appendChild(box);
+        document.body.appendChild(ov);
+        var closeBtn = box.querySelector('[data-sv-close]');
+        if (closeBtn) closeBtn.addEventListener('click', function () { ov.remove(); });
+        ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+        function renderList(list) {
+          body.innerHTML = '';
+          if (!list || !list.length) {
+            body.innerHTML = '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));text-align:center;padding:32px 12px;margin:0;">Aucun message enregistré. Touchez « Enregistrer » sur un message pour le retrouver ici.</p>';
+            return;
+          }
+          list.forEach(function (it) {
+            var peerId = it.mine ? it.to : it.from;
+            var peerName = peerNameById(peerId);
+            var row = document.createElement('button');
+            row.type = 'button';
+            row.style.cssText = 'display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%;text-align:left;padding:12px;border:1px solid rgb(var(--mgt-border));border-radius:12px;background:rgb(var(--mgt-background));cursor:pointer;margin-bottom:8px;font-family:var(--mgt-font-sans);';
+            row.innerHTML =
+              '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+                '<span style="font-size:13px;font-weight:600;color:rgb(var(--mgt-primary));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(peerName) + (it.mine ? ' · Vous' : '') + '</span>' +
+                '<span style="font-size:11px;color:rgb(var(--mgt-muted-foreground));flex-shrink:0;">' + esc(fmtTime(it.sentAt)) + '</span>' +
+              '</div>' +
+              '<span style="font-size:13px;color:rgb(var(--mgt-foreground));line-height:1.45;word-break:break-word;overflow-wrap:anywhere;">' + esc(it.text) + '</span>';
+            row.addEventListener('click', function () { ov.remove(); openConvByPeerId(peerId, peerName); });
+            body.appendChild(row);
+          });
+        }
+        if (window.MangooConnect && typeof window.MangooConnect.getSavedMessages === 'function') {
+          try {
+            window.MangooConnect.getSavedMessages(renderList);
+          } catch (e) {
+            body.innerHTML = '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));text-align:center;padding:32px 12px;margin:0;">Impossible de charger les messages enregistrés.</p>';
+          }
+        } else {
+          renderList([]);
+        }
+      }
+      var savedBtn = document.getElementById('btn-saved-messages');
+      if (savedBtn) savedBtn.addEventListener('click', openSavedMessages);
+
       // Ajoute les actions Copier/Modifier/Supprimer à une bulle sortante.
       function addOutgoingActions(wrap, msgId) {
         if (!wrap || !msgId) return;
@@ -1334,6 +1450,7 @@ html.dark {
         actions.appendChild(fwdBtn);
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
+        addSaveButton(actions, msgId, true);
         wrap.appendChild(actions);
       }
       // Actions Copier/Répondre/Transférer pour une bulle entrante.
@@ -1365,6 +1482,7 @@ html.dark {
         actions.appendChild(copyBtn);
         actions.appendChild(fwdBtn);
         actions.appendChild(replyBtn);
+        addSaveButton(actions, msgId, false);
         greyBubble.appendChild(actions);
       }
       function appendVendorBubble(html, attachList, msgId, replyPreview) {
@@ -2072,6 +2190,9 @@ html.dark {
           var myId = '';
           try { myId = connectedVendorIdentity().id || ''; } catch (e) {}
           msgs.forEach(function (m) {
+            // État « enregistré » calculé côté serveur (savedBy) : on le reflète
+            // dans SAVED pour que le bouton signet soit correct dès l'affichage.
+            SAVED[m.msgId] = !!(m.saved === true);
             // `mine` est calculé côté serveur sur l'id CANONIQUE (alias de comptes
             // pro dupliqués réconciliés) : fiable même quand le compte réel
             // (ven-…) diffère du seed (pro-…). Repli sur la comparaison directe
@@ -2371,6 +2492,31 @@ html.dark {
             if (!e || !e.msgId) return;
             var wrap = document.querySelector('.msg-bubble[data-msg-id="' + e.msgId + '"]');
             if (wrap) wrap.remove();
+          });
+        }
+
+        // « Enregistrer un message et le Consulter » : synchronise l'état enregistré
+        // (ack de l'émetteur + autres onglets via chat-saved) et recharge la liste.
+        if (typeof RT.onMessageSaved === 'function') {
+          RT.onMessageSaved(function (e) {
+            if (!e || !e.msgId) return;
+            SAVED[e.msgId] = !!e.saved;
+            document.querySelectorAll('[data-save-msg="' + e.msgId + '"]').forEach(function (b) {
+              b.textContent = saveBtnLabel(!!e.saved);
+              b.style.color = e.saved ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
+            });
+          });
+        }
+        if (typeof RT.getSavedMessages === 'function') {
+          RT.getSavedMessages(function (list) {
+            SAVED = {};
+            (list || []).forEach(function (sm) { if (sm && sm.msgId) SAVED[sm.msgId] = true; });
+            document.querySelectorAll('[data-save-msg]').forEach(function (b) {
+              var id = b.getAttribute('data-save-msg');
+              var on = !!SAVED[id];
+              b.textContent = saveBtnLabel(on);
+              b.style.color = on ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
+            });
           });
         }
 
