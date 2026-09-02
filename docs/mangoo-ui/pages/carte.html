@@ -561,8 +561,15 @@ html.dark {
       var canon = (v.city && CITIES[v.city]) ? CITIES[v.city] : null;
       if (canon && typeof canon.lat === 'number' && typeof canon.lng === 'number' &&
           isFinite(canon.lat) && isFinite(canon.lng)) {
-        v.lat = canon.lat;
-        v.lng = canon.lng;
+        // Préserve une position GPS réelle proche du centre (≤ 50 km) ; ne
+        // recale sur le centre que si les coordonnées sont absentes ou
+        // incohérentes (ex. ville « Paris » avec des coordonnées à Dakar).
+        var hasReal = typeof v.lat === 'number' && typeof v.lng === 'number' && isFinite(v.lat) && isFinite(v.lng);
+        var closeEnough = hasReal && haversineKm(v.lat, v.lng, canon.lat, canon.lng) <= 50;
+        if (!closeEnough) {
+          v.lat = canon.lat;
+          v.lng = canon.lng;
+        }
         if (canon.country) v.country = canon.country;
       }
     });

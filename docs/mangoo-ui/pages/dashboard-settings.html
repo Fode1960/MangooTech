@@ -483,6 +483,10 @@ html.dark {
             <div class="flex flex-col gap-1.5">
               <label class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Ville</label>
               <input class="mgt-input" type="text" data-profile="city" list="mgt-city-suggestions" placeholder="Dakar" readonly>
+              <button type="button" id="btn-geoloc-profile" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border border-[rgb(var(--mgt-border))] rounded-lg text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] hover:text-[rgb(var(--mgt-foreground))] transition-colors">
+                <i data-lucide="map-pin" class="w-4 h-4"></i> Me géolocaliser
+              </button>
+              <span id="geoloc-profile-status" class="text-xs text-[rgb(var(--mgt-muted-foreground))]"></span>
               <datalist id="mgt-city-suggestions"></datalist>
             </div>
           </div>
@@ -936,6 +940,26 @@ html.dark {
           .catch(function () { /* silencieux : le champ reste un texte libre */ });
       }
 
+      // Bouton « Me géolocaliser » : capture la position GPS réelle et la mémorise
+      // pour l'envoyer avec la ville à l'enregistrement (la fiche est alors placée
+      // à la vraie position, pas au centre-ville).
+      function setupProfileGeoloc() {
+        var btn = document.getElementById('btn-geoloc-profile');
+        var statusEl = document.getElementById('geoloc-profile-status');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+          if (!navigator.geolocation) { if (statusEl) statusEl.textContent = 'Géolocalisation non supportée.'; return; }
+          if (statusEl) statusEl.textContent = 'Localisation en cours…';
+          navigator.geolocation.getCurrentPosition(function (pos) {
+            window.__settingsLat = pos.coords.latitude;
+            window.__settingsLng = pos.coords.longitude;
+            if (statusEl) statusEl.textContent = 'Position enregistrée. Enregistrez pour appliquer.';
+          }, function () {
+            if (statusEl) statusEl.textContent = 'Localisation refusée ou indisponible.';
+          }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
+        });
+      }
+
       function syncIdentity() {
         if (!currentConfig || !currentConfig.profile) return;
         var email = currentConfig.profile.email || '';
@@ -973,7 +997,11 @@ html.dark {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer ' + token
             },
-            body: JSON.stringify({ enseigne: enseigne, email: email, logo: logo, city: city })
+            body: JSON.stringify(Object.assign(
+              { enseigne: enseigne, email: email, logo: logo, city: city },
+              (typeof window.__settingsLat === 'number' && typeof window.__settingsLng === 'number')
+                ? { lat: window.__settingsLat, lng: window.__settingsLng } : {}
+            ))
           }).then(function (r) {
             return r.json().catch(function () { return {}; });
           }).then(function (data) {
@@ -1127,6 +1155,7 @@ html.dark {
       });
 
       loadCitySuggestions();
+      setupProfileGeoloc();
     })();
     </script>
 

@@ -1652,8 +1652,21 @@ function ensureSeedVendorUsers() {
 // Permet d'enregistrer country + lat/lng au moment de la création du compte, afin
 // que la carte Local+ puisse géolocaliser chaque pro sans retomber sur Dakar.
 const GEO_CITIES = {
-  // Europe (test France)
+  // Europe (France) — centre-ville de chaque commune. Évite qu'une ville
+  // saisie librement (ex. « Vichy ») soit ignorée et retombe sur Dakar.
   'paris':        { city: 'Paris',        country: 'France',        lat: 48.8566, lng: 2.3522 },
+  'vichy':        { city: 'Vichy',        country: 'France',        lat: 46.1267, lng: 3.4259 },
+  'lyon':         { city: 'Lyon',         country: 'France',        lat: 45.7640, lng: 4.8357 },
+  'marseille':    { city: 'Marseille',    country: 'France',        lat: 43.2965, lng: 5.3698 },
+  'toulouse':     { city: 'Toulouse',     country: 'France',        lat: 43.6047, lng: 1.4442 },
+  'nice':         { city: 'Nice',         country: 'France',        lat: 43.7102, lng: 7.2620 },
+  'nantes':       { city: 'Nantes',       country: 'France',        lat: 47.2184, lng: -1.5536 },
+  'strasbourg':   { city: 'Strasbourg',   country: 'France',        lat: 48.5734, lng: 7.7521 },
+  'montpellier':  { city: 'Montpellier',  country: 'France',        lat: 43.6108, lng: 3.8767 },
+  'bordeaux':     { city: 'Bordeaux',     country: 'France',        lat: 44.8378, lng: -0.5792 },
+  'lille':        { city: 'Lille',        country: 'France',        lat: 50.6292, lng: 3.0573 },
+  'rennes':       { city: 'Rennes',       country: 'France',        lat: 48.1173, lng: -1.6778 },
+  'clermont-ferrand': { city: 'Clermont-Ferrand', country: 'France', lat: 45.7772, lng: 3.0870 },
 
   // Afrique du Nord
   'algiers':      { city: 'Alger',        country: 'Algeria',       lat: 36.7538, lng: 3.0588 },
@@ -1854,12 +1867,16 @@ function normalizeVendorCities() {
     let geo = geocodeCity(city);
 
     if (geo) {
-      // Ville connue : on force des coordonnées canoniques pour corriger les
-      // incohérences (ville ≠ coordonnées).
+      // Ville connue : on garde ville/pays canoniques, mais on préserve les
+      // coordonnées GPS réelles si elles sont plausibles (≤ 50 km du centre),
+      // afin de ne plus écraser une vraie position par le centre-ville. On ne
+      // recale sur le centre que si les coordonnées sont absentes ou
+      // manifestement incohérentes (ex. « Paris » avec des coordonnées à Dakar).
       city = geo.city;
       country = geo.country;
-      lat = geo.lat;
-      lng = geo.lng;
+      const hasReal = typeof lat === 'number' && isFinite(lat) && typeof lng === 'number' && isFinite(lng);
+      const closeEnough = hasReal && haversineKm(lat, lng, geo.lat, geo.lng) <= 50;
+      if (!closeEnough) { lat = geo.lat; lng = geo.lng; }
     } else if (needsResolve) {
       // Ville vide / « other » : on la dérive de la position GPS.
       const resolved = resolveVendorCity(lat, lng, country);
@@ -2043,9 +2060,9 @@ function userByToken(token) {
 
 // Catalogue d'offres de boosters (fixe, exposé tel quel à l'écran).
 const BOOSTER_OFFERS = [
-  { id: 'boost-sponsorise', type: 'sponsorise', name: 'Sponsorisé', title: 'Tête des résultats', desc: 'Votre fiche remonte en premier sur la carte et la recherche', price: 2000, priceLabel: 'FCFA / 24h', durationText: '24h', durationMs: 24 * 60 * 60 * 1000, icon: 'megaphone', recommended: false, features: ['Position en tête des résultats', 'Priorité sur la carte Local+', 'Portée maximale pendant 24h'] },
-  { id: 'boost-promo', type: 'promo', name: 'En Promo', title: 'Badge promo', desc: 'Affichez le badge « Promo » et mettez vos offres en avant', price: 3000, priceLabel: 'FCFA / 3 jours', durationText: '3 jours', durationMs: 3 * 24 * 60 * 60 * 1000, icon: 'tag', recommended: true, features: ['Badge « Promo » sur votre fiche', 'Mise en avant de vos offres', 'Visibilité pendant 3 jours'] },
-  { id: 'boost-nouveau', type: 'nouveau', name: 'Nouveau', title: 'Badge nouveauté', desc: 'Attirez l\'attention des nouveaux clients', price: 1000, priceLabel: 'FCFA / 48h', durationText: '48h', durationMs: 48 * 60 * 60 * 1000, icon: 'sparkles', recommended: false, features: ['Badge « Nouveau » sur votre fiche', 'Signale votre activité récente', 'Visibilité pendant 48h'] }
+  { id: 'boost-sponsorise', type: 'sponsorise', name: 'Sponsorisé', title: 'Passez devant vos concurrents', desc: 'Votre fiche remonte en tête de la carte et de la recherche, là où les clients cliquent en premier.', price: 2000, priceLabel: 'FCFA / 24h', durationText: '24h', durationMs: 24 * 60 * 60 * 1000, icon: 'megaphone', recommended: false, features: ['Première place sur la carte et la recherche', 'Badge « Sponsorisé » mis en avant', 'Visibilité maximale pendant 24 h'] },
+  { id: 'boost-promo', type: 'promo', name: 'En Promo', title: 'Boostez vos ventes', desc: 'Le badge rose « Promo » attire l’œil et crée l’urgence : idéal pour écouler un stock ou lancer une offre.', price: 3000, priceLabel: 'FCFA / 3 jours', durationText: '3 jours', durationMs: 3 * 24 * 60 * 60 * 1000, icon: 'tag', recommended: true, features: ['Badge « Promo » rose, très visible', 'Mise en avant dans l’Offre du jour', 'Visibilité pendant 3 jours'] },
+  { id: 'boost-nouveau', type: 'nouveau', name: 'Nouveau', title: 'Faites-vous remarquer', desc: 'Signalez votre ouverture ou un nouveau service et attirez les clients qui cherchent une nouveauté.', price: 1000, priceLabel: 'FCFA / 48h', durationText: '48h', durationMs: 48 * 60 * 60 * 1000, icon: 'sparkles', recommended: false, features: ['Badge « Nouveau » bleu sur votre fiche', 'Mise en avant des dernières inscriptions', 'Visibilité pendant 48 h'] }
 ];
 
 function findOffer(idOrType) {
@@ -4934,6 +4951,11 @@ function handleHttp(req, res) {
       const cityRaw = String(body.city || '').trim() || 'Dakar';
       const geo = geocodeCity(cityRaw);
       const city = geo ? geo.city : cityRaw;
+      // Coordonnées GPS réelles fournies par le navigateur (bouton « Utiliser ma
+      // position exacte »). Si valides, elles priment sur le centre-ville du
+      // dictionnaire pour placer la fiche à la vraie position du pro.
+      const clientLat = (body.lat != null && body.lat !== '' && isFinite(Number(body.lat))) ? Number(body.lat) : null;
+      const clientLng = (body.lng != null && body.lng !== '' && isFinite(Number(body.lng))) ? Number(body.lng) : null;
       const category = String(body.category || '').trim() || 'salon';
       const logo = String(body.logo || '').slice(0, 500000); // data URL logo (max 500 Ko)
       // Véhicule du livreur validé AVANT création du compte (évite tout compte orphelin).
@@ -4948,8 +4970,8 @@ function handleHttp(req, res) {
         passwordHash: password ? hashSecret(password) : null,
         logo, category, city,
         country: geo ? geo.country : null,
-        lat: geo ? geo.lat : null,
-        lng: geo ? geo.lng : null,
+        lat: clientLat != null ? clientLat : (geo ? geo.lat : null),
+        lng: clientLng != null ? clientLng : (geo ? geo.lng : null),
         createdAt: nowIso()
       };
       users.push(user);
@@ -4966,8 +4988,8 @@ function handleHttp(req, res) {
           ownerName: name, email: email || '', phone: phone,
           enseigne: enseigne, category: category, city: city, logo: logo,
           country: geo ? geo.country : (doc.profile.country || ''),
-          lat: geo ? geo.lat : (doc.profile.lat != null ? doc.profile.lat : null),
-          lng: geo ? geo.lng : (doc.profile.lng != null ? doc.profile.lng : null)
+          lat: clientLat != null ? clientLat : (geo ? geo.lat : (doc.profile.lat != null ? doc.profile.lat : null)),
+          lng: clientLng != null ? clientLng : (geo ? geo.lng : (doc.profile.lng != null ? doc.profile.lng : null))
         });
         doc.updatedAt = nowIso();
         saveVendorConfig();
@@ -5125,24 +5147,42 @@ function handleHttp(req, res) {
       // et le pays, puis on synchronise le vendor-config. Cela permet de
       // « déménager » un compte (ex. de Paris vers Dakar) sans le recréer, et
       // la carte reflète le nouveau lieu immédiatement.
+      // Coordonnées GPS réelles éventuellement fournies par le client
+      // (bouton « Me géolocaliser »). Elles priment sur le centre-ville.
+      const newLat = (body.lat != null && body.lat !== '' && isFinite(Number(body.lat))) ? Number(body.lat) : null;
+      const newLng = (body.lng != null && body.lng !== '' && isFinite(Number(body.lng))) ? Number(body.lng) : null;
+
       if (Object.prototype.hasOwnProperty.call(body, 'city') && user.city) {
         const geo = geocodeCity(user.city);
         if (geo) {
           user.city = geo.city;
           user.country = geo.country;
-          user.lat = geo.lat;
-          user.lng = geo.lng;
+          user.lat = newLat != null ? newLat : geo.lat;
+          user.lng = newLng != null ? newLng : geo.lng;
           if (user.vendorId) {
             const doc = vendorConfigFor(user.vendorId);
             if (doc) {
               doc.profile = Object.assign({}, doc.profile, {
-                city: geo.city, country: geo.country, lat: geo.lat, lng: geo.lng
+                city: geo.city, country: geo.country, lat: user.lat, lng: user.lng
               });
               doc.updatedAt = nowIso();
               saveVendorConfig();
             }
           }
         }
+      } else if (newLat != null && newLng != null) {
+        // Position GPS fournie sans changement de ville : on affine la position seule.
+        user.lat = newLat;
+        user.lng = newLng;
+        if (user.vendorId) {
+          const doc = vendorConfigFor(user.vendorId);
+          if (doc) {
+            doc.profile = Object.assign({}, doc.profile, { lat: newLat, lng: newLng });
+            doc.updatedAt = nowIso();
+            saveVendorConfig();
+          }
+        }
+        changed = true;
       }
 
       if (!changed) {
