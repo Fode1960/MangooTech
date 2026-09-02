@@ -301,9 +301,9 @@ html.dark {
       .dashboard-content { padding: 24px 32px 48px; max-width: 1200px; width: 100%; }
       .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; margin-bottom: 40px; }
       .orders-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 40px; }
-      .favorites-scroll { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 8px; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; }
+      .favorites-scroll { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
       .favorites-scroll::-webkit-scrollbar { display: none; }
-      .favorites-scroll .favorites-card { text-decoration: none; flex-shrink: 0; }
+      .favorites-scroll .favorites-card { text-decoration: none; min-width: 0; }
       .favorites-scroll .favorites-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.10); border-color: rgb(var(--mgt-primary)); }
       .quick-actions-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 40px; }
       @media (max-width: 1024px) {
@@ -888,7 +888,7 @@ html.dark {
       : '<div style="width:44px;height:44px;border-radius:var(--mgt-radius-sm);background:rgb(var(--mgt-primary));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;">' + escHtml(String(v.name || '?').charAt(0).toUpperCase()) + '</div>';
     var rating = (v.rating != null && v.rating !== '') ? String(v.rating) : '—';
     return '<div class="favorites-card" data-vendor-id="' + escHtml(v.vendorId) + '" ' +
-      'style="min-width:240px;max-width:240px;display:flex;flex-direction:column;gap:12px;padding:16px;background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:var(--mgt-radius-md);box-shadow:var(--mgt-shadow-sm);color:rgb(var(--mgt-foreground));">' +
+      'style="width:100%;min-width:0;display:flex;flex-direction:column;gap:12px;padding:16px;background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:var(--mgt-radius-md);box-shadow:var(--mgt-shadow-sm);color:rgb(var(--mgt-foreground));">' +
       '<div style="display:flex;align-items:center;gap:12px;">' + avatar +
         '<div style="min-width:0;"><h3 style="margin:0;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(v.name) + '</h3>' +
         '<div class="caption" style="color:rgb(var(--mgt-muted-foreground));">' + label + (v.city ? ' &middot; ' + escHtml(v.city) : '') + '</div></div>' +
@@ -904,7 +904,7 @@ html.dark {
   function renderCommerces() {
     var scroll = document.getElementById('dashboard-favorites-scroll');
     if (!scroll) return;
-    fetch('/api/carte', { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+    fetch('/api/carte?ts=' + Date.now(), { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
       .then(function (r) { return r.json(); })
       .then(function (data) {
         var list = (data && data.vendors) || [];
