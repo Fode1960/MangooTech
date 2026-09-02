@@ -932,7 +932,7 @@ html.dark {
         var conv = document.createElement('div');
         conv.className = 'msg-conv flex items-start gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))] cursor-pointer';
         conv.setAttribute('data-name', name);
-        conv.setAttribute('data-peer-id', c.vendorId || c.id || '');
+        conv.setAttribute('data-peer-id', c.routingId || c.vendorId || c.id || '');
         conv.setAttribute('data-online', c.online ? 'true' : 'false');
         conv.setAttribute('data-role', c.role || 'client');
         conv.setAttribute('data-city', c.city || '');
