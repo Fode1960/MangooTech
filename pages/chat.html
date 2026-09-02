@@ -878,6 +878,7 @@ html.dark {
     }).join('');
     menu.style.cssText = 'position:fixed;z-index:2147483600;min-width:190px;max-width:250px;background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.25);padding:6px;box-sizing:border-box;';
     document.body.appendChild(menu);
+    msgMenu = menu;
     positionMsgMenu(menu, anchorEl, outgoing);
     menu.querySelectorAll('[data-menu-act]').forEach(function(btn){
       btn.addEventListener('click', function(e){
