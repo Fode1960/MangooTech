@@ -4351,6 +4351,7 @@ function handleHttp(req, res) {
         return {
           id: u.id,
           vendorId: u.vendorId || u.id,
+          routingId: routingIdForUser(u),
           role: u.role,
           name: u.enseigne || u.name || u.fullName || u.phone || u.email || 'Contact',
           enseigne: u.enseigne || '',

@@ -336,7 +336,7 @@ html.dark {
             <span id="vendor-badge" class="inline-block rounded-full px-3 py-1 text-xs font-semibold" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Beauté &amp; coiffure</span>
             <button id="boost-badge-hero" type="button" data-badge-audio="promo" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:brightness-110" style="background-color: rgb(var(--mgt-primary-100)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); border: 1px solid rgb(var(--mgt-primary-200));">
               <i data-lucide="tag" class="h-3.5 w-3.5"></i>
-              <span>Promotion</span>
+              <span>Démo</span>
               <i data-lucide="volume-2" class="h-3.5 w-3.5"></i>
             </button>
             <span class="inline-flex items-center gap-1.5 caption" style="color: rgb(var(--mgt-primary-100));">
@@ -426,12 +426,12 @@ html.dark {
 
       <div class="mt-4 rounded-md p-4" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md);">
         <p class="caption mb-1 font-semibold" style="color: rgb(var(--mgt-primary-600)); font-family: var(--mgt-font-sans);">Transcription</p>
-        <p class="body" style="color: rgb(var(--mgt-foreground));">« Bienvenue chez DAN Coiffure ! Découvrez nos prestations, nos offres de la semaine et nos horaires. »</p>
+        <p id="welcome-transcription" class="body" style="color: rgb(var(--mgt-foreground));"></p>
       </div>
 
       <p class="caption mt-3 flex items-start gap-2" style="color: rgb(var(--mgt-muted-foreground));">
         <i data-lucide="shield-check" class="h-4 w-4 flex-shrink-0 mt-0.5" style="color: rgb(var(--mgt-primary));"></i>
-        <span>Stockage maîtrisé : message conservé 30 jours puis supprimé automatiquement ; l'audio lié au badge « Promotion » disparaît dès son expiration.</span>
+        <span>Stockage maîtrisé : message conservé 30 jours puis supprimé automatiquement ; l'audio lié au badge « Démo » disparaît dès son expiration.</span>
       </p>
     </div>
   </section>
@@ -1154,6 +1154,12 @@ html.dark {
   }
   var WELCOME_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-eb10536cd12d';
 
+  function setTranscription() {
+    var el = document.getElementById('welcome-transcription');
+    if (!el) return;
+    el.textContent = '« ' + WELCOME_TEXT() + ' »';
+  }
+
   function fmt(s) {
     var m = Math.floor(s / 60);
     var sec = Math.floor(s % 60);
@@ -1266,6 +1272,7 @@ html.dark {
   function bind() {
     buildWaveform();
     setSourceLabel();
+    setTranscription();
     var btn = document.getElementById('welcome-play-btn');
     if (btn) btn.addEventListener('click', toggle);
     var hero = document.getElementById('welcome-listen-hero');
