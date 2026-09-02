@@ -823,18 +823,33 @@ html.dark {
               plan: user.plan || 'decouverte'
             }));
             // Migre l'enregistrement de bienvenue provisoire (reg_pending) vers
-            // le vendorId définitif, en y rattachant la transcription saisie.
+            // le vendorId définitif, en y rattachant la transcription saisie,
+            // puis le persiste côté serveur pour que la fiche publique affiche
+            // la transcription et l'audio du prestataire sur n'importe quel
+            // appareil (et non uniquement dans le localStorage de cet appareil).
             var finalVendorId = user.vendorId || user.id || '';
             if (finalVendorId && window.MangooWelcomeAudio) {
               try {
                 var ti = document.getElementById('welcome-transcript-input');
-                if (ti && ti.value && ti.value.trim()) {
-                  var pend = window.MangooWelcomeAudio.getRecording('reg_pending');
-                  if (pend && pend.dataUrl) {
-                    window.MangooWelcomeAudio.saveRecording('reg_pending', pend.dataUrl, pend.mime, ti.value.trim());
-                  }
+                var pend = window.MangooWelcomeAudio.getRecording('reg_pending');
+                var text = (ti && ti.value && ti.value.trim()) ? ti.value.trim() : '';
+                if (pend && pend.dataUrl) {
+                  window.MangooWelcomeAudio.saveRecording('reg_pending', pend.dataUrl, pend.mime, text);
                 }
                 window.MangooWelcomeAudio.migrate('reg_pending', finalVendorId);
+                if (pend && (pend.dataUrl || text)) {
+                  fetch('/api/vendor-config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      action: 'set-welcome-audio',
+                      vendorId: finalVendorId,
+                      text: text,
+                      dataUrl: pend.dataUrl || '',
+                      mime: pend.mime || 'audio/webm'
+                    })
+                  }).catch(function () {});
+                }
               } catch (e) {}
             }
           } else {

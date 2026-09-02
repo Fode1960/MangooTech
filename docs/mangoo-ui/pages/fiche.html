@@ -1184,6 +1184,10 @@ html.dark {
           setText(document.getElementById('vendor-hours-sun'), c.horaires.dimanche.open ? (c.horaires.dimanche.openTime + ' - ' + c.horaires.dimanche.closeTime) : 'Fermé');
         }
       }
+      if (c.welcomeAudio && (c.welcomeAudio.dataUrl || c.welcomeAudio.text)) {
+        if (window.MangooWelcomeAudio) window.MangooWelcomeAudio.hydrate(vendorId, c.welcomeAudio);
+        if (window.__mgtRefreshWelcome) window.__mgtRefreshWelcome();
+      }
       if (window.lucide) window.lucide.createIcons();
     })
     .catch(function () {});
@@ -1199,7 +1203,7 @@ html.dark {
     if (!name) name = 'nos équipes';
     return 'Bienvenue chez ' + name + '. Découvrez nos prestations, nos offres de la semaine et nos horaires.';
   }
-  var WELCOME_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-eb10536cd12d';
+  var WELCOME_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
 
   function welcomeTranscript() {
     if (window.MangooWelcomeAudio) {
@@ -1271,6 +1275,12 @@ html.dark {
     el.style.backgroundColor = has ? 'rgb(var(--mgt-primary-50))' : 'rgb(var(--mgt-muted))';
     el.style.color = has ? 'rgb(var(--mgt-primary-700))' : 'rgb(var(--mgt-muted-foreground))';
   }
+
+  // Re-rendu déclenché après réception des données serveur (welcomeAudio).
+  window.__mgtRefreshWelcome = function () {
+    setSourceLabel();
+    setTranscription();
+  };
 
   function stop() {
     playing = false;
@@ -1351,7 +1361,7 @@ html.dark {
     promo: 'Promotion en cours : profitez de remises sur une sélection de nos prestations et produits, dans la limite des stocks disponibles.',
     nouveau: 'Nouveau chez nous : découvrez nos dernières offres et nouveautés du moment.'
   };
-  var BADGE_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-eb10536cd12d';
+  var BADGE_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
   // Délégation : les badges payants sont injectés dynamiquement après le
   // chargement des données serveur, on écoute donc au niveau du document.
   document.addEventListener('click', function (e) {

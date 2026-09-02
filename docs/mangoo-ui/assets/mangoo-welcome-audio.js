@@ -45,16 +45,38 @@
     try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) {}
   }
 
+  // Données servies par le serveur (source de vérité). La transcription et
+  // l'audio de bienvenue sont persistés dans vendor-config.json (welcomeAudio).
+  // Les fiches publiques les reçoivent via /api/vendor-config et les hydratent
+  // ici afin que lecture et transcription correspondent au message réellement
+  // enregistré par le prestataire, quel que soit l'appareil du visiteur.
+  var serverStore = {};
+
+  function hydrate(vendorId, recording) {
+    if (!vendorId) return;
+    if (recording && (recording.dataUrl || recording.text)) {
+      serverStore[vendorId] = {
+        dataUrl: recording.dataUrl || '',
+        mime: recording.mime || 'audio/webm',
+        text: recording.text || '',
+        updatedAt: recording.updatedAt || null
+      };
+    } else {
+      delete serverStore[vendorId];
+    }
+  }
+
   function supported() {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
   }
 
   function hasRecording(vendorId) {
-    var s = readStore();
-    return !!(s[vendorId] && s[vendorId].dataUrl);
+    var rec = getRecording(vendorId);
+    return !!(rec && rec.dataUrl);
   }
 
   function getRecording(vendorId) {
+    if (serverStore[vendorId]) return serverStore[vendorId];
     var s = readStore();
     return s[vendorId] || null;
   }
@@ -226,6 +248,7 @@
     hasRecording: hasRecording,
     getRecording: getRecording,
     getTranscript: getTranscript,
+    hydrate: hydrate,
     saveRecording: saveRecording,
     removeRecording: removeRecording,
     migrate: migrate,

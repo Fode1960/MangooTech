@@ -68,6 +68,17 @@
     return post({ action: 'toggle-online', vendorId: vendorId(), online: online });
   }
 
+  function setWelcomeAudio(recording) {
+    var r = recording || {};
+    return post({
+      action: 'set-welcome-audio',
+      vendorId: vendorId(),
+      text: r.text || '',
+      dataUrl: r.dataUrl || '',
+      mime: r.mime || 'audio/webm'
+    });
+  }
+
   // Calcule le taux de complétude du profil (pour le Classement / la Découverte).
   function completeness(config) {
     var checks = [];
@@ -113,6 +124,7 @@
     setVerification: setVerification,
     setVendorVerification: setVendorVerification,
     toggleOnline: toggleOnline,
+    setWelcomeAudio: setWelcomeAudio,
     completeness: completeness,
     planLabel: planLabel,
     verifLabel: verifLabel

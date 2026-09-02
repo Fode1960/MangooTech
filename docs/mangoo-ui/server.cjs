@@ -1249,6 +1249,12 @@ function blankVendorConfig(vendorId) {
       renewsAt: null,
       autoRenew: false
     },
+    welcomeAudio: {
+      text: '',
+      dataUrl: '',
+      mime: 'audio/webm',
+      updatedAt: null
+    },
     horsLigne: {
       enabled: false,
       lastSyncAt: null,
@@ -5943,6 +5949,19 @@ function handleHttp(req, res) {
         if (action === 'toggle-online') {
           const next = body.online !== undefined ? !!body.online : !(doc.horsLigne && doc.horsLigne.online);
           doc.horsLigne = Object.assign({}, doc.horsLigne || {}, { online: next, lastSeenAt: new Date().toISOString() });
+          doc.updatedAt = new Date().toISOString();
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, config: doc }));
+          return;
+        }
+        if (action === 'set-welcome-audio') {
+          doc.welcomeAudio = Object.assign({}, doc.welcomeAudio || {}, {
+            text: String(body.text || ''),
+            dataUrl: String(body.dataUrl || ''),
+            mime: body.mime || 'audio/webm',
+            updatedAt: new Date().toISOString()
+          });
           doc.updatedAt = new Date().toISOString();
           saveVendorConfig();
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
