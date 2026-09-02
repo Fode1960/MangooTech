@@ -932,7 +932,7 @@ html.dark {
         var conv = document.createElement('div');
         conv.className = 'msg-conv flex items-start gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))] cursor-pointer';
         conv.setAttribute('data-name', name);
-        conv.setAttribute('data-peer-id', c.id || c.vendorId || '');
+        conv.setAttribute('data-peer-id', c.vendorId || c.id || '');
         conv.setAttribute('data-online', c.online ? 'true' : 'false');
         conv.setAttribute('data-role', c.role || 'client');
         conv.setAttribute('data-city', c.city || '');
@@ -2721,16 +2721,24 @@ html.dark {
           return fromName || from || 'Client';
         }
         function syncOnlineStatus() {
+          var onlineIds = {};
           var onlineNames = {};
           livePeers.forEach(function (p) {
-            if (p.role === 'client') onlineNames[normalizeName(p.name)] = true;
+            if (!p) return;
+            if (p.id) onlineIds[String(p.id)] = true;
+            if (p.name) onlineNames[normalizeName(p.name)] = true;
           });
           liveConvs().forEach(function (conv) {
+            var pid = conv.getAttribute('data-peer-id') || '';
             var name = conv.getAttribute('data-name') || '';
             var cn = normalizeName(name);
             var isOnline = false;
-            for (var key in onlineNames) {
-              if (key && (cn === key || cn.indexOf(key) === 0 || key.indexOf(cn) === 0)) { isOnline = true; break; }
+            if (pid && onlineIds[String(pid)]) {
+              isOnline = true;
+            } else {
+              for (var key in onlineNames) {
+                if (key && (cn === key || cn.indexOf(key) === 0 || key.indexOf(cn) === 0)) { isOnline = true; break; }
+              }
             }
             conv.setAttribute('data-online', isOnline ? 'true' : 'false');
           });
