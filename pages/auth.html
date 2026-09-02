@@ -645,6 +645,10 @@ html.dark {
                 <option value="other">Autre (saisir ma ville)</option>
               </select>
               <input type="text" id="register-city-other" class="auth-input" placeholder="Nom de votre ville" autocomplete="address-level2" style="display:none;margin-top:8px;">
+              <button type="button" id="register-geoloc" class="auth-btn" style="display:flex;align-items:center;gap:8px;justify-content:center;margin-top:8px;width:100%;border:1px dashed rgb(var(--mgt-border));background:transparent;color:rgb(var(--mgt-muted-foreground));font-size:13px;cursor:pointer;">
+                <i data-lucide="map-pin" style="width:16px;height:16px;"></i> Utiliser ma position exacte (optionnel)
+              </button>
+              <span id="register-geoloc-status" style="display:block;margin-top:4px;font-size:12px;color:rgb(var(--mgt-muted-foreground));"></span>
             </div>
             <script>
               (function () {
@@ -691,6 +695,24 @@ html.dark {
                   .then(function (r) { return r.json(); })
                   .then(apply)
                   .catch(function () { apply(null); });
+              })();
+            </script>
+            <script>
+              (function () {
+                var btn = document.getElementById('register-geoloc');
+                var statusEl = document.getElementById('register-geoloc-status');
+                if (!btn) return;
+                btn.addEventListener('click', function () {
+                  if (!navigator.geolocation) { statusEl.textContent = 'Géolocalisation non supportée.'; return; }
+                  statusEl.textContent = 'Localisation en cours…';
+                  navigator.geolocation.getCurrentPosition(function (pos) {
+                    window.__regLat = pos.coords.latitude;
+                    window.__regLng = pos.coords.longitude;
+                    statusEl.textContent = 'Position enregistrée.';
+                  }, function () {
+                    statusEl.textContent = 'Localisation refusée ou indisponible.';
+                  }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
+                });
               })();
             </script>
             <div id="register-message" class="auth-message" style="display:none;padding:10px 14px;border-radius:var(--mgt-radius-md);font-size:14px;margin-bottom:16px;"></div>
@@ -1080,6 +1102,10 @@ html.dark {
           role: registerRole, name: name, phone: phone, pin: pin,
           email: email, city: city, logo: logoDataUrl, plan: selectedPlan
         };
+        if (typeof window.__regLat === 'number' && typeof window.__regLng === 'number') {
+          payload.lat = window.__regLat;
+          payload.lng = window.__regLng;
+        }
         if (registerRole === 'prestataire' || registerRole === 'vendeur') {
           payload.enseigne = document.getElementById('register-enseigne').value.trim();
           payload.category = document.getElementById('register-category').value;
