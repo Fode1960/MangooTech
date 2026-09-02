@@ -813,6 +813,200 @@ html.dark {
     if (RT && typeof RT.toggleSavedMessage === 'function') RT.toggleSavedMessage(msgId, PEER.id);
   }
 
+  // --- Menu contextuel des messages (façon WhatsApp) ---
+  var msgMenu = null;
+  function closeMsgMenu(){
+    if (msgMenu && msgMenu.parentNode) msgMenu.parentNode.removeChild(msgMenu);
+    msgMenu = null;
+  }
+  var MENU_ICONS = {
+    'copy': '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>',
+    'corner-up-right': '<polyline points="15 14 20 9 15 4"></polyline><path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>',
+    'pencil': '<path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>',
+    'reply': '<polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path>',
+    'bookmark': '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>',
+    'trash-2': '<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>'
+  };
+  function menuIcon(name){ return MENU_ICONS[name] || ''; }
+  function positionMsgMenu(menu, anchorEl, outgoing){
+    var r = anchorEl.getBoundingClientRect();
+    var mw = menu.offsetWidth || 190;
+    var mh = menu.offsetHeight || 220;
+    var pad = 8;
+    var left = outgoing ? (r.right - mw) : r.left;
+    left = Math.max(pad, Math.min(left, window.innerWidth - mw - pad));
+    var top = (r.top - mh - pad >= 0) ? (r.top - mh - pad) : (r.bottom + pad);
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+  }
+  function openMsgMenu(m, anchorEl){
+    closeMsgMenu();
+    if (!m || m.dir === 'sys' || m.kind === 'appt') return;
+    var outgoing = m.dir === 'out';
+    var isText = m.kind !== 'audio' && m.kind !== 'file' && m.kind !== 'appt';
+    var isAudio = m.kind === 'audio';
+    var items = [];
+    function add(id, label, icon, opts){
+      items.push({ id: id, label: label, icon: icon, danger: !!(opts && opts.danger), checked: !!(opts && opts.checked) });
+    }
+    if (isText){
+      add('copy', 'Copier', 'copy');
+      add('forward', 'Transférer', 'corner-up-right');
+      if (outgoing) add('edit', 'Modifier', 'pencil');
+      else add('reply', 'Répondre', 'reply');
+      add('save', m.saved ? 'Retirer des favoris' : 'Favori', 'bookmark', { checked: !!m.saved });
+      if (outgoing) add('delete', 'Supprimer', 'trash-2', { danger: true });
+    } else if (isAudio){
+      add('forward', 'Transférer', 'corner-up-right');
+      if (!outgoing) add('reply', 'Répondre', 'reply');
+      add('save', m.saved ? 'Retirer des favoris' : 'Favori', 'bookmark', { checked: !!m.saved });
+      if (outgoing) add('delete', 'Supprimer', 'trash-2', { danger: true });
+    } else {
+      add('forward', 'Transférer', 'corner-up-right');
+      if (outgoing) add('delete', 'Supprimer', 'trash-2', { danger: true });
+    }
+    if (!items.length) return;
+    var menu = document.createElement('div');
+    menu.setAttribute('data-msg-menu', '1');
+    menu.innerHTML = items.map(function(it){
+      var color = it.danger ? 'rgb(var(--mgt-error))' : 'rgb(var(--mgt-foreground))';
+      return '<button type="button" data-menu-act="' + it.id + '" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 13px;border:none;background:transparent;color:' + color + ';font-size:14px;font-weight:500;cursor:pointer;text-align:left;border-radius:8px;">' +
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + menuIcon(it.icon) + '</svg>' +
+        '<span style="flex:1;">' + esc(it.label) + '</span>' +
+        (it.checked ? '<span style="font-size:16px;color:rgb(var(--mgt-accent));">✓</span>' : '') +
+      '</button>';
+    }).join('');
+    menu.style.cssText = 'position:fixed;z-index:2147483600;min-width:190px;max-width:250px;background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.25);padding:6px;box-sizing:border-box;';
+    document.body.appendChild(menu);
+    positionMsgMenu(menu, anchorEl, outgoing);
+    menu.querySelectorAll('[data-menu-act]').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var act = btn.getAttribute('data-menu-act');
+        closeMsgMenu();
+        if (act === 'copy') copyMessage(m);
+        else if (act === 'forward') forwardMessage(m);
+        else if (act === 'edit') beginEdit(m.msgId);
+        else if (act === 'delete') confirmDelete(m.msgId);
+        else if (act === 'save') toggleSave(m.msgId);
+        else if (act === 'reply') replyMessage(m);
+      });
+    });
+  }
+  function copyMessage(m){
+    var txt = '';
+    if (m.kind === 'audio') txt = 'Message vocal (' + fmtDur(m.duration) + ')';
+    else if (m.kind === 'file') txt = m.name || 'Fichier';
+    else txt = m.text || '';
+    if (!txt) { toast('Rien à copier.'); return; }
+    function ok(){ toast('Copié dans le presse-papiers.'); }
+    function fail(){ toast('Impossible de copier.'); }
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function'){
+      navigator.clipboard.writeText(txt).then(ok, fail);
+    } else {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = txt;
+        ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        var did = document.execCommand('copy');
+        document.body.removeChild(ta);
+        did ? ok() : fail();
+      } catch(e){ fail(); }
+    }
+  }
+  function forwardMessage(m){
+    closeMsgMenu();
+    var targets = CONVERSATIONS.filter(function(c){ return c.vendorId !== ACTIVE; });
+    var ov = document.createElement('div');
+    ov.id = 'mgt-forward-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:2147483600;display:flex;align-items:center;justify-content:center;padding:20px;';
+    var box = document.createElement('div');
+    box.style.cssText = 'background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:420px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4);';
+    var head = document.createElement('div');
+    head.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgb(var(--mgt-border));';
+    head.innerHTML = '<h3 style="font-size:16px;font-weight:700;color:rgb(var(--mgt-foreground));margin:0;">Transférer à…</h3>' +
+      '<button data-fw-close type="button" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:24px;line-height:1;cursor:pointer;">&times;</button>';
+    box.appendChild(head);
+    var body = document.createElement('div');
+    body.style.cssText = 'flex:1;overflow-y:auto;padding:12px;';
+    if (!targets.length){
+      body.innerHTML = '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));text-align:center;padding:32px 12px;margin:0;">Aucune autre conversation disponible.</p>';
+    } else {
+      targets.forEach(function(c){
+        var row = document.createElement('button');
+        row.type = 'button';
+        row.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px;border:1px solid rgb(var(--mgt-border));border-radius:12px;background:rgb(var(--mgt-background));cursor:pointer;margin-bottom:8px;';
+        row.innerHTML =
+          '<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;' + (c.img ? '' : 'background:linear-gradient(135deg, rgb(var(--mgt-accent-400)), rgb(var(--mgt-accent-600)));') + '">' +
+            (c.img ? '<img src="' + esc(c.img) + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">' : '<span style="color:#fff;font-weight:600;font-size:13px;">' + initialsOf(c.name || '') + '</span>') +
+          '</div>' +
+          '<span style="font-size:14px;font-weight:600;color:rgb(var(--mgt-foreground));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(c.name) + '</span>';
+        row.addEventListener('click', function(){
+          var copy = {};
+          for (var k in m) if (Object.prototype.hasOwnProperty.call(m, k)) copy[k] = m[k];
+          copy.msgId = genMsgId();
+          copy.time = nowTime();
+          pushMsg(c.vendorId, copy);
+          ov.remove();
+          toast('Message transféré.');
+          if (RT && typeof RT.sendMessage === 'function' && copy.text) RT.sendMessage(c.vendorId, copy.text, copy.msgId);
+          renderThread();
+          renderSidebar();
+        });
+        body.appendChild(row);
+      });
+    }
+    box.appendChild(body);
+    ov.appendChild(box);
+    document.body.appendChild(ov);
+    var closeBtn = box.querySelector('[data-fw-close]');
+    if (closeBtn) closeBtn.addEventListener('click', function(){ ov.remove(); });
+    ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
+  }
+  var replyingTo = null;
+  function renderReplyBar(){
+    var bar = document.getElementById('chat-reply-bar');
+    if (!bar){
+      var chatInput = document.getElementById('chat-input');
+      if (!chatInput) return;
+      bar = document.createElement('div');
+      bar.id = 'chat-reply-bar';
+      bar.style.cssText = 'display:none;align-items:center;gap:8px;padding:7px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;';
+      var recBar = document.getElementById('chat-rec-bar');
+      chatInput.insertBefore(bar, recBar || chatInput.firstChild);
+    }
+    if (!replyingTo){
+      bar.style.display = 'none';
+      bar.innerHTML = '';
+      return;
+    }
+    var preview = replyingTo.kind === 'audio' ? 'Message vocal' : (replyingTo.kind === 'file' ? (replyingTo.name || 'Fichier') : (replyingTo.text || 'Message'));
+    if (preview.length > 60) preview = preview.slice(0, 60) + '…';
+    bar.style.display = 'flex';
+    bar.innerHTML =
+      '<span style="flex:1;min-width:0;font-size:12px;color:rgb(var(--mgt-muted-foreground));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Répondre à : <b style="color:rgb(var(--mgt-foreground));">' + esc(preview) + '</b></span>' +
+      '<button type="button" data-reply-cancel style="flex-shrink:0;border:none;background:none;color:rgb(var(--mgt-muted-foreground));font-size:20px;line-height:1;cursor:pointer;padding:0 4px;">&times;</button>';
+    var cancel = bar.querySelector('[data-reply-cancel]');
+    if (cancel) cancel.addEventListener('click', function(){ replyingTo = null; renderReplyBar(); });
+  }
+  function replyMessage(m){
+    closeMsgMenu();
+    replyingTo = m;
+    renderReplyBar();
+    if (input) input.focus();
+  }
+  document.addEventListener('click', function(e){
+    if (!msgMenu) return;
+    if (e.target && typeof e.target.closest === 'function' && e.target.closest('[data-msg-menu]')) return;
+    closeMsgMenu();
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closeMsgMenu();
+  });
+  window.addEventListener('scroll', function(){ closeMsgMenu(); }, true);
+
   // ===== Messages vocaux (notes audio type WhatsApp) =====
   function toast(msg){
     var t = document.createElement('div');
@@ -1133,7 +1327,9 @@ html.dark {
           '</div>' +
         '</div>';
     } else {
-      body = '<div class="'+(outgoing?'bg-[rgb(var(--mgt-primary))] text-white rounded-2xl rounded-br-sm':'bg-white rounded-2xl rounded-bl-sm shadow-sm')+' px-4 py-2.5"><p class="text-sm leading-relaxed"></p></div>';
+      body = '<div class="'+(outgoing?'bg-[rgb(var(--mgt-primary))] text-white rounded-2xl rounded-br-sm':'bg-white rounded-2xl rounded-bl-sm shadow-sm')+' px-4 py-2.5">' +
+        (m.replyToText ? '<div style="font-size:11px;opacity:.72;border-left:2px solid currentColor;padding-left:6px;margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(m.replyToText) + '</div>' : '') +
+        '<p class="text-sm leading-relaxed"></p></div>';
     }
 
     el.innerHTML =
@@ -1145,55 +1341,21 @@ html.dark {
     var p = el.querySelector('p');
     if (p && m.kind !== 'file' && m.kind !== 'appt' && !editing) p.textContent = m.text || '';
 
-    // Menu d'actions (enregistrer / modifier / supprimer) sur les messages texte
-    // sortants.
-    if (outgoing && !editing && m.kind !== 'file' && m.kind !== 'appt' && m.kind !== 'audio' && m.msgId) {
-      var wrap = el.children[1];
-      var actions = document.createElement('div');
-      // Toujours visibles : sur tactile (Android) il n'y a pas de survol, les
-      // boutons restaient invisibles (opacity:0) et inutilisables.
-      actions.style.cssText = 'display:flex;align-items:center;gap:4px;margin-top:2px;opacity:1;';
-      actions.innerHTML =
-        saveButtonHtml(!!m.saved) +
-        '<button type="button" data-msg-act="edit" title="Modifier" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:rgb(var(--mgt-muted-foreground));cursor:pointer;">' +
-          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>' +
-        '</button>' +
-        '<button type="button" data-msg-act="delete" title="Supprimer" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:rgb(var(--mgt-muted-foreground));cursor:pointer;">' +
-          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>' +
-        '</button>';
-      wrap.appendChild(actions);
-      var actBtns = actions.querySelectorAll('button[data-msg-act]');
-      actBtns[0].addEventListener('click', function(e){ e.stopPropagation(); toggleSave(m.msgId); });
-      actBtns[1].addEventListener('click', function(e){ e.stopPropagation(); beginEdit(m.msgId); });
-      actBtns[2].addEventListener('click', function(e){ e.stopPropagation(); confirmDelete(m.msgId); });
-    }
-
-    // Message vocal sortant : bouton « Supprimer » dédié (consulter se fait via
-    // le bouton lecture de la bulle ; il n'y a pas d'édition pour un audio).
-    if (outgoing && m.kind === 'audio' && m.msgId) {
-      var awrap = el.children[1];
-      var aacts = document.createElement('div');
-      aacts.style.cssText = 'display:flex;align-items:center;gap:4px;margin-top:2px;opacity:1;';
-      aacts.innerHTML =
-        '<button type="button" data-msg-act="delete" title="Supprimer" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card));color:rgb(var(--mgt-muted-foreground));cursor:pointer;">' +
-          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>' +
-        '</button>';
-      awrap.appendChild(aacts);
-      var adel = aacts.querySelector('[data-msg-act="delete"]');
-      if (adel) adel.addEventListener('click', function(e){ e.stopPropagation(); confirmDelete(m.msgId); });
-    }
-
-    // Bouton « Enregistrer » sur les messages texte entrants.
-    if (!outgoing && !editing && m.kind !== 'file' && m.kind !== 'appt' && m.kind !== 'audio' && m.dir !== 'sys' && m.msgId) {
-      var inCol = el.children[1];
-      if (inCol) {
-        var inSave = document.createElement('div');
-        inSave.style.cssText = 'display:flex;margin-top:2px;opacity:1;';
-        inSave.innerHTML = saveButtonHtml(!!m.saved);
-        inCol.appendChild(inSave);
-        var isb = inSave.querySelector('[data-msg-act="save"]');
-        if (isb) isb.addEventListener('click', function(e){ e.stopPropagation(); toggleSave(m.msgId); });
-      }
+    // Menu contextuel (façon WhatsApp) : un clic sur la bulle ouvre un panneau
+    // vertical d'actions. Les boutons inline (Copier / Modifier / Supprimer /
+    // Favori) sont remplacés par ce panneau, plus propre et accessible au tactile.
+    if (!editing && m.dir !== 'sys' && m.kind !== 'appt'){
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function(e){
+        var t = e.target;
+        while (t && t !== el){
+          var tag = (t.tagName || '').toLowerCase();
+          if (tag === 'button' || tag === 'a' || tag === 'textarea' || tag === 'input') return;
+          t = t.parentNode;
+        }
+        e.stopPropagation();
+        openMsgMenu(m, el);
+      });
     }
 
     if (editing) {
@@ -1278,7 +1440,14 @@ html.dark {
     input.value = '';
     input.style.height = 'auto';
     var msgId = genMsgId();
-    pushMsg(ACTIVE, { dir:'out', text:text, time:nowTime(), msgId: msgId });
+    var msg = { dir:'out', text:text, time:nowTime(), msgId: msgId };
+    if (replyingTo){
+      var rt = replyingTo;
+      msg.replyToText = rt.kind === 'audio' ? 'Message vocal' : (rt.kind === 'file' ? (rt.name || 'Fichier') : (rt.text || 'Message'));
+      replyingTo = null;
+      renderReplyBar();
+    }
+    pushMsg(ACTIVE, msg);
     renderThread();
     renderSidebar();
     if (RT && typeof RT.sendMessage === 'function') RT.sendMessage(PEER.id, text, msgId);
