@@ -12,8 +12,8 @@
    la suppression automatique pour maîtriser les coûts de stockage.
 
    Expose window.MangooWelcomeAudio :
-     supported(), hasRecording(id), getRecording(id),
-     saveRecording(id, dataUrl, mime), removeRecording(id),
+     supported(), hasRecording(id), getRecording(id), getTranscript(id),
+     saveRecording(id, dataUrl, mime, text), removeRecording(id), migrate(from, to),
      play(id, defaultText, opts), speak(text, opts), stop(),
      recorder(id, opts)
    ========================================================================= */
@@ -59,9 +59,26 @@
     return s[vendorId] || null;
   }
 
-  function saveRecording(vendorId, dataUrl, mime) {
+  function getTranscript(vendorId) {
+    var rec = getRecording(vendorId);
+    return (rec && rec.text) ? rec.text : '';
+  }
+
+  // Migre un enregistrement provisoire (ex. `reg_pending` avant attribution du
+  // vendorId) vers son identifiant definitif. Ne remplace jamais un
+  // enregistrement deja present cote cible.
+  function migrate(fromId, toId) {
+    if (!fromId || !toId || fromId === toId) return;
     var s = readStore();
-    s[vendorId] = { dataUrl: dataUrl, mime: mime || 'audio/webm', size: dataUrl.length, updatedAt: Date.now() };
+    if (!s[fromId]) return;
+    if (!s[toId] || !s[toId].dataUrl) s[toId] = s[fromId];
+    delete s[fromId];
+    writeStore(s);
+  }
+
+  function saveRecording(vendorId, dataUrl, mime, text) {
+    var s = readStore();
+    s[vendorId] = { dataUrl: dataUrl, mime: mime || 'audio/webm', size: dataUrl.length, text: text || '', updatedAt: Date.now() };
     writeStore(s);
   }
 
@@ -208,8 +225,10 @@
     supported: supported,
     hasRecording: hasRecording,
     getRecording: getRecording,
+    getTranscript: getTranscript,
     saveRecording: saveRecording,
     removeRecording: removeRecording,
+    migrate: migrate,
     play: play,
     playBadge: playBadge,
     badgeKey: badgeKey,

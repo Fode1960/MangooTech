@@ -592,6 +592,7 @@ html.dark {
                     <i data-lucide="trash-2" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"></i>Supprimer
                   </button>
                 </div>
+                <input type="text" id="welcome-transcript-input" class="auth-input" placeholder="Transcription du message vocal (texte affiché sur la fiche)" style="margin-top:10px;">
                 <div id="welcome-record-status" class="caption" style="color:rgb(var(--mgt-muted-foreground));margin-top:8px;">Aucun message enregistré. Un message par défaut sera utilisé.</div>
                 <p class="caption" style="color:rgb(var(--mgt-muted-foreground));margin-top:6px;">Enregistrez un court message (ex. « Bienvenue chez votre boutique, voici nos horaires... »). Il sera lu sur votre fiche à la place du message par défaut.</p>
               </div>
@@ -821,6 +822,21 @@ html.dark {
               verified: !!user.verified,
               plan: user.plan || 'decouverte'
             }));
+            // Migre l'enregistrement de bienvenue provisoire (reg_pending) vers
+            // le vendorId définitif, en y rattachant la transcription saisie.
+            var finalVendorId = user.vendorId || user.id || '';
+            if (finalVendorId && window.MangooWelcomeAudio) {
+              try {
+                var ti = document.getElementById('welcome-transcript-input');
+                if (ti && ti.value && ti.value.trim()) {
+                  var pend = window.MangooWelcomeAudio.getRecording('reg_pending');
+                  if (pend && pend.dataUrl) {
+                    window.MangooWelcomeAudio.saveRecording('reg_pending', pend.dataUrl, pend.mime, ti.value.trim());
+                  }
+                }
+                window.MangooWelcomeAudio.migrate('reg_pending', finalVendorId);
+              } catch (e) {}
+            }
           } else {
             // Admin / client : on efface toute identité prestataire résiduelle.
             localStorage.removeItem('mgt_vendor_identity_v1');
@@ -1111,6 +1127,7 @@ html.dark {
       var previewBtn = document.getElementById('welcome-preview-btn');
       var deleteBtn = document.getElementById('welcome-delete-btn');
       var statusEl = document.getElementById('welcome-record-status');
+      var transcriptEl = document.getElementById('welcome-transcript-input');
 
       function setStatus(text, isError) {
         if (!statusEl) return;
@@ -1137,7 +1154,12 @@ html.dark {
         recordBtn.innerHTML = '<i data-lucide="square" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"></i>Arrêter';
         if (window.lucide) window.lucide.createIcons();
         rec = window.MangooWelcomeAudio.recorder(REG_PENDING, {
-          onSaved: function () { rec = null; refresh(); setStatus('Message enregistré avec succès.', false); },
+          onSaved: function (dataUrl, mime) {
+            if (transcriptEl) {
+              window.MangooWelcomeAudio.saveRecording(REG_PENDING, dataUrl, mime, transcriptEl.value.trim());
+            }
+            rec = null; refresh(); setStatus('Message enregistré avec succès.', false);
+          },
           onError: function (err) {
             rec = null;
             refresh();

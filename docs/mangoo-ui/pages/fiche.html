@@ -334,11 +334,7 @@ html.dark {
         <div class="flex flex-col items-center gap-3 md:items-start">
           <div class="flex flex-wrap items-center justify-center gap-3 md:justify-start">
             <span id="vendor-badge" class="inline-block rounded-full px-3 py-1 text-xs font-semibold" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Beauté &amp; coiffure</span>
-            <button id="boost-badge-hero" type="button" data-badge-audio="promo" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:brightness-110" style="background-color: rgb(var(--mgt-primary-100)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); border: 1px solid rgb(var(--mgt-primary-200));">
-              <i data-lucide="tag" class="h-3.5 w-3.5"></i>
-              <span>Démo</span>
-              <i data-lucide="volume-2" class="h-3.5 w-3.5"></i>
-            </button>
+            <span id="boost-badge-hero" class="inline-flex flex-wrap items-center gap-2"></span>
             <span class="inline-flex items-center gap-1.5 caption" style="color: rgb(var(--mgt-primary-100));">
               <span class="h-2 w-2 rounded-full" style="background-color: rgb(var(--mgt-primary-300));"></span>
               <span id="vendor-open">Fermé aujourd'hui</span>
@@ -1052,6 +1048,56 @@ html.dark {
     }
   }
 
+  // Badges payants (Sponsorise / En Promo / Nouveau) : rendu conditionnel a
+  // partir de `match.boosts` (donnees serveur). Sans boost actif, on affiche
+  // « Demo » (compte non payant).
+  function boostLabel(boost) {
+    return { sponsorise: 'Sponsorise', promo: 'En Promo', nouveau: 'Nouveau' }[boost] || '';
+  }
+  function boostGradient(boost) {
+    return {
+      sponsorise: 'linear-gradient(135deg, #f59e0b 0%, #c2410c 100%)',
+      promo: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
+      nouveau: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
+    }[boost] || null;
+  }
+  function boostIcon(boost) {
+    return { sponsorise: 'megaphone', promo: 'tag', nouveau: 'sparkles' }[boost] || 'tag';
+  }
+  function vendorBoosts(vendor) {
+    if (vendor && vendor.boosts && vendor.boosts.length) return vendor.boosts.slice();
+    if (vendor && vendor.boost) return [vendor.boost];
+    return [];
+  }
+  function renderBoostBadges(vendor) {
+    var host = document.getElementById('boost-badge-hero');
+    if (!host) return;
+    var boosts = vendorBoosts(vendor);
+    var html = '';
+    if (boosts.length) {
+      for (var i = 0; i < boosts.length; i++) {
+        var b = boosts[i];
+        var grad = boostGradient(b) || 'rgb(var(--mgt-primary-100))';
+        var label = boostLabel(b) || b;
+        var icon = boostIcon(b);
+        var hasAudio = (b === 'promo' || b === 'nouveau');
+        var tag = hasAudio ? 'button' : 'span';
+        var audioAttr = hasAudio ? ' data-badge-audio="' + b + '"' : '';
+        var cls = hasAudio ? ' cursor-pointer hover:brightness-110' : '';
+        html += '<' + tag + (hasAudio ? ' type="button"' : '') + audioAttr + ' class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold' + cls + '" style="background:' + grad + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);box-shadow:var(--mgt-shadow-sm);">'
+          + '<i data-lucide="' + icon + '" class="h-3.5 w-3.5"></i>'
+          + '<span>' + label + '</span>'
+          + (hasAudio ? '<i data-lucide="volume-2" class="h-3.5 w-3.5"></i>' : '')
+          + '</' + tag + '>';
+      }
+    } else {
+      html = '<span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style="background-color: rgb(var(--mgt-primary-100)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); border: 1px solid rgb(var(--mgt-primary-200));">'
+        + '<i data-lucide="tag" class="h-3.5 w-3.5"></i><span>Demo</span></span>';
+    }
+    host.innerHTML = html;
+    if (window.lucide) window.lucide.createIcons();
+  }
+
   function applyVendor(match) {
     if (!match) return;
     var meta = categoryMeta(match.category);
@@ -1078,6 +1124,7 @@ html.dark {
     setText(document.getElementById('vendor-description'), match.desc);
     if (match.name && document.title) document.title = match.name + ' · Prestataire · MangooTech';
 
+    renderBoostBadges(match);
     initReviews(match.rating);
     if (window.lucide) window.lucide.createIcons();
   }
@@ -1154,10 +1201,18 @@ html.dark {
   }
   var WELCOME_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-eb10536cd12d';
 
+  function welcomeTranscript() {
+    if (window.MangooWelcomeAudio) {
+      var t = window.MangooWelcomeAudio.getTranscript(WELCOME_VENDOR);
+      if (t) return t;
+    }
+    return WELCOME_TEXT();
+  }
+
   function setTranscription() {
     var el = document.getElementById('welcome-transcription');
     if (!el) return;
-    el.textContent = '« ' + WELCOME_TEXT() + ' »';
+    el.textContent = '« ' + welcomeTranscript() + ' »';
   }
 
   function fmt(s) {
@@ -1294,25 +1349,19 @@ html.dark {
 (function () {
   var BADGE_TEXTS = {
     promo: 'Promotion en cours : profitez de remises sur une sélection de nos prestations et produits, dans la limite des stocks disponibles.',
-    new: 'Nouveau chez nous : découvrez nos dernières offres et nouveautés du moment.'
+    nouveau: 'Nouveau chez nous : découvrez nos dernières offres et nouveautés du moment.'
   };
   var BADGE_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-eb10536cd12d';
-  function bind() {
-    var els = document.querySelectorAll('[data-badge-audio]');
-    for (var i = 0; i < els.length; i++) {
-      (function (el) {
-        el.addEventListener('click', function (e) {
-          e.preventDefault();
-          var type = el.getAttribute('data-badge-audio');
-          var text = BADGE_TEXTS[type] || '';
-          // Enregistrement personnalisé du badge s'il existe, sinon repli sur la synthèse.
-          if (window.MangooWelcomeAudio) window.MangooWelcomeAudio.playBadge(BADGE_VENDOR, type, text);
-        });
-      })(els[i]);
-    }
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
-  else bind();
+  // Délégation : les badges payants sont injectés dynamiquement après le
+  // chargement des données serveur, on écoute donc au niveau du document.
+  document.addEventListener('click', function (e) {
+    var el = (e.target && e.target.closest) ? e.target.closest('[data-badge-audio]') : null;
+    if (!el) return;
+    e.preventDefault();
+    var type = el.getAttribute('data-badge-audio');
+    var text = BADGE_TEXTS[type] || '';
+    if (window.MangooWelcomeAudio) window.MangooWelcomeAudio.playBadge(BADGE_VENDOR, type, text);
+  });
 })();
 </script>
 </body>
