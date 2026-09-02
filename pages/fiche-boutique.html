@@ -1807,7 +1807,11 @@ window.__mgtInitBoutique = function () {
 <script>
 (function () {
   var WELCOME_DURATION = 24; // secondes simulées (durée indicative du message vocal)
-  var WELCOME_TEXT = 'Bienvenue chez DAN Boutique. Découvrez nos nouveautés, nos offres de la semaine et nos horaires.';
+  function WELCOME_TEXT() {
+    var name = (window._mcpVendor && window._mcpVendor.name) || '';
+    if (!name) name = 'nos équipes';
+    return 'Bienvenue chez ' + name + '. Découvrez nos nouveautés, nos offres de la semaine et nos horaires.';
+  }
   var WELCOME_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
 
   function fmt(s) {
@@ -1889,7 +1893,7 @@ window.__mgtInitBoutique = function () {
     setIcon('pause');
     setSourceLabel();
     if (window.MangooWelcomeAudio) {
-      window.MangooWelcomeAudio.play(WELCOME_VENDOR, WELCOME_TEXT, { onEnd: finish });
+      window.MangooWelcomeAudio.play(WELCOME_VENDOR, WELCOME_TEXT(), { onEnd: finish });
     }
 
     var timeEl = document.getElementById('welcome-time');

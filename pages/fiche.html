@@ -1147,7 +1147,11 @@ html.dark {
 <script>
 (function () {
   var WELCOME_DURATION = 24; // secondes simulées (durée indicative du message vocal)
-  var WELCOME_TEXT = 'Bienvenue chez DAN Coiffure. Découvrez nos prestations, nos offres de la semaine et nos horaires.';
+  function WELCOME_TEXT() {
+    var name = (window._mcpVendor && window._mcpVendor.name) || '';
+    if (!name) name = 'nos équipes';
+    return 'Bienvenue chez ' + name + '. Découvrez nos prestations, nos offres de la semaine et nos horaires.';
+  }
   var WELCOME_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-eb10536cd12d';
 
   function fmt(s) {
@@ -1229,7 +1233,7 @@ html.dark {
     setIcon('pause');
     setSourceLabel();
     if (window.MangooWelcomeAudio) {
-      window.MangooWelcomeAudio.play(WELCOME_VENDOR, WELCOME_TEXT, { onEnd: finish });
+      window.MangooWelcomeAudio.play(WELCOME_VENDOR, WELCOME_TEXT(), { onEnd: finish });
     }
 
     var timeEl = document.getElementById('welcome-time');
