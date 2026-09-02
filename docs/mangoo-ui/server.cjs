@@ -3480,11 +3480,11 @@ function handleChatMessage(ws, msg) {
 }
 
 function handleTyping(ws, msg) {
-  const from = ws.meta && ws.meta.id;
-  const to = String(msg.to || '').trim();
+  const from = canonicalRoutingId(ws.meta && ws.meta.id);
+  const to = canonicalRoutingId(String(msg.to || '').trim());
   if (!from || !to) return;
   broadcastToPeer(to, {
-    type: 'typing', from, fromName: ws.meta.name, isTyping: !!msg.isTyping
+    type: 'typing', from, fromName: ws.meta && ws.meta.name, isTyping: !!msg.isTyping
   });
 }
 
