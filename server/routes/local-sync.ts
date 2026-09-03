@@ -106,8 +106,40 @@ router.get('/shops/:slug', (req, res) => {
   res.json({ success: true, shop })
 })
 
+const normalizeVendorNameKeyLocalPlus = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+
+// Correctifs forcés pour la carte Local+ : réaffecte les fiches connues à leur
+// vraie position d'inscription, quel que soit l'état stocké en base (coordonnées
+// « centre de Paris » erronées issues d'un géocodage par ville). S'applique en
+// lecture, avant res.json, donc sans dépendre d'une mise à jour des données.
+const KNOWN_LOCALPLUS_VENDOR_FIXES = [
+  { ids: ['pro-45624665'], nameKeys: ['sagho', 'sagho mustafa'], patch: { city: 'Vichy', country: 'France', lat: 46.1267, lng: 3.4259, phone: '+33610498123' } },
+  { ids: ['pro-41cafa4bcb31', 'ven-e9e831ccf698'], nameKeys: ['dan boutique'], patch: { city: 'Paris', country: 'France', lat: 48.89385, lng: 2.37708, address: '3 rue de Cambrai, 75019 Paris' } },
+  { ids: ['ven-7267d483b4d8'], nameKeys: ['boutique jeu video', 'boutique jeux video', 'boutique jeu vidéo'], patch: { city: 'Paris', country: 'France', lat: 48.89385, lng: 2.37708, address: '3 rue de Cambrai, 75019 Paris' } }
+]
+
+const localPlusVendorFixFor = (vendor) => {
+  if (!vendor || typeof vendor !== 'object') return null
+  const id = String(vendor?.id || '').trim()
+  const nameKey = normalizeVendorNameKeyLocalPlus(vendor?.name)
+  for (const fix of KNOWN_LOCALPLUS_VENDOR_FIXES) {
+    if (fix.ids && id && fix.ids.includes(id)) return fix.patch
+    if (fix.nameKeys && nameKey && fix.nameKeys.some((k) => nameKey === k || nameKey.includes(k))) return fix.patch
+  }
+  return null
+}
+
 router.get('/localplus/vendors', (req, res) => {
-  const vendors = localSyncStore.listLocalPlusVendors()
+  const vendors = localSyncStore.listLocalPlusVendors().map((v) => {
+    const forcedFix = localPlusVendorFixFor(v)
+    return forcedFix ? { ...v, ...forcedFix } : v
+  })
   res.json({ success: true, vendors })
 })
 
