@@ -4317,6 +4317,8 @@ function handleHttp(req, res) {
       const cityRaw = String(body.city || '').trim() || 'Dakar';
       const geo = geocodeCity(cityRaw);
       const city = geo ? geo.city : cityRaw;
+      const clientLat = (body.lat != null && body.lat !== '' && isFinite(Number(body.lat))) ? Number(body.lat) : null;
+      const clientLng = (body.lng != null && body.lng !== '' && isFinite(Number(body.lng))) ? Number(body.lng) : null;
       const category = String(body.category || '').trim() || 'salon';
       const logo = String(body.logo || '').slice(0, 500000); // data URL logo (max 500 Ko)
       // Véhicule du livreur validé AVANT création du compte (évite tout compte orphelin).
@@ -4331,8 +4333,8 @@ function handleHttp(req, res) {
         passwordHash: password ? hashSecret(password) : null,
         logo, category, city,
         country: geo ? geo.country : null,
-        lat: geo ? geo.lat : null,
-        lng: geo ? geo.lng : null,
+        lat: clientLat != null ? clientLat : (geo ? geo.lat : null),
+        lng: clientLng != null ? clientLng : (geo ? geo.lng : null),
         createdAt: nowIso()
       };
       users.push(user);
@@ -4348,8 +4350,8 @@ function handleHttp(req, res) {
           ownerName: name, email: email || '', phone: phone,
           enseigne: enseigne, category: category, city: city, logo: logo,
           country: geo ? geo.country : (doc.profile.country || ''),
-          lat: geo ? geo.lat : (doc.profile.lat != null ? doc.profile.lat : null),
-          lng: geo ? geo.lng : (doc.profile.lng != null ? doc.profile.lng : null)
+          lat: clientLat != null ? clientLat : (geo ? geo.lat : (doc.profile.lat != null ? doc.profile.lat : null)),
+          lng: clientLng != null ? clientLng : (geo ? geo.lng : (doc.profile.lng != null ? doc.profile.lng : null))
         });
         doc.updatedAt = nowIso();
         saveVendorConfig();
