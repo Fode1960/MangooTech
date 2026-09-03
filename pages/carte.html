@@ -2415,9 +2415,16 @@ html.dark {
     } catch (e) { return 'chat.html#rdv'; }
   })();
   var rdvFlag = (rdvTarget.indexOf('#rdv') >= 0) ? 'rdv' : '';
+  var msgTarget = (function(){
+    try {
+      var _m = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+      var _mr = _m && String(_m.role || '').toLowerCase();
+      return (_mr === 'vendeur' || _mr === 'prestataire') ? 'dashboard-messages.html' : 'chat.html';
+    } catch (e) { return 'chat.html'; }
+  })();
   var DRAWER=[
     [homeTarget,'home','Accueil'],
-    ['chat.html','message-circle','Messagerie'],
+    [msgTarget,'message-circle','Messagerie'],
     [rdvTarget,'calendar-days','Mes rendez-vous',rdvFlag],
     ['client-orders.html','shopping-bag','Mes commandes'],
     ['client-favorites.html','heart','Mes favoris'],
@@ -2426,7 +2433,7 @@ html.dark {
   ];
   var BOTTOM=[
     [homeTarget,'home','Accueil'],
-    ['chat.html','message-circle','Messages'],
+    [msgTarget,'message-circle','Messages'],
     ['carte.html','map','Boutiques'],
     [rdvTarget,'calendar-days','RDV',rdvFlag],
     [profileTarget,'user','Profil']
