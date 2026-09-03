@@ -633,6 +633,15 @@
         a.addEventListener('click', function () { if (window.innerWidth <= 768) close(); });
       })(navLinks[i]);
     }
+
+    // Auto-ouvre le menu lateral sur la « Vue d'ensemble » (accueil du dashboard)
+    // en mobile : le professionnel doit voir immediatement ses modules (Vue
+    // d'ensemble, Performance, Avis clients, ...) au lieu d'une colonne qui
+    // apparait puis disparait et qu'il faut rouvrir avec le bouton hamburger.
+    if (window.innerWidth <= 768 && currentPageName() === 'dashboard-overview.html') {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+    }
   }
 
   function buildSidebarLogout() {
