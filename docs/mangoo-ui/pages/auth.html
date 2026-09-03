@@ -715,6 +715,80 @@ html.dark {
                 });
               })();
             </script>
+            <div class="auth-input-group">
+              <label class="auth-label" for="register-address">Adresse exacte <span style="color:rgb(var(--mgt-muted-foreground));font-weight:400;">(recommandée pour la livraison)</span></label>
+              <input type="text" id="register-address" class="auth-input" placeholder="Ex. 3 rue de Cambrai, 75019 Paris" autocomplete="street-address">
+              <span id="register-address-status" style="display:block;margin-top:4px;font-size:12px;color:rgb(var(--mgt-muted-foreground));"></span>
+            </div>
+            <script>
+              (function () {
+                // Capture GPS automatique au chargement (précis sur mobile), en
+                // complément du bouton manuel « Utiliser ma position exacte ».
+                if (navigator.geolocation) {
+                  navigator.geolocation.getCurrentPosition(function (pos) {
+                    window.__regLat = pos.coords.latitude;
+                    window.__regLng = pos.coords.longitude;
+                    var s = document.getElementById('register-geoloc-status');
+                    if (s) s.textContent = 'Position détectée automatiquement.';
+                  }, function () { /* refus silencieux */ },
+                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
+                }
+
+                // Géocodage de l'adresse exacte (adresse -> coordonnées). Fiable
+                // sur tous les appareils, contrairement au GPS (imprécis sur PC).
+                var addrInput = document.getElementById('register-address');
+                var addrStatus = document.getElementById('register-address-status');
+                function geocodeExactAddress(address) {
+                  if (!address) return Promise.resolve();
+                  var url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1'
+                    + '&accept-language=fr&q=' + encodeURIComponent(address);
+                  return fetch(url, { headers: { 'Accept': 'application/json' } })
+                    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                    .then(function (results) {
+                      if (results && results.length) {
+                        window.__addrLat = parseFloat(results[0].lat);
+                        window.__addrLng = parseFloat(results[0].lon);
+                        if (addrStatus) addrStatus.textContent = 'Adresse localisée.';
+                      } else {
+                        window.__addrLat = null; window.__addrLng = null;
+                        if (addrStatus) addrStatus.textContent = 'Adresse introuvable, la position GPS sera utilisée.';
+                      }
+                    })
+                    .catch(function () {
+                      window.__addrLat = null; window.__addrLng = null;
+                      if (addrStatus) addrStatus.textContent = 'Localisation de l'adresse impossible.';
+                    });
+                }
+                if (addrInput) {
+                  addrInput.addEventListener('blur', function () {
+                    var v = addrInput.value.trim();
+                    if (v) geocodeExactAddress(v);
+                  });
+                }
+
+                // Priorité : adresse exacte géocodée > GPS automatique > ville.
+                window.resolveRegistrationCoords = function (address) {
+                  if (typeof window.__addrLat === 'number' && typeof window.__addrLng === 'number') {
+                    return Promise.resolve({ lat: window.__addrLat, lng: window.__addrLng });
+                  }
+                  if (address) {
+                    return geocodeExactAddress(address).then(function () {
+                      if (typeof window.__addrLat === 'number' && typeof window.__addrLng === 'number') {
+                        return { lat: window.__addrLat, lng: window.__addrLng };
+                      }
+                      if (typeof window.__regLat === 'number' && typeof window.__regLng === 'number') {
+                        return { lat: window.__regLat, lng: window.__regLng };
+                      }
+                      return null;
+                    });
+                  }
+                  if (typeof window.__regLat === 'number' && typeof window.__regLng === 'number') {
+                    return Promise.resolve({ lat: window.__regLat, lng: window.__regLng });
+                  }
+                  return Promise.resolve(null);
+                };
+              })();
+            </script>
             <div id="register-message" class="auth-message" style="display:none;padding:10px 14px;border-radius:var(--mgt-radius-md);font-size:14px;margin-bottom:16px;"></div>
             <div class="auth-checkbox-group">
               <input type="checkbox" id="register-terms" required>
@@ -1098,14 +1172,14 @@ html.dark {
         if (!/^\d{4}$/.test(pin)) { showMessage('register', 'Le PIN doit contenir exactement 4 chiffres.', true); return; }
         if (!terms) { showMessage('register', 'Veuillez accepter les conditions d\'utilisation.', true); return; }
 
+        var address = '';
+        var addressInput = document.getElementById('register-address');
+        if (addressInput) address = addressInput.value.trim();
+
         var payload = {
           role: registerRole, name: name, phone: phone, pin: pin,
           email: email, city: city, logo: logoDataUrl, plan: selectedPlan
         };
-        if (typeof window.__regLat === 'number' && typeof window.__regLng === 'number') {
-          payload.lat = window.__regLat;
-          payload.lng = window.__regLng;
-        }
         if (registerRole === 'prestataire' || registerRole === 'vendeur') {
           payload.enseigne = document.getElementById('register-enseigne').value.trim();
           payload.category = document.getElementById('register-category').value;
@@ -1117,19 +1191,25 @@ html.dark {
           payload.zone = document.getElementById('register-zone').value.trim();
         }
 
-        setBusy('register', true);
-        api('/api/auth/register', payload).then(function (res) {
-          setBusy('register', false);
-          if (res.ok && res.data.ok) {
-            saveSession(res.data.token, res.data.user);
-            showMessage('register', 'Compte créé avec succès. Redirection…', false);
-            setTimeout(function(){ redirectAfterLogin(res.data.user); }, 600);
-          } else {
-            showMessage('register', (res.data && res.data.error) || 'Échec de la création.', true);
-          }
-        }).catch(function () {
-          setBusy('register', false);
-          showMessage('register', 'Impossible de joindre le serveur.', true);
+        // Position la plus fiable : adresse exacte géocodée > GPS auto > ville.
+        window.resolveRegistrationCoords(address).then(function (coords) {
+          if (coords) { payload.lat = coords.lat; payload.lng = coords.lng; }
+          if (address) { payload.address = address; }
+
+          setBusy('register', true);
+          api('/api/auth/register', payload).then(function (res) {
+            setBusy('register', false);
+            if (res.ok && res.data.ok) {
+              saveSession(res.data.token, res.data.user);
+              showMessage('register', 'Compte créé avec succès. Redirection…', false);
+              setTimeout(function(){ redirectAfterLogin(res.data.user); }, 600);
+            } else {
+              showMessage('register', (res.data && res.data.error) || 'Échec de la création.', true);
+            }
+          }).catch(function () {
+            setBusy('register', false);
+            showMessage('register', 'Impossible de joindre le serveur.', true);
+          });
         });
       });
 
