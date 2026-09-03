@@ -441,10 +441,13 @@ html.dark {
         var vendors = (data && data.vendors) ? data.vendors : [];
         PROVIDERS = vendors.map(function (v) {
           var b = badgeFor(v);
+          var logo = String(v.img || v.logo || '');
+          if (logo.slice(0, 5) !== 'data:' && logo.slice(0, 4) !== 'http') logo = '';
           return {
             vendorId: v.vendorId || String(v.id),
             name: v.name || 'Professionnel',
             ini: initials(v.name),
+            logo: logo,
             type: typeLabelFor(v),
             rating: (v.rating != null && v.rating !== '') ? v.rating : '—',
             reviews: null,
@@ -556,7 +559,9 @@ html.dark {
       card.innerHTML =
         '<div class="flex items-start gap-3">' +
           '<div class="relative flex-shrink-0">' +
-            '<div class="flex items-center justify-center w-12 h-12 rounded-full text-white font-semibold text-base" style="background-color: rgb(var(--mgt-accent));">' + p.ini + '</div>' +
+            (p.logo
+              ? '<img src="' + p.logo + '" alt="" style="width:48px;height:48px;border-radius:9999px;object-fit:cover;display:block;background-color:rgb(var(--mgt-muted));">'
+              : '<div class="flex items-center justify-center w-12 h-12 rounded-full text-white font-semibold text-base" style="background-color: rgb(var(--mgt-accent));">' + p.ini + '</div>') +
             '<span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2" style="background-color: ' + (isYou ? 'rgb(var(--mgt-muted-foreground))' : (isOnline ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-muted-foreground))')) + '; border-color: rgb(var(--mgt-card));"></span>' +
           '</div>' +
           '<div class="flex-1 min-w-0">' +
