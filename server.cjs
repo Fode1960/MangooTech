@@ -1428,7 +1428,9 @@ function isStrongPassword(pw) {
 }
 
 function normalizePhone(p) {
-  return String(p || '').replace(/[^\d+]/g, '').trim();
+  let s = String(p || '').replace(/[^\d+]/g, '').trim();
+  if (/^00\d{7,15}$/.test(s)) s = '+' + s.slice(2);
+  return s;
 }
 
 function publicUser(u) {
@@ -1950,6 +1952,66 @@ function safeLogo(logo) {
   return s;
 }
 
+const KNOWN_VENDOR_FIXES = [
+  {
+    matchId: 'pro-45624665',
+    matchEmail: 'moussakho@yahoo.fr',
+    patch: {
+      city: 'Vichy',
+      country: 'France',
+      lat: 46.1267,
+      lng: 3.4259,
+      phone: '+33610498123',
+      category: 'autre',
+      plan: 'decouverte',
+      status: 'en_attente'
+    }
+  },
+  {
+    matchId: 'pro-41cafa4bcb31',
+    matchEmail: 'dan@exemple.com',
+    patch: {
+      city: 'Paris',
+      country: 'France',
+      lat: 48.89385,
+      lng: 2.37708,
+      address: '3 rue de Cambrai, 75019 Paris'
+    }
+  },
+  {
+    matchId: 'ven-e9e831ccf698',
+    matchEmail: '',
+    patch: {
+      city: 'Paris',
+      country: 'France',
+      lat: 48.89385,
+      lng: 2.37708,
+      address: '3 rue de Cambrai, 75019 Paris'
+    }
+  },
+  {
+    matchId: 'ven-7267d483b4d8',
+    matchEmail: '',
+    patch: {
+      city: 'Paris',
+      country: 'France',
+      lat: 48.89385,
+      lng: 2.37708,
+      address: '3 rue de Cambrai, 75019 Paris'
+    }
+  }
+];
+
+function knownVendorFix(id, email) {
+  const idKey = String(id || '');
+  const mail = String(email || '').toLowerCase().trim();
+  for (const f of KNOWN_VENDOR_FIXES) {
+    if (f.matchId && idKey === f.matchId) return f.patch;
+    if (f.matchEmail && mail === f.matchEmail) return f.patch;
+  }
+  return null;
+}
+
 function carteVendors() {
   // Réconcilie l'état des boosters (expiration des badges échus) avant de
   // construire l'annuaire, afin que la carte reflète les badges actifs en
@@ -1967,7 +2029,10 @@ function carteVendors() {
     const cfg = u.vendorId ? vendorConfigFor(u.vendorId) : null;
     const profile = (cfg && cfg.profile) || {};
     const type = u.role === 'vendeur' ? 'boutique' : 'prestataire';
-    const category = carteCategory(profile.category || u.category || (type === 'boutique' ? 'boutique' : 'service'));
+    const knownFix = knownVendorFix(u.vendorId || u.id, u.email);
+    const category = knownFix && knownFix.category
+      ? carteCategory(knownFix.category)
+      : carteCategory(profile.category || u.category || (type === 'boutique' ? 'boutique' : 'service'));
     const rawRating = (cfg && cfg.rating != null)
       ? Number(cfg.rating)
       : ((cfg && cfg.ranking && cfg.ranking.score != null) ? Number((cfg.ranking.score / 20).toFixed(1)) : 4.5);
@@ -1984,18 +2049,30 @@ function carteVendors() {
     let city = profile.city || u.city || '';
     let country = profile.country || u.country || '';
 
+    // Correctif ciblé : fiche connue réaffectée à sa vraie ville d'inscription.
+    if (knownFix) {
+      city = knownFix.city;
+      country = knownFix.country;
+      lat = knownFix.lat;
+      lng = knownFix.lng;
+    }
+
     // Défense en profondeur : si le libellé de ville correspond à une ville du
     // dictionnaire géographique, on aligne SYSTÉMATIQUEMENT les coordonnées sur
     // cette ville. Corrige à la lecture tout compte dont la ville a été modifiée
     // sans mise à jour des coordonnées (ex. « Paris » avec lat/lng restés sur
     // Dakar), afin que la carte, la liste et l'annuaire reflètent le même lieu.
+    // Exception : si un correctif ciblé impose des coordonnées exactes (adresse
+    // précise comme « 3 rue de Cambrai »), on NE les écrase PAS par le centroïde
+    // de la ville (ex. centre de Paris).
     const cityGeo = geocodeCity(city);
-    if (cityGeo) {
+    const hasExactFix = !!(knownFix && knownFix.lat != null && knownFix.lng != null);
+    if (!hasExactFix && cityGeo) {
       city = cityGeo.city;
       country = cityGeo.country;
       lat = cityGeo.lat;
       lng = cityGeo.lng;
-    } else if (!city || normalizeCityKey(city) === 'other' || normalizeCityKey(city) === 'autre') {
+    } else if (!hasExactFix && (!city || normalizeCityKey(city) === 'other' || normalizeCityKey(city) === 'autre')) {
       const resolved = resolveVendorCity(lat, lng, country);
       city = resolved.city;
       if (!country) country = resolved.country;
@@ -2016,7 +2093,7 @@ function carteVendors() {
       live: isVendorLive(u.vendorId || u.id),
       desc: profile.description || '',
       img: safeLogo(profile.logo || profile.cover || ''),
-      phone: profile.phone || u.phone || '',
+      phone: (knownFix && knownFix.phone) || profile.phone || u.phone || '',
       boosts: activeBoostsFor(u.vendorId || u.id)
     });
   });
@@ -5583,18 +5660,19 @@ function handleHttp(req, res) {
       const doc = vendorConfigFor(u.vendorId || u.id);
       const p = doc.profile || {};
       const r = doc.rapports || {};
-      const status = prestaStatusOf(doc);
+      const knownFix = knownVendorFix(u.vendorId || u.id, u.email || (p && p.email));
+      const status = knownFix && knownFix.status ? knownFix.status : prestaStatusOf(doc);
       const verified = !!(doc.verification && doc.verification.status === 'certifie');
       return {
         id: u.vendorId || u.id,
         userId: u.id,
         name: u.enseigne || u.name,
         owner: u.name,
-        category: p.category || u.category || 'services',
-        city: p.city || u.city || '—',
-        phone: p.phone || u.phone || '',
+        category: (knownFix && knownFix.category) || p.category || u.category || 'services',
+        city: (knownFix && knownFix.city) || p.city || u.city || '—',
+        phone: (knownFix && knownFix.phone) || p.phone || u.phone || '',
         email: p.email || u.email || '',
-        address: p.address || '',
+        address: (knownFix && knownFix.address) || p.address || '',
         logo: u.logo || p.logo || '',
         status: status,
         verification: (doc.verification && doc.verification.status) || 'non_soumis',
