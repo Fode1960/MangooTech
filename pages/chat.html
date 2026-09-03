@@ -1076,11 +1076,24 @@ html.dark {
   }
   function toggleVoicePlay(btn, src){
     if (!btn || !src) return;
+    // Meme bouton : bascule lecture/pause et relance si deja termine
+    // (auparavant, un clic sur un audio en pause le laissait bloque).
     if (voicePlayer.btn === btn && voicePlayer.audio){
-      try { voicePlayer.audio.pause(); } catch(e){}
+      var cur = voicePlayer.audio;
+      if (cur.paused || cur.ended){
+        if (cur.ended){ try { cur.currentTime = 0; } catch(e){} }
+        cur.play().catch(function(){ setVoicePlaying(btn, false); });
+      } else {
+        try { cur.pause(); } catch(e){}
+      }
       return;
     }
-    if (voicePlayer.audio){ try { voicePlayer.audio.pause(); } catch(e){} }
+    // Autre bouton : on stoppe proprement l'audio precedent avant d'en lancer un nouveau.
+    if (voicePlayer.audio){
+      try { voicePlayer.audio.pause(); } catch(e){}
+      voicePlayer.audio.onended = null;
+      if (voicePlayer.btn) setVoicePlaying(voicePlayer.btn, false);
+    }
     var a = new Audio(src);
     a.onplay = function(){ setVoicePlaying(btn, true); };
     a.onpause = function(){ setVoicePlaying(btn, false); };
