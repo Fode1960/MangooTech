@@ -2390,6 +2390,16 @@ html.dark {
 </style>
 <script>
 (function(){
+  // Profil : lien role-aware. Un professionnel (vendeur/prestataire) doit
+  // atterrir sur ses « Parametres », pas sur le profil client qui le renvoie
+  // vers la « Vue d'ensemble » du Dashboard.
+  var profileTarget = (function(){
+    try {
+      var _u = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+      var _r = _u && String(_u.role || '').toLowerCase();
+      return (_r === 'vendeur' || _r === 'prestataire') ? 'dashboard-settings.html' : 'client-profile.html';
+    } catch (e) { return 'client-profile.html'; }
+  })();
   var DRAWER=[
     ['client-dashboard.html','home','Accueil'],
     ['chat.html','message-circle','Messagerie'],
@@ -2397,14 +2407,14 @@ html.dark {
     ['client-orders.html','shopping-bag','Mes commandes'],
     ['client-favorites.html','heart','Mes favoris'],
     ['carte.html','map','Boutique &amp; Prestataires'],
-    ['client-profile.html','user','Mon profil']
+    [profileTarget,'user','Mon profil']
   ];
   var BOTTOM=[
     ['client-dashboard.html','home','Accueil'],
     ['chat.html','message-circle','Messages'],
     ['carte.html','map','Boutiques'],
     ['chat.html#rdv','calendar-days','RDV','rdv'],
-    ['client-profile.html','user','Profil']
+    [profileTarget,'user','Profil']
   ];
   var path=location.pathname.toLowerCase();
   function isActive(h){var f=h.split('/').pop().toLowerCase();return path.indexOf(f)!==-1;}
