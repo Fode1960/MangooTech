@@ -2400,8 +2400,15 @@ html.dark {
       return (_r === 'vendeur' || _r === 'prestataire') ? 'dashboard-settings.html' : 'client-profile.html';
     } catch (e) { return 'client-profile.html'; }
   })();
+  var homeTarget = (function(){
+    try {
+      var _h = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+      var _hr = _h && String(_h.role || '').toLowerCase();
+      return (_hr === 'vendeur' || _hr === 'prestataire') ? 'dashboard-overview.html' : 'client-dashboard.html';
+    } catch (e) { return 'client-dashboard.html'; }
+  })();
   var DRAWER=[
-    ['client-dashboard.html','home','Accueil'],
+    [homeTarget,'home','Accueil'],
     ['chat.html','message-circle','Messagerie'],
     ['chat.html#rdv','calendar-days','Mes rendez-vous','rdv'],
     ['client-orders.html','shopping-bag','Mes commandes'],
@@ -2410,7 +2417,7 @@ html.dark {
     [profileTarget,'user','Mon profil']
   ];
   var BOTTOM=[
-    ['client-dashboard.html','home','Accueil'],
+    [homeTarget,'home','Accueil'],
     ['chat.html','message-circle','Messages'],
     ['carte.html','map','Boutiques'],
     ['chat.html#rdv','calendar-days','RDV','rdv'],
