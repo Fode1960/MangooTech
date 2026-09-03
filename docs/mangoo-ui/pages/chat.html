@@ -1890,7 +1890,10 @@ html.dark {
         if (n && (n===norm || n.indexOf(norm)===0 || norm.indexOf(n)===0)) return CONVERSATIONS[i].vendorId;
       }
     }
-    if (!hasLanding && CONVERSATIONS.length) return CONVERSATIONS[0].vendorId;
+    // Ne plus ouvrir automatiquement la premiere conversation : l'utilisateur
+    // doit voir la liste de ses contacts (sidebar) et choisir lui-meme. Seule
+    // une cible explicite (vendorId/from/to/fromName dans l'URL) ouvre une
+    // conversation.
     return null;
   }
   // Finalise le chargement : garantit la cible URL, sélectionne un contact et
