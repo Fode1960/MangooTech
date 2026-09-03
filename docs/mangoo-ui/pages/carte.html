@@ -2407,10 +2407,18 @@ html.dark {
       return (_hr === 'vendeur' || _hr === 'prestataire') ? 'dashboard-overview.html' : 'client-dashboard.html';
     } catch (e) { return 'client-dashboard.html'; }
   })();
+  var rdvTarget = (function(){
+    try {
+      var _rv = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+      var _rr = _rv && String(_rv.role || '').toLowerCase();
+      return (_rr === 'vendeur' || _rr === 'prestataire') ? 'dashboard-agenda.html' : 'chat.html#rdv';
+    } catch (e) { return 'chat.html#rdv'; }
+  })();
+  var rdvFlag = (rdvTarget.indexOf('#rdv') >= 0) ? 'rdv' : '';
   var DRAWER=[
     [homeTarget,'home','Accueil'],
     ['chat.html','message-circle','Messagerie'],
-    ['chat.html#rdv','calendar-days','Mes rendez-vous','rdv'],
+    [rdvTarget,'calendar-days','Mes rendez-vous',rdvFlag],
     ['client-orders.html','shopping-bag','Mes commandes'],
     ['client-favorites.html','heart','Mes favoris'],
     ['carte.html','map','Boutique &amp; Prestataires'],
@@ -2420,7 +2428,7 @@ html.dark {
     [homeTarget,'home','Accueil'],
     ['chat.html','message-circle','Messages'],
     ['carte.html','map','Boutiques'],
-    ['chat.html#rdv','calendar-days','RDV','rdv'],
+    [rdvTarget,'calendar-days','RDV',rdvFlag],
     [profileTarget,'user','Profil']
   ];
   var path=location.pathname.toLowerCase();
