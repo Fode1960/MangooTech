@@ -444,6 +444,10 @@ html.dark {
             <i data-lucide="message-circle" class="w-5 h-5"></i>
             <span>Messages</span>
           </a>
+          <a href="./carte.html" class="client-nav-item">
+            <i data-lucide="map" class="w-5 h-5"></i>
+            <span>Boutiques</span>
+          </a>
           <a href="#" class="client-nav-item" id="bottom-nav-agenda">
             <i data-lucide="calendar-days" class="w-5 h-5"></i>
             <span>RDV</span>
@@ -1914,6 +1918,15 @@ html.dark {
     } else {
       renderHeader();
       renderThread();
+      // Sur mobile, sans conversation cible, on ouvre automatiquement la liste
+      // des contacts (comme chez les pros) afin que le client choisisse
+      // directement a qui ecrire, au lieu de l etat vide « Demarrez... ».
+      if (window.innerWidth <= 768) {
+        var _cl = document.getElementById('conversation-list');
+        var _ov = document.querySelector('.chat-overlay');
+        if (_cl) _cl.classList.add('open');
+        if (_ov) _ov.classList.add('show');
+      }
     }
   }
 

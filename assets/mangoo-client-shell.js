@@ -260,7 +260,7 @@
     injectMobileStyle();
     sidebar.classList.add('mgt-shell-sidebar');
 
-    var existing = document.getElementById('btn-app-menu') || header.querySelector('.mobile-menu-btn');
+    var existing = document.getElementById('btn-app-menu') || header.querySelector('.mobile-menu-btn') || document.querySelector('.mgt-nav-btn');
     if (existing) return; // déjà géré (ex. client-dashboard avec un bouton fonctionnel)
 
     var btn = document.createElement('button');
