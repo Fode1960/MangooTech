@@ -913,13 +913,17 @@ html.dark {
     var mi = String(d.getMinutes()).padStart(2, '0');
     return dd + '/' + mm + ' ' + hh + ':' + mi;
   }
+  // Badge de localité (Local+) réutilisable : pastille « map-pin + ville ».
+  // Utilisée dans la barre des offres, la fiche vendeur et les marqueurs de la
+  // carte afin de renforcer la notion « chaque localité a ses propres offres ».
+  function localityBadgeHtml(vendor) {
+    if (!vendor || !vendor.city) return '';
+    return '<span class="inline-flex items-center gap-1 text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded-full" style="background:rgb(var(--mgt-primary-100));color:rgb(var(--mgt-primary-700));border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);"><i data-lucide="map-pin" class="h-3 w-3"></i>' + escapeHtml(vendor.city) + '</span>';
+  }
   function offreCardHtml(offre, vendor) {
     var startText = formatOffreDate(offre.startsAt);
     var endText = formatOffreDate(offre.endsAt);
-    var locality = (vendor && vendor.city) ? escapeHtml(vendor.city) : '';
-    var localityBadge = locality
-      ? '<span class="inline-flex items-center gap-1 text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded-full" style="background:rgb(var(--mgt-primary-100));color:rgb(var(--mgt-primary-700));border-radius:var(--mgt-radius-full);"><i data-lucide="map-pin" class="h-3 w-3"></i>' + locality + '</span>'
-      : '';
+    var localityBadge = localityBadgeHtml(vendor);
     var period = (startText || endText)
       ? '<div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 pt-2" style="border-top:1px solid rgb(var(--mgt-primary-100));">' +
           (startText ? '<span class="inline-flex items-center gap-1 text-[11px] font-medium" style="color:rgb(var(--mgt-muted-foreground));font-family:var(--mgt-font-sans);"><i data-lucide="clock" class="h-3 w-3"></i> Début : ' + startText + '</span>' : '') +
@@ -1078,6 +1082,9 @@ html.dark {
     // Badges nommés sous l'épingle : boost payant + « Live » (local). Ils sont
     // empilés verticalement, chacun nommé et clignotant pour rester lisible.
     var labels = [];
+    if (vendor.city) {
+      labels.push('<span class="mgt-badge-blink" style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:9999px;background:rgba(255,255,255,.92);color:#0f172a;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);"><i data-lucide="map-pin" style="width:10px;height:10px;"></i>' + escapeHtml(vendor.city) + '</span>');
+    }
     if (boost) {
       var boostText = boostLabel(top) + (isTrialBoost(vendor, top) ? ' · Essai' : '') + (count > 1 ? ' +' + (count - 1) : '');
       labels.push('<span class="mgt-badge-blink" style="display:block;padding:2px 7px;border-radius:9999px;background:' + grad + ';color:#fff;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);">' + boostText + '</span>');
@@ -1476,10 +1483,7 @@ html.dark {
       var cd = offreCountdownText(o);
       var startText = formatOffreDate(o.startsAt);
       var endText = formatOffreDate(o.endsAt);
-      var locality = (v.city ? escapeHtml(v.city) : '');
-      var localityBadge = locality
-        ? '<span class="inline-flex items-center gap-1 text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded-full" style="background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary));border-radius:var(--mgt-radius-full);"><i data-lucide="map-pin" class="h-3 w-3"></i>' + locality + '</span>'
-        : '';
+      var localityBadge = localityBadgeHtml(v);
       html += '<button data-offre-vendor="' + escapeHtml(v.vendorId) + '" data-offre-ends="' + escapeHtml(o.endsAt) + '" class="promo-item flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-full border flex-shrink-0 cursor-pointer transition-all hover:brightness-105" style="background:rgb(var(--mgt-accent-50)); border-color:rgb(var(--mgt-accent-200)); border-radius:var(--mgt-radius-full); font-family:var(--mgt-font-sans);">' +
         '<img src="' + v.img + '" alt="' + escapeHtml(v.name) + '" class="w-6 h-6 rounded-full object-cover" style="border-radius:var(--mgt-radius-full);" onerror="this.style.display=\'none\'">' +
         localityBadge +
