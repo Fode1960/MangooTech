@@ -410,6 +410,13 @@ html.dark {
             <button type="button" data-voice-cancel style="font-size:12px;font-weight:600;color:rgb(var(--mgt-error));border:none;background:transparent;cursor:pointer;">Supprimer</button>
             <button type="button" data-voice-send style="margin-left:auto;font-size:12px;font-weight:700;color:#fff;background:rgb(var(--mgt-accent));border:none;border-radius:999px;padding:6px 14px;cursor:pointer;">Envoyer</button>
           </div>
+          <!-- Aperçu de la vidéo avant envoi -->
+          <div id="chat-video-preview" style="display:none;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;">
+            <video data-video-preview playsinline muted style="width:120px;height:68px;border-radius:8px;background:#000;object-fit:cover;flex-shrink:0;"></video>
+            <span data-video-preview-dur style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));">0:00</span>
+            <button type="button" data-video-cancel style="font-size:12px;font-weight:600;color:rgb(var(--mgt-error));border:none;background:transparent;cursor:pointer;">Supprimer</button>
+            <button type="button" data-video-send style="margin-left:auto;font-size:12px;font-weight:700;color:#fff;background:rgb(var(--mgt-accent));border:none;border-radius:999px;padding:6px 14px;cursor:pointer;">Envoyer</button>
+          </div>
           <div class="flex items-end gap-2">
             <!-- Attachment Button -->
             <button id="btn-attach" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0" title="Joindre un fichier">
@@ -425,6 +432,11 @@ html.dark {
             <!-- Micro Button -->
             <button id="btn-mic" type="button" class="w-10 h-10 flex items-center justify-center rounded-full border shrink-0 transition-all hover:opacity-90 active:scale-95" style="background-color: rgb(var(--mgt-card));border-color: rgb(var(--mgt-border));color: rgb(var(--mgt-muted-foreground));touch-action:none;user-select:none;-webkit-user-select:none;" title="Maintenir pour enregistrer un message vocal">
               <i data-lucide="mic" class="w-5 h-5"></i>
+            </button>
+
+            <!-- Camera Button -->
+            <button id="btn-cam" type="button" class="w-10 h-10 flex items-center justify-center rounded-full border shrink-0 transition-all hover:opacity-90 active:scale-95" style="background-color: rgb(var(--mgt-card));border-color: rgb(var(--mgt-border));color: rgb(var(--mgt-muted-foreground));touch-action:none;user-select:none;-webkit-user-select:none;" title="Maintenir pour filmer une vidéo">
+              <i data-lucide="video" class="w-5 h-5"></i>
             </button>
 
             <!-- Send Button -->
@@ -853,8 +865,9 @@ html.dark {
     closeMsgMenu();
     if (!m || m.dir === 'sys' || m.kind === 'appt') return;
     var outgoing = m.dir === 'out';
-    var isText = m.kind !== 'audio' && m.kind !== 'file' && m.kind !== 'appt';
+    var isText = m.kind !== 'audio' && m.kind !== 'file' && m.kind !== 'appt' && m.kind !== 'video';
     var isAudio = m.kind === 'audio';
+    var isVideo = m.kind === 'video';
     var items = [];
     function add(id, label, icon, opts){
       items.push({ id: id, label: label, icon: icon, danger: !!(opts && opts.danger), checked: !!(opts && opts.checked) });
@@ -867,6 +880,11 @@ html.dark {
       add('save', m.saved ? 'Retirer des favoris' : 'Favori', 'bookmark', { checked: !!m.saved });
       if (outgoing) add('delete', 'Supprimer', 'trash-2', { danger: true });
     } else if (isAudio){
+      add('forward', 'Transférer', 'corner-up-right');
+      if (!outgoing) add('reply', 'Répondre', 'reply');
+      add('save', m.saved ? 'Retirer des favoris' : 'Favori', 'bookmark', { checked: !!m.saved });
+      if (outgoing) add('delete', 'Supprimer', 'trash-2', { danger: true });
+    } else if (isVideo){
       add('forward', 'Transférer', 'corner-up-right');
       if (!outgoing) add('reply', 'Répondre', 'reply');
       add('save', m.saved ? 'Retirer des favoris' : 'Favori', 'bookmark', { checked: !!m.saved });
@@ -907,6 +925,7 @@ html.dark {
   function copyMessage(m){
     var txt = '';
     if (m.kind === 'audio') txt = 'Message vocal (' + fmtDur(m.duration) + ')';
+    else if (m.kind === 'video') txt = 'Message vidéo (' + fmtDur(m.duration) + ')';
     else if (m.kind === 'file') txt = m.name || 'Fichier';
     else txt = m.text || '';
     if (!txt) { toast('Rien à copier.'); return; }
@@ -993,7 +1012,7 @@ html.dark {
       bar.innerHTML = '';
       return;
     }
-    var preview = replyingTo.kind === 'audio' ? 'Message vocal' : (replyingTo.kind === 'file' ? (replyingTo.name || 'Fichier') : (replyingTo.text || 'Message'));
+    var preview = replyingTo.kind === 'audio' ? 'Message vocal' : (replyingTo.kind === 'video' ? 'Message vidéo' : (replyingTo.kind === 'file' ? (replyingTo.name || 'Fichier') : (replyingTo.text || 'Message')));
     if (preview.length > 60) preview = preview.slice(0, 60) + '…';
     bar.style.display = 'flex';
     bar.innerHTML =
@@ -1073,6 +1092,94 @@ html.dark {
   var recBar = document.getElementById('chat-rec-bar');
   var recPreview = document.getElementById('chat-rec-preview');
   var recTimerEl = document.getElementById('chat-rec-timer');
+  var videoPreview = document.getElementById('chat-video-preview');
+
+  function pickVideoMime(){
+    if (window.MediaRecorder && typeof MediaRecorder.isTypeSupported === 'function'){
+      if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) return 'video/webm;codecs=vp8,opus';
+      if (MediaRecorder.isTypeSupported('video/webm')) return 'video/webm';
+      if (MediaRecorder.isTypeSupported('video/mp4')) return 'video/mp4';
+    }
+    return '';
+  }
+  var videoRecorder = null;
+  var videoChunks = [];
+  var videoStream = null;
+  var videoStartAt = 0;
+  var videoTimerId = null;
+  var pendingVideo = null;    // { video: dataURL, duration, mime }
+
+  function startVideoRecord(){
+    if ((videoRecorder && videoRecorder.state === 'recording') || (mediaRecorder && mediaRecorder.state === 'recording')) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder){
+      toast('Enregistrement vidéo non supporté sur cet appareil.');
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true }).then(function(stream){
+      videoStream = stream;
+      var mime = pickVideoMime();
+      var mr;
+      try { mr = new MediaRecorder(stream, mime ? { mimeType: mime } : {}); }
+      catch(e){ mr = new MediaRecorder(stream); }
+      videoChunks = [];
+      mr.ondataavailable = function(e){ if (e.data && e.data.size) videoChunks.push(e.data); };
+      mr.onstop = function(){
+        if (videoStream){ videoStream.getTracks().forEach(function(t){ t.stop(); }); videoStream = null; }
+        var type = mr.mimeType || mime || 'video/webm';
+        var blob = new Blob(videoChunks, { type: type });
+        var dur = Math.max(1, Math.round((Date.now() - videoStartAt) / 1000));
+        var reader = new FileReader();
+        reader.onloadend = function(){
+          pendingVideo = { video: reader.result, duration: dur, mime: type };
+          showVideoPreview();
+        };
+        reader.readAsDataURL(blob);
+      };
+      videoRecorder = mr;
+      mr.start(1000);
+      videoStartAt = Date.now();
+      if (recBar) recBar.style.display = 'flex';
+      if (recTimerEl) recTimerEl.textContent = '0:00';
+      if (videoPreview) videoPreview.style.display = 'none';
+      var secTimer = function(){ if (recTimerEl) recTimerEl.textContent = fmtDur(Math.floor((Date.now() - videoStartAt) / 1000)); };
+      secTimer();
+      videoTimerId = setInterval(secTimer, 500);
+    }).catch(function(){
+      toast('Caméra inaccessible. Autorisez l\'accès à la caméra puis réessayez.');
+    });
+  }
+  function stopVideoRecord(){
+    if (videoRecorder && videoRecorder.state === 'recording'){ try { videoRecorder.stop(); } catch(e){} }
+    if (videoTimerId){ clearInterval(videoTimerId); videoTimerId = null; }
+    if (recBar) recBar.style.display = 'none';
+  }
+  function showVideoPreview(){
+    if (!videoPreview || !pendingVideo) return;
+    var vid = videoPreview.querySelector('[data-video-preview]');
+    if (vid){ vid.src = pendingVideo.video; }
+    var durEl = videoPreview.querySelector('[data-video-preview-dur]');
+    if (durEl) durEl.textContent = fmtDur(pendingVideo.duration);
+    videoPreview.style.display = 'flex';
+  }
+  function hideVideoPreview(){
+    pendingVideo = null;
+    if (videoPreview){
+      videoPreview.style.display = 'none';
+      var vid = videoPreview.querySelector('[data-video-preview]');
+      if (vid){ try { vid.pause(); } catch(e){} vid.removeAttribute('src'); vid.load(); }
+    }
+  }
+  function sendVideo(){
+    if (!pendingVideo || !ACTIVE) return;
+    var msgId = genMsgId();
+    var data = pendingVideo;
+    pushMsg(ACTIVE, { dir:'out', kind:'video', video:data.video, duration:data.duration, mime:data.mime, time:nowTime(), msgId: msgId });
+    hideVideoPreview();
+    renderThread();
+    renderSidebar();
+    if (RT && typeof RT.sendVideoMessage === 'function') RT.sendVideoMessage(PEER.id, data.video, data.duration, data.mime, msgId);
+    scheduleAutoReply(ACTIVE, PEER.name);
+  }
 
   function setVoicePlaying(btn, playing){
     var icon = btn && btn.querySelector('svg');
@@ -1121,6 +1228,7 @@ html.dark {
   }
   function startVoiceRecord(){
     if (mediaRecorder && mediaRecorder.state === 'recording') return;
+    if (videoRecorder && videoRecorder.state === 'recording') return;
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder){
       toast('Enregistrement vocal non supporté sur cet appareil.');
       return;
@@ -1190,6 +1298,7 @@ html.dark {
       if (m.dir === 'sys') continue;
       if (m.kind === 'file') return '📎 ' + (m.name || 'Fichier');
       if (m.kind === 'audio') return '🎤 Message vocal';
+      if (m.kind === 'video') return '🎥 Message vidéo';
       return m.text || '';
     }
     return '';
@@ -1360,6 +1469,12 @@ html.dark {
         '<div class="'+(outgoing?'bg-[rgb(var(--mgt-primary))] text-white rounded-2xl rounded-br-sm':'bg-white rounded-2xl rounded-bl-sm shadow-sm')+' px-3 py-2.5" style="min-width:180px;max-width:260px;">' +
           voiceBubbleInner(m, outgoing) +
         '</div>';
+    } else if (m.kind === 'video'){
+      body =
+        '<div class="'+(outgoing?'bg-[rgb(var(--mgt-primary))] text-white rounded-2xl rounded-br-sm':'bg-white rounded-2xl rounded-bl-sm shadow-sm')+' p-1.5" style="max-width:260px;">' +
+          '<video controls playsinline preload="metadata" style="width:100%;max-width:240px;height:auto;max-height:260px;border-radius:10px;background:#000;display:block;" src="' + esc(m.video || '') + '"></video>' +
+          '<div style="font-size:11px;margin-top:4px;padding:0 2px;'+(outgoing?'opacity:.85;':'color:rgb(var(--mgt-muted-foreground));')+'">🎥 ' + fmtDur(m.duration) + '</div>' +
+        '</div>';
     } else if (editing){
       body =
         '<div class="bg-[rgb(var(--mgt-primary))] text-white rounded-2xl rounded-br-sm px-3 py-2.5" style="min-width:220px;">' +
@@ -1486,7 +1601,7 @@ html.dark {
     var msg = { dir:'out', text:text, time:nowTime(), msgId: msgId };
     if (replyingTo){
       var rt = replyingTo;
-      msg.replyToText = rt.kind === 'audio' ? 'Message vocal' : (rt.kind === 'file' ? (rt.name || 'Fichier') : (rt.text || 'Message'));
+      msg.replyToText = rt.kind === 'audio' ? 'Message vocal' : (rt.kind === 'video' ? 'Message vidéo' : (rt.kind === 'file' ? (rt.name || 'Fichier') : (rt.text || 'Message')));
       replyingTo = null;
       renderReplyBar();
     }
@@ -1505,6 +1620,19 @@ html.dark {
     micBtn.addEventListener('pointerdown', function(e){ e.preventDefault(); startVoiceRecord(); });
     micBtn.addEventListener('pointerup', function(){ stopVoiceRecord(); });
     micBtn.addEventListener('pointercancel', function(){ stopVoiceRecord(); });
+  }
+  // Caméra : maintenir pour filmer, relâcher pour arrêter puis prévisualiser.
+  var camBtn = document.getElementById('btn-cam');
+  if (camBtn){
+    camBtn.addEventListener('pointerdown', function(e){ e.preventDefault(); startVideoRecord(); });
+    camBtn.addEventListener('pointerup', function(){ stopVideoRecord(); });
+    camBtn.addEventListener('pointercancel', function(){ stopVideoRecord(); });
+  }
+  if (videoPreview){
+    var vidCancel = videoPreview.querySelector('[data-video-cancel]');
+    var vidSend = videoPreview.querySelector('[data-video-send]');
+    if (vidCancel) vidCancel.addEventListener('click', function(){ hideVideoPreview(); });
+    if (vidSend) vidSend.addEventListener('click', sendVideo);
   }
   // Aperçu du message vocal : lecture, réenregistrement, suppression, envoi.
   if (recPreview){
@@ -1775,6 +1903,7 @@ html.dark {
       if (!from) return;
       var msgObj = { dir:'in', text:m.text || '', time:nowTime(), name:m.fromName, msgId:m.msgId };
       if (m.kind === 'audio'){ msgObj.kind = 'audio'; msgObj.audio = m.audio; msgObj.duration = m.duration; msgObj.mime = m.mime; }
+      if (m.kind === 'video'){ msgObj.kind = 'video'; msgObj.video = m.video; msgObj.duration = m.duration; msgObj.mime = m.mime; }
       pushMsg(from, msgObj);
       if (from !== ACTIVE) UNREAD[from] = (UNREAD[from]||0)+1;
       if (from === ACTIVE) renderThread();

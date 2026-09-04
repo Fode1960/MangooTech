@@ -3473,6 +3473,7 @@ function handleMessage(ws, msg) {
     case 'ice-candidate': handleIce(ws, msg); break;
     case 'chat-message': handleChatMessage(ws, msg); break;
     case 'chat-audio': handleChatAudio(ws, msg); break;
+    case 'chat-video': handleChatVideo(ws, msg); break;
     case 'chat-edit': handleChatEdit(ws, msg); break;
     case 'chat-delete': handleChatDelete(ws, msg); break;
     case 'chat-history': handleChatHistory(ws, msg); break;
@@ -3733,6 +3734,52 @@ function handleChatAudio(ws, msg) {
     sendPush(to, {
       title: fromName || 'Nouveau message',
       body: '🎤 Message vocal (' + Math.max(1, Math.round(duration)) + ' s)',
+      url: pushLandingUrl({ routingId: to, kind: 'message', from: from, fromName: fromName, convId: entry.convId }),
+      tag: 'msg-' + entry.msgId,
+      data: { kind: 'message', from: from, fromName: fromName, convId: entry.convId }
+    });
+  }
+}
+
+// Message vidéo (capture caméra). La vidéo est transmise en base64 (data URL)
+// via le canal WebSocket, stockée dans le chatLog pour survivre au redémarrage,
+// puis diffusée au destinataire sous chat-new avec kind: 'video'. Borné en
+// taille (≈8 Mo base64, soit quelques secondes de vidéo) pour préserver messages.json.
+const MAX_VIDEO_B64 = 8 * 1024 * 1024;
+function handleChatVideo(ws, msg) {
+  const from = canonicalRoutingId(ws.meta.id);
+  const to = canonicalRoutingId(String(msg.to || '').trim());
+  const video = String(msg.video || '');
+  const duration = Number(msg.duration) || 0;
+  const mime = String(msg.mime || 'video/webm').slice(0, 80);
+  if (!from || !to || !video || video.length > MAX_VIDEO_B64) {
+    send(ws, { type: 'chat-video-error', reason: 'video invalide ou trop volumineuse' });
+    return;
+  }
+  const entry = {
+    msgId: msg.msgId || rand(),
+    convId: convKey(from, to),
+    from, to,
+    kind: 'video',
+    video: video,
+    duration: duration,
+    mime: mime,
+    sentAt: nowIso()
+  };
+  chatLog.push(entry);
+  saveChatLog();
+  send(ws, { type: 'chat-ack', msgId: entry.msgId, sentAt: entry.sentAt });
+  broadcastToPeer(to, {
+    type: 'chat-new', msgId: entry.msgId, convId: entry.convId,
+    from, fromName: ws.meta.name,
+    kind: 'video', video: entry.video, duration: entry.duration, mime: entry.mime,
+    text: '', sentAt: entry.sentAt
+  });
+  if (!isOnMessaging(to)) {
+    const fromName = (ws.meta && ws.meta.name) || '';
+    sendPush(to, {
+      title: fromName || 'Nouveau message',
+      body: '🎥 Message vidéo (' + Math.max(1, Math.round(duration)) + ' s)',
       url: pushLandingUrl({ routingId: to, kind: 'message', from: from, fromName: fromName, convId: entry.convId }),
       tag: 'msg-' + entry.msgId,
       data: { kind: 'message', from: from, fromName: fromName, convId: entry.convId }
