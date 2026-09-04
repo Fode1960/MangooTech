@@ -742,6 +742,7 @@ html.dark {
   var CONVERSATIONS = [];   // [{ vendorId, name, img, type, category }]
   var ACTIVE = null;        // vendorId actif
   var ONLINE = {};          // vendorId -> bool
+  var LAST_SEEN = {};       // vendorId -> timestamp (ms) de dernière connexion
   var UNREAD = {};          // vendorId -> compteur non-lu
   var LAST_PEERS = [];      // dernier état de présence reçu (rejoué après chargement de l'annuaire)
   var THREADS = {};         // vendorId -> [message]
@@ -1232,10 +1233,28 @@ html.dark {
   }
 
   // --- Rendu en-tête ---
+  // Libellé de présence enrichi : quand le contact est hors ligne, on
+  // affiche sa dernière connexion connue (fournie par le serveur via /api/carte).
+  function lastSeenLabel(id){
+    var ts = id ? LAST_SEEN[id] : null;
+    if (!ts) return 'Hors ligne';
+    var d = new Date(ts);
+    var mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
+    if (mins < 1) return 'Dernière connexion à l’instant';
+    if (mins < 60) return 'Dernière connexion il y a ' + mins + ' min';
+    var hh = ('0' + d.getHours()).slice(-2);
+    var mm = ('0' + d.getMinutes()).slice(-2);
+    return 'Dernière connexion à ' + hh + ':' + mm;
+  }
   function updateStatusEl(online){
     if (statusEl){
-      statusEl.textContent = online ? 'En ligne' : 'Hors ligne';
-      statusEl.style.color = online ? '#86efac' : 'rgb(var(--mgt-primary-200))';
+      if (online){
+        statusEl.textContent = 'En ligne';
+        statusEl.style.color = '#86efac';
+      } else {
+        statusEl.textContent = lastSeenLabel(ACTIVE);
+        statusEl.style.color = 'rgb(var(--mgt-primary-200))';
+      }
     }
     var dot = document.getElementById('chat-peer-dot');
     if (dot){
@@ -1943,7 +1962,9 @@ html.dark {
       .then(function(data){
         var list = (data && data.vendors) || [];
         CONVERSATIONS = list.map(function(v){
-          return { vendorId: String(v.vendorId || v.id || ''), name: v.name || 'Professionnel', img: v.img || '', type: v.type || '', category: v.category || '' };
+          var vid = String(v.vendorId || v.id || '');
+          if (v.lastSeen) LAST_SEEN[vid] = v.lastSeen;
+          return { vendorId: vid, name: v.name || 'Professionnel', img: v.img || '', type: v.type || '', category: v.category || '' };
         }).filter(function(c){ return c.vendorId; });
         mergeThreadsIntoConversations();
         finishConversationLoad(qp);

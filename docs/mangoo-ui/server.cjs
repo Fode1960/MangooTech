@@ -125,6 +125,7 @@ const MIME = {
  *  État temps réel (en mémoire)
  * ------------------------------------------------------------------ */
 const clients = new Map();        // id -> Array<{ ws, role, name, online, lastSeen }>
+const lastSeenByUser = new Map(); // id canonique -> timestamp de dernière connexion (survit à la déconnexion)
 const calls = new Map();          // callId -> { callerId, calleeId, callerWs, calleeWs, mode }
 let chatLog = [];               // { msgId, convId, from, to, text, sentAt }
 let callLog = [];               // { callId, callerId, calleeId, mode, status, at }
@@ -143,6 +144,7 @@ function addClient(id, ws, role, name) {
   if (idx !== -1) list.splice(idx, 1);
   list.push({ ws, role, name, online: true, lastSeen: Date.now() });
   clients.set(cid, list);
+  lastSeenByUser.set(cid, Date.now());
   return list;
 }
 
@@ -152,6 +154,7 @@ function removeClient(id, ws) {
   if (!list) return;
   const idx = list.findIndex((c) => c.ws === ws);
   if (idx !== -1) list.splice(idx, 1);
+  lastSeenByUser.set(cid, Date.now());
   if (list.length === 0) clients.delete(cid);
 }
 
@@ -2081,6 +2084,7 @@ function carteVendors() {
     list.push({
       id: nextId++,
       vendorId: canonicalRoutingId(u.vendorId || u.id),
+      lastSeen: lastSeenByUser.get(canonicalRoutingId(u.vendorId || u.id)) || null,
       name: profile.enseigne || u.enseigne || u.name || 'Professionnel',
       type: type,
       category: category,
