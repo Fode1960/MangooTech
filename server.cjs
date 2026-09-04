@@ -3744,8 +3744,8 @@ function handleChatAudio(ws, msg) {
 // Message vidéo (capture caméra). La vidéo est transmise en base64 (data URL)
 // via le canal WebSocket, stockée dans le chatLog pour survivre au redémarrage,
 // puis diffusée au destinataire sous chat-new avec kind: 'video'. Borné en
-// taille (≈8 Mo base64, soit quelques secondes de vidéo) pour préserver messages.json.
-const MAX_VIDEO_B64 = 8 * 1024 * 1024;
+// taille (≈12 Mo base64, soit ~30 s de vidéo) pour préserver messages.json.
+const MAX_VIDEO_B64 = 12 * 1024 * 1024;
 function handleChatVideo(ws, msg) {
   const from = canonicalRoutingId(ws.meta.id);
   const to = canonicalRoutingId(String(msg.to || '').trim());
