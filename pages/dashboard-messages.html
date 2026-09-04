@@ -566,6 +566,13 @@ html.dark {
               <span id="msg-rec-timer" style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));">0:00</span>
               <span style="font-size:12px;color:rgb(var(--mgt-muted-foreground));flex:1;">Relâchez pour arrêter</span>
             </div>
+            <!-- Barre d'enregistrement vidéo (indicateur bien visible pendant le filmage) -->
+            <div id="msg-video-rec-bar" style="display:none;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.45);margin-bottom:8px;">
+              <span style="width:12px;height:12px;border-radius:50%;background:#ef4444;flex-shrink:0;animation:mgtpulse 1s infinite;box-shadow:0 0 0 0 rgba(239,68,68,.5);"></span>
+              <span style="font-size:13px;font-weight:700;color:#ef4444;white-space:nowrap;">● Enregistrement vidéo</span>
+              <span id="msg-video-rec-timer" style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));white-space:nowrap;">0:00 / 0:30</span>
+              <span id="msg-video-rec-hint" style="font-size:12px;color:rgb(var(--mgt-muted-foreground));flex:1;">Relâchez pour arrêter</span>
+            </div>
             <!-- Aperçu du message vocal avant envoi -->
             <div id="msg-rec-preview" style="display:none;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;">
               <button type="button" data-voice-preview-play style="width:34px;height:34px;border-radius:50%;border:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgb(var(--mgt-primary));color:#fff;cursor:pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
@@ -573,6 +580,13 @@ html.dark {
               <button type="button" data-voice-rerecord style="font-size:12px;font-weight:600;color:rgb(var(--mgt-primary));border:none;background:transparent;cursor:pointer;">Réenregistrer</button>
               <button type="button" data-voice-cancel style="font-size:12px;font-weight:600;color:rgb(var(--mgt-error));border:none;background:transparent;cursor:pointer;">Supprimer</button>
               <button type="button" data-voice-send style="margin-left:auto;font-size:12px;font-weight:700;color:#fff;background:rgb(var(--mgt-primary));border:none;border-radius:999px;padding:6px 14px;cursor:pointer;">Envoyer</button>
+            </div>
+            <!-- Aperçu de la vidéo avant envoi -->
+            <div id="msg-video-preview" style="display:none;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;">
+              <video data-video-preview playsinline muted style="width:120px;height:68px;border-radius:8px;background:#000;object-fit:cover;flex-shrink:0;"></video>
+              <span data-video-preview-dur style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));">0:00</span>
+              <button type="button" data-video-cancel style="font-size:12px;font-weight:600;color:rgb(var(--mgt-error));border:none;background:transparent;cursor:pointer;">Supprimer</button>
+              <button type="button" data-video-send style="margin-left:auto;font-size:12px;font-weight:700;color:#fff;background:rgb(var(--mgt-primary));border:none;border-radius:999px;padding:6px 14px;cursor:pointer;">Envoyer</button>
             </div>
             <div class="flex items-end gap-3">
               <button id="btn-attach" title="Joindre un fichier" class="p-2.5 rounded-lg hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
@@ -582,6 +596,7 @@ html.dark {
                 <button id="btn-emoji" type="button" title="Insérer un émoji" class="absolute right-2 bottom-2 p-1.5 rounded-md hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="smile" class="w-4.5 h-4.5"></i></button>
               </div>
               <button id="msg-mic" type="button" title="Maintenir pour enregistrer un message vocal" class="inline-flex items-center justify-center p-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors flex-shrink-0" style="touch-action:none;user-select:none;-webkit-user-select:none;"><i data-lucide="mic" class="w-5 h-5"></i></button>
+              <button id="msg-cam" type="button" title="Maintenir pour filmer une vidéo" class="inline-flex items-center justify-center p-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors flex-shrink-0" style="touch-action:none;user-select:none;-webkit-user-select:none;"><i data-lucide="video" class="w-5 h-5"></i></button>
               <button id="msg-send" type="button" title="Envoyer" class="inline-flex items-center gap-1.5 p-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white hover:bg-[rgb(var(--mgt-primary-700))] transition-colors flex-shrink-0"><i data-lucide="send" class="w-5 h-5"></i><span class="hidden sm:inline text-sm font-semibold">Envoyer</span></button>
             </div>
           </div>
@@ -1900,11 +1915,184 @@ html.dark {
         }
       }
 
+      // ---- Message vidéo (capture caméra) ----
+      var videoRecorder = null;
+      var videoChunks = [];
+      var videoStream = null;
+      var videoStartAt = 0;
+      var videoTimerId = null;
+      var pendingVideo = null;    // { video: dataURL, duration, mime }
+      var videoRecBar = document.getElementById('msg-video-rec-bar');
+      var videoRecTimerEl = document.getElementById('msg-video-rec-timer');
+      var videoRecHintEl = document.getElementById('msg-video-rec-hint');
+      var videoPreview = document.getElementById('msg-video-preview');
+      var MAX_VIDEO_SECONDS = 30;
+
+      function pickVideoMime() {
+        if (window.MediaRecorder && typeof MediaRecorder.isTypeSupported === 'function') {
+          if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) return 'video/webm;codecs=vp8,opus';
+          if (MediaRecorder.isTypeSupported('video/webm')) return 'video/webm';
+          if (MediaRecorder.isTypeSupported('video/mp4')) return 'video/mp4';
+        }
+        return '';
+      }
+      function startVideoRecord() {
+        if ((videoRecorder && videoRecorder.state === 'recording') || (mediaRecorder && mediaRecorder.state === 'recording')) return;
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+          toast('Enregistrement vidéo non supporté sur cet appareil.');
+          return;
+        }
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true }).then(function (stream) {
+          videoStream = stream;
+          var mime = pickVideoMime();
+          var mr;
+          try { mr = new MediaRecorder(stream, mime ? { mimeType: mime } : {}); }
+          catch (e) { mr = new MediaRecorder(stream); }
+          videoChunks = [];
+          mr.ondataavailable = function (e) { if (e.data && e.data.size) videoChunks.push(e.data); };
+          mr.onstop = function () {
+            if (videoStream) { videoStream.getTracks().forEach(function (t) { t.stop(); }); videoStream = null; }
+            var type = mr.mimeType || mime || 'video/webm';
+            var blob = new Blob(videoChunks, { type: type });
+            var dur = Math.max(1, Math.round((Date.now() - videoStartAt) / 1000));
+            var reader = new FileReader();
+            reader.onloadend = function () {
+              pendingVideo = { video: reader.result, duration: dur, mime: type };
+              showVideoPreview();
+            };
+            reader.readAsDataURL(blob);
+          };
+          videoRecorder = mr;
+          mr.start(1000);
+          videoStartAt = Date.now();
+          if (recBar) recBar.style.display = 'none';
+          if (videoRecBar) videoRecBar.style.display = 'flex';
+          if (videoRecTimerEl) { videoRecTimerEl.textContent = '0:00 / ' + fmtDur(MAX_VIDEO_SECONDS); videoRecTimerEl.style.color = ''; }
+          if (videoRecHintEl) { videoRecHintEl.textContent = 'Relâchez pour arrêter'; videoRecHintEl.style.color = ''; }
+          if (videoPreview) videoPreview.style.display = 'none';
+          var secTimer = function () {
+            var elapsed = Math.floor((Date.now() - videoStartAt) / 1000);
+            var remaining = Math.max(0, MAX_VIDEO_SECONDS - elapsed);
+            if (videoRecTimerEl) videoRecTimerEl.textContent = fmtDur(elapsed) + ' / ' + fmtDur(MAX_VIDEO_SECONDS);
+            if (remaining > 0 && remaining <= 5) {
+              if (videoRecTimerEl) videoRecTimerEl.style.color = '#ef4444';
+              if (videoRecHintEl) { videoRecHintEl.textContent = 'Arrêt dans ' + remaining + ' s'; videoRecHintEl.style.color = '#ef4444'; }
+            } else if (remaining > 5) {
+              if (videoRecTimerEl) videoRecTimerEl.style.color = '';
+              if (videoRecHintEl) { videoRecHintEl.textContent = 'Relâchez pour arrêter'; videoRecHintEl.style.color = ''; }
+            }
+            if (elapsed >= MAX_VIDEO_SECONDS) { stopVideoRecord(); }
+          };
+          secTimer();
+          videoTimerId = setInterval(secTimer, 200);
+        }).catch(function () {
+          toast("Caméra inaccessible. Autorisez l'accès à la caméra puis réessayez.");
+        });
+      }
+      function stopVideoRecord() {
+        if (videoRecorder && videoRecorder.state === 'recording') { try { videoRecorder.stop(); } catch (e) {} }
+        if (videoTimerId) { clearInterval(videoTimerId); videoTimerId = null; }
+        if (recBar) recBar.style.display = 'none';
+        if (videoRecBar) videoRecBar.style.display = 'none';
+      }
+      function showVideoPreview() {
+        if (!videoPreview || !pendingVideo) return;
+        var vid = videoPreview.querySelector('[data-video-preview]');
+        if (vid) { vid.src = pendingVideo.video; }
+        var durEl = videoPreview.querySelector('[data-video-preview-dur]');
+        if (durEl) durEl.textContent = fmtDur(pendingVideo.duration);
+        videoPreview.style.display = 'flex';
+      }
+      function hideVideoPreview() {
+        pendingVideo = null;
+        if (videoPreview) {
+          videoPreview.style.display = 'none';
+          var vid = videoPreview.querySelector('[data-video-preview]');
+          if (vid) { try { vid.pause(); } catch (e) {} vid.removeAttribute('src'); vid.load(); }
+        }
+      }
+      function videoBubbleInner(video, duration) {
+        return '<div style="padding:4px;max-width:260px;box-sizing:border-box;">' +
+          '<video controls playsinline preload="metadata" style="width:100%;max-width:240px;height:auto;max-height:260px;border-radius:10px;background:#000;display:block;" src="' + esc(video || '') + '"></video>' +
+          '<div style="font-size:11px;margin-top:4px;padding:0 2px;opacity:.85;">🎥 ' + fmtDur(duration) + '</div>' +
+        '</div>';
+      }
+      // Bulle de message vidéo sortant (professionnel, à droite).
+      function appendVendorVideo(video, duration, msgId) {
+        if (!thread) return null;
+        var emptyEl = document.getElementById('msg-thread-empty');
+        if (emptyEl && emptyEl.parentNode) emptyEl.parentNode.removeChild(emptyEl);
+        var wrap = document.createElement('div');
+        wrap.className = 'flex flex-col items-end gap-1.5 max-w-[70%] ml-auto';
+        wrap.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:75%;margin-left:auto;box-sizing:border-box;min-width:0;';
+        var bubble = document.createElement('div');
+        bubble.className = 'bg-[rgb(var(--mgt-primary))] rounded-2xl rounded-br-md p-1.5 text-white';
+        bubble.style.cssText = 'box-sizing:border-box;';
+        bubble.innerHTML = videoBubbleInner(video, duration);
+        wrap.appendChild(bubble);
+        if (msgId) {
+          wrap.setAttribute('data-msg-id', msgId);
+          wrap.setAttribute('data-dir', 'out');
+          wrap.classList.add('msg-bubble');
+        }
+        thread.appendChild(wrap);
+        thread.scrollTop = thread.scrollHeight;
+        if (window.lucide) window.lucide.createIcons();
+        return wrap;
+      }
+      // Bulle de message vidéo entrant (client, à gauche).
+      function appendIncomingVideo(video, duration, msgId) {
+        if (!thread) return;
+        var emptyEl = document.getElementById('msg-thread-empty');
+        if (emptyEl && emptyEl.parentNode) emptyEl.parentNode.removeChild(emptyEl);
+        var name = currentConv ? currentConv.getAttribute('data-name') : 'Client';
+        var bubble = document.createElement('div');
+        bubble.className = 'flex items-end gap-2 max-w-[70%]';
+        bubble.style.cssText = 'display:flex;align-items:flex-end;gap:8px;max-width:75%;box-sizing:border-box;min-width:0;';
+        if (msgId) { bubble.setAttribute('data-msg-id', msgId); bubble.setAttribute('data-dir', 'in'); bubble.classList.add('msg-bubble'); }
+        bubble.innerHTML =
+          '<div class="w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-[10px] flex-shrink-0">' + esc(initials(name)) + '</div>' +
+          '<div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md p-1.5" style="box-sizing:border-box;">' +
+            videoBubbleInner(video, duration) +
+          '</div>';
+        thread.appendChild(bubble);
+        thread.scrollTop = thread.scrollHeight;
+        if (window.lucide) window.lucide.createIcons();
+        requestAnimationFrame(function () { thread.scrollTop = thread.scrollHeight; });
+        return bubble;
+      }
+      function sendVideo() {
+        if (!pendingVideo) return;
+        var peer = activePeer();
+        if (!peer || !peer.id) { toast('Sélectionnez une conversation.'); return; }
+        var msgId = genMsgId();
+        var data = pendingVideo;
+        appendVendorVideo(data.video, data.duration, msgId);
+        hideVideoPreview();
+        if (currentConv) {
+          var last = currentConv.querySelector('p.truncate');
+          if (last) last.textContent = '🎥 Message vidéo';
+          var time = currentConv.querySelector('.flex.items-center.justify-between span');
+          if (time) time.textContent = nowTime();
+        }
+        var rtNow = window.MangooConnect;
+        if (rtNow && typeof rtNow.sendVideoMessage === 'function') {
+          rtNow.sendVideoMessage(peer.id, data.video, data.duration, data.mime, msgId);
+        }
+      }
+
       // Micro : maintenir pour enregistrer, relâcher pour arrêter puis prévisualiser.
       if (micBtn) {
         micBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); startVoiceRecord(); });
         micBtn.addEventListener('pointerup', function () { stopVoiceRecord(); });
         micBtn.addEventListener('pointercancel', function () { stopVoiceRecord(); });
+      }
+      // Caméra : maintenir pour filmer, relâcher pour arrêter puis prévisualiser.
+      var camBtn = document.getElementById('msg-cam');
+      if (camBtn) {
+        camBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); startVideoRecord(); });
+        camBtn.addEventListener('pointerup', function () { stopVideoRecord(); });
+        camBtn.addEventListener('pointercancel', function () { stopVideoRecord(); });
       }
       // Aperçu du message vocal : lecture, réenregistrement, suppression, envoi.
       if (recPreview) {
@@ -1916,6 +2104,13 @@ html.dark {
         if (vpRerecord) vpRerecord.addEventListener('click', function () { hideRecPreview(); startVoiceRecord(); });
         if (vpCancel) vpCancel.addEventListener('click', function () { hideRecPreview(); });
         if (vpSend) vpSend.addEventListener('click', sendVoice);
+      }
+      // Aperçu de la vidéo avant envoi : suppression ou envoi.
+      if (videoPreview) {
+        var vidCancel = videoPreview.querySelector('[data-video-cancel]');
+        var vidSend = videoPreview.querySelector('[data-video-send]');
+        if (vidCancel) vidCancel.addEventListener('click', function () { hideVideoPreview(); });
+        if (vidSend) vidSend.addEventListener('click', sendVideo);
       }
 
       // ---- Réponse à un message précis (citation inline) ----
@@ -2568,6 +2763,9 @@ html.dark {
             if (m.kind === 'audio') {
               if (isMine) appendVendorVoice(m.audio, m.duration, m.msgId);
               else appendIncomingVoice(m.audio, m.duration, m.msgId);
+            } else if (m.kind === 'video') {
+              if (isMine) appendVendorVideo(m.video, m.duration, m.msgId);
+              else appendIncomingVideo(m.video, m.duration, m.msgId);
             } else if (isMine) {
               appendVendorBubble('<p class="text-sm">' + esc(m.text || '') + '</p><span class="text-[10px] text-white/70 mt-1 block text-right">' + fmtTime(m.sentAt) + '</span>', [], m.msgId, m.replyPreview);
             } else {
@@ -2577,7 +2775,7 @@ html.dark {
           // Met à jour l'aperçu (dernier message) dans la liste de conversations.
           var last = msgs[msgs.length - 1];
           var p = conv.querySelector('p.truncate');
-          if (p && last) p.textContent = last.kind === 'audio' ? '🎤 Message vocal' : ((last.file ? '📎 ' : '') + (last.text || ''));
+          if (p && last) p.textContent = last.kind === 'audio' ? '🎤 Message vocal' : (last.kind === 'video' ? '🎥 Message vidéo' : ((last.file ? '📎 ' : '') + (last.text || '')));
           if (conv.getAttribute('data-unread') === 'true') markRead(conv, true);
         }).catch(function () {});
       }
@@ -2865,6 +3063,34 @@ html.dark {
             }
             var vlast = conv.querySelector('p.truncate');
             if (vlast) vlast.textContent = '🎤 Message vocal';
+            return;
+          }
+          if (m && m.kind === 'video') {
+            var vname = convNameForPeer(m.from, m.fromName);
+            var vconv = ensureConversation(vname, m.from);
+            var vlist = document.getElementById('msg-conv-list');
+            if (vlist && vconv.parentNode === vlist && vlist.firstElementChild !== vconv) {
+              vlist.insertBefore(vconv, vlist.firstElementChild);
+            }
+            var vactive = currentConv && (
+              currentConv === vconv ||
+              (m.from && currentConv.getAttribute('data-peer-id') === m.from)
+            );
+            if (vactive) {
+              if (currentConv !== vconv) setActive(vconv);
+              appendIncomingVideo(m.video, m.duration, m.msgId);
+              vconv.setAttribute('data-unread', 'false');
+              updateUnreadBadge();
+            } else {
+              vconv.setAttribute('data-unread', 'true');
+              addUnreadBadge(vconv);
+              var vvtime = vconv.querySelector('.flex.items-center.justify-between span');
+              if (vvtime) vvtime.textContent = nowTime();
+              updateUnreadBadge();
+              toast('Nouveau message vidéo de ' + vname);
+            }
+            var vvlast = vconv.querySelector('p.truncate');
+            if (vvlast) vvlast.textContent = '🎥 Message vidéo';
             return;
           }
           showIncoming(m.from, m.fromName, m.text, m.msgId, m.replyPreview);
