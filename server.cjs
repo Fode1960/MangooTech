@@ -1059,8 +1059,10 @@ function saveGalerie() {
  * ------------------------------------------------------------------ */
 const BOOSTERS_FILE = path.join(DATA_DIR, 'boosters.json');
 const BOOSTER_STATS_FILE = path.join(DATA_DIR, 'booster-stats.json');
+const TRIALS_FILE = path.join(DATA_DIR, 'trials.json');
 let boosters = [];          // activations (actives + historique)
 let boosterStats = null;    // KPIs agrégés du mois
+let trials = [];            // essais gratuits (une utilisation par vendeur/type)
 
 /* ------------------------------------------------------------------ *
  *  Profil & configuration du vendeur (source unique pour les modules
@@ -2131,7 +2133,8 @@ function carteVendors() {
       desc: profile.description || '',
       img: safeLogo(profile.logo || profile.cover || ''),
       phone: (knownFix && knownFix.phone) || profile.phone || u.phone || '',
-      boosts: activeBoostsFor(u.vendorId || u.id)
+      boosts: activeBoostsFor(u.vendorId || u.id),
+      trialBoosts: trialBoostsFor(u.vendorId || u.id)
     });
   });
   return list;
@@ -2210,6 +2213,40 @@ function saveBoosters() {
   writeJsonAtomic('boosters.json', boosters);
 }
 
+function loadTrials() {
+  try {
+    if (fs.existsSync(TRIALS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(TRIALS_FILE, 'utf8'));
+      if (Array.isArray(data)) { trials = data; console.log('[Essais] essais chargés :', trials.length); return; }
+    }
+  } catch (e) { console.error('[Essais] lecture impossible, réinitialisation :', e.message); }
+  trials = [];
+}
+
+function saveTrials() {
+  writeJsonAtomic('trials.json', trials);
+}
+
+/* Un essai gratuit est accordé UNE seule fois par vendeur et par type
+ * (offre du jour, badge « Nouveau », badge « Promo »). Retourne true si le
+ * vendeur a déjà consommé son essai pour ce type. */
+function trialUsed(vendorId, type) {
+  const id = canonicalRoutingId(vendorId);
+  return trials.some(function (t) {
+    return t && canonicalRoutingId(t.vendorId) === id && String(t.type || '') === String(type || '');
+  });
+}
+
+function recordTrial(vendorId, type, refId) {
+  trials.push({
+    vendorId: canonicalRoutingId(vendorId),
+    type: String(type || ''),
+    refId: String(refId || ''),
+    createdAt: new Date().toISOString()
+  });
+  saveTrials();
+}
+
 /* Réconcilie l'état des activations : expire les badges actifs échus et
  * migre les anciens badges sans date d'expiration (legacy) en leur donnant
  * une échéance future basée sur la durée de l'offre. Cela évite de vider
@@ -2256,6 +2293,25 @@ function activeBoostsFor(vendorId) {
     if (t && !seen[t]) { seen[t] = true; types.push(t); }
   });
   types.sort(function (a, b) { return (rankOf[b] || 0) - (rankOf[a] || 0); });
+  return types;
+}
+
+/* Types de badges actifs (non expirés) en mode essai d'un vendeur. Utilisé
+ * par /api/carte pour signaler « Essai » à côté des badges concernés. */
+function trialBoostsFor(vendorId) {
+  const id = String(vendorId || '');
+  if (!id) return [];
+  const now = Date.now();
+  const seen = {};
+  const types = [];
+  boosters.forEach(function (b) {
+    if (!b || b.status !== 'active') return;
+    if (String(b.vendorId || '') !== id) return;
+    if (b.mode !== 'essai') return;
+    if (b.expiresAt && Date.parse(b.expiresAt) <= now) return;
+    const t = b.type;
+    if (t && !seen[t]) { seen[t] = true; types.push(t); }
+  });
   return types;
 }
 
@@ -4953,10 +5009,23 @@ function handleHttp(req, res) {
           if (!offer) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'offre inconnue' })); return; }
           const user = userForVendorId(body.vendorId);
           if (!user) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'compte vendeur introuvable' })); return; }
-          const pay = recordBoosterPayment(user, offer, 'booster', body);
-          if (!pay.ok) { res.writeHead(402, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(pay)); return; }
+          const isTrial = body.trial === true;
+          if (isTrial && offer.type !== 'nouveau' && offer.type !== 'promo') {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Essai gratuit indisponible pour ce badge.' })); return;
+          }
+          if (isTrial && trialUsed(body.vendorId, offer.type)) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Votre essai gratuit a déjà été utilisé pour ce badge.' })); return;
+          }
           const now = Date.now();
-          const durationMs = Number(offer.durationMs) || 24 * 60 * 60 * 1000;
+          const durationMs = isTrial ? (48 * 60 * 60 * 1000) : (Number(offer.durationMs) || 24 * 60 * 60 * 1000);
+          let pay;
+          if (isTrial) {
+            pay = { ok: true, payment: { id: 'ESSAI-' + crypto.randomBytes(6).toString('hex'), amount: 0, paidAt: new Date(now).toISOString(), operator: '', phone: '' } };
+            recordTrial(body.vendorId, offer.type, null);
+          } else {
+            pay = recordBoosterPayment(user, offer, 'booster', body);
+            if (!pay.ok) { res.writeHead(402, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(pay)); return; }
+          }
           const activation = {
             id: rand(),
             vendorId: String(body.vendorId || ''),
@@ -4965,14 +5034,15 @@ function handleHttp(req, res) {
             type: offer.type,
             name: offer.name,
             status: 'active',
+            mode: isTrial ? 'essai' : 'standard',
             createdAt: new Date(now).toISOString(),
             expiresAt: new Date(now + durationMs).toISOString(),
             paymentId: pay.payment.id,
             startLabel: 'À l\'instant',
-            endLabel: 'Dans ' + offer.durationText,
-            remainingLabel: offer.durationText + ' / ' + offer.durationText,
+            endLabel: 'Dans ' + (isTrial ? '48h' : offer.durationText),
+            remainingLabel: (isTrial ? '48h' : offer.durationText) + ' / ' + (isTrial ? '48h' : offer.durationText),
             remainingPct: 100,
-            price: offer.price,
+            price: isTrial ? 0 : offer.price,
             views: 0,
             clicks: 0,
             orders: 0
@@ -6291,14 +6361,21 @@ function handleHttp(req, res) {
       const user = userFromReq(req);
       if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
       if (!isSeller(user)) { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Réservé aux vendeurs et prestataires.' })); return; }
-      const tier = tierById(String(body.tierId || ''));
+      const isTrial = body.trial === true;
+      const tier = isTrial
+        ? { id: 'essai', durationHours: 24, durationLabel: '24 heures', price: 0 }
+        : tierById(String(body.tierId || ''));
       if (!tier) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Palier de durée invalide.' })); return; }
       const title = String(body.title || '').trim();
       if (!title) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Titre manquant.' })); return; }
 
       const vendorId = user.vendorId || user.id;
       let payment;
-      if (body.payFromWallet === true) {
+      if (isTrial) {
+        if (trialUsed(vendorId, 'offre')) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Votre essai gratuit a déjà été utilisé pour l\'offre du jour.' })); return; }
+        payment = { id: 'ESSAI-' + crypto.randomBytes(6).toString('hex'), amount: 0, paidAt: new Date().toISOString(), operator: '', phone: '' };
+        recordTrial(vendorId, 'offre', null);
+      } else if (body.payFromWallet === true) {
         const w = walletFor(user.id);
         if ((Number(w.balance) || 0) < tier.price) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Solde portefeuille insuffisant.' })); return; }
         w.balance = Math.round((Number(w.balance) || 0) - tier.price);
@@ -6322,9 +6399,10 @@ function handleHttp(req, res) {
         title: title,
         description: String(body.description || '').trim(),
         tierId: tier.id,
-        durationLabel: tier.durationLabel,
+        durationLabel: isTrial ? '24 heures (essai)' : tier.durationLabel,
         price: tier.price,
         paymentId: payment.id,
+        mode: isTrial ? 'essai' : 'standard',
         productId: String(body.productId || ''),
         status: 'active',
         startsAt: now.toISOString(),
@@ -7138,6 +7216,7 @@ loadInventaireMouvements();
 loadGalerie();
 loadBoosters();
 loadBoosterStats();
+loadTrials();
 loadVendorConfig();
 loadUsers();
 ensureSeedVendorUsers();
