@@ -1068,6 +1068,9 @@ html.dark {
       ? '<span style="position:absolute;bottom:-4px;right:-4px;min-width:16px;height:16px;padding:0 3px;border-radius:9999px;background:' + grad + ';color:#fff;font-size:9px;font-weight:700;line-height:16px;text-align:center;border:2px solid #fff;box-sizing:content-box;">' + count + '</span>'
       : '';
     var initial = '<span style="font-weight:700;font-size:14px;line-height:1;color:#fff;">' + (vendor.name ? vendor.name.charAt(0) : '?') + '</span>';
+    // Nom complet du vendeur sous l'épingle : permet de reconnaître une boutique
+    // ou un prestataire sans devoir ouvrir la fiche (au lieu de la seule initiale).
+    var nameLabel = '<span style="display:block;max-width:150px;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,.92);color:#0f172a;font-size:11px;font-weight:600;line-height:1.3;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 3px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);">' + escapeHtml(vendor.name) + '</span>';
     // Badges nommés sous l'épingle : boost payant + « Live » (local). Ils sont
     // empilés verticalement, chacun nommé et clignotant pour rester lisible.
     var labels = [];
@@ -1083,15 +1086,13 @@ html.dark {
     }
     var labelsHtml = labels.join('');
     var circle = '<div style="position:relative;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:' + tcol + ';box-shadow:' + shadow + ';border:' + border + ';cursor:pointer;">' + initial + liveDot + countBadge + '</div>';
-    var html = labelsHtml
-      ? '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:max-content;">' + circle + labelsHtml + '</div>'
-      : circle;
+    var html = '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:160px;">' + circle + nameLabel + labelsHtml + '</div>';
     var labelCount = labels.length;
     return L.divIcon({
       className: 'custom-marker',
       html: html,
-      iconSize: [40, 40 + labelCount * 20],
-      iconAnchor: [20, 20],
+      iconSize: [160, 40 + 3 + 18 + (labelCount ? 3 + labelCount * 20 : 0)],
+      iconAnchor: [80, 20],
       popupAnchor: [0, -22]
     });
   }
