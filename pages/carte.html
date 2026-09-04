@@ -1471,8 +1471,13 @@ html.dark {
       var cd = offreCountdownText(o);
       var startText = formatOffreDate(o.startsAt);
       var endText = formatOffreDate(o.endsAt);
+      var locality = (v.city ? escapeHtml(v.city) : '');
+      var localityBadge = locality
+        ? '<span class="inline-flex items-center gap-1 text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded-full" style="background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary));border-radius:var(--mgt-radius-full);"><i data-lucide="map-pin" class="h-3 w-3"></i>' + locality + '</span>'
+        : '';
       html += '<button data-offre-vendor="' + escapeHtml(v.vendorId) + '" data-offre-ends="' + escapeHtml(o.endsAt) + '" class="promo-item flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-full border flex-shrink-0 cursor-pointer transition-all hover:brightness-105" style="background:rgb(var(--mgt-accent-50)); border-color:rgb(var(--mgt-accent-200)); border-radius:var(--mgt-radius-full); font-family:var(--mgt-font-sans);">' +
         '<img src="' + v.img + '" alt="' + escapeHtml(v.name) + '" class="w-6 h-6 rounded-full object-cover" style="border-radius:var(--mgt-radius-full);" onerror="this.style.display=\'none\'">' +
+        localityBadge +
         '<span class="text-xs font-semibold whitespace-nowrap" style="color:rgb(var(--mgt-foreground));">' + escapeHtml(o.title) + '</span>' +
         (startText && endText ? '<span class="text-[10px] font-medium whitespace-nowrap" style="color:rgb(var(--mgt-muted-foreground));">' + startText + ' → ' + endText + '</span>' : '') +
         '<span class="promo-countdown text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded-full" style="background:rgb(var(--mgt-accent-600)); color:#fff; border-radius:var(--mgt-radius-full);">' + cd + '</span>' +
