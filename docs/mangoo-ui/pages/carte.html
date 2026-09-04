@@ -872,32 +872,21 @@ html.dark {
   function topBoost(vendor) {
     return vendorBoosts(vendor)[0] || null;
   }
-  // vendorId du professionnel connecté (session `mgt_user`), ou '' si invité.
-  // L'« Offre du jour » Local+ est un emplacement payé : quand un vendeur est
-  // connecté, on n'affiche que SES offres (jamais celles d'un autre vendeur).
+  // Canonise le vendorId des offres (ven-... -> pro-...) pour aligner
+  // l'affichage sur la même identité que renvoie /api/carte.
   function canonicalLocalVendorId(vid) {
     if (vid === 'ven-e9e831ccf698') return 'pro-41cafa4bcb31';
     return vid;
   }
-  function connectedVendorId() {
-    try {
-      var raw = localStorage.getItem('mgt_user');
-      if (!raw) return '';
-      var u = JSON.parse(raw);
-      if (!u) return '';
-      var role = u.role || '';
-      if (role !== 'prestataire' && role !== 'vendeur') return '';
-      return canonicalLocalVendorId(u.vendorId || u.id || '');
-    } catch (e) { return ''; }
-  }
   // Offres du jour actives rattachées à un vendeur (par vendorId).
+  // L'« Offre du jour » Local+ est un emplacement payé PUBLIC : elle doit être
+  // visible par tous les visiteurs de la carte (clients, invités, autres
+  // vendeurs), et non uniquement par le vendeur qui l'a publiée.
   function offresDuJourFor(vendor) {
-    var myVendorId = connectedVendorId();
     var list = offresJourByVendor[vendor.vendorId] || [];
     return list.filter(function (o) {
       if (!o || o.status !== 'active') return false;
       if (new Date(o.endsAt).getTime() <= Date.now()) return false;
-      if (myVendorId && canonicalLocalVendorId(o.vendorId) !== myVendorId) return false;
       return true;
     });
   }
