@@ -1103,7 +1103,6 @@ html.dark {
 
   function pickVideoMime(){
     if (window.MediaRecorder && typeof MediaRecorder.isTypeSupported === 'function'){
-      if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) return 'video/webm;codecs=vp8,opus';
       if (MediaRecorder.isTypeSupported('video/webm')) return 'video/webm';
       if (MediaRecorder.isTypeSupported('video/mp4')) return 'video/mp4';
     }
@@ -1126,12 +1125,11 @@ html.dark {
     if (src.indexOf('data:') !== 0) return src;
     if (mgtVideoUrlCache[src]) return mgtVideoUrlCache[src];
     try {
-      var comma = src.indexOf(',');
-      var head = src.slice(0, comma);
-      var b64 = src.slice(comma + 1);
-      var mime = 'video/webm';
-      var m = head.match(/data:([^;]+)/);
-      if (m && m[1]) mime = m[1];
+      var marker = ';base64,';
+      var mi = src.indexOf(marker);
+      if (mi < 0) return src;
+      var mime = src.slice(5, mi) || 'video/webm';
+      var b64 = src.slice(mi + marker.length);
       var bin = atob(b64);
       var len = bin.length;
       var bytes = new Uint8Array(len);
