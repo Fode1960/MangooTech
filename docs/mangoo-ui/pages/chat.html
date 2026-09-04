@@ -402,6 +402,13 @@ html.dark {
             <span id="chat-rec-timer" style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));">0:00</span>
             <span style="font-size:12px;color:rgb(var(--mgt-muted-foreground));flex:1;">Relâchez pour arrêter</span>
           </div>
+          <!-- Barre d'enregistrement vidéo (indicateur bien visible pendant le filmage) -->
+          <div id="chat-video-rec-bar" style="display:none;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.45);margin-bottom:8px;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#ef4444;flex-shrink:0;animation:mgtpulse 1s infinite;box-shadow:0 0 0 0 rgba(239,68,68,.5);"></span>
+            <span style="font-size:13px;font-weight:700;color:#ef4444;white-space:nowrap;">● Enregistrement vidéo</span>
+            <span id="chat-video-rec-timer" style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));white-space:nowrap;">0:00 / 0:30</span>
+            <span style="font-size:12px;color:rgb(var(--mgt-muted-foreground));flex:1;">Relâchez pour arrêter</span>
+          </div>
           <!-- Aperçu du message vocal avant envoi -->
           <div id="chat-rec-preview" style="display:none;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;">
             <button type="button" data-voice-preview-play style="width:34px;height:34px;border-radius:50%;border:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgb(var(--mgt-accent));color:#fff;cursor:pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
@@ -1108,6 +1115,9 @@ html.dark {
   var videoStartAt = 0;
   var videoTimerId = null;
   var pendingVideo = null;    // { video: dataURL, duration, mime }
+  var videoRecBar = document.getElementById('chat-video-rec-bar');
+  var videoRecTimerEl = document.getElementById('chat-video-rec-timer');
+  var MAX_VIDEO_SECONDS = 30;
 
   function startVideoRecord(){
     if ((videoRecorder && videoRecorder.state === 'recording') || (mediaRecorder && mediaRecorder.state === 'recording')) return;
@@ -1138,12 +1148,18 @@ html.dark {
       videoRecorder = mr;
       mr.start(1000);
       videoStartAt = Date.now();
-      if (recBar) recBar.style.display = 'flex';
-      if (recTimerEl) recTimerEl.textContent = '0:00';
+      if (recBar) recBar.style.display = 'none';
+      if (videoRecBar) videoRecBar.style.display = 'flex';
+      if (videoRecTimerEl) videoRecTimerEl.textContent = '0:00 / ' + fmtDur(MAX_VIDEO_SECONDS);
       if (videoPreview) videoPreview.style.display = 'none';
-      var secTimer = function(){ if (recTimerEl) recTimerEl.textContent = fmtDur(Math.floor((Date.now() - videoStartAt) / 1000)); };
+      var secTimer = function(){
+        var elapsed = Math.floor((Date.now() - videoStartAt) / 1000);
+        var remaining = Math.max(0, MAX_VIDEO_SECONDS - elapsed);
+        if (videoRecTimerEl) videoRecTimerEl.textContent = fmtDur(elapsed) + ' / ' + fmtDur(MAX_VIDEO_SECONDS);
+        if (elapsed >= MAX_VIDEO_SECONDS){ stopVideoRecord(); }
+      };
       secTimer();
-      videoTimerId = setInterval(secTimer, 500);
+      videoTimerId = setInterval(secTimer, 200);
     }).catch(function(){
       toast('Caméra inaccessible. Autorisez l\'accès à la caméra puis réessayez.');
     });
@@ -1152,6 +1168,7 @@ html.dark {
     if (videoRecorder && videoRecorder.state === 'recording'){ try { videoRecorder.stop(); } catch(e){} }
     if (videoTimerId){ clearInterval(videoTimerId); videoTimerId = null; }
     if (recBar) recBar.style.display = 'none';
+    if (videoRecBar) videoRecBar.style.display = 'none';
   }
   function showVideoPreview(){
     if (!videoPreview || !pendingVideo) return;
