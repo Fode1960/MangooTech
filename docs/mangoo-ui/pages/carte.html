@@ -913,9 +913,13 @@ html.dark {
     var mi = String(d.getMinutes()).padStart(2, '0');
     return dd + '/' + mm + ' ' + hh + ':' + mi;
   }
-  function offreCardHtml(offre) {
+  function offreCardHtml(offre, vendor) {
     var startText = formatOffreDate(offre.startsAt);
     var endText = formatOffreDate(offre.endsAt);
+    var locality = (vendor && vendor.city) ? escapeHtml(vendor.city) : '';
+    var localityBadge = locality
+      ? '<span class="inline-flex items-center gap-1 text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded-full" style="background:rgb(var(--mgt-primary-100));color:rgb(var(--mgt-primary-700));border-radius:var(--mgt-radius-full);"><i data-lucide="map-pin" class="h-3 w-3"></i>' + locality + '</span>'
+      : '';
     var period = (startText || endText)
       ? '<div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 pt-2" style="border-top:1px solid rgb(var(--mgt-primary-100));">' +
           (startText ? '<span class="inline-flex items-center gap-1 text-[11px] font-medium" style="color:rgb(var(--mgt-muted-foreground));font-family:var(--mgt-font-sans);"><i data-lucide="clock" class="h-3 w-3"></i> Début : ' + startText + '</span>' : '') +
@@ -927,6 +931,7 @@ html.dark {
         '<span class="inline-flex items-center gap-1.5 text-xs font-semibold" style="color:rgb(var(--mgt-primary-700));font-family:var(--mgt-font-sans);"><i data-lucide="badge-percent" class="h-3.5 w-3.5"></i> Offre du jour' + (offre.mode === 'essai' ? ' · Essai' : '') + '</span>' +
         '<span class="text-xs font-semibold tabular-nums" style="color:rgb(var(--mgt-primary-700));font-family:var(--mgt-font-sans);">' + offreCountdownText(offre) + '</span>' +
       '</div>' +
+      (localityBadge ? '<div class="flex items-center gap-1.5 mb-1">' + localityBadge + '</div>' : '') +
       '<p class="text-sm font-semibold" style="color:rgb(var(--mgt-foreground));font-family:var(--mgt-font-sans);">' + escapeHtml(offre.title) + '</p>' +
       (offre.description ? '<p class="text-xs mt-0.5" style="color:rgb(var(--mgt-muted-foreground));font-family:var(--mgt-font-sans);">' + escapeHtml(offre.description) + '</p>' : '') +
       period +
@@ -1140,7 +1145,7 @@ html.dark {
           '<p class="text-xs flex items-center gap-1" style="color:rgb(var(--mgt-muted-foreground));"><i data-lucide="map-pin" class="h-3.5 w-3.5"></i> ' + vendor.city + ' &middot; a ' + distanceLabel(vendorDistanceKm(vendor)) + ' &middot; ' + vendor.price + '</p>',
         '</div>',
         '<p class="text-sm leading-relaxed" style="color:rgb(var(--mgt-muted-foreground));">' + vendor.desc + '</p>',
-        (offres.length ? '<div class="flex flex-col gap-2">' + offres.map(offreCardHtml).join('') + '</div>' : ''),
+        (offres.length ? '<div class="flex flex-col gap-2">' + offres.map(function(o) { return offreCardHtml(o, vendor); }).join('') + '</div>' : ''),
         '<div class="flex items-center gap-2 flex-wrap">' + (window.MangooExpress ? window.MangooExpress.badge(window.MangooExpress.fromCategory(vendor.category)) : '') + '</div>',
         '<div class="flex flex-col gap-2.5">',
           (vendor.live ? '<a href="live-client.html" class="flex items-center justify-center gap-2 w-full py-3 px-4 text-sm font-bold rounded-md transition-all hover:brightness-110 no-underline" style="background:#ef4444;color:#fff;border-radius:var(--mgt-radius-md);font-family:var(--mgt-font-sans);box-shadow:var(--mgt-shadow-sm);"><span class="w-2 h-2 rounded-full" style="background:#fff;animation:mgt-pulse 1.6s infinite;"></span> Rejoindre le live</a>' : ''),
