@@ -1624,7 +1624,7 @@ html.dark {
               '<span class="font-semibold text-sm" style="color: rgb(var(--mgt-foreground)); word-break: break-word;">' + v.name + '</span>',
               pinLabel ? '<span class="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded" style="background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary));border-radius:var(--mgt-radius-sm);">' + pinLabel + '</span>' : '',
             '</div>',
-            '<div class="flex items-center gap-1.5 mb-1.5 flex-wrap">' + typeBadge + boostBadge + liveBadge + '</div>',
+            '<div class="flex items-center gap-1.5 mb-1.5 flex-wrap">' + typeBadge + boostBadge + liveBadge + localityBadgeHtml(v) + '</div>',
             '<div class="flex items-center gap-1 text-xs" style="color: rgb(var(--mgt-muted-foreground));">' + renderStars(v.rating) + ' <span class="font-medium ml-0.5" style="color:rgb(var(--mgt-foreground));">' + v.rating + '</span> <span class="mx-1">&middot;</span> <span class="truncate">' + v.city + '</span> <span class="mx-1">&middot;</span> <span class="whitespace-nowrap">a ' + distanceLabel(vendorDistanceKm(v)) + '</span> <span class="mx-1">&middot;</span> ' + v.price + '</div>',
           '</div>',
           '<i data-lucide="chevron-right" class="h-5 w-5 flex-shrink-0" style="color:rgb(var(--mgt-muted-foreground));"></i>',
