@@ -126,6 +126,37 @@ const MIME = {
  * ------------------------------------------------------------------ */
 const clients = new Map();        // id -> Array<{ ws, role, name, online, lastSeen }>
 const lastSeenByUser = new Map(); // id canonique -> timestamp de dernière connexion (survit à la déconnexion)
+
+// Persistance « dernière connexion » : le timestamp est conservé en mémoire
+// (accès rapide) ET écrit dans users.json (survie au redémarrage). L'écriture
+// disque est regroupée (debounce) pour absorber les rafales connexion/déconnexion.
+let lastSeenPersistTimer = null;
+function persistLastSeenNow() {
+  lastSeenPersistTimer = null;
+  saveUsers();
+}
+function scheduleLastSeenPersist() {
+  if (lastSeenPersistTimer) return;
+  lastSeenPersistTimer = setTimeout(persistLastSeenNow, 2000);
+}
+function seedLastSeenFromUsers() {
+  users.forEach(function (u) {
+    if (!u) return;
+    const cid = routingIdForUser(u);
+    if (!cid || lastSeenByUser.has(cid) || !u.lastSeenAt) return;
+    const ts = Date.parse(u.lastSeenAt);
+    if (Number.isFinite(ts)) lastSeenByUser.set(cid, ts);
+  });
+}
+function setLastSeen(cid) {
+  if (!cid) return;
+  lastSeenByUser.set(cid, Date.now());
+  const u = userByRoutingId(cid);
+  if (u) {
+    u.lastSeenAt = new Date().toISOString();
+    scheduleLastSeenPersist();
+  }
+}
 const calls = new Map();          // callId -> { callerId, calleeId, callerWs, calleeWs, mode }
 let chatLog = [];               // { msgId, convId, from, to, text, sentAt }
 let callLog = [];               // { callId, callerId, calleeId, mode, status, at }
@@ -144,7 +175,7 @@ function addClient(id, ws, role, name) {
   if (idx !== -1) list.splice(idx, 1);
   list.push({ ws, role, name, online: true, lastSeen: Date.now() });
   clients.set(cid, list);
-  lastSeenByUser.set(cid, Date.now());
+  setLastSeen(cid);
   return list;
 }
 
@@ -154,7 +185,7 @@ function removeClient(id, ws) {
   if (!list) return;
   const idx = list.findIndex((c) => c.ws === ws);
   if (idx !== -1) list.splice(idx, 1);
-  lastSeenByUser.set(cid, Date.now());
+  setLastSeen(cid);
   if (list.length === 0) clients.delete(cid);
 }
 
@@ -1585,6 +1616,7 @@ function loadUsers() {
         console.log('[Auth] comptes chargés :', users.length);
         rotateLegacyAdminCredentials();
         applyAdminPasswordReset();
+        seedLastSeenFromUsers();
         return;
       }
     }
@@ -2081,10 +2113,11 @@ function carteVendors() {
       if (!country) country = resolved.country;
     }
 
+    const cid = canonicalRoutingId(u.vendorId || u.id);
     list.push({
       id: nextId++,
-      vendorId: canonicalRoutingId(u.vendorId || u.id),
-      lastSeen: lastSeenByUser.get(canonicalRoutingId(u.vendorId || u.id)) || null,
+      vendorId: cid,
+      lastSeen: (lastSeenByUser.get(cid) || (u.lastSeenAt ? Date.parse(u.lastSeenAt) : null)) || null,
       name: profile.enseigne || u.enseigne || u.name || 'Professionnel',
       type: type,
       category: category,
