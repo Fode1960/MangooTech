@@ -820,6 +820,7 @@ html.dark {
           '</div>' +
           '<ul class="space-y-2.5 mb-6 flex-1">' + features + '</ul>' +
           '<button data-act="activate" data-offer="' + esc(o.id) + '" class="w-full py-2.5 rounded-lg ' + activateBtnClass(o.type) + ' font-semibold text-sm transition-colors">Activer ' + MB.formatPrice(o.price) + ' F</button>' +
+          ((o.type === 'nouveau' || o.type === 'promo') ? '<button data-act="trial" data-offer="' + esc(o.id) + '" class="w-full py-2 rounded-lg border border-[rgb(var(--mgt-success))] text-[rgb(var(--mgt-success))] font-semibold text-sm transition-colors hover:bg-[rgb(var(--mgt-success)/0.08)] mt-2">Essai gratuit 48 h</button>' : '') +
         '</div>';
     }).join('');
     if (window.lucide) window.lucide.createIcons();
@@ -848,7 +849,7 @@ html.dark {
                 '<p class="caption text-[rgb(var(--mgt-muted-foreground))]">Activé ' + esc(b.startLabel) + '</p>' +
               '</div>' +
             '</div>' +
-            '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><span class="w-1.5 h-1.5 rounded-full bg-[rgb(var(--mgt-success))]"></span> Actif</span>' +
+            '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><span class="w-1.5 h-1.5 rounded-full bg-[rgb(var(--mgt-success))]"></span> Actif</span>' + (b.mode === 'essai' ? '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success))] text-white">Essai</span>' : '') +
           '</div>' +
           '<div class="mb-4">' +
             '<div class="flex items-center justify-between mb-1.5"><span class="caption text-[rgb(var(--mgt-muted-foreground))]">Durée restante</span><span class="caption font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">' + esc(b.remainingLabel) + '</span></div>' +
@@ -891,7 +892,7 @@ html.dark {
       tbody.innerHTML = rows.map(function (b) {
         return '' +
           '<tr class="hover:bg-[rgb(var(--mgt-muted))] transition-colors">' +
-            '<td class="py-3.5 px-4 font-medium text-[rgb(var(--mgt-foreground))]"><div class="flex items-center gap-2.5"><div class="flex items-center justify-center w-8 h-8 rounded-lg ' + iconToneClass(b.type) + '"><i data-lucide="' + MB.boosterIcon(b.type) + '" class="w-4 h-4"></i></div> ' + esc(b.name) + '</div></td>' +
+            '<td class="py-3.5 px-4 font-medium text-[rgb(var(--mgt-foreground))]"><div class="flex items-center gap-2.5"><div class="flex items-center justify-center w-8 h-8 rounded-lg ' + iconToneClass(b.type) + '"><i data-lucide="' + MB.boosterIcon(b.type) + '" class="w-4 h-4"></i></div> ' + esc(b.name) + (b.mode === 'essai' ? ' <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[rgb(var(--mgt-success))] text-white">Essai</span>' : '') + '</div></td>' +
             '<td class="py-3.5 px-4 tabular-nums text-[rgb(var(--mgt-foreground))]">' + fmtDateTime(b.createdAt) + '</td>' +
             '<td class="py-3.5 px-4 tabular-nums text-[rgb(var(--mgt-foreground))]">' + fmtDateTime(b.expiresAt) + '</td>' +
             '<td class="py-3.5 px-4">' + statusChip(b.status) + '</td>' +
@@ -962,6 +963,18 @@ html.dark {
       doActivate(null);
     }
   }
+  function onTrial(offerId) {
+    var offer = null;
+    for (var i = 0; i < state.offers.length; i++) {
+      if (state.offers[i].id === offerId) { offer = state.offers[i]; break; }
+    }
+    if (!offer) return;
+    MB.api.trial(state.vendorId, state.vendorName, offerId).then(function () {
+      return reload();
+    }).catch(function (err) {
+      flashError('Essai impossible : ' + err.message);
+    });
+  }
   function onRenew(id) {
     var badge = null;
     for (var i = 0; i < state.active.length; i++) {
@@ -1016,6 +1029,7 @@ html.dark {
     if (!t) return;
     var act = t.getAttribute('data-act');
     if (act === 'activate') onActivate(t.getAttribute('data-offer'));
+    else if (act === 'trial') onTrial(t.getAttribute('data-offer'));
     else if (act === 'renew') onRenew(t.getAttribute('data-id'));
     else if (act === 'stop') onStop(t.getAttribute('data-id'));
   }

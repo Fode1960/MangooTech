@@ -863,6 +863,12 @@ html.dark {
   function hasBoost(vendor, type) {
     return vendorBoosts(vendor).indexOf(type) !== -1;
   }
+  function vendorTrials(vendor) {
+    return (vendor && vendor.trialBoosts) ? vendor.trialBoosts.slice() : [];
+  }
+  function isTrialBoost(vendor, type) {
+    return vendorTrials(vendor).indexOf(type) !== -1;
+  }
   function topBoost(vendor) {
     return vendorBoosts(vendor)[0] || null;
   }
@@ -925,7 +931,7 @@ html.dark {
       : '';
     return '<div style="border:1px solid rgb(var(--mgt-primary-100));background:rgb(var(--mgt-primary-50));border-radius:var(--mgt-radius-md);padding:12px;">' +
       '<div class="flex items-center justify-between mb-1.5">' +
-        '<span class="inline-flex items-center gap-1.5 text-xs font-semibold" style="color:rgb(var(--mgt-primary-700));font-family:var(--mgt-font-sans);"><i data-lucide="badge-percent" class="h-3.5 w-3.5"></i> Offre du jour</span>' +
+        '<span class="inline-flex items-center gap-1.5 text-xs font-semibold" style="color:rgb(var(--mgt-primary-700));font-family:var(--mgt-font-sans);"><i data-lucide="badge-percent" class="h-3.5 w-3.5"></i> Offre du jour' + (offre.mode === 'essai' ? ' · Essai' : '') + '</span>' +
         '<span class="text-xs font-semibold tabular-nums" style="color:rgb(var(--mgt-primary-700));font-family:var(--mgt-font-sans);">' + offreCountdownText(offre) + '</span>' +
       '</div>' +
       '<p class="text-sm font-semibold" style="color:rgb(var(--mgt-foreground));font-family:var(--mgt-font-sans);">' + escapeHtml(offre.title) + '</p>' +
@@ -1075,7 +1081,7 @@ html.dark {
     // empilés verticalement, chacun nommé et clignotant pour rester lisible.
     var labels = [];
     if (boost) {
-      var boostText = boostLabel(top) + (count > 1 ? ' +' + (count - 1) : '');
+      var boostText = boostLabel(top) + (isTrialBoost(vendor, top) ? ' · Essai' : '') + (count > 1 ? ' +' + (count - 1) : '');
       labels.push('<span class="mgt-badge-blink" style="display:block;padding:2px 7px;border-radius:9999px;background:' + grad + ';color:#fff;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);">' + boostText + '</span>');
     }
     if (vendor.live) {
@@ -1120,7 +1126,7 @@ html.dark {
     var typeBadge = '<span class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full" style="background:' + typeColor(vendor.type) + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);">' + typeLabel(vendor.type) + '</span>';
     var catBadge = '<span class="inline-block text-xs font-medium px-2.5 py-1 rounded-full" style="background:' + categoryColor(vendor.category) + ';color:white;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);">' + categoryLabel(vendor.category) + '</span>';
     var boostBadge = vendorBoosts(vendor).map(function(b) {
-      return '<span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full" style="background:' + boostGradient(b) + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);box-shadow:var(--mgt-shadow-sm);"><i data-lucide="sparkles" class="h-3.5 w-3.5"></i> ' + boostLabel(b) + (b === 'promo' ? promoEndText(vendor) : '') + '</span>';
+      return '<span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full" style="background:' + boostGradient(b) + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);box-shadow:var(--mgt-shadow-sm);"><i data-lucide="sparkles" class="h-3.5 w-3.5"></i> ' + boostLabel(b) + (isTrialBoost(vendor, b) ? ' · Essai' : '') + (b === 'promo' ? promoEndText(vendor) : '') + '</span>';
     }).join('');
     var liveBadge = vendor.live
       ? '<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full" style="background:#ef4444;color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);box-shadow:var(--mgt-shadow-sm);"><span class="w-1.5 h-1.5 rounded-full" style="background:#fff;animation:mgt-pulse 1.6s infinite;"></span> En direct</span>'
@@ -1176,7 +1182,7 @@ html.dark {
 
   function buildPopupContent(vendor) {
     var boostBadge = vendorBoosts(vendor).map(function(b) {
-      return '<span style="display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:9999px;background:' + boostColor(b) + ';color:#fff;margin-top:2px;margin-right:4px;">' + boostLabel(b) + '</span>';
+      return '<span style="display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:9999px;background:' + boostColor(b) + ';color:#fff;margin-top:2px;margin-right:4px;">' + boostLabel(b) + (isTrialBoost(vendor, b) ? ' · Essai' : '') + '</span>';
     }).join('');
     var liveBadge = vendor.live ? '<span style="display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:9999px;background:#ef4444;color:#fff;margin-top:2px;">En direct</span>' : '';
     var offreBadge = offresDuJourFor(vendor).length ? '<span style="display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:9999px;background:rgb(var(--mgt-primary));color:#fff;margin-top:2px;margin-right:4px;">Offre du jour</span>' : '';

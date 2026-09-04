@@ -79,6 +79,9 @@
   function stop(id) {
     return post({ action: 'stop', id: id });
   }
+  function trial(vendorId, vendorName, boosterId) {
+    return post({ action: 'activate', trial: true, vendorId: vendorId, vendorName: vendorName, boosterId: boosterId });
+  }
 
   global.MangooBoosters = {
     tone: tone,
@@ -86,6 +89,6 @@
     boosterIcon: boosterIcon,
     formatNumber: formatNumber,
     formatPrice: formatPrice,
-    api: { list: list, activate: activate, renew: renew, stop: stop }
+    api: { list: list, activate: activate, renew: renew, stop: stop, trial: trial }
   };
 })(window);
