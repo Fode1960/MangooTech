@@ -897,7 +897,7 @@ html.dark {
     return list.filter(function (o) {
       if (!o || o.status !== 'active') return false;
       if (new Date(o.endsAt).getTime() <= Date.now()) return false;
-      if (myVendorId && o.vendorId !== myVendorId) return false;
+      if (myVendorId && canonicalLocalVendorId(o.vendorId) !== myVendorId) return false;
       return true;
     });
   }
@@ -1520,6 +1520,31 @@ html.dark {
     }
   }
 
+  // Fait défiler automatiquement la barre « Offres du jour » horizontalement,
+  // pour que toutes les offres soient visibles à tour de rôle (au lieu de
+  // laisser la première figée en permanence). Se met en pause au survol et au
+  // toucher, puis reprend dès que l'utilisateur relâche.
+  var promoAutoScrollTimer = null;
+  function stopPromoAutoScroll() {
+    if (promoAutoScrollTimer) { clearInterval(promoAutoScrollTimer); promoAutoScrollTimer = null; }
+  }
+  function startPromoAutoScroll() {
+    var list = document.getElementById('promo-list');
+    if (!list) return;
+    stopPromoAutoScroll();
+    promoAutoScrollTimer = setInterval(function() {
+      var max = list.scrollWidth - list.clientWidth;
+      if (max <= 2) return; // pas de débordement : une seule offre, rien à défiler
+      if (list.scrollLeft >= max - 2) {
+        // Fin de liste : retour en douceur au début.
+        list.scrollTo({ left: 0, behavior: 'smooth' });
+        return;
+      }
+      var item = list.querySelector('.promo-item');
+      var step = item ? (item.offsetWidth + 8) : Math.min(240, max);
+      list.scrollBy({ left: step, behavior: 'smooth' });
+    }, 3800);
+  }
   var promoBanner = document.getElementById('promo-banner');
   var promoDismiss = document.getElementById('promo-dismiss');
   if (promoDismiss) {
@@ -1529,6 +1554,14 @@ html.dark {
   }
   renderPromos();
   setInterval(tickPromos, 1000);
+  startPromoAutoScroll();
+  var promoListEl = document.getElementById('promo-list');
+  if (promoListEl) {
+    promoListEl.addEventListener('mouseenter', stopPromoAutoScroll);
+    promoListEl.addEventListener('mouseleave', startPromoAutoScroll);
+    promoListEl.addEventListener('touchstart', stopPromoAutoScroll, { passive: true });
+    promoListEl.addEventListener('touchend', function() { setTimeout(startPromoAutoScroll, 2500); }, { passive: true });
+  }
 
   /* ===== VUE LISTE ===== */
   var viewMapBtn = document.getElementById('view-map');
