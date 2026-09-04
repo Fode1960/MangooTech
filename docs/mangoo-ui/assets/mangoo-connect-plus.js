@@ -840,10 +840,12 @@
     emit(messageCbs, {
       from: msg.from, fromName: msg.fromName, text: text, sentAt: msg.sentAt,
       msgId: msg.msgId, convId: msg.convId, replyTo: msg.replyTo, replyPreview: msg.replyPreview,
-      kind: msg.kind || 'text', audio: msg.audio, duration: msg.duration, mime: msg.mime
+      kind: msg.kind || 'text', audio: msg.audio, duration: msg.duration, mime: msg.mime, video: msg.video
     });
-    if (!text && msg.kind !== 'audio') return;
-    var display = msg.kind === 'audio' ? ('🎤 Message vocal (' + Math.max(1, Math.round(msg.duration || 0)) + ' s)') : text;
+    if (!text && msg.kind !== 'audio' && msg.kind !== 'video') return;
+    var display = msg.kind === 'audio'
+      ? ('🎤 Message vocal (' + Math.max(1, Math.round(msg.duration || 0)) + ' s)')
+      : (msg.kind === 'video' ? ('🎥 Message vidéo (' + Math.max(1, Math.round(msg.duration || 0)) + ' s)') : text);
     var isCurrent = chatTarget && targetId(chatTarget) === String(msg.from || '');
     if (chatEl.classList.contains('open') && isCurrent) {
       appendMsg('in', display);
@@ -1079,6 +1081,17 @@
       var payload = {
         type: 'chat-audio', to: to, audio: String(audio),
         duration: Number(duration) || 0, mime: String(mime || 'audio/webm')
+      };
+      if (msgId) payload.msgId = String(msgId);
+      return enqueueOutbox(function () { sendWS(payload); });
+    },
+    // Envoie un message vidéo (capture caméra) : video est une data URL base64,
+    // duration la durée en secondes, mime le type MIME (video/webm…).
+    sendVideoMessage: function (to, video, duration, mime, msgId) {
+      if (!to || !video) return false;
+      var payload = {
+        type: 'chat-video', to: to, video: String(video),
+        duration: Number(duration) || 0, mime: String(mime || 'video/webm')
       };
       if (msgId) payload.msgId = String(msgId);
       return enqueueOutbox(function () { sendWS(payload); });
