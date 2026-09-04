@@ -1438,11 +1438,14 @@ html.dark {
   document.getElementById('drawer-overlay').addEventListener('click', closeDrawer);
 
   /* ===== OFFRES DU JOUR (barre horizontale Local+) =====
-     Affiche les offres actives du vendeur connecté : titre, description,
-     début (startsAt) et fin (endsAt). */
+     Affiche les offres actives de la zone courante : même ville en mode
+     « nearby », tout le pays en mode « country ». L'offre est publique (visible
+     de tous), mais limitée au même périmètre géographique que la carte Local+ :
+     elle suit la visibilité du vendeur, jamais « le monde entier ». */
   function visibleOffresJour() {
     var out = [];
     vendors.forEach(function(v) {
+      if (!matchesScopeFor(v)) return;
       offresDuJourFor(v).forEach(function(o) {
         out.push({ vendor: v, offre: o });
       });
@@ -1869,6 +1872,10 @@ html.dark {
       emptyState.classList.add('hidden');
       emptyState.classList.remove('flex');
     }
+
+    // La barre « Offres du jour » suit le même périmètre que la carte : on la
+    // re-rend pour refléter tout changement de ville, de rayon ou de pays.
+    renderPromos();
   }
 
   searchInput.addEventListener('input', applyFilters);
