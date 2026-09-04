@@ -875,6 +875,10 @@ html.dark {
   // vendorId du professionnel connecté (session `mgt_user`), ou '' si invité.
   // L'« Offre du jour » Local+ est un emplacement payé : quand un vendeur est
   // connecté, on n'affiche que SES offres (jamais celles d'un autre vendeur).
+  function canonicalLocalVendorId(vid) {
+    if (vid === 'ven-e9e831ccf698') return 'pro-41cafa4bcb31';
+    return vid;
+  }
   function connectedVendorId() {
     try {
       var raw = localStorage.getItem('mgt_user');
@@ -883,7 +887,7 @@ html.dark {
       if (!u) return '';
       var role = u.role || '';
       if (role !== 'prestataire' && role !== 'vendeur') return '';
-      return u.vendorId || u.id || '';
+      return canonicalLocalVendorId(u.vendorId || u.id || '');
     } catch (e) { return ''; }
   }
   // Offres du jour actives rattachées à un vendeur (par vendorId).
@@ -2214,8 +2218,9 @@ html.dark {
         var offres = (data && data.offres) ? data.offres : [];
         offres.forEach(function(o) {
           if (!o || !o.vendorId) return;
-          if (!offresJourByVendor[o.vendorId]) offresJourByVendor[o.vendorId] = [];
-          offresJourByVendor[o.vendorId].push(o);
+          var vid = canonicalLocalVendorId(o.vendorId);
+          if (!offresJourByVendor[vid]) offresJourByVendor[vid] = [];
+          offresJourByVendor[vid].push(o);
         });
       })
       .catch(function() { offresJourByVendor = {}; });

@@ -2463,7 +2463,18 @@ function loadOffresJour() {
   try {
     if (fs.existsSync(OFFRES_JOUR_FILE)) {
       const data = JSON.parse(fs.readFileSync(OFFRES_JOUR_FILE, 'utf8'));
-      if (Array.isArray(data)) { offresJour = data; console.log('[Paiement] offres du jour chargées :', offresJour.length); return; }
+      if (Array.isArray(data)) {
+        let changed = false;
+        data.forEach(function (o) {
+          if (o && typeof o.vendorId === 'string') {
+            const canon = canonicalRoutingId(o.vendorId);
+            if (canon && canon !== o.vendorId) { o.vendorId = canon; changed = true; }
+          }
+        });
+        offresJour = data;
+        if (changed) saveOffresJour();
+        console.log('[Paiement] offres du jour chargées :', offresJour.length); return;
+      }
     }
   } catch (e) { console.error('[Paiement] offres du jour illisibles, réinitialisation :', e.message); }
   offresJour = [];
@@ -6369,7 +6380,7 @@ function handleHttp(req, res) {
       const title = String(body.title || '').trim();
       if (!title) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Titre manquant.' })); return; }
 
-      const vendorId = user.vendorId || user.id;
+      const vendorId = canonicalRoutingId(user.vendorId || user.id);
       let payment;
       if (isTrial) {
         if (trialUsed(vendorId, 'offre')) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Votre essai gratuit a déjà été utilisé pour l\'offre du jour.' })); return; }
@@ -6426,7 +6437,7 @@ function handleHttp(req, res) {
       if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
       const offre = offresJour.find(function (o) { return o.id === String(body.offreId || body.id || ''); });
       if (!offre) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Offre introuvable.' })); return; }
-      if ((user.vendorId || user.id) !== offre.vendorId && user.role !== 'admin') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès refusé.' })); return; }
+      if (canonicalRoutingId(user.vendorId || user.id) !== offre.vendorId && user.role !== 'admin') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès refusé.' })); return; }
       const tier = tierById(String(body.tierId || offre.tierId || ''));
       if (!tier) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Palier de durée invalide.' })); return; }
       let payment;
@@ -6469,7 +6480,7 @@ function handleHttp(req, res) {
       if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
       const offre = offresJour.find(function (o) { return o.id === String(body.offreId || body.id || ''); });
       if (!offre) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Offre introuvable.' })); return; }
-      if ((user.vendorId || user.id) !== offre.vendorId && user.role !== 'admin') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès refusé.' })); return; }
+      if (canonicalRoutingId(user.vendorId || user.id) !== offre.vendorId && user.role !== 'admin') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès refusé.' })); return; }
       offre.status = 'expiree';
       offre.expiredAt = new Date().toISOString();
       saveOffresJour();

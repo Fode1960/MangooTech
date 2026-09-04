@@ -47,6 +47,19 @@
 
   function inDemo() { return !!readUrlDemo(); }
 
+  // Vraie session (authentification PIN) présente ? En production, une session
+  // locale réelle prime sur le mode démo : on ne doit JAMAIS intercepter les
+  // écritures d'un utilisateur réellement connecté.
+  function hasRealSession() {
+    try {
+      if (localStorage.getItem('mgt_token')) return true;
+      var raw = localStorage.getItem('mgt_user');
+      if (!raw) return false;
+      var u = JSON.parse(raw);
+      return !!(u && (u.id || u.vendorId));
+    } catch (e) { return false; }
+  }
+
   // ------------------------------------------------------------------ *
   //  Bac à sable : interceptor fetch
   // ------------------------------------------------------------------ */
@@ -91,7 +104,7 @@
   if (global.fetch) {
     global.fetch = function (input, init) {
       init = init || {};
-      if (!inDemo()) return originalFetch(input, init);
+      if (!inDemo() || hasRealSession()) return originalFetch(input, init);
 
       var url = typeof input === 'string' ? input : (input && input.url) || '';
       var method = String(init.method || 'GET').toUpperCase();
