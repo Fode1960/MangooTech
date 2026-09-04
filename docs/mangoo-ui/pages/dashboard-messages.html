@@ -586,12 +586,14 @@ html.dark {
               <button type="button" data-voice-send style="margin-left:auto;font-size:12px;font-weight:700;color:#fff;background:rgb(var(--mgt-primary));border:none;border-radius:999px;padding:6px 14px;cursor:pointer;">Envoyer</button>
             </div>
             <!-- Aperçu de la vidéo avant envoi -->
-            <div id="msg-video-preview" style="display:none;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;">
-              <video data-video-preview playsinline controls style="width:240px;height:135px;border-radius:8px;background:#000;object-fit:cover;flex-shrink:0;"></video>
-              <span data-video-preview-dur style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));">0:00</span>
-              <button type="button" data-video-cancel style="font-size:12px;font-weight:600;color:rgb(var(--mgt-error));border:none;background:transparent;cursor:pointer;">Supprimer</button>
-              <button type="button" data-video-rerecord style="font-size:12px;font-weight:600;color:rgb(var(--mgt-foreground));border:1px solid rgb(var(--mgt-border));background:transparent;border-radius:999px;padding:6px 12px;cursor:pointer;">Réenregistrer</button>
-              <button type="button" data-video-send style="margin-left:auto;font-size:12px;font-weight:700;color:#fff;background:rgb(var(--mgt-primary));border:none;border-radius:999px;padding:6px 14px;cursor:pointer;">Envoyer</button>
+            <div id="msg-video-preview" style="display:none;flex-direction:column;gap:8px;padding:10px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;">
+              <video data-video-preview playsinline controls style="width:100%;max-width:320px;height:auto;aspect-ratio:16/9;border-radius:8px;background:#000;object-fit:contain;align-self:center;"></video>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+                <span data-video-preview-dur style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));">0:00</span>
+                <button type="button" data-video-cancel style="font-size:13px;font-weight:600;color:rgb(var(--mgt-error));border:none;background:transparent;cursor:pointer;padding:6px 4px;">Supprimer</button>
+                <button type="button" data-video-rerecord style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));border:1px solid rgb(var(--mgt-border));background:transparent;border-radius:999px;padding:7px 14px;cursor:pointer;">Réenregistrer</button>
+                <button type="button" data-video-send style="margin-left:auto;font-size:13px;font-weight:700;color:#fff;background:rgb(var(--mgt-primary));border:none;border-radius:999px;padding:8px 18px;cursor:pointer;">Envoyer</button>
+              </div>
             </div>
             <div class="flex items-end gap-3">
               <button id="btn-attach" title="Joindre un fichier" class="p-2.5 rounded-lg hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
