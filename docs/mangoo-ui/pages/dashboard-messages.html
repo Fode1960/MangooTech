@@ -587,9 +587,10 @@ html.dark {
             </div>
             <!-- Aperçu de la vidéo avant envoi -->
             <div id="msg-video-preview" style="display:none;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;">
-              <video data-video-preview playsinline muted style="width:120px;height:68px;border-radius:8px;background:#000;object-fit:cover;flex-shrink:0;"></video>
+              <video data-video-preview playsinline controls style="width:240px;height:135px;border-radius:8px;background:#000;object-fit:cover;flex-shrink:0;"></video>
               <span data-video-preview-dur style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));">0:00</span>
               <button type="button" data-video-cancel style="font-size:12px;font-weight:600;color:rgb(var(--mgt-error));border:none;background:transparent;cursor:pointer;">Supprimer</button>
+              <button type="button" data-video-rerecord style="font-size:12px;font-weight:600;color:rgb(var(--mgt-foreground));border:1px solid rgb(var(--mgt-border));background:transparent;border-radius:999px;padding:6px 12px;cursor:pointer;">Réenregistrer</button>
               <button type="button" data-video-send style="margin-left:auto;font-size:12px;font-weight:700;color:#fff;background:rgb(var(--mgt-primary));border:none;border-radius:999px;padding:6px 14px;cursor:pointer;">Envoyer</button>
             </div>
             <div class="flex items-end gap-3">
@@ -2141,8 +2142,10 @@ html.dark {
       // Aperçu de la vidéo avant envoi : suppression ou envoi.
       if (videoPreview) {
         var vidCancel = videoPreview.querySelector('[data-video-cancel]');
+        var vidRerecord = videoPreview.querySelector('[data-video-rerecord]');
         var vidSend = videoPreview.querySelector('[data-video-send]');
         if (vidCancel) vidCancel.addEventListener('click', function () { hideVideoPreview(); });
+        if (vidRerecord) vidRerecord.addEventListener('click', function () { hideVideoPreview(); startVideoRecord(); });
         if (vidSend) vidSend.addEventListener('click', sendVideo);
       }
 
