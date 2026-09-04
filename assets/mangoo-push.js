@@ -253,6 +253,32 @@
     } catch (e) { /* ignore */ }
   }
 
+  // ===== Auto-rechargement sur redéploiement (marqueur de version serveur) =====
+  // Les pages sont servies en no-store, donc toute nouvelle OUVERTURE récupère
+  // le code à jour. Reste le cas d'un dashboard déjà ouvert au moment du
+  // déploiement : on sonde périodiquement /health et on recharge UNE seule fois
+  // quand startedAt change (le process Node est redémarré à chaque déploiement).
+  (function startBuildPolling() {
+    var baseline = null;
+    var reloaded = false;
+    function check() {
+      try {
+        fetch('/health', { cache: 'no-store' }).then(function (r) {
+          return r.json().catch(function () { return null; });
+        }).then(function (d) {
+          if (!d || typeof d.startedAt !== 'number') return;
+          if (baseline === null) { baseline = d.startedAt; return; }
+          if (baseline !== d.startedAt && !reloaded) {
+            reloaded = true;
+            try { global.location.reload(); } catch (e) { /* ignore */ }
+          }
+        }).catch(function () { /* ignore */ });
+      } catch (e) { /* ignore */ }
+    }
+    check();
+    setInterval(check, 60000);
+  })();
+
   // État courant, pour afficher un bouton « Notifications » dans la cloche.
   function state() {
     return {

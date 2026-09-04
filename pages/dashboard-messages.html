@@ -1942,6 +1942,29 @@ html.dark {
         }
         return '';
       }
+      var mgtVideoUrlCache = {};
+      function mgtVideoUrl(src) {
+        src = String(src == null ? '' : src);
+        if (src.indexOf('data:') !== 0) return src;
+        if (mgtVideoUrlCache[src]) return mgtVideoUrlCache[src];
+        try {
+          var comma = src.indexOf(',');
+          var head = src.slice(0, comma);
+          var b64 = src.slice(comma + 1);
+          var mime = 'video/webm';
+          var m = head.match(/data:([^;]+)/);
+          if (m && m[1]) mime = m[1];
+          var bin = atob(b64);
+          var len = bin.length;
+          var bytes = new Uint8Array(len);
+          for (var i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+          var url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+          mgtVideoUrlCache[src] = url;
+          return url;
+        } catch (e) {
+          return src;
+        }
+      }
       function startVideoRecord() {
         if ((videoRecorder && videoRecorder.state === 'recording') || (mediaRecorder && mediaRecorder.state === 'recording')) return;
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
@@ -1954,7 +1977,9 @@ html.dark {
           if (videoLive) videoLive.style.display = 'flex';
           var mime = pickVideoMime();
           var mr;
-          try { mr = new MediaRecorder(stream, mime ? { mimeType: mime } : {}); }
+          var recOpts = { videoBitsPerSecond: 1500000 };
+          if (mime) recOpts.mimeType = mime;
+          try { mr = new MediaRecorder(stream, recOpts); }
           catch (e) { mr = new MediaRecorder(stream); }
           videoChunks = [];
           mr.ondataavailable = function (e) { if (e.data && e.data.size) videoChunks.push(e.data); };
@@ -2008,7 +2033,7 @@ html.dark {
       function showVideoPreview() {
         if (!videoPreview || !pendingVideo) return;
         var vid = videoPreview.querySelector('[data-video-preview]');
-        if (vid) { vid.src = pendingVideo.video; }
+        if (vid) { vid.src = mgtVideoUrl(pendingVideo.video); }
         var durEl = videoPreview.querySelector('[data-video-preview-dur]');
         if (durEl) durEl.textContent = fmtDur(pendingVideo.duration);
         videoPreview.style.display = 'flex';
@@ -2023,7 +2048,7 @@ html.dark {
       }
       function videoBubbleInner(video, duration) {
         return '<div style="padding:4px;max-width:260px;box-sizing:border-box;">' +
-          '<video controls playsinline preload="metadata" style="width:100%;max-width:240px;height:auto;max-height:260px;border-radius:10px;background:#000;display:block;" src="' + esc(video || '') + '"></video>' +
+          '<video controls playsinline preload="metadata" style="width:100%;max-width:240px;height:auto;max-height:260px;border-radius:10px;background:#000;display:block;" src="' + mgtVideoUrl(video) + '"></video>' +
           '<div style="font-size:11px;margin-top:4px;padding:0 2px;opacity:.85;">🎥 ' + fmtDur(duration) + '</div>' +
         '</div>';
       }
