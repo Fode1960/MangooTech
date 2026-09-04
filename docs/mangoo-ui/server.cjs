@@ -4498,6 +4498,7 @@ function handleHttp(req, res) {
           logo: u.logo || '',
           category: u.category || '',
           online: isOnline(u.id) || isOnline(u.vendorId),
+          lastSeen: (lastSeenByUser.get(routingIdForUser(u)) || (u.lastSeenAt ? Date.parse(u.lastSeenAt) : null)) || null,
           createdAt: u.createdAt || ''
         };
       })
