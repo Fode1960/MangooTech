@@ -796,12 +796,25 @@ html.dark {
         var b = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
         return (a + b).toUpperCase();
       }
-      function renderPresenceStatus(el, online) {
+      // Libellé de présence enrichi : hors ligne, on affiche la dernière
+      // connexion connue du contact (fournie par /api/contacts via lastSeen).
+      function lastSeenLabel(ts) {
+        if (!ts) return 'Hors ligne';
+        var d = new Date(ts);
+        if (isNaN(d.getTime())) return 'Hors ligne';
+        var mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
+        if (mins < 1) return 'Dernière connexion à l’instant';
+        if (mins < 60) return 'Dernière connexion il y a ' + mins + ' min';
+        var hh = ('0' + d.getHours()).slice(-2);
+        var mm = ('0' + d.getMinutes()).slice(-2);
+        return 'Dernière connexion à ' + hh + ':' + mm;
+      }
+      function renderPresenceStatus(el, online, lastSeen) {
         if (!el) return;
         if (online) {
           el.innerHTML = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))]"><span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span>En ligne</span>';
         } else {
-          el.innerHTML = '<span class="inline-flex items-center gap-1 text-[11px] text-[rgb(var(--mgt-muted-foreground))]"><span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-muted-foreground))]"></span>Hors ligne</span>';
+          el.innerHTML = '<span class="inline-flex items-center gap-1 text-[11px] text-[rgb(var(--mgt-muted-foreground))]"><span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-muted-foreground))]"></span>' + esc(lastSeenLabel(lastSeen)) + '</span>';
         }
       }
       function liveConvs() { return document.querySelectorAll('.msg-conv'); }
@@ -847,7 +860,7 @@ html.dark {
           clientBadge.textContent = roleLabel(role);
           clientBadge.style.display = real ? 'inline-flex' : 'none';
         }
-        renderPresenceStatus(statusEl, online);
+        renderPresenceStatus(statusEl, online, Number(conv.getAttribute('data-last-seen')) || null);
         // Tous les clients sont joignables en production (l'appel audio reste
         // toujours disponible ; la vidéo dépend de HTTPS + temps réel).
         if (callBtn) callBtn.style.display = '';
@@ -934,6 +947,7 @@ html.dark {
         conv.setAttribute('data-name', name);
         conv.setAttribute('data-peer-id', c.routingId || c.vendorId || c.id || '');
         conv.setAttribute('data-online', c.online ? 'true' : 'false');
+        conv.setAttribute('data-last-seen', c.lastSeen || '');
         conv.setAttribute('data-role', c.role || 'client');
         conv.setAttribute('data-city', c.city || '');
         conv.setAttribute('data-phone', c.phone || '');
@@ -954,6 +968,7 @@ html.dark {
               '<span class="type-badge inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] border border-[rgb(var(--mgt-primary))]">' + esc(roleLabel(c.role)) + '</span>' +
               '<span class="text-xs text-[rgb(var(--mgt-muted-foreground))] truncate">' + esc(contactSnippet(c)) + '</span>' +
             '</div>' +
+            (!c.online && c.lastSeen ? '<div class="text-[11px] text-[rgb(var(--mgt-muted-foreground))] mt-0.5">' + esc(lastSeenLabel(c.lastSeen)) + '</div>' : '') +
           '</div>';
         list.appendChild(conv);
         conv.addEventListener('click', function () { setActive(conv); markRead(conv, false); });
@@ -2741,7 +2756,7 @@ html.dark {
           if (currentConv) {
             var online = currentConv.getAttribute('data-online') === 'true';
             var statusEl = document.getElementById('conv-status');
-            renderPresenceStatus(statusEl, online);
+            renderPresenceStatus(statusEl, online, Number(currentConv.getAttribute('data-last-seen')) || null);
           }
         }
         function buildConversationRow(name, peerId) {
