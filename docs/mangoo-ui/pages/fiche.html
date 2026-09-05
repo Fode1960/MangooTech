@@ -429,7 +429,7 @@ html.dark {
 
       <p class="caption mt-3 flex items-start gap-2" style="color: rgb(var(--mgt-muted-foreground));">
         <i data-lucide="shield-check" class="h-4 w-4 flex-shrink-0 mt-0.5" style="color: rgb(var(--mgt-primary));"></i>
-        <span>Stockage maîtrisé : message conservé 30 jours puis supprimé automatiquement ; l'audio lié au badge « Démo » disparaît dès son expiration.</span>
+        <span>Stockage maîtrisé : message conservé 30 jours puis supprimé automatiquement ; l'audio lié aux badges « Promotion » et « Nouveau » disparaît dès leur expiration.</span>
       </p>
     </div>
   </section>
@@ -1093,8 +1093,7 @@ html.dark {
           + '</' + tag + '>';
       }
     } else {
-      html = '<span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style="background-color: rgb(var(--mgt-primary-100)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); border: 1px solid rgb(var(--mgt-primary-200));">'
-        + '<i data-lucide="tag" class="h-3.5 w-3.5"></i><span>Demo</span></span>';
+      html = '';
     }
     host.innerHTML = html;
     if (window.lucide) window.lucide.createIcons();
