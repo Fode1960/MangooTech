@@ -80,6 +80,13 @@
     '.mcp-call-overlay .mcp-btn.mute{background:rgba(255,255,255,.18);color:#fff;}',
     '.mcp-call-overlay .mcp-btn.mute.off{background:rgba(255,255,255,.1);color:rgba(255,255,255,.85);}',
     '.mcp-call-overlay .mcp-hint{position:absolute;bottom:24px;left:0;right:0;text-align:center;color:rgba(255,255,255,.55);font-size:11px;z-index:2;}',
+    '.mcp-call-overlay.has-video .mcp-center{position:absolute;bottom:26px;left:0;right:0;margin:0 auto;justify-content:flex-end;max-width:100%;padding:0 18px;z-index:3;pointer-events:none;}',
+    '.mcp-call-overlay.has-video .mcp-avatar{display:none;}',
+    '.mcp-call-overlay.has-video .mcp-name{font-size:16px;text-shadow:0 1px 8px rgba(0,0,0,.8);}',
+    '.mcp-call-overlay.has-video .mcp-state{font-size:12px;margin-bottom:6px;text-shadow:0 1px 8px rgba(0,0,0,.8);}',
+    '.mcp-call-overlay.has-video .mcp-timer{margin-bottom:16px;font-size:14px;text-shadow:0 1px 8px rgba(0,0,0,.8);}',
+    '.mcp-call-overlay.has-video .mcp-actions{pointer-events:auto;}',
+    '.mcp-call-overlay.has-video .mcp-hint{display:none;}',
     '',
     '.mcp-chat{position:fixed;right:16px;bottom:16px;z-index:9500;width:360px;max-width:calc(100vw - 32px);max-height:min(520px,calc(100vh - 32px));display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:rgb(var(--mgt-card,255,255,255));border:1px solid rgb(var(--mgt-border,226,232,240));box-shadow:0 24px 60px -20px rgba(15,23,42,.35);opacity:0;transform:translateY(12px);visibility:hidden;transition:opacity .22s,transform .22s,visibility .22s;}',
     '.mcp-chat.open{opacity:1;transform:translateY(0);visibility:visible;}',
@@ -226,6 +233,11 @@
     var local = q('[data-mcp="local"]', callOverlay);
     if (remote) { remote.srcObject = null; remote.classList.remove('show'); }
     if (local) { local.srcObject = null; local.classList.remove('show'); }
+    syncVideoUI();
+  }
+
+  function syncVideoUI() {
+    callOverlay.classList.toggle('has-video', callState.hasVideo);
   }
 
   function startTimer() {
@@ -604,6 +616,7 @@
       if (e.streams && e.streams[0]) {
         var remote = q('[data-mcp="remote"]', callOverlay);
         if (remote) { remote.srcObject = e.streams[0]; remote.classList.add('show'); callState.hasVideo = true; }
+        syncVideoUI();
       }
     };
     pc.onconnectionstatechange = function () {
