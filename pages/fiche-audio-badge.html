@@ -1114,8 +1114,8 @@ html.dark {
   }
 
   // Badges payants (Sponsorise / En Promo / Nouveau) : rendu conditionnel a
-  // partir de `match.boosts` (donnees serveur). Sans boost actif, on affiche
-  // « Demo » (compte non payant).
+  // partir de `match.boosts` (donnees serveur). Sans boost actif, aucun
+  // badge n'est affiché.
   function boostLabel(boost) {
     return { sponsorise: 'Sponsorise', promo: 'En Promo', nouveau: 'Nouveau' }[boost] || '';
   }
@@ -1156,8 +1156,7 @@ html.dark {
           + '</' + tag + '>';
       }
     } else {
-      html = '<span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style="background-color: rgb(var(--mgt-primary-100)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); border: 1px solid rgb(var(--mgt-primary-200));">'
-        + '<i data-lucide="tag" class="h-3.5 w-3.5"></i><span>Demo</span></span>';
+      html = '';
     }
     host.innerHTML = html;
     if (window.lucide) window.lucide.createIcons();
