@@ -195,6 +195,7 @@
     callId: null,
     incomingSdp: null,
     incomingMode: 'audio',
+    iceQueue: [],
     simTimers: []
   };
 
@@ -255,6 +256,7 @@
     resetVideos();
     callState.callId = null;
     callState.incomingSdp = null;
+    callState.iceQueue = [];
     callState.hasVideo = false;
   }
 
@@ -659,6 +661,7 @@
   function onCallRing(msg) {
     callState.callId = msg.callId;
     callState.incomingSdp = msg.sdp;
+    callState.iceQueue = [];
     callState.incomingMode = msg.mode || 'audio';
     emit(incomingCallCbs, {
       callId: msg.callId, from: msg.from, fromName: msg.fromName, mode: msg.mode || 'audio',
@@ -681,7 +684,7 @@
       stream.getTracks().forEach(function (track) { pc.addTrack(track, stream); });
       var RTCSessionDesc = global.RTCSessionDescription || global.webkitRTCSessionDescription;
       pc.setRemoteDescription(new RTCSessionDesc(callState.incomingSdp))
-        .then(function () { return pc.createAnswer(); })
+        .then(function () { flushIceQueue(); return pc.createAnswer(); })
         .then(function (answer) { return pc.setLocalDescription(answer); })
         .then(function () {
           sendWS({ type: 'call-answer', callId: callState.callId, sdp: pc.localDescription });
@@ -707,6 +710,7 @@
     var RTCSessionDesc = global.RTCSessionDescription || global.webkitRTCSessionDescription;
     if (msg.sdp) {
       callState.pc.setRemoteDescription(new RTCSessionDesc(msg.sdp)).then(function () {
+        flushIceQueue();
         startTimer();
       }).catch(function () { startTimer(); });
     } else {
@@ -730,12 +734,24 @@
     else setCallState('Appel impossible');
   }
 
+  function addRemoteIce(candidate) {
+    if (!callState.pc) return;
+    try {
+      var RTCIceCand = global.RTCIceCandidate || global.webkitRTCIceCandidate;
+      callState.pc.addIceCandidate(new RTCIceCand(candidate));
+    } catch (e) {}
+  }
+  function flushIceQueue() {
+    if (!callState.pc || !callState.pc.remoteDescription) return;
+    var q = callState.iceQueue.splice(0, callState.iceQueue.length);
+    q.forEach(function (c) { addRemoteIce(c); });
+  }
   function onIce(msg) {
-    if (callState.pc && msg.candidate) {
-      try {
-        var RTCIceCand = global.RTCIceCandidate || global.webkitRTCIceCandidate;
-        callState.pc.addIceCandidate(new RTCIceCand(msg.candidate));
-      } catch (e) {}
+    if (!msg.candidate) return;
+    if (callState.pc && callState.pc.remoteDescription) {
+      addRemoteIce(msg.candidate);
+    } else {
+      callState.iceQueue.push(msg.candidate);
     }
   }
 
@@ -1168,6 +1184,7 @@
       callState.muted = false;
       callState.incoming = false;
       callState.callId = (opts && opts.callId) || 'call-' + Date.now() + '-' + Math.floor(Math.random() * 1e4);
+      callState.iceQueue = [];
       stopIncomingRing();
       setCallState('Connexion…');
       callOverlay.classList.add('open');
