@@ -86,7 +86,7 @@
     '.mcp-call-overlay.has-video .mcp-state{font-size:12px;margin-bottom:6px;text-shadow:0 1px 8px rgba(0,0,0,.8);}',
     '.mcp-call-overlay.has-video .mcp-timer{margin-bottom:16px;font-size:14px;text-shadow:0 1px 8px rgba(0,0,0,.8);}',
     '.mcp-call-overlay.has-video .mcp-actions{pointer-events:auto;}',
-    '.mcp-call-overlay.has-video .mcp-hint{display:none;}',
+    '.mcp-call-overlay.has-video .mcp-hint{display:block;bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,.7);}',
     '',
     '.mcp-chat{position:fixed;right:16px;bottom:16px;z-index:9500;width:360px;max-width:calc(100vw - 32px);max-height:min(520px,calc(100vh - 32px));display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:rgb(var(--mgt-card,255,255,255));border:1px solid rgb(var(--mgt-border,226,232,240));box-shadow:0 24px 60px -20px rgba(15,23,42,.35);opacity:0;transform:translateY(12px);visibility:hidden;transition:opacity .22s,transform .22s,visibility .22s;}',
     '.mcp-chat.open{opacity:1;transform:translateY(0);visibility:visible;}',
