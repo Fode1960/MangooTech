@@ -2049,6 +2049,15 @@ function knownVendorFix(id, email) {
   return null;
 }
 
+// Comptes de démonstration (DAN Coiffure prestataire + DAN Boutique vendeur).
+// Exclus de l'annuaire public et des listes publiques en production pour ne
+// pas mélanger les données de démo avec les vrais prestataires. Ils restent
+// accessibles uniquement via le mode démo (?demo=...).
+const DEMO_VENDOR_IDS = new Set(['pro-41cafa4bcb31', 'pro-eb10536cd12d']);
+function isDemoVendor(id) {
+  return !!(id && DEMO_VENDOR_IDS.has(id));
+}
+
 function carteVendors() {
   // Réconcilie l'état des boosters (expiration des badges échus) avant de
   // construire l'annuaire, afin que la carte reflète les badges actifs en
@@ -2056,7 +2065,7 @@ function carteVendors() {
   reconcileBoosters();
   const list = [];
   const eligible = users.filter(function (u) {
-    return u && (u.role === 'prestataire' || u.role === 'vendeur');
+    return u && (u.role === 'prestataire' || u.role === 'vendeur') && !isDemoVendor(u.vendorId || u.id);
   });
   eligible.sort(function (a, b) {
     return String(a.enseigne || a.name || '').localeCompare(String(b.enseigne || b.name || ''));
@@ -4751,7 +4760,7 @@ function handleHttp(req, res) {
   if (urlPath === '/prestations') {
     if (req.method === 'GET') {
       const vendor = queryParam(req, 'vendor');
-      const list = vendor ? prestations.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; }) : prestations;
+      const list = vendor ? prestations.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; }) : prestations.filter(function (p) { return !isDemoVendor(p.vendorId); });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ prestations: list }));
       return;
@@ -4808,6 +4817,7 @@ function handleHttp(req, res) {
       const category = queryParam(req, 'category');
       let list = catalogue;
       if (vendor) list = list.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; });
+      else list = list.filter(function (p) { return !isDemoVendor(p.vendorId); });
       if (category && category !== 'all') list = list.filter(function (p) { return p.category === category; });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ catalogue: list.map(publicProduct) }));
@@ -4975,6 +4985,7 @@ function handleHttp(req, res) {
       const category = queryParam(req, 'category');
       let list = galerie;
       if (vendor) list = list.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; });
+      else list = list.filter(function (p) { return !isDemoVendor(p.vendorId); });
       if (category && category !== 'all') list = list.filter(function (p) { return p.category === category; });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ galerie: list }));
