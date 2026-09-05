@@ -103,6 +103,8 @@
     '.mcp-chat .mcp-msg.in{background:rgb(var(--mgt-card,255,255,255));color:rgb(var(--mgt-foreground,15,23,42));border:1px solid rgb(var(--mgt-border,226,232,240));align-self:flex-start;border-bottom-left-radius:4px;}',
     '.mcp-chat .mcp-msg.out{background:rgb(var(--mgt-primary,26,92,42));color:rgb(var(--mgt-primary-foreground,255,255,255));align-self:flex-end;border-bottom-right-radius:4px;}',
     '.mcp-chat .mcp-msg.sys{align-self:center;background:transparent;color:rgb(var(--mgt-muted-foreground,100,116,139));font-size:11.5px;text-align:center;padding:2px 8px;}',
+    '.mcp-chat .mcp-msg.mcp-msg-video{padding:6px 6px 8px;overflow:hidden;}',
+    '.mcp-chat .mcp-msg.mcp-msg-video video{display:block;max-width:100%;}',
     '.mcp-chat .mcp-typing{display:flex;align-items:center;gap:8px;padding:6px 14px 0;background:rgb(var(--mgt-muted,248,250,252));color:rgb(var(--mgt-muted-foreground,100,116,139));font-size:12px;}',
     '.mcp-chat .mcp-typing .mcp-typing-dots{display:inline-flex;gap:3px;}',
     '.mcp-chat .mcp-typing .mcp-typing-dots i{width:5px;height:5px;border-radius:50%;background:rgb(var(--mgt-muted-foreground,100,116,139));display:inline-block;animation:mcpBlink 1.2s infinite ease-in-out;}',
@@ -812,6 +814,43 @@
   // pour éviter le double affichage (page de chat + mini-chat Connect+).
   var suppressAutoOpen = false;
 
+  // Convertit une data URL base64 (video/*;base64,…) en URL Blob lisible par
+  // <video>, avec cache. Repris de chat.html / dashboard-messages.html afin que
+  // les messages vidéo entrants s'affichent réellement dans le mini-chat (et
+  // non plus sous forme d'un simple texte « Message vidéo »).
+  var mcpVideoUrlCache = {};
+  function mcpVideoUrl(src) {
+    src = String(src == null ? '' : src);
+    if (src.indexOf('data:') !== 0) return src;
+    if (mcpVideoUrlCache[src]) return mcpVideoUrlCache[src];
+    try {
+      var marker = ';base64,';
+      var mi = src.indexOf(marker);
+      if (mi < 0) return src;
+      var mime = src.slice(5, mi) || 'video/webm';
+      var b64 = src.slice(mi + marker.length);
+      var bin = atob(b64);
+      var len = bin.length;
+      var bytes = new Uint8Array(len);
+      for (var i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+      var url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+      mcpVideoUrlCache[src] = url;
+      return url;
+    } catch (e) { return src; }
+  }
+
+  function appendVideoMsg(kind, video, duration) {
+    var body = q('[data-mcp="body"]', chatEl);
+    if (!body) return;
+    var el = document.createElement('div');
+    el.className = 'mcp-msg ' + kind + ' mcp-msg-video';
+    el.innerHTML =
+      '<video controls playsinline preload="metadata" style="width:220px;max-width:100%;height:auto;max-height:260px;border-radius:10px;background:#000;display:block;" src="' + mcpVideoUrl(video) + '"></video>' +
+      '<div style="font-size:11px;margin-top:5px;opacity:.85;">🎥 ' + Math.max(1, Math.round(duration || 0)) + ' s</div>';
+    body.appendChild(el);
+    body.scrollTop = body.scrollHeight;
+  }
+
   function appendMsg(kind, text) {
     var body = q('[data-mcp="body"]', chatEl);
     if (!body) return;
@@ -872,12 +911,17 @@
       kind: msg.kind || 'text', audio: msg.audio, duration: msg.duration, mime: msg.mime, video: msg.video
     });
     if (!text && msg.kind !== 'audio' && msg.kind !== 'video') return;
+    var isVideo = msg.kind === 'video' && msg.video;
     var display = msg.kind === 'audio'
       ? ('🎤 Message vocal (' + Math.max(1, Math.round(msg.duration || 0)) + ' s)')
-      : (msg.kind === 'video' ? ('🎥 Message vidéo (' + Math.max(1, Math.round(msg.duration || 0)) + ' s)') : text);
+      : (isVideo ? '' : text);
+    function showIncoming() {
+      if (isVideo) { appendVideoMsg('in', msg.video, msg.duration); return; }
+      appendMsg('in', display);
+    }
     var isCurrent = chatTarget && targetId(chatTarget) === String(msg.from || '');
     if (chatEl.classList.contains('open') && isCurrent) {
-      appendMsg('in', display);
+      showIncoming();
       return;
     }
     // Les pages qui affichent déjà leur propre fil (ex. chat.html) désactivent
@@ -887,7 +931,7 @@
     // discussion n'est pas ouverte (ou pas sur ce pair), on l'ouvre pour
     // afficher le texte immédiatement au lieu de le laisser « invisible ».
     openChat({ vendorId: msg.from, id: msg.from, name: msg.fromName || msg.from });
-    appendMsg('in', display);
+    showIncoming();
   }
 
   /* Indicateur « en train d'écrire » côté discussion (overlay). */
