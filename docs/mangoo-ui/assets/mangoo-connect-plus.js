@@ -66,7 +66,7 @@
     '.mcp-call-overlay .mcp-remote.show{display:block;}',
     '.mcp-call-overlay .mcp-local{position:absolute;top:16px;right:16px;width:112px;height:150px;object-fit:cover;border-radius:14px;background:#000;border:1px solid rgba(255,255,255,.25);display:none;z-index:3;box-shadow:0 8px 30px rgba(0,0,0,.4);}',
     '.mcp-call-overlay .mcp-local.show{display:block;}',
-    '.mcp-call-overlay .mcp-center{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:420px;}',
+    '.mcp-call-overlay .mcp-center{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:420px;margin-top:96px;}',
     '.mcp-call-overlay .mcp-avatar{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgb(232,97,12);color:#fff;font-size:32px;font-weight:700;text-transform:uppercase;border:3px solid rgba(255,255,255,.25);margin-bottom:16px;}',
     '.mcp-call-overlay .mcp-name{color:#fff;font-size:20px;font-weight:600;margin-bottom:4px;text-align:center;}',
     '.mcp-call-overlay .mcp-state{color:rgba(255,255,255,.92);font-size:14px;margin-bottom:8px;text-align:center;}',
