@@ -807,6 +807,39 @@ html.dark {
         });
       }
 
+      // Persiste immédiatement un logo uploadé dans les 3 couches : profil de la
+      // boutique (source de la carte/fiche), identité de session locale et compte
+      // utilisateur (users.json). Garantit que le logo ne disparaît plus au rechargement.
+      function persistLogoNow(dataUrl) {
+        MangooVendorConfig.patch('profile', { logo: dataUrl }).catch(function () {});
+        try {
+          var raw = localStorage.getItem('mgt_user');
+          var user = raw ? JSON.parse(raw) : null;
+          if (user && (user.role === 'vendeur' || user.role === 'prestataire')) {
+            user.logo = dataUrl;
+            localStorage.setItem('mgt_user', JSON.stringify(user));
+          }
+        } catch (e) { /* ignore */ }
+        if (window.MangooVendor && window.MangooVendor.save) {
+          try { window.MangooVendor.save({ logo: dataUrl }); } catch (e) { /* ignore */ }
+        }
+        var token = null;
+        try { token = localStorage.getItem('mgt_token'); } catch (e) {}
+        if (token) {
+          fetch('/api/auth/me', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ logo: dataUrl })
+          }).catch(function () { /* l'identité locale reste le repli */ });
+        }
+        var circles = document.querySelectorAll('[data-vendor-initials]');
+        circles.forEach(function (c) {
+          c.style.overflow = 'hidden';
+          c.innerHTML = '<img src="' + dataUrl + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
+        });
+        showToast('Logo enregistré');
+      }
+
       function hydrate(res) {
         currentConfig = res.config || {};
         var p = currentConfig.profile || {};
@@ -1107,7 +1140,7 @@ html.dark {
             currentConfig = currentConfig || {};
             currentConfig.profile = currentConfig.profile || {};
             currentConfig.profile.logo = dataUrl;
-            showToast('Photo mise à jour — pensez à enregistrer');
+            persistLogoNow(dataUrl);
           }).catch(function () { showToast('Impossible de lire l\'image'); });
           logoInput.value = '';
         });
@@ -1121,6 +1154,12 @@ html.dark {
       }
 
       currentConfig = {};
+
+      // Charge la config réelle du prestataire (profil, logo, horaires…) au
+      // démarrage pour que les champs et l'aperçu reflètent les données persistées.
+      MangooVendorConfig.get().then(function (res) {
+        if (res && res.config) { pendingLogo = ''; hydrate(res); }
+      }).catch(function () { /* reste sur l'état vide */ });
 
       loadCitySuggestions();
     })();

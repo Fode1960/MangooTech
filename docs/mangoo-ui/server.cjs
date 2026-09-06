@@ -6265,7 +6265,7 @@ function handleHttp(req, res) {
     if (req.method === 'POST') {
       readJsonBody(req, function (err, body) {
         if (err) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
-        const vendor = String(body.vendorId || body.vendor || 'pro-41cafa4bcb31');
+        const vendor = canonicalRoutingId(String(body.vendorId || body.vendor || 'pro-41cafa4bcb31')) || 'pro-41cafa4bcb31';
         const doc = vendorConfigFor(vendor);
         const action = body && body.action;
 

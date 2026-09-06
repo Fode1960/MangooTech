@@ -348,12 +348,12 @@ html.dark {
           <div class="flex flex-wrap items-center gap-3">
             <h1 id="vendor-title" class="h1" style="color: rgb(var(--mgt-primary-foreground));">DAN Boutique</h1>
             <span id="vendor-badge" class="inline-block rounded-full px-3 py-1 text-xs font-semibold" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Boutique</span>
-            <button id="boost-badge-hero" type="button" data-badge-audio="promo" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:brightness-110" style="background-color: rgb(var(--mgt-primary-100)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); border: 1px solid rgb(var(--mgt-primary-200));">
+            <button id="boost-badge-hero" type="button" data-badge-audio="promo" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:brightness-110" style="display:none; background-color: rgb(var(--mgt-primary-100)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); border: 1px solid rgb(var(--mgt-primary-200));">
               <i data-lucide="tag" class="h-3.5 w-3.5"></i>
               <span>Promotion</span>
               <i data-lucide="volume-2" class="h-3.5 w-3.5"></i>
             </button>
-            <button id="boost-badge-new" type="button" data-badge-audio="new" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:brightness-110" style="background-color: rgb(var(--mgt-primary-300)); color: rgb(var(--mgt-primary-900)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
+            <button id="boost-badge-new" type="button" data-badge-audio="new" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:brightness-110" style="display:none; background-color: rgb(var(--mgt-primary-300)); color: rgb(var(--mgt-primary-900)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
               <i data-lucide="sparkles" class="h-3.5 w-3.5"></i>
               <span>Nouveau</span>
               <i data-lucide="volume-2" class="h-3.5 w-3.5"></i>
@@ -595,7 +595,7 @@ html.dark {
                 <div class="flex flex-col items-center gap-3">
                   <i data-lucide="map" class="h-12 w-12" style="color: rgb(var(--mgt-primary-300));"></i>
                   <span id="vendor-locality" class="caption" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Paris, France</span>
-                  <a id="vendor-map-link" href="/carte.html#ville=Paris" class="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold no-underline" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+                  <a id="vendor-map-link" href="./carte.html#ville=Paris" class="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold no-underline" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
                     <i data-lucide="map-pin" class="h-3 w-3"></i>Voir sur la carte
                   </a>
                 </div>
@@ -1620,6 +1620,21 @@ window.__mgtInitBoutique = function () {
     return map[category] || { label: category || 'Boutique', icon: 'shopping-bag' };
   }
 
+  function applyBoostBadges(boosts, trialBoosts) {
+    var active = {};
+    (boosts || []).forEach(function (t) { active[t] = true; });
+    (trialBoosts || []).forEach(function (t) { active[t] = true; });
+    var promo = document.getElementById('boost-badge-hero');
+    var nouveau = document.getElementById('boost-badge-new');
+    if (promo) promo.style.display = active.promo ? '' : 'none';
+    if (nouveau) nouveau.style.display = active.nouveau ? '' : 'none';
+  }
+
+  function updateMapLink(city) {
+    var link = document.getElementById('vendor-map-link');
+    if (link && city) link.setAttribute('href', './carte.html#ville=' + encodeURIComponent(city));
+  }
+
   function applyVendor(match) {
     if (!match) return;
     var meta = categoryMeta(match.category);
@@ -1644,6 +1659,8 @@ window.__mgtInitBoutique = function () {
     if (match.rating != null) setText(document.getElementById('vendor-rating'), String(match.rating));
     setText(document.getElementById('vendor-city'), (match.city || '') + (match.country ? ', ' + match.country : ''));
     setText(document.getElementById('vendor-description'), match.desc);
+    applyBoostBadges(match.boosts, match.trialBoosts);
+    updateMapLink(match.city);
     if (match.name && document.title) document.title = match.name + ' · Boutique · MangooTech';
     if (window.lucide) window.lucide.createIcons();
   }
@@ -1666,11 +1683,19 @@ window.__mgtInitBoutique = function () {
       var c = data && data.config;
       if (!c) return;
       var p = c.profile || {};
+      var cfgLogo = p.logo || p.cover;
+      if (cfgLogo) {
+        var cfgAvatarImg = document.getElementById('vendor-avatar-img');
+        var cfgAvatarIcon = document.getElementById('vendor-avatar-icon');
+        if (cfgAvatarImg) { cfgAvatarImg.src = cfgLogo; cfgAvatarImg.style.display = 'block'; }
+        if (cfgAvatarIcon) cfgAvatarIcon.style.display = 'none';
+      }
       setText(document.getElementById('vendor-title'), p.enseigne || c.vendorName);
       setText(document.getElementById('vendor-description'), p.description);
       if (p.city) setText(document.getElementById('vendor-city'), p.city + (p.country ? ', ' + p.country : ''));
       if (p.city) {
         setText(document.getElementById('vendor-locality'), p.city + (p.country ? ', ' + p.country : ''));
+        updateMapLink(p.city);
         var villes = (c.decouverte && c.decouverte.villes) || [];
         var rayon = (c.decouverte && c.decouverte.rayonKm) ? ' (+' + c.decouverte.rayonKm + ' km)' : '';
         var zone = (villes.length ? villes[0] : p.city) + ' et ses environs' + rayon;
