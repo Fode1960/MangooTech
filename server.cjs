@@ -7347,6 +7347,86 @@ function handleHttp(req, res) {
 }
 
 /* ------------------------------------------------------------------ *
+ *  Nettoyage des données fictives (démo/test) au démarrage
+ * ------------------------------------------------------------------ *
+ *  Les comptes réels (DAN Boutique, DAN Coiffure, client, admin) sont
+ *  conservés. Seules les INFORMATIONS de test sont retirées : transactions
+ *  sandbox, livraisons, négociations, offres du jour, coursiers et commandes
+ *  fictives, ainsi que les soldes crédités par ces données fictives.
+ *  Appelée APRÈS le chargement de tous les fichiers, avant l'écoute réseau.
+ * ------------------------------------------------------------------ */
+function sanitizeRuntimeData() {
+  const changes = {};
+
+  // Transactions : ne conserver que les paiements réels (hors modes démo).
+  if (Array.isArray(transactions) && transactions.length) {
+    const kept = transactions.filter(function (t) {
+      return t && !['sandbox', 'wallet', 'internal'].includes(t.mode);
+    });
+    if (kept.length !== transactions.length) {
+      transactions = kept;
+      saveTransactions();
+      changes.transactions = kept.length;
+    }
+  }
+
+  // Livraisons fictives (Dakar) : supprimées.
+  if (Array.isArray(deliveries) && deliveries.length) {
+    deliveries = [];
+    saveDeliveries();
+    changes.deliveries = 0;
+  }
+
+  // Négociations fictives : supprimées.
+  if (Array.isArray(negotiations) && negotiations.length) {
+    negotiations = [];
+    saveNegotiations();
+    changes.negotiations = 0;
+  }
+
+  // Offres du jour fictives : supprimées.
+  if (Array.isArray(offresJour) && offresJour.length) {
+    offresJour = [];
+    saveOffresJour();
+    changes.offresJour = 0;
+  }
+
+  // Coursiers fictifs (Dakar) : supprimés.
+  if (Array.isArray(couriers) && couriers.length) {
+    couriers = [];
+    saveCouriers();
+    changes.couriers = 0;
+  }
+
+  // Commandes fictives : supprimées.
+  if (Array.isArray(orders) && orders.length) {
+    orders = [];
+    saveOrders();
+    changes.orders = 0;
+  }
+
+  // Portefeuilles : soldes remis à zéro (crédités par les données fictives).
+  if (Array.isArray(wallets)) {
+    let touched = false;
+    wallets.forEach(function (w) {
+      if (w && (Number(w.balance) > 0 || Number(w.pending) > 0)) {
+        w.balance = 0;
+        w.pending = 0;
+        touched = true;
+      }
+    });
+    if (touched) {
+      saveWallets();
+      changes.wallets = 'remis à zéro';
+    }
+  }
+
+  if (Object.keys(changes).length) {
+    console.log('[Data] données fictives retirées :', JSON.stringify(changes));
+  }
+}
+
+/* ------------------------------------------------------------------ *
  *  Démarrage
  * ------------------------------------------------------------------ *
  *  - Vérifie/crée DATA_DIR (jamais de réinitialisation des données).
@@ -7375,6 +7455,7 @@ loadCouriers();
 loadDeliveries();
 loadOrders();
 loadNegotiations();
+sanitizeRuntimeData();
 loadPushSubscriptions();
 loadPushPrefs();
 ensureVapidKeys();
