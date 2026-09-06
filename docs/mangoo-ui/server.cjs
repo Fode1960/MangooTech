@@ -2052,6 +2052,14 @@ function knownVendorFix(id, email) {
 // Exclus de l'annuaire public et des listes publiques en production pour ne
 // pas mélanger les données de démo avec les vrais prestataires. Ils restent
 // accessibles uniquement via le mode démo (?demo=...).
+//
+// INVARIANT CRITIQUE : isDemoVendor() doit être appelé UNIQUEMENT sur un id
+// BRUT (ex. u.vendorId || u.id), JAMAIS sur un id déjà canonisé. Le compte
+// réel DAN Boutique (ven-e9e831ccf698) est canonisé vers pro-41cafa4bcb31 via
+// ROUTING_ALIASES : ces deux chaînes désignent le MÊME vendeur réel. Canoniser
+// avant isDemoVendor() masquerait donc à tort ce vendeur sur la carte. Le
+// marqueur démo vise ici le compte « seed » pro-41cafa4bcb31 (aucun produit,
+// créé par ensureSeedVendorUsers), distinct du compte réel issu de l'inscription.
 const DEMO_VENDOR_IDS = new Set(['pro-41cafa4bcb31', 'pro-eb10536cd12d']);
 function isDemoVendor(id) {
   return !!(id && DEMO_VENDOR_IDS.has(id));
