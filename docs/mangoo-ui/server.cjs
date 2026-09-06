@@ -1022,7 +1022,7 @@ function seedVendorConfig() {
         address: '3 rue de Cambrai, 75019 Paris',
         lat: 48.89385,
         lng: 2.37708,
-        logo: '',
+        logo: '/assets/dan-boutique-logo.svg',
         cover: ''
       },
       horaires: {
@@ -1322,6 +1322,28 @@ function sanitizeVendorConfig(config) {
   DEMO_IDS.forEach(function (vid) {
     const c = config[vid];
     if (!c) return;
+    // Réapplique la vraie identité + géolocalisation (Paris) des comptes DAN,
+    // quel que soit l'état persisté (ex. ville/description restées sur Dakar).
+    const fix = knownVendorFix(vid);
+    if (fix) {
+      c.profile = Object.assign({}, c.profile || {}, {
+        city: fix.city,
+        country: fix.country,
+        lat: fix.lat,
+        lng: fix.lng,
+        address: fix.address || (c.profile && c.profile.address) || '',
+        description: fix.description || (c.profile && c.profile.description) || ''
+      });
+      if (fix.city) {
+        c.decouverte = Object.assign({}, c.decouverte || {});
+        c.decouverte.villes = [fix.city];
+        c.decouverte.pays = [fix.country];
+      }
+    }
+    // Logo dédié : évite l'avatar vide/générique sur la fiche publique.
+    if (vid === 'pro-41cafa4bcb31' && !(c.profile && c.profile.logo)) {
+      c.profile = Object.assign({}, c.profile || {}, { logo: '/assets/dan-boutique-logo.svg' });
+    }
     c.verification = Object.assign({}, c.verification || {}, { status: 'en_attente', badgeLabel: '', badgeVisible: false });
     c.ranking = { score: 0, position: 0, positionLabel: '', factors: { boost: 0, verification: 0, avis: 0, completude: 0 } };
     c.fidelite = Object.assign({}, c.fidelite || {}, { members: 0, pointsDistributed: 0, redeemed: 0, retention: 0 });
@@ -6148,7 +6170,9 @@ function handleHttp(req, res) {
       const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || cookieFromReq(req, 'mgt_session');
       const authedUser = userByToken(token);
       const vendor = queryParam(req, 'vendor') || (authedUser && authedUser.vendorId) || 'pro-41cafa4bcb31';
-      const doc = vendorConfigFor(vendor);
+      // Vue corrigée (identité/géolocalisation Paris) plutôt que config brute :
+      // évite de re-servir une ville/description persistée sur Dakar.
+      const doc = vendorConfigView(vendor) || vendorConfigFor(vendor);
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ ok: true, config: doc, plans: ABONNEMENT_PLANS }));
       return;
