@@ -843,17 +843,8 @@ const CATALOGUE_FILE = path.join(DATA_DIR, 'catalogue.json');
 let catalogue = [];
 
 function seedCatalogue() {
-  return [
-    // DAN Boutique — vendeur-boutique (commerce général, Dakar)
-    { id: 'c-dan-1', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Robe wax élégante', description: 'Robe en wax authentique, coupe moderne.', price: 12500, stock: 8, unit: 'unité', category: 'mode', available: true, image: '' },
-    { id: 'c-dan-2', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Chemise homme premium', description: 'Chemise coton, coupe ajustée.', price: 9000, stock: 15, unit: 'unité', category: 'mode', available: true, image: '' },
-    { id: 'c-dan-3', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Baskets tendance', description: 'Baskets légères, semelle confort.', price: 15000, stock: 6, unit: 'paire', category: 'chaussures', available: true, image: '' },
-    { id: 'c-dan-4', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sandales cuir', description: 'Sandales en cuir véritable.', price: 11000, stock: 0, unit: 'paire', category: 'chaussures', available: false, image: '' },
-    { id: 'c-dan-5', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sac à main cuir', description: 'Sac à main en cuir, finitions soignées.', price: 22000, stock: 4, unit: 'unité', category: 'sacs', available: true, image: '' },
-    { id: 'c-dan-6', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Smartphone 128 Go', description: 'Smartphone débloqué, double SIM.', price: 145000, stock: 3, unit: 'unité', category: 'electronique', available: true, image: '' },
-    { id: 'c-dan-7', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Lampe déco LED', description: 'Lampe d\'ambiance à intensité variable.', price: 8500, stock: 20, unit: 'unité', category: 'maison', available: true, image: '' },
-    { id: 'c-dan-8', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Parfum boisé 50 ml', description: 'Parfum boisé longue tenue.', price: 18000, stock: 9, unit: 'flacon', category: 'beaute', available: true, image: '' }
-  ];
+  // Aucun produit de démonstration : le catalogue démarre vide en production.
+  return [];
 }
 
 function loadCatalogue() {
@@ -914,28 +905,12 @@ let inventaire = [];
 let inventaireMouvements = [];
 
 function seedInventaire() {
-  return [
-    // DAN Boutique — vendeur-boutique (commerce général, Dakar)
-    { id: 'inv-dan-1', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Robe wax élégante', category: 'mode', stock: 8, threshold: 5, unit: 'unité', costPrice: 7000, salePrice: 12500, supplier: 'Atelier Dakar', available: true },
-    { id: 'inv-dan-2', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Chemise homme premium', category: 'mode', stock: 2, threshold: 6, unit: 'unité', costPrice: 5000, salePrice: 9000, supplier: 'Atelier Dakar', available: true },
-    { id: 'inv-dan-3', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Baskets tendance', category: 'chaussures', stock: 6, threshold: 4, unit: 'paire', costPrice: 9000, salePrice: 15000, supplier: 'Import Chine', available: true },
-    { id: 'inv-dan-4', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sandales cuir', category: 'chaussures', stock: 0, threshold: 5, unit: 'paire', costPrice: 6500, salePrice: 11000, supplier: 'Maroquinerie Ndiaye', available: true },
-    { id: 'inv-dan-5', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sac à main cuir', category: 'sacs', stock: 4, threshold: 3, unit: 'unité', costPrice: 13000, salePrice: 22000, supplier: 'Maroquinerie Ndiaye', available: true },
-    { id: 'inv-dan-6', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Smartphone 128 Go', category: 'electronique', stock: 3, threshold: 5, unit: 'unité', costPrice: 120000, salePrice: 145000, supplier: 'Import Dubaï', available: true },
-    { id: 'inv-dan-7', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Lampe déco LED', category: 'maison', stock: 20, threshold: 8, unit: 'unité', costPrice: 5000, salePrice: 8500, supplier: 'Import Turquie', available: true },
-    { id: 'inv-dan-8', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Parfum boisé 50 ml', category: 'beaute', stock: 9, threshold: 4, unit: 'flacon', costPrice: 11000, salePrice: 18000, supplier: 'Import Paris', available: true }
-  ];
+  // Aucun stock de démonstration : l'inventaire démarre vide en production.
+  return [];
 }
 
 function seedInventaireMouvements() {
-  return [
-    // DAN Boutique — vendeur-boutique
-    { id: 'mov-dan-1', itemId: 'inv-dan-1', vendorId: 'pro-41cafa4bcb31', name: 'Robe wax élégante', type: 'entree', quantity: 12, reason: 'Réception atelier', time: 'Il y a 3 h' },
-    { id: 'mov-dan-2', itemId: 'inv-dan-6', vendorId: 'pro-41cafa4bcb31', name: 'Smartphone 128 Go', type: 'sortie', quantity: 2, reason: 'Vente #3051', time: 'Il y a 6 h' },
-    { id: 'mov-dan-3', itemId: 'inv-dan-3', vendorId: 'pro-41cafa4bcb31', name: 'Baskets tendance', type: 'entree', quantity: 10, reason: 'Réception import', time: 'Hier' },
-    { id: 'mov-dan-4', itemId: 'inv-dan-5', vendorId: 'pro-41cafa4bcb31', name: 'Sac à main cuir', type: 'sortie', quantity: 1, reason: 'Vente #3047', time: 'Hier' },
-    { id: 'mov-dan-5', itemId: 'inv-dan-7', vendorId: 'pro-41cafa4bcb31', name: 'Lampe déco LED', type: 'entree', quantity: 20, reason: 'Réception import', time: 'Il y a 2 j' }
-  ];
+  return [];
 }
 
 function loadInventaire() {
@@ -978,12 +953,8 @@ const GALERIE_FILE = path.join(DATA_DIR, 'galerie.json');
 let galerie = [];
 
 function seedGalerie() {
-  return [
-    { id: 'g-dan-1', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Robe wax élégante', category: 'vetements', type: 'photo', views: 210, likes: 34, featured: true, author: 'DAN Boutique', date: 'Hier' },
-    { id: 'g-dan-2', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Baskets tendance', category: 'chaussures', type: 'photo', views: 165, likes: 28, featured: false, author: 'DAN Boutique', date: 'Il y a 2 jours' },
-    { id: 'g-dan-3', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sac à main cuir', category: 'sacs', type: 'photo', views: 140, likes: 22, featured: true, author: 'DAN Boutique', date: 'Il y a 3 jours' },
-    { id: 'g-dan-4', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Lampe déco LED', category: 'maison', type: 'photo', views: 98, likes: 15, featured: false, author: 'DAN Boutique', date: 'Il y a 4 jours' }
-  ];
+  // Aucune photo de démonstration : la galerie démarre vide en production.
+  return [];
 }
 
 function loadGalerie() {
@@ -1040,9 +1011,9 @@ function seedVendorConfig() {
       updatedAt: new Date().toISOString(),
       profile: {
         ownerName: 'DANSOKO Fodé',
-        email: 'dan@exemple.com',
-        phone: '+336423456789',
-        whatsapp: '+33 6 42 34 56 78',
+        email: '',
+        phone: '',
+        whatsapp: '',
         enseigne: 'DAN Boutique',
         category: 'commerce',
         description: 'Boutique de prêt-à-porter, accessoires et articles tendance au cœur de Paris.',
@@ -1194,10 +1165,10 @@ function blankVendorConfig(vendorId) {
       category: 'salon',
       description: '',
       city: '',
-      country: 'Senegal',
+      country: '',
       address: '',
-      lat: 14.7167,
-      lng: -17.4677,
+      lat: null,
+      lng: null,
       logo: '',
       cover: ''
     },
@@ -1298,8 +1269,8 @@ function blankVendorConfig(vendorId) {
     decouverte: {
       public: false,
       rayonKm: 25,
-      pays: ['Senegal'],
-      villes: ['Dakar'],
+      pays: [],
+      villes: [],
       badges: [],
       apparaitDans: [],
       impressions: 0,
@@ -1596,8 +1567,8 @@ function ensureSeedVendorUsers() {
       role: 'vendeur',
       name: 'DANSOKO Fodé',
       enseigne: 'DAN Boutique',
-      email: 'dan@exemple.com',
-      phone: '+336423456789',
+      email: '',
+      phone: '',
       category: 'commerce',
       city: 'Paris',
       country: 'France',
@@ -1772,8 +1743,8 @@ function carteCategory(category) {
 // Reconstruit une ville valide à partir d'un profil dont la ville est absente
 // ou a été enregistrée comme « other » (ancienne option « Autre » du formulaire,
 // qui n'était pas géolocalisée). On dérive la ville connue la plus proche des
-// coordonnées, sinon la première ville du pays, sinon Dakar. Corrige les comptes
-// créés avant la normalisation des villes, afin qu'ils apparaissent sur la carte.
+// coordonnées, sinon la première ville du pays, sinon Paris (repli neutre). Corrige
+// les comptes créés avant la normalisation des villes, afin qu'ils apparaissent sur la carte.
 function resolveVendorCity(lat, lng, country) {
   const hasGeo = typeof lat === 'number' && isFinite(lat) && typeof lng === 'number' && isFinite(lng);
   if (hasGeo) {
@@ -1792,7 +1763,7 @@ function resolveVendorCity(lat, lng, country) {
       if (String(c.country).trim().toLowerCase() === ck) return { city: c.city, country: c.country };
     }
   }
-  return { city: 'Dakar', country: 'Senegal' };
+  return { city: 'Paris', country: 'France' };
 }
 
 // Compare deux coordonnées numériques avec une petite tolérance (évite de
@@ -1860,8 +1831,8 @@ function normalizeVendorCities() {
       geo = geocodeCity(city);
       if (geo) { lat = geo.lat; lng = geo.lng; }
     } else if (lat == null || lng == null) {
-      // Ville inconnue du dictionnaire et sans coordonnées : repli Dakar.
-      geo = geocodeCity('Dakar');
+      // Ville inconnue du dictionnaire et sans coordonnées : repli Paris.
+      geo = geocodeCity('Paris');
       if (geo) { city = geo.city; country = geo.country; lat = geo.lat; lng = geo.lng; }
     }
 
@@ -1959,6 +1930,20 @@ const KNOWN_VENDOR_FIXES = [
       description: 'Boutique de prêt-à-porter, accessoires et articles tendance au cœur de Paris.'
     }
   },
+  // DAN Coiffure — même propriétaire (DANSOKO), vraie adresse : 3 rue de Cambrai,
+  // 75019 Paris. Corrige la ville enregistrée par défaut (Dakar) en production.
+  {
+    matchId: 'pro-eb10536cd12d',
+    matchEmail: '',
+    patch: {
+      city: 'Paris',
+      country: 'France',
+      lat: 48.89385,
+      lng: 2.37708,
+      address: '3 rue de Cambrai, 75019 Paris',
+      description: 'Salon de coiffure et soins capillaires au cœur de Paris.'
+    }
+  },
   // Boutique jeu vidéo — même adresse réelle : 3 rue de Cambrai, 75019 Paris.
   {
     matchId: 'ven-7267d483b4d8',
@@ -1984,11 +1969,10 @@ function knownVendorFix(id, email) {
   return null;
 }
 
-// Comptes de démonstration (DAN Coiffure prestataire + DAN Boutique vendeur).
-// Exclus de l'annuaire public et des listes publiques en production pour ne
-// pas mélanger les données de démo avec les vrais prestataires. Ils restent
-// accessibles uniquement via le mode démo (?demo=...).
-const DEMO_VENDOR_IDS = new Set(['pro-41cafa4bcb31', 'pro-eb10536cd12d']);
+// Plus aucun compte de démonstration : DAN Boutique (vendeur) et DAN Coiffure
+// (prestataire) sont désormais des profils de production réels et doivent
+// apparaître dans l'annuaire public et les listes publiques.
+const DEMO_VENDOR_IDS = new Set([]);
 function isDemoVendor(id) {
   return !!(id && DEMO_VENDOR_IDS.has(id));
 }
@@ -2054,9 +2038,9 @@ function carteVendors() {
 
     // Coordonnées + ville normalisées : les comptes « other » (ancienne option
     // « Autre ») sont ré-affectés à une vraie ville pour ne pas disparaître de
-    // la carte alors qu'ils sont géolocalisés (par défaut Dakar).
-    let lat = (profile.lat != null) ? Number(profile.lat) : (u.lat != null ? Number(u.lat) : 14.7167);
-    let lng = (profile.lng != null) ? Number(profile.lng) : (u.lng != null ? Number(u.lng) : -17.4677);
+    // la carte alors qu'ils sont géolocalisés (repli neutre sur Paris).
+    let lat = (profile.lat != null) ? Number(profile.lat) : (u.lat != null ? Number(u.lat) : 48.8566);
+    let lng = (profile.lng != null) ? Number(profile.lng) : (u.lng != null ? Number(u.lng) : 2.3522);
     let city = profile.city || u.city || '';
     let country = profile.country || u.country || '';
 
@@ -2854,6 +2838,117 @@ function loadDeliveries() {
 
 function saveDeliveries() {
   writeJsonAtomic('deliveries.json', deliveries);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Commandes client (synchronisation client ↔ vendeur/prestataire)
+ * ------------------------------------------------------------------ *
+ *  Une commande passée côté client est persistée ici (data/orders.json)
+ *  et relue côté vendeur/prestataire. C'est la source de vérité : plus de
+ *  données de démo ni de localStorage partagé. Chaque commande porte son
+ *  clientId (auteur) et son vendorId (boutique/prestataire destinataire).
+ * ------------------------------------------------------------------ */
+const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
+let orders = [];
+
+const ORDER_STATUSES = [
+  'en-cours', 'commandee', 'confirmee', 'en-preparation', 'en-livraison',
+  'livree', 'annulee'
+];
+
+function loadOrders() {
+  try {
+    if (fs.existsSync(ORDERS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(ORDERS_FILE, 'utf8'));
+      if (Array.isArray(data)) { orders = data; console.log('[Commandes] commandes chargées :', orders.length); return; }
+    }
+  } catch (e) { console.error('[Commandes] lecture impossible, réinitialisation :', e.message); }
+  orders = [];
+}
+
+function saveOrders() {
+  writeJsonAtomic('orders.json', orders);
+}
+
+// Montant numérique à partir d'un montant affiché (« 35 000 FCFA ») ou numérique.
+function orderAmountNumber(a) {
+  if (typeof a === 'number') return Math.round(a);
+  const s = String(a == null ? '' : a).replace(/[^\d]/g, '');
+  return parseInt(s, 10) || 0;
+}
+
+function createOrderFromClient(user, body) {
+  const id = String(body.id || '').trim().replace(/^#/, '');
+  if (!id) return { ok: false, error: 'Identifiant de commande manquant.' };
+  const vendorIdRaw = String(body.vendorId || '').trim();
+  const vendorId = vendorIdRaw ? (canonicalRoutingId(vendorIdRaw) || vendorIdRaw) : '';
+  if (!vendorId) return { ok: false, error: 'Boutique/prestataire introuvable.' };
+  const existing = orders.find(function (o) { return o && String(o.id) === id; });
+  if (existing) return { ok: true, order: existing, existed: true };
+  const order = {
+    id: id,
+    clientId: String(user.id || ''),
+    clientName: String(body.clientName || user.name || 'Client'),
+    clientPhone: String(body.clientPhone || user.phone || ''),
+    clientEmail: String(body.clientEmail || user.email || ''),
+    clientCity: String(body.clientCity || body.city || user.city || ''),
+    clientTz: String(body.clientTz || body.buyerTz || ''),
+    vendorId: vendorId,
+    vendorName: String(body.provider || body.vendorName || ''),
+    kind: String(body.kind || 'commerce'),
+    service: String(body.service || ''),
+    items: Array.isArray(body.items) ? body.items : [],
+    amount: String(body.amount == null ? '' : body.amount),
+    amountN: orderAmountNumber(body.amount),
+    currency: 'XOF',
+    status: String(body.status || 'en-cours'),
+    payment: String(body.payment || ''),
+    fulfillment: String(body.fulfillment || ''),
+    address: String(body.address || ''),
+    addressNotes: String(body.addressNotes || ''),
+    bookingDate: body.bookingDate != null ? body.bookingDate : null,
+    bookingTime: body.bookingTime != null ? body.bookingTime : null,
+    createdAt: Number(body.createdAt) || Date.now(),
+    createdAtIso: nowIso(),
+    updatedAt: nowIso()
+  };
+  return { ok: true, order: order };
+}
+
+function publicOrder(o) {
+  if (!o) return null;
+  return {
+    id: o.id, clientId: o.clientId, clientName: o.clientName,
+    clientPhone: o.clientPhone, clientEmail: o.clientEmail,
+    clientCity: o.clientCity, clientTz: o.clientTz,
+    vendorId: o.vendorId, vendorName: o.vendorName, kind: o.kind,
+    service: o.service, items: Array.isArray(o.items) ? o.items : [],
+    amount: o.amount, amountN: o.amountN != null ? o.amountN : orderAmountNumber(o.amount),
+    currency: o.currency || 'XOF', status: o.status || 'en-cours',
+    payment: o.payment || '', fulfillment: o.fulfillment || '',
+    address: o.address || '', addressNotes: o.addressNotes || '',
+    bookingDate: o.bookingDate != null ? o.bookingDate : null,
+    bookingTime: o.bookingTime != null ? o.bookingTime : null,
+    createdAt: o.createdAt, createdAtIso: o.createdAtIso || null, updatedAt: o.updatedAt || null
+  };
+}
+
+// Commandes visibles par l'utilisateur connecté : un pro voit les commandes
+// adressées à sa boutique/prestation, un client voit ses propres commandes.
+function ordersForUser(user) {
+  if (isSeller(user)) {
+    const myId = canonicalRoutingId(user.vendorId || user.id) || (user.vendorId || user.id);
+    const myName = String(user.enseigne || user.name || '').trim().toLowerCase();
+    return orders.filter(function (o) {
+      if (!o) return false;
+      const ov = canonicalRoutingId(o.vendorId) || o.vendorId || '';
+      if (ov && myId && ov === myId) return true;
+      if (myName && o.vendorName && String(o.vendorName).trim().toLowerCase() === myName) return true;
+      return false;
+    });
+  }
+  const cid = String(user.id || '');
+  return orders.filter(function (o) { return o && String(o.clientId) === cid; });
 }
 
 function courierForUser(userId) {
@@ -5091,7 +5186,7 @@ function handleHttp(req, res) {
 
       const userId = newUserId(role);
       const enseigne = String(body.enseigne || '').trim() || name;
-      const cityRaw = String(body.city || '').trim() || 'Dakar';
+      const cityRaw = String(body.city || '').trim() || 'Paris';
       const geo = geocodeCity(cityRaw);
       const city = geo ? geo.city : cityRaw;
       const clientLat = (body.lat != null && body.lat !== '' && isFinite(Number(body.lat))) ? Number(body.lat) : null;
@@ -6200,6 +6295,56 @@ function handleHttp(req, res) {
     return;
   }
 
+  /* -------- Commandes (synchronisation client ↔ vendeur) -------- */
+  if (urlPath === '/api/orders') {
+    const user = userFromReq(req);
+    if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
+
+    if (req.method === 'POST') {
+      readJsonBody(req, function (err, body) {
+        if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+        body = body || {};
+        const created = createOrderFromClient(user, body);
+        if (!created.ok) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: created.error })); return; }
+        if (!created.existed) { orders.push(created.order); saveOrders(); }
+        res.writeHead(created.existed ? 200 : 201, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, order: publicOrder(created.order) }));
+      });
+      return;
+    }
+
+    const mine = ordersForUser(user);
+    res.writeHead(200, JSON_HEADERS);
+    res.end(JSON.stringify({ ok: true, orders: mine.map(publicOrder) }));
+    return;
+  }
+
+  if (urlPath === '/api/orders/status') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    readJsonBody(req, function (err, body) {
+      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+      body = body || {};
+      const user = userFromReq(req);
+      if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
+      const id = String(body.id || '').trim().replace(/^#/, '');
+      const status = String(body.status || '').trim();
+      if (!id) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Commande manquante.' })); return; }
+      if (ORDER_STATUSES.indexOf(status) === -1) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Statut invalide.' })); return; }
+      const order = orders.find(function (o) { return o && String(o.id) === id; });
+      if (!order) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Commande introuvable.' })); return; }
+      // Un pro ne peut modifier que ses propres commandes ; un client ne peut
+      // que mettre à jour (annulation) les siennes.
+      const mine = ordersForUser(user).some(function (o) { return o && String(o.id) === id; });
+      if (!mine) { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Commande non autorisée.' })); return; }
+      order.status = status;
+      order.updatedAt = nowIso();
+      saveOrders();
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, order: publicOrder(order) }));
+    });
+    return;
+  }
+
   /* -------- Portefeuille Vendeur + Client -------- */
   if (urlPath === '/api/wallet') {
     const user = userFromReq(req);
@@ -7172,6 +7317,7 @@ loadOffresJour();
 loadAdminConfig();
 loadCouriers();
 loadDeliveries();
+loadOrders();
 loadNegotiations();
 loadPushSubscriptions();
 loadPushPrefs();

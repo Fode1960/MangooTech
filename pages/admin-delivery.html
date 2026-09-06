@@ -311,9 +311,9 @@ html.dark {
             </nav>
 
             <div class="p-4 border-t flex items-center gap-3" style="border-color: rgb(var(--mgt-primary-700) / .5);">
-                <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0" style="background-color: rgb(var(--mgt-primary-500)); color: rgb(var(--mgt-primary-foreground));">DF</div>
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0" style="background-color: rgb(var(--mgt-primary-500)); color: rgb(var(--mgt-primary-foreground));">AD</div>
                 <div class="flex-1 min-w-0">
-                    <div class="text-white text-sm font-medium truncate">DANSOKO Fodé</div>
+                    <div class="text-white text-sm font-medium truncate">Administrateur</div>
                     <div class="text-xs truncate" style="color: rgb(var(--mgt-primary-300));">Administrateur</div>
                 </div>
                 <button class="text-white/50 hover:text-white transition-colors">
@@ -333,7 +333,7 @@ html.dark {
                         </button>
                         <div>
                             <h1 class="text-xl font-semibold text-foreground">Gestion des livraisons</h1>
-                            <p class="text-sm text-muted-foreground">Suivi en temps réel · Dakar</p>
+                            <p class="text-sm text-muted-foreground">Suivi en temps réel</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
@@ -358,7 +358,7 @@ html.dark {
                             <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Aujourd'hui</span>
                             <i data-lucide="truck" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i>
                         </div>
-                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));">47</div>
+                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));">0</div>
                         <div class="text-xs text-muted-foreground">livraisons au total</div>
                     </div>
                     <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
@@ -366,7 +366,7 @@ html.dark {
                             <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">En cours</span>
                             <i data-lucide="navigation" class="w-4 h-4" style="color: rgb(var(--mgt-info));"></i>
                         </div>
-                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-info));">12</div>
+                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-info));">0</div>
                         <div class="text-xs text-muted-foreground">livreurs actifs</div>
                     </div>
                     <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
@@ -374,7 +374,7 @@ html.dark {
                             <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Livrées</span>
                             <i data-lucide="check-circle" class="w-4 h-4" style="color: rgb(var(--mgt-success));"></i>
                         </div>
-                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-success));">32</div>
+                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-success));">0</div>
                         <div class="text-xs text-muted-foreground">colis remis</div>
                     </div>
                     <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
@@ -382,7 +382,7 @@ html.dark {
                             <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Retard</span>
                             <i data-lucide="clock" class="w-4 h-4" style="color: rgb(var(--mgt-error));"></i>
                         </div>
-                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-error));">3</div>
+                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-error));">0</div>
                         <div class="text-xs text-muted-foreground">à surveiller</div>
                     </div>
                     <div class="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
@@ -397,14 +397,14 @@ html.dark {
 
                 <!-- ===== MAP + ACTIVE DELIVERIES ===== -->
                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                    <!-- Carte simulée Dakar -->
+                    <!-- Carte de suivi -->
                     <div class="lg:col-span-3 bg-card border border-border rounded-xl overflow-hidden">
                         <div class="flex items-center justify-between px-5 py-4 border-b border-border">
                             <h3 class="text-base font-semibold text-foreground flex items-center gap-2">
                                 <i data-lucide="map-pin" class="w-4 h-4" style="color: rgb(var(--mgt-accent));"></i>
-                                Suivi en direct — Dakar
+                                Suivi en direct
                             </h3>
-                            <span class="text-xs text-muted-foreground">12 livreurs actifs</span>
+                            <span class="text-xs text-muted-foreground">0 livreur actif</span>
                         </div>
                         <div class="relative h-[380px] overflow-hidden" style="background:linear-gradient(135deg,#d4e8d4 0%,#c8e0c8 25%,#dce8dc 50%,#c4dcc4 75%,#d0e4d0 100%)">
                             <svg class="absolute inset-0 w-full h-full" viewBox="0 0 600 340" preserveAspectRatio="none">
@@ -430,17 +430,12 @@ html.dark {
                                 <polyline points="360,187 390,170 432,61" fill="none" stroke="rgb(59,130,246)" stroke-width="2" stroke-dasharray="5,3" opacity="0.6"/>
                             </svg>
 
-                            <div class="absolute z-10" style="top:22%;left:28%"><div class="map-pin" data-name="Moussa D." style="background:rgb(var(--mgt-success))"></div></div>
-                            <div class="absolute z-10" style="top:35%;left:55%"><div class="map-pin" data-name="Fatou S." style="background:rgb(var(--mgt-success))"></div></div>
-                            <div class="absolute z-10" style="top:18%;left:72%"><div class="map-pin" data-name="Omar K." style="background:rgb(var(--mgt-accent))"></div></div>
-                            <div class="absolute z-10" style="top:48%;left:18%"><div class="map-pin" data-name="Awa N." style="background:rgb(var(--mgt-success))"></div></div>
-                            <div class="absolute z-10" style="top:30%;left:40%"><div class="map-pin" data-name="Ibrahima T." style="background:rgb(var(--mgt-error))"></div></div>
-                            <div class="absolute z-10" style="top:55%;left:60%"><div class="map-pin" data-name="Saliou B." style="background:rgb(var(--mgt-info))"></div></div>
-
-                            <div class="absolute" style="top:8%;left:18%;font-size:10px;color:rgb(var(--mgt-primary-800) / .6);font-weight:600">Plateau</div>
-                            <div class="absolute" style="top:14%;left:52%;font-size:10px;color:rgb(var(--mgt-primary-800) / .6);font-weight:600">Medina</div>
-                            <div class="absolute" style="top:50%;left:12%;font-size:10px;color:rgb(var(--mgt-primary-800) / .6);font-weight:600">Almadies</div>
-                            <div class="absolute" style="top:40%;left:72%;font-size:10px;color:rgb(var(--mgt-primary-800) / .6);font-weight:600">Yoff</div>
+                            <div class="absolute inset-0 z-10 flex items-center justify-center">
+                                <div class="flex flex-col items-center gap-2 text-center px-6">
+                                    <i data-lucide="map-pin-off" class="w-8 h-8" style="color: rgb(var(--mgt-muted-foreground)); opacity: .6;"></i>
+                                    <p class="text-sm font-medium" style="color: rgb(var(--mgt-muted-foreground));">Aucune livraison en cours pour le moment.</p>
+                                </div>
+                            </div>
 
                             <div class="absolute bottom-2 right-2 bg-white/85 px-3 py-1.5 rounded-md text-[10px] flex flex-wrap gap-2 z-[15]">
                                 <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full" style="background:rgb(var(--mgt-success))"></span>En cours</span>
@@ -488,23 +483,23 @@ html.dark {
                             Livraisons / jour — Cette semaine
                         </h3>
                         <div class="flex items-end gap-3 h-[170px]">
-                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums">38</span><div class="w-full max-w-[48px] rounded-t" style="height:95px;background:linear-gradient(180deg,rgb(var(--mgt-primary-500)),rgb(var(--mgt-primary-300)))"></div><span class="text-[11px] text-muted-foreground">Lun</span></div>
-                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums">42</span><div class="w-full max-w-[48px] rounded-t" style="height:105px;background:linear-gradient(180deg,rgb(var(--mgt-primary-500)),rgb(var(--mgt-primary-300)))"></div><span class="text-[11px] text-muted-foreground">Mar</span></div>
-                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums">47</span><div class="w-full max-w-[48px] rounded-t" style="height:118px;background:linear-gradient(180deg,rgb(var(--mgt-primary-500)),rgb(var(--mgt-primary-300)))"></div><span class="text-[11px] text-muted-foreground">Mer</span></div>
-                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums">44</span><div class="w-full max-w-[48px] rounded-t" style="height:110px;background:linear-gradient(180deg,rgb(var(--mgt-accent-400)),rgb(var(--mgt-accent-300)))"></div><span class="text-[11px] text-muted-foreground">Jeu</span></div>
-                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums">51</span><div class="w-full max-w-[48px] rounded-t" style="height:128px;background:linear-gradient(180deg,rgb(var(--mgt-accent-400)),rgb(var(--mgt-accent-300)))"></div><span class="text-[11px] text-muted-foreground">Ven</span></div>
-                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums">29</span><div class="w-full max-w-[48px] rounded-t" style="height:72px;background:linear-gradient(180deg,rgb(var(--mgt-primary-400)),rgb(var(--mgt-primary-200)))"></div><span class="text-[11px] text-muted-foreground">Sam</span></div>
-                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums" style="color:rgb(var(--mgt-accent))">20</span><div class="w-full max-w-[48px] rounded-t" style="height:50px;background:linear-gradient(180deg,rgb(var(--mgt-accent-500)),rgb(var(--mgt-accent-400)))"></div><span class="text-[11px] font-bold" style="color:rgb(var(--mgt-accent))">Dim</span></div>
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums text-muted-foreground">0</span><div class="w-full max-w-[48px] rounded-t" style="height:2px;background:rgb(var(--mgt-border))"></div><span class="text-[11px] text-muted-foreground">Lun</span></div>
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums text-muted-foreground">0</span><div class="w-full max-w-[48px] rounded-t" style="height:2px;background:rgb(var(--mgt-border))"></div><span class="text-[11px] text-muted-foreground">Mar</span></div>
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums text-muted-foreground">0</span><div class="w-full max-w-[48px] rounded-t" style="height:2px;background:rgb(var(--mgt-border))"></div><span class="text-[11px] text-muted-foreground">Mer</span></div>
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums text-muted-foreground">0</span><div class="w-full max-w-[48px] rounded-t" style="height:2px;background:rgb(var(--mgt-border))"></div><span class="text-[11px] text-muted-foreground">Jeu</span></div>
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums text-muted-foreground">0</span><div class="w-full max-w-[48px] rounded-t" style="height:2px;background:rgb(var(--mgt-border))"></div><span class="text-[11px] text-muted-foreground">Ven</span></div>
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums text-muted-foreground">0</span><div class="w-full max-w-[48px] rounded-t" style="height:2px;background:rgb(var(--mgt-border))"></div><span class="text-[11px] text-muted-foreground">Sam</span></div>
+                            <div class="flex-1 flex flex-col items-center gap-1.5"><span class="text-xs font-semibold tabular-nums text-muted-foreground">0</span><div class="w-full max-w-[48px] rounded-t" style="height:2px;background:rgb(var(--mgt-border))"></div><span class="text-[11px] text-muted-foreground">Dim</span></div>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 gap-4">
                         <div class="bg-card border border-border rounded-xl p-5 text-center">
-                            <div class="text-3xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));">42 min</div>
+                            <div class="text-3xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));">—</div>
                             <div class="text-xs text-muted-foreground mt-1">Temps moyen de livraison</div>
-                            <div class="text-[11px] text-muted-foreground mt-1">−3 min vs. semaine dernière</div>
+                            <div class="text-[11px] text-muted-foreground mt-1">aucune donnée</div>
                         </div>
                         <div class="bg-card border border-border rounded-xl p-5 text-center">
-                            <div class="text-3xl font-bold tabular-nums" style="color: rgb(var(--mgt-error));">3,2%</div>
+                            <div class="text-3xl font-bold tabular-nums" style="color: rgb(var(--mgt-error));">0%</div>
                             <div class="text-xs text-muted-foreground mt-1">Taux de retard</div>
                             <div class="text-[11px] text-muted-foreground mt-1">Objectif &lt; 5%</div>
                         </div>
@@ -545,7 +540,7 @@ html.dark {
                             <i data-lucide="alert-triangle" class="w-4 h-4" style="color: rgb(var(--mgt-accent));"></i>
                             Litiges livraison
                         </h3>
-                        <span class="text-xs text-muted-foreground" id="disputes-count">3 en attente</span>
+                        <span class="text-xs text-muted-foreground" id="disputes-count">0 en attente</span>
                     </div>
                     <div id="disputes-list" class="divide-y divide-border"></div>
                 </div>
@@ -575,31 +570,12 @@ html.dark {
       var couriers = [];
       var disputes = [];
 
-      var DELIVERIES_SEED = [
-        { id: '#DL-1047', shop: "Rapid'Shop", client: 'Marieme F.', courier: 'Moussa D.', status: 'en_cours', eta: '14:32' },
-        { id: '#DL-1048', shop: 'MarchéSaaS', client: 'Koudous S.', courier: 'Fatou S.', status: 'en_cours', eta: '14:45' },
-        { id: '#DL-1051', shop: 'QuickLivre', client: 'Adama B.', courier: 'Omar K.', status: 'retard', eta: '15:10' },
-        { id: '#DL-1053', shop: "Rapid'Shop", client: 'Ndèye G.', courier: 'Awa N.', status: 'en_cours', eta: '14:55' },
-        { id: '#DL-1056', shop: 'SamaLivre', client: 'Cheikh T.', courier: 'Ibrahima T.', status: 'livree', eta: '14:10' },
-        { id: '#DL-1058', shop: 'MarchéSaaS', client: 'Fatim B.', courier: 'Saliou B.', status: 'en_cours', eta: '15:20' },
-        { id: '#DL-1060', shop: 'QuickLivre', client: 'Moussa K.', courier: 'Moussa D.', status: 'en_attente', eta: '15:35' },
-        { id: '#DL-1062', shop: 'SamaLivre', client: 'Aïssatou S.', courier: 'Omar K.', status: 'en_cours', eta: '15:50' }
-      ];
+      // Aucune donnée fictive : le flux réel provient de l'API /orders/live.
+      var DELIVERIES_SEED = [];
 
-      var COURIERS_SEED = [
-        { name: 'Moussa Diallo', vehicle: 'Moto', zone: 'Plateau', count: 12, rating: '4.9', stars: 5, status: 'actif' },
-        { name: 'Fatou Sow', vehicle: 'Scooter', zone: 'Médina', count: 9, rating: '4.8', stars: 5, status: 'actif' },
-        { name: 'Omar Kane', vehicle: 'Voiture', zone: 'Yoff', count: 7, rating: '4.6', stars: 4, status: 'retard' },
-        { name: 'Awa Ndiaye', vehicle: 'Moto', zone: 'Almadies', count: 11, rating: '4.9', stars: 5, status: 'actif' },
-        { name: 'Ibrahima Tall', vehicle: 'Vélo', zone: 'Plateau', count: 8, rating: '4.3', stars: 4, status: 'actif' },
-        { name: 'Saliou Ba', vehicle: 'Scooter', zone: 'Médina', count: 6, rating: '4.1', stars: 4, status: 'inactif' }
-      ];
+      var COURIERS_SEED = [];
 
-      var DISPUTES_SEED = [
-        { id: '#DL-1042', badge: 'Retard', badgeBg: 'rgb(var(--mgt-accent-50))', badgeFg: 'rgb(var(--mgt-accent))', icon: 'clock', iconBg: 'rgb(var(--mgt-accent-50))', iconFg: 'rgb(var(--mgt-accent))', text: 'Client signale un retard de 45 min. Livraison prévue 13:00, arrivée 13:45.', actions: [['Contacter livreur', 'primary'], ['Dédommager', 'outline'], ['Escalader', 'danger']] },
-        { id: '#DL-1038', badge: 'Colis endommagé', badgeBg: 'rgb(var(--mgt-error) / .1)', badgeFg: 'rgb(var(--mgt-error))', icon: 'package-x', iconBg: 'rgb(var(--mgt-error) / .1)', iconFg: 'rgb(var(--mgt-error))', text: "Colis arrivé avec emballage déchiré. Client refuse la réception.", actions: [['Rembourser', 'primary'], ['Enquête', 'outline'], ['Remplacer', 'outline']] },
-        { id: '#DL-1045', badge: 'Adresse erronée', badgeBg: 'rgb(var(--mgt-info) / .1)', badgeFg: 'rgb(var(--mgt-info))', icon: 'map-pin-off', iconBg: 'rgb(var(--mgt-info) / .1)', iconFg: 'rgb(var(--mgt-info))', text: 'Adresse de livraison introuvable. Livreur a tenté 3 fois sans succès.', actions: [['Contacter client', 'primary'], ['Mettre à jour adresse', 'outline'], ['Retour expéditeur', 'outline']] }
-      ];
+      var DISPUTES_SEED = [];
 
       var COURIER_NAMES = [];
 
@@ -662,6 +638,10 @@ html.dark {
           if (currentFilter === 'all') return true;
           return d.status === currentFilter;
         });
+        if (!list.length) {
+          tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-10 text-center text-sm text-muted-foreground">Aucune livraison pour le moment.</td></tr>';
+          return;
+        }
         tbody.innerHTML = list.map(function (d) {
           var isLate = d.status === 'retard';
           var opts = Object.keys(DELIVERY_STATUS).map(function (k) {
@@ -680,6 +660,10 @@ html.dark {
 
       function renderCouriers() {
         var tbody = document.getElementById('couriers-tbody');
+        if (!couriers.length) {
+          tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-10 text-center text-sm text-muted-foreground">Aucun livreur enregistré.</td></tr>';
+          return;
+        }
         tbody.innerHTML = couriers.map(function (c, i) {
           var stars = '';
           for (var j = 0; j < 5; j++) stars += j < c.stars ? '★' : '☆';
@@ -701,6 +685,10 @@ html.dark {
 
       function renderDisputes() {
         var el = document.getElementById('disputes-list');
+        if (!disputes.length) {
+          el.innerHTML = '<div class="px-5 py-10 text-center text-sm text-muted-foreground">Aucun litige en attente.</div>';
+          return;
+        }
         el.innerHTML = disputes.map(function (dp) {
           var actionHtml = dp.actions.map(function (a) {
             if (a[1] === 'primary') return '<button class="dispute-action text-xs font-semibold px-2.5 py-1 rounded-md transition-all hover:brightness-110" data-action="' + esc(a[0]) + '" style="background-color:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground))">' + esc(a[0]) + '</button>';
@@ -748,6 +736,7 @@ html.dark {
         if (!btn) return;
         var d = deliveries.find(function (x) { return x.id === btn.getAttribute('data-id'); });
         if (!d) return;
+        if (!COURIER_NAMES.length) { toast('Aucun livreur disponible à assigner.'); return; }
         var idx = COURIER_NAMES.indexOf(d.courier);
         var next = COURIER_NAMES[(idx + 1) % COURIER_NAMES.length];
         d.courier = next;

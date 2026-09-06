@@ -433,7 +433,7 @@ html.dark {
               <div class="auth-input-group auth-input-icon-wrap">
                 <label class="auth-label" for="login-identifier">Numéro de téléphone ou PIN</label>
                 <i data-lucide="smartphone" class="auth-icon-left" style="width:18px;height:18px;"></i>
-                <input type="text" id="login-identifier" class="auth-input auth-input-icon" placeholder="+221 XX XX XX XX XX  ou  votre PIN à 4 chiffres" required autocomplete="username" inputmode="text">
+                <input type="text" id="login-identifier" class="auth-input auth-input-icon" placeholder="Numéro de téléphone  ou  votre PIN à 4 chiffres" required autocomplete="username" inputmode="text">
               </div>
               <p class="caption" style="color:rgb(var(--mgt-muted-foreground));margin:-8px 0 16px;">Un seul champ suffit : entrez votre numéro de téléphone, ou simplement votre PIN à 4 chiffres.</p>
               <a href="forgot-password.html" class="auth-forgot">Mot de passe oublié ?</a>
@@ -592,7 +592,6 @@ html.dark {
                     <i data-lucide="trash-2" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"></i>Supprimer
                   </button>
                 </div>
-                <input type="text" id="welcome-transcript-input" class="auth-input" placeholder="Transcription du message vocal (texte affiché sur la fiche)" style="margin-top:10px;">
                 <div id="welcome-record-status" class="caption" style="color:rgb(var(--mgt-muted-foreground));margin-top:8px;">Aucun message enregistré. Un message par défaut sera utilisé.</div>
                 <p class="caption" style="color:rgb(var(--mgt-muted-foreground));margin-top:6px;">Enregistrez un court message (ex. « Bienvenue chez votre boutique, voici nos horaires... »). Il sera lu sur votre fiche à la place du message par défaut.</p>
               </div>
@@ -614,7 +613,7 @@ html.dark {
               <div class="auth-input-group auth-input-icon-wrap">
                 <label class="auth-label" for="register-zone">Zone de travail <span style="color:rgb(var(--mgt-muted-foreground));font-weight:400;">(optionnel)</span></label>
                 <i data-lucide="map-pin" class="auth-icon-left" style="width:18px;height:18px;"></i>
-                <input type="text" id="register-zone" class="auth-input auth-input-icon" placeholder="Ex. Plateau, Médina, Almadies">
+                <input type="text" id="register-zone" class="auth-input auth-input-icon" placeholder="Ex. Quartier ou zone">
               </div>
             </div>
 
@@ -645,10 +644,6 @@ html.dark {
                 <option value="other">Autre (saisir ma ville)</option>
               </select>
               <input type="text" id="register-city-other" class="auth-input" placeholder="Nom de votre ville" autocomplete="address-level2" style="display:none;margin-top:8px;">
-              <button type="button" id="register-geoloc" class="auth-btn" style="display:flex;align-items:center;gap:8px;justify-content:center;margin-top:8px;width:100%;border:1px dashed rgb(var(--mgt-border));background:transparent;color:rgb(var(--mgt-muted-foreground));font-size:13px;cursor:pointer;">
-                <i data-lucide="map-pin" style="width:16px;height:16px;"></i> Utiliser ma position exacte (optionnel)
-              </button>
-              <span id="register-geoloc-status" style="display:block;margin-top:4px;font-size:12px;color:rgb(var(--mgt-muted-foreground));"></span>
             </div>
             <script>
               (function () {
@@ -656,7 +651,7 @@ html.dark {
                 var otherInput = document.getElementById('register-city-other');
                 var FALLBACK = [
                   { slug: 'abidjan', city: 'Abidjan', country: "Cote d'Ivoire" },
-                  { slug: 'dakar', city: 'Dakar', country: 'Senegal' },
+                  { slug: 'casablanca', city: 'Casablanca', country: 'Morocco' },
                   { slug: 'paris', city: 'Paris', country: 'France' }
                 ];
                 function fill(list) {
@@ -697,24 +692,6 @@ html.dark {
                   .catch(function () { apply(null); });
               })();
             </script>
-            <script>
-              (function () {
-                var btn = document.getElementById('register-geoloc');
-                var statusEl = document.getElementById('register-geoloc-status');
-                if (!btn) return;
-                btn.addEventListener('click', function () {
-                  if (!navigator.geolocation) { statusEl.textContent = 'Géolocalisation non supportée.'; return; }
-                  statusEl.textContent = 'Localisation en cours…';
-                  navigator.geolocation.getCurrentPosition(function (pos) {
-                    window.__regLat = pos.coords.latitude;
-                    window.__regLng = pos.coords.longitude;
-                    statusEl.textContent = 'Position enregistrée.';
-                  }, function () {
-                    statusEl.textContent = 'Localisation refusée ou indisponible.';
-                  }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
-                });
-              })();
-            </script>
             <div class="auth-input-group">
               <label class="auth-label" for="register-address">Adresse exacte <span style="color:rgb(var(--mgt-muted-foreground));font-weight:400;">(recommandée pour la livraison)</span></label>
               <input type="text" id="register-address" class="auth-input" placeholder="Ex. 3 rue de Cambrai, 75019 Paris" autocomplete="street-address">
@@ -722,14 +699,11 @@ html.dark {
             </div>
             <script>
               (function () {
-                // Capture GPS automatique au chargement (précis sur mobile), en
-                // complément du bouton manuel « Utiliser ma position exacte ».
+                // Capture GPS automatique au chargement (précis sur mobile).
                 if (navigator.geolocation) {
                   navigator.geolocation.getCurrentPosition(function (pos) {
                     window.__regLat = pos.coords.latitude;
                     window.__regLng = pos.coords.longitude;
-                    var s = document.getElementById('register-geoloc-status');
-                    if (s) s.textContent = 'Position détectée automatiquement.';
                   }, function () { /* refus silencieux */ },
                     { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
                 }
@@ -756,7 +730,7 @@ html.dark {
                     })
                     .catch(function () {
                       window.__addrLat = null; window.__addrLng = null;
-                      if (addrStatus) addrStatus.textContent = 'Localisation de l'adresse impossible.';
+                      if (addrStatus) addrStatus.textContent = 'Impossible de localiser cette adresse.';
                     });
                 }
                 if (addrInput) {
@@ -918,36 +892,6 @@ html.dark {
               verified: !!user.verified,
               plan: user.plan || 'decouverte'
             }));
-            // Migre l'enregistrement de bienvenue provisoire (reg_pending) vers
-            // le vendorId définitif, en y rattachant la transcription saisie,
-            // puis le persiste côté serveur pour que la fiche publique affiche
-            // la transcription et l'audio du prestataire sur n'importe quel
-            // appareil (et non uniquement dans le localStorage de cet appareil).
-            var finalVendorId = user.vendorId || user.id || '';
-            if (finalVendorId && window.MangooWelcomeAudio) {
-              try {
-                var ti = document.getElementById('welcome-transcript-input');
-                var pend = window.MangooWelcomeAudio.getRecording('reg_pending');
-                var text = (ti && ti.value && ti.value.trim()) ? ti.value.trim() : '';
-                if (pend && pend.dataUrl) {
-                  window.MangooWelcomeAudio.saveRecording('reg_pending', pend.dataUrl, pend.mime, text);
-                }
-                window.MangooWelcomeAudio.migrate('reg_pending', finalVendorId);
-                if (pend && (pend.dataUrl || text)) {
-                  fetch('/api/vendor-config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      action: 'set-welcome-audio',
-                      vendorId: finalVendorId,
-                      text: text,
-                      dataUrl: pend.dataUrl || '',
-                      mime: pend.mime || 'audio/webm'
-                    })
-                  }).catch(function () {});
-                }
-              } catch (e) {}
-            }
           } else {
             // Admin / client : on efface toute identité prestataire résiduelle.
             localStorage.removeItem('mgt_vendor_identity_v1');
@@ -1248,7 +1192,6 @@ html.dark {
       var previewBtn = document.getElementById('welcome-preview-btn');
       var deleteBtn = document.getElementById('welcome-delete-btn');
       var statusEl = document.getElementById('welcome-record-status');
-      var transcriptEl = document.getElementById('welcome-transcript-input');
 
       function setStatus(text, isError) {
         if (!statusEl) return;
@@ -1275,12 +1218,7 @@ html.dark {
         recordBtn.innerHTML = '<i data-lucide="square" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"></i>Arrêter';
         if (window.lucide) window.lucide.createIcons();
         rec = window.MangooWelcomeAudio.recorder(REG_PENDING, {
-          onSaved: function (dataUrl, mime) {
-            if (transcriptEl) {
-              window.MangooWelcomeAudio.saveRecording(REG_PENDING, dataUrl, mime, transcriptEl.value.trim());
-            }
-            rec = null; refresh(); setStatus('Message enregistré avec succès.', false);
-          },
+          onSaved: function () { rec = null; refresh(); setStatus('Message enregistré avec succès.', false); },
           onError: function (err) {
             rec = null;
             refresh();

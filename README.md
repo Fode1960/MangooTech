@@ -28,7 +28,7 @@ La carte démarre à **5 km**, puis élargit automatiquement tant qu'il n'y a **
 
 ### Scope ville / pays
 
-Un utilisateur à Dakar voit les commerces de Dakar, celui de Libreville voit ceux de Libreville, etc. Le sélecteur « Ma ville » permet de changer de ville à tout moment (utile pour la démo).
+Un utilisateur à Paris voit les commerces de Paris, celui de Libreville voit ceux de Libreville, etc. Le sélecteur « Ma ville » permet de changer de ville à tout moment.
 
 ## Détection de position
 

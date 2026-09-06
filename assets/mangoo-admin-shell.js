@@ -5,7 +5,7 @@
  * ciblaient des sélecteurs inexistants) et rend actifs les boutons statiques
  * de la topbar : cloche (notifications), compte (menu), recherche (palette).
  *
- * Identité admin par défaut : DANSOKO Fodé — Administrateur (DF).
+ * Identité admin neutre : Administrateur (AD).
  * ========================================================================== */
 (function (global) {
   'use strict';
@@ -36,12 +36,7 @@
   if (global.MangooAdminShell && global.MangooAdminShell.__ready) return;
 
   var NOTIF_KEY = 'mgt_admin_notifications_v1';
-  var NOTIF_SEED = [
-    { id: 'a1', title: 'Nouveau prestataire', body: 'Awa N. a demandé la vérification de son compte.', time: 'Il y a 12 min', unread: true },
-    { id: 'a2', title: 'Commission disponible', body: '84 500 FCFA de commissions à reverser ce mois.', time: 'Il y a 2 h', unread: true },
-    { id: 'a3', title: 'Livraison en retard', body: '3 courses dépassent leur fenêtre de livraison.', time: 'Il y a 5 h', unread: true },
-    { id: 'a4', title: 'Nouvelle boutique', body: '« Saveurs de Dakar » est en attente d’approbation.', time: 'Hier', unread: false }
-  ];
+  var NOTIF_SEED = [];
 
   var CSS = [
     '.mgt-popover{font-family:var(--mgt-font-sans);color:rgb(var(--mgt-foreground));text-align:left;font-size:14px;}',
@@ -268,7 +263,7 @@
 
   function buildAccount(account) {
     function render() {
-      return '<div class="mgt-pop-header"><div style="display:flex;gap:10px;align-items:center;"><span style="width:32px;height:32px;border-radius:50%;background:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground));display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;">DF</span><span>DANSOKO Fodé</span></div></div>' +
+      return '<div class="mgt-pop-header"><div style="display:flex;gap:10px;align-items:center;"><span style="width:32px;height:32px;border-radius:50%;background:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground));display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;">AD</span><span>Administrateur</span></div></div>' +
         '<div class="mgt-pop-list" style="padding:6px;">' +
           '<a class="mgt-pop-item" href="./admin.html"><div style="flex:1;">Administration</div></a>' +
           '<a class="mgt-pop-item" href="./admin-vendors.html"><div style="flex:1;">Prestataires</div></a>' +
