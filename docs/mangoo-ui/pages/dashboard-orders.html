@@ -418,10 +418,10 @@ html.dark {
       <!-- Account info bottom -->
       <div class="border-t border-white/10 px-4 py-4">
         <div class="flex items-center gap-3">
-          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>DB</div>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
-            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Boutique</p>
           </div>
         </div>
       </div>
@@ -445,12 +445,12 @@ html.dark {
             <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
           </button>
           <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
-            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>DB</div>
             <div class="hidden sm:block text-right">
               <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
               <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
                 <i data-lucide="star" class="w-3 h-3 fill-current"></i>
-                <span data-vendor-rating>4.8</span>
+                <span data-vendor-rating>—</span>
               </div>
             </div>
           </div>
@@ -606,13 +606,13 @@ html.dark {
             Informations client
           </h3>
           <div class="flex items-center gap-3 mb-3">
-            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" id="drawer-client-avatar">FD</div>
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" id="drawer-client-avatar"></div>
             <div>
-              <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]" id="drawer-client-name">Fatou Diallo</p>
-              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]" id="drawer-client-contact">+221 77 123 45 67</p>
+              <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]" id="drawer-client-name"></p>
+              <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]" id="drawer-client-contact"></p>
             </div>
           </div>
-          <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]" id="drawer-client-email">fatou.diallo@email.com</p>
+          <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]" id="drawer-client-email"></p>
         </div>
 
         <!-- Services commandes -->
@@ -621,16 +621,7 @@ html.dark {
             <i data-lucide="shopping-bag" class="w-4 h-4 text-[rgb(var(--mgt-primary))]"></i>
             Services commandes
           </h3>
-          <div id="drawer-services" class="space-y-2.5">
-            <!-- Service 1 -->
-            <div class="flex items-center justify-between py-2 border-b border-[rgb(var(--mgt-border))] last:border-0">
-              <div>
-                <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Coiffure Mariage</p>
-                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Durée: ~2h30</p>
-              </div>
-              <span class="text-sm font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">85 000 FCFA</span>
-            </div>
-          </div>
+          <div id="drawer-services" class="space-y-2.5"></div>
         </div>
 
         <!-- Montant detaille -->
@@ -642,19 +633,19 @@ html.dark {
           <div class="space-y-2">
             <div class="flex justify-between text-sm">
               <span class="text-[rgb(var(--mgt-muted-foreground))]">Sous-total</span>
-              <span class="font-medium tabular-nums text-[rgb(var(--mgt-foreground))]" id="drawer-subtotal">85 000 FCFA</span>
+              <span class="font-medium tabular-nums text-[rgb(var(--mgt-foreground))]" id="drawer-subtotal"></span>
             </div>
             <div class="flex justify-between text-sm">
               <span class="text-[rgb(var(--mgt-muted-foreground))]">Frais de service (5%)</span>
-              <span class="font-medium tabular-nums text-[rgb(var(--mgt-foreground))]" id="drawer-fees">4 250 FCFA</span>
+              <span class="font-medium tabular-nums text-[rgb(var(--mgt-foreground))]" id="drawer-fees"></span>
             </div>
             <div class="flex justify-between text-sm">
               <span class="text-[rgb(var(--mgt-muted-foreground))]">Livraison</span>
-              <span class="font-medium tabular-nums text-[rgb(var(--mgt-primary))]" id="drawer-delivery">Gratuite</span>
+              <span class="font-medium tabular-nums text-[rgb(var(--mgt-primary))]" id="drawer-delivery"></span>
             </div>
             <div class="flex justify-between pt-2 border-t border-[rgb(var(--mgt-border))]">
               <span class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Total</span>
-              <span class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-primary))]" id="drawer-total">89 250 FCFA</span>
+              <span class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-primary))]" id="drawer-total"></span>
             </div>
           </div>
         </div>
@@ -709,8 +700,8 @@ html.dark {
             <i data-lucide="map-pin" class="w-4 h-4 text-[rgb(var(--mgt-primary))]"></i>
             Adresse de livraison
           </h3>
-          <p class="text-sm text-[rgb(var(--mgt-foreground))]" id="drawer-address">Villa 245, Cite Keur Gorgui, Dakar</p>
-          <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1" id="drawer-address-notes">Code porte: 1234, 2e etage</p>
+          <p class="text-sm text-[rgb(var(--mgt-foreground))]" id="drawer-address"></p>
+          <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1" id="drawer-address-notes"></p>
         </div>
       </div>
 
@@ -842,17 +833,10 @@ html.dark {
       }
 
       /* ===== Drawer Logic ===== */
-      const orderData = {
-        'CMD-2401': { id:'#CMD-2401', date:'17 Aout 2026', avatar:'FD', name:'Fatou Diallo', contact:'+221 77 123 45 67', email:'fatou.diallo@email.com', services:[{name:'Coiffure Mariage', duration:'~2h30', price:'85 000 FCFA'}], subtotal:'85 000 FCFA', fees:'4 250 FCFA', delivery:'Gratuite', total:'89 250 FCFA', address:'Villa 245, Cite Keur Gorgui, Dakar', addressNotes:'Code porte: 1234, 2e etage' },
-        'CMD-2398': { id:'#CMD-2398', date:'17 Aout 2026', avatar:'AB', name:'Aissatou Ba', contact:'+221 76 234 56 78', email:'aissatou.ba@email.com', services:[{name:'Tresse Senegalaises', duration:'~3h00', price:'45 000 FCFA'}], subtotal:'45 000 FCFA', fees:'2 250 FCFA', delivery:'Gratuite', total:'47 250 FCFA', address:'Rue 12, Point E, Dakar', addressNotes:'' },
-        'CMD-2395': { id:'#CMD-2395', date:'18 Aout 2026', avatar:'KS', name:'Kadija Sow', contact:'+221 70 345 67 89', email:'kadija.sow@email.com', services:[{name:'Maquillage Pro', duration:'~1h30', price:'35 000 FCFA'}], subtotal:'35 000 FCFA', fees:'1 750 FCFA', delivery:'Gratuite', total:'36 750 FCFA', address:'Appt 12, Sacre Coeur 3, Dakar', addressNotes:'Sonner a l interphone' },
-        'CMD-2389': { id:'#CMD-2389', date:'19 Aout 2026', avatar:'MB', name:'Mariama Balde', contact:'+221 78 456 78 90', email:'mariama.balde@email.com', services:[{name:'Manucure', duration:'~45min', price:'15 000 FCFA'}], subtotal:'15 000 FCFA', fees:'750 FCFA', delivery:'Gratuite', total:'15 750 FCFA', address:'Cite Biagui, Rufisque', addressNotes:'' },
-        'CMD-2384': { id:'#CMD-2384', date:'20 Aout 2026', avatar:'RN', name:'Ramatoulaye Ndiaye', contact:'+221 77 567 89 01', email:'rama.ndiaye@email.com', services:[{name:'Coiffure Enfant', duration:'~1h00', price:'25 000 FCFA'}], subtotal:'25 000 FCFA', fees:'1 250 FCFA', delivery:'Gratuite', total:'26 250 FCFA', address:'Grand Yoff, Dakar', addressNotes:'Pres de la mosquee' },
-        'CMD-2380': { id:'#CMD-2380', date:'21 Aout 2026', avatar:'DC', name:'Djenaba Coulibaly', contact:'+221 76 678 90 12', email:'djenaba.c@email.com', services:[{name:'Coiffure', duration:'~1h30', price:'30 000 FCFA'},{name:'Maquillage', duration:'~1h00', price:'35 000 FCFA'}], subtotal:'65 000 FCFA', fees:'3 250 FCFA', delivery:'Gratuite', total:'68 250 FCFA', address:'Almadies, Dakar', addressNotes:'' },
-        'CMD-2375': { id:'#CMD-2375', date:'22 Aout 2026', avatar:'SK', name:'Saliou Kane', contact:'+221 70 789 01 23', email:'saliou.kane@email.com', services:[{name:'Coiffure Homme', duration:'~30min', price:'10 000 FCFA'}], subtotal:'10 000 FCFA', fees:'500 FCFA', delivery:'Gratuite', total:'10 500 FCFA', address:'Medina, Dakar', addressNotes:'' },
-        'CMD-2370': { id:'#CMD-2370', date:'23 Aout 2026', avatar:'OF', name:'Oumou Fall', contact:'+221 78 890 12 34', email:'oumou.fall@email.com', services:[{name:'Tresse', duration:'~2h00', price:'30 000 FCFA'},{name:'Meches', duration:'~1h00', price:'25 000 FCFA'}], subtotal:'55 000 FCFA', fees:'2 750 FCFA', delivery:'Gratuite', total:'57 750 FCFA', address:'Yoff, Dakar', addressNotes:'' },
-        'CMD-2365': { id:'#CMD-2365', date:'04 Aout 2026', avatar:'MT', name:'Maimouna Toure', contact:'+221 77 901 23 45', email:'maimouna.toure@email.com', services:[{name:'Pediculure', duration:'~45min', price:'12 000 FCFA'}], subtotal:'12 000 FCFA', fees:'600 FCFA', delivery:'Gratuite', total:'12 600 FCFA', address:'Parcelles Assainies, Dakar', addressNotes:'Villa 89' }
-      };
+      // Source unique des commandes affichées. En production, cet objet est
+      // rempli dynamiquement par GET /api/orders (voir script « Chargement des
+      // commandes » en bas de page). Plus aucune donnée de démonstration.
+      const orderData = {};
 
       /* ===== MACHINE À ÉTATS DES STATUTS (comportement de production) ===== */
       const STATUS_ORDER = ['commandee', 'confirmee', 'en-preparation', 'en-livraison', 'livree'];
@@ -872,18 +856,9 @@ html.dark {
         'livree': 'livrees',
         'annulee': 'annulees'
       };
-      // Statut initial de chaque commande affichée.
-      const INITIAL_STATUS = {
-        'CMD-2401': 'en-livraison',
-        'CMD-2398': 'livree',
-        'CMD-2395': 'en-preparation',
-        'CMD-2389': 'annulee',
-        'CMD-2384': 'livree',
-        'CMD-2380': 'en-preparation',
-        'CMD-2375': 'livree',
-        'CMD-2370': 'confirmee',
-        'CMD-2365': 'annulee'
-      };
+      // Statut initial de chaque commande affichée (rempli dynamiquement à
+      // partir des commandes serveur — plus de statuts de démonstration).
+      const INITIAL_STATUS = {};
       let currentOrderId = null;
 
       function statusBadgeHTML(status) {
@@ -967,9 +942,9 @@ html.dark {
         }
       }
 
-      // Compteurs KPI : on conserve les agrégats métier (23 / 89 / 12) et on
-      // ajuste par incréments à chaque changement de statut, comme en production.
-      const KPI_STATE = { en: 23, li: 89, an: 12 };
+      // Compteurs KPI calculés à partir des commandes réelles (chargées depuis
+      // le serveur). Plus d'agrégats métier codés en dur.
+      const KPI_STATE = { en: 0, li: 0, an: 0 };
       function renderKpis() {
         const set = function(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; };
         set('kpi-en-cours', KPI_STATE.en);
@@ -1182,6 +1157,7 @@ html.dark {
           renderTimeline(next);
           updateFooter();
           bumpKpi(st, next);
+          persistOrderStatus(currentOrderId, next);
         });
       }
       if (btnCancel) {
@@ -1194,7 +1170,16 @@ html.dark {
           renderTimeline('annulee');
           updateFooter();
           bumpKpi(st, 'annulee');
+          persistOrderStatus(currentOrderId, 'annulee');
         });
+      }
+
+      // Persiste le statut côté serveur (source de vérité) pour que le client
+      // voie la même commande mise à jour. Silencieux en cas d'échec.
+      function persistOrderStatus(id, status) {
+        if (window.MangooVendor && typeof window.MangooVendor.updateOrderStatus === 'function') {
+          window.MangooVendor.updateOrderStatus(id, status);
+        }
       }
 
       // Bouton « Contacter le client » : ouvre la messagerie avec ce client.
@@ -1423,210 +1408,108 @@ html.dark {
 <script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
 <script src="../assets/mangoo-dashboard-shell.js"></script>
 <script>
-/* Commandes différenciées : boutiquier-vendeur = produits, prestataire = services */
+/* Chargement des commandes depuis le serveur (source de vérité en production).
+   Le tableau, le tiroir et les KPIs sont calculés à partir des commandes réelles
+   renvoyées par GET /api/orders. Plus aucune donnée de démonstration. */
 (function(){
-  function run(){
-    try {
-      var vendor = (window.MangooVendor && window.MangooVendor.current) ? window.MangooVendor.current() : null;
-      if (!vendor || vendor.role !== 'vendeur') return;
-
-      // 1) Libellés métier
-      if (typeof __mgtItemMetaLabel !== 'undefined') __mgtItemMetaLabel = 'Quantité: ';
-      var col = document.getElementById('orders-col-item');
-      if (col) col.textContent = 'Produit';
-      var head = document.getElementById('drawer-items-heading');
-      if (head) head.textContent = 'Produits commandés';
-      var badge = document.querySelector('header span.caption');
-      if (badge) badge.textContent = 'Boutique vendeuse';
-
-      // 2) Données produits de la boutique
-      var P = [
-        { id:'CMD-1042', date:'19 Août 2026', time:'14:25', avatar:'FD', name:'Fatou Diop', contact:'+221 77 123 45 67', email:'fatou.diop@email.com', product:'Robe en wax', qty:'×1', price:'35 000 FCFA', status:'en-livraison', address:'Médina, Dakar', notes:'' },
-        { id:'CMD-1039', date:'18 Août 2026', time:'11:40', avatar:'AM', name:'Awa Mbaye', contact:'+221 76 234 56 78', email:'awa.mbaye@email.com', product:'Sandales en cuir', qty:'×1', price:'22 000 FCFA', status:'livree', address:'Parcelles Assainies, Dakar', notes:'' },
-        { id:'CMD-1036', date:'18 Août 2026', time:'09:15', avatar:'MN', name:'Moussa Ndiaye', contact:'+221 70 345 67 89', email:'moussa.ndiaye@email.com', product:'Sac à main', qty:'×1', price:'48 000 FCFA', status:'en-preparation', address:'Point E, Dakar', notes:'Sonner au portail' },
-        { id:'CMD-1033', date:'17 Août 2026', time:'16:05', avatar:'KS', name:'Khady Sarr', contact:'+221 78 456 78 90', email:'khady.sarr@email.com', product:'Tissu bazin', qty:'×3 m', price:'30 000 FCFA', status:'livree', address:'Grand Yoff, Dakar', notes:'' },
-        { id:'CMD-1029', date:'17 Août 2026', time:'10:30', avatar:'AB', name:'Aminata Bâ', contact:'+221 77 567 89 01', email:'aminata.ba@email.com', product:'Boubou brodé', qty:'×1', price:'65 000 FCFA', status:'en-preparation', address:'Almadies, Dakar', notes:'' },
-        { id:'CMD-1026', date:'16 Août 2026', time:'13:50', avatar:'OD', name:'Ousmane Diallo', contact:'+221 76 678 90 12', email:'ousmane.diallo@email.com', product:'Chemise wax', qty:'×2', price:'25 000 FCFA', status:'livree', address:'Yoff, Dakar', notes:'' },
-        { id:'CMD-1023', date:'15 Août 2026', time:'17:20', avatar:'MS', name:'Mariama Sow', contact:'+221 70 789 01 23', email:'mariama.sow@email.com', product:'Pagne tissé', qty:'×2', price:'18 000 FCFA', status:'annulee', address:'Rufisque', notes:'' },
-        { id:'CMD-1020', date:'14 Août 2026', time:'12:10', avatar:'DF', name:'Doudou Fall', contact:'+221 78 890 12 34', email:'doudou.fall@email.com', product:'Escarpins', qty:'×1', price:'40 000 FCFA', status:'livree', address:'Sacre Coeur 3, Dakar', notes:'' },
-        { id:'CMD-1017', date:'13 Août 2026', time:'15:45', avatar:'AN', name:'Adja Ndiaye', contact:'+221 77 901 23 45', email:'adja.ndiaye@email.com', product:'Ensemble bazin', qty:'×1', price:'55 000 FCFA', status:'annulee', address:'Médina, Dakar', notes:'' }
-      ];
-
-      // 2bis) Fusion des commandes réellement passées par les clients (localStorage)
-      //       afin que la boutique voie ses nouvelles commandes dans sa liste.
-      var realOrders = (window.MangooVendor && window.MangooVendor.ordersForVendor) ? window.MangooVendor.ordersForVendor(vendor) : [];
-      function clientInitials(name) {
-        var p = String(name || '').trim().split(/\s+/).filter(Boolean);
-        if (!p.length) return 'CL';
-        return p.length === 1 ? p[0].slice(0, 2) : (p[0][0] + p[p.length - 1][0]);
-      }
-      var STATUS_FROM_CLIENT = { 'en-cours': 'commandee', 'livree': 'livree', 'annulee': 'annulee' };
-      var realEnCours = 0, realLivrees = 0, realAnnulees = 0;
-      realOrders.forEach(function (o) {
-        if (!o || !o.id) return;
-        if (o.status === 'livree') realLivrees++; else if (o.status === 'annulee') realAnnulees++; else realEnCours++;
-        P.unshift({
-          id: o.id,
-          date: o.date || '',
-          time: o.time || '',
-          avatar: clientInitials(o.clientName || o.provider || 'Client').toUpperCase(),
-          name: o.clientName || 'Client',
-          contact: o.clientPhone || 'Non renseigné',
-          email: o.clientEmail || 'Non renseigné',
-          product: o.service || 'Produit',
-          qty: '×1',
-          price: o.amount || '',
-          status: STATUS_FROM_CLIENT[o.status] || 'commandee',
-          address: o.address || 'Non renseigné',
-          notes: ''
-        });
-      });
-
-      // 3) Réécriture des données métier (orderData & INITIAL_STATUS sont en portée globale)
-      Object.keys(orderData).forEach(function(k){ delete orderData[k]; });
-      Object.keys(INITIAL_STATUS).forEach(function(k){ delete INITIAL_STATUS[k]; });
-      P.forEach(function(o){
-        orderData[o.id] = {
-          id: '#' + o.id, date: o.date, time: o.time || '', avatar: o.avatar, name: o.name,
-          contact: o.contact, email: o.email,
-          services: [{ name: o.product, duration: o.qty, price: o.price }],
-          subtotal: o.price, fees: '—', delivery: 'Livraison', total: o.price,
-          address: o.address, addressNotes: o.notes
-        };
-        INITIAL_STATUS[o.id] = o.status;
-      });
-
-      // 4) Reconstruction du tableau
-      var tbody = document.querySelector('#orders-table tbody');
-      if (tbody) {
-        tbody.innerHTML = P.map(function(o){
-          return '<tr class="hover:bg-[rgb(var(--mgt-muted))] transition-colors" data-status="' + STATUS_COARSE[o.status] + '" data-order="#' + o.id + '">'
-            + '<td class="px-5 py-3.5 font-mono text-xs font-semibold text-[rgb(var(--mgt-primary))]">#' + o.id + '</td>'
-            + '<td class="px-5 py-3.5"><div class="flex items-center gap-2.5"><div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent))] font-semibold text-xs">' + o.avatar + '</div><span class="font-medium text-[rgb(var(--mgt-foreground))]">' + o.name + '</span></div></td>'
-            + '<td class="px-5 py-3.5 text-[rgb(var(--mgt-muted-foreground))]">' + o.product + '</td>'
-            + '<td class="px-5 py-3.5 text-right font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">' + o.price + '</td>'
-            + '<td class="px-5 py-3.5 text-[rgb(var(--mgt-muted-foreground))]">' + o.date + '</td>'
-            + '<td class="px-5 py-3.5 tabular-nums text-[rgb(var(--mgt-muted-foreground))]">' + (o.time || '—') + '</td>'
-            + '<td class="px-5 py-3.5 text-center"></td>'
-            + '<td class="px-5 py-3.5 text-center"><button onclick="openDrawer(\'' + o.id + '\')" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-[rgb(var(--mgt-primary))] bg-[rgb(var(--mgt-primary-50))] hover:bg-[rgb(var(--mgt-primary-100))] transition-colors"><i data-lucide="eye" class="w-3.5 h-3.5"></i> Voir detail</button></td>'
-            + '</tr>';
-        }).join('');
-      }
-
-      // 5) Réinitialisation (même logique que le chargement initial)
-      document.querySelectorAll('#orders-table tbody tr').forEach(function(row){
-        var first = row.querySelector('td');
-        if (first) row.setAttribute('data-order', first.textContent.trim());
-      });
-      Object.keys(INITIAL_STATUS).forEach(function(id){
-        if (orderData[id]) { orderData[id].status = INITIAL_STATUS[id]; updateOrderRow(id); }
-      });
-
-      // 6) KPIs boutique (les commandes réelles passées par les clients sont ajoutées)
-      KPI_STATE.en = 8 + realEnCours;
-      KPI_STATE.li = 114 + realLivrees;
-      KPI_STATE.an = 6 + realAnnulees;
-      var kt = document.getElementById('kpi-total'); if (kt) kt.textContent = String(128 + realOrders.length);
-      var ab = document.getElementById('kpi-active-badge'); if (ab) ab.textContent = (8 + realEnCours) + ' actives';
-      renderKpis();
-      applyFilters();
-      if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
-    } catch (e) { /* non bloquant */ }
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
+  function initials(name) {
+    var p = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!p.length) return 'CL';
+    return p.length === 1 ? p[0].slice(0, 2).toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase();
+  }
+  var STATUS_FROM_CLIENT = { 'en-cours': 'commandee', 'livree': 'livree', 'annulee': 'annulee' };
+  var DELIVERY_FROM_FULFILLMENT = { livraison: 'Livraison', retrait: 'Retrait', domicile: 'À domicile' };
+  function toVendorStatus(s) { return STATUS_FROM_CLIENT[s] || s; }
+
+  function applyRoleLabels(vendor) {
+    var isVendeur = vendor && vendor.role === 'vendeur';
+    if (typeof __mgtItemMetaLabel !== 'undefined') __mgtItemMetaLabel = isVendeur ? 'Quantité: ' : 'Durée: ';
+    var col = document.getElementById('orders-col-item');
+    if (col) col.textContent = isVendeur ? 'Produit' : 'Service';
+    var head = document.getElementById('drawer-items-heading');
+    if (head) head.textContent = isVendeur ? 'Produits commandés' : 'Services commandés';
+    var badge = document.querySelector('header span.caption');
+    if (badge) badge.textContent = isVendeur ? 'Boutique vendeuse' : 'Prestataire de services';
+  }
+
+  function renderFromServer(orders) {
+    Object.keys(orderData).forEach(function(k){ delete orderData[k]; });
+    Object.keys(INITIAL_STATUS).forEach(function(k){ delete INITIAL_STATUS[k]; });
+
+    var en = 0, li = 0, an = 0;
+    (orders || []).forEach(function (o) {
+      if (!o || !o.id) return;
+      var key = String(o.id).replace(/^#/, '');
+      var st = toVendorStatus(o.status || 'en-cours');
+      var name = o.clientName || 'Client';
+      var service = o.service || 'Produit';
+      var amount = o.amount || (o.amountN ? String(o.amountN) + ' FCFA' : '—');
+      var delivery = DELIVERY_FROM_FULFILLMENT[o.fulfillment] || 'Livraison';
+      var ts = o.createdAt || null;
+      var tzRef = o.clientTz || o.clientCity || null;
+      var realDate = '';
+      var realTime = '';
+      if (ts && window.MangooVendor && window.MangooVendor.formatDate && window.MangooVendor.formatTime) {
+        realDate = window.MangooVendor.formatDate(ts, tzRef);
+        realTime = window.MangooVendor.formatTime(ts, tzRef);
+      }
+
+      orderData[key] = {
+        id: '#' + key,
+        date: realDate || 'Aujourd\'hui',
+        time: realTime,
+        avatar: initials(name),
+        name: name,
+        contact: o.clientPhone || 'Non renseigné',
+        email: o.clientEmail || 'Non renseigné',
+        services: [{ name: service, duration: '—', price: amount }],
+        subtotal: amount,
+        fees: '—',
+        delivery: delivery,
+        total: amount,
+        address: o.address || 'Non renseigné',
+        addressNotes: o.addressNotes || '',
+        status: st
+      };
+      INITIAL_STATUS[key] = st;
+
+      if (st === 'livree') li++; else if (st === 'annulee') an++; else en++;
+    });
+
+    KPI_STATE.en = en;
+    KPI_STATE.li = li;
+    KPI_STATE.an = an;
+    var kt = document.getElementById('kpi-total'); if (kt) kt.textContent = String((orders || []).length);
+    var ab = document.getElementById('kpi-active-badge'); if (ab) ab.textContent = en + ' actives';
+
+    Object.keys(INITIAL_STATUS).forEach(function(id){ if (orderData[id]) orderData[id].status = INITIAL_STATUS[id]; });
+    renderOrdersTable();
+    renderKpis();
+    applyFilters();
+    if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+  }
+
+  function run() {
+    var vendor = (window.MangooVendor && window.MangooVendor.current) ? window.MangooVendor.current() : null;
+    if (!vendor || (vendor.role !== 'vendeur' && vendor.role !== 'prestataire')) return;
+    applyRoleLabels(vendor);
+    if (!window.MangooVendor || typeof window.MangooVendor.fetchServerOrders !== 'function') {
+      renderFromServer([]);
+      return;
+    }
+    window.MangooVendor.fetchServerOrders(function (res) {
+      if (res && res.ok && Array.isArray(res.orders)) renderFromServer(res.orders);
+      else renderFromServer([]);
+    });
+  }
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
   else run();
-})();
-</script>
-<script>
-/* Prestataire (DAN Boutique) : fusion des commandes clients réelles (localStorage). */
-(function(){
-  function runPresta(){
-    try {
-      var vendor = (window.MangooVendor && window.MangooVendor.current) ? window.MangooVendor.current() : null;
-      if (!vendor || vendor.role === 'vendeur') return; // le vendeur est traité dans le script précédent
-      if (!window.MangooVendor || !window.MangooVendor.ordersForVendor) return;
-
-      var real = window.MangooVendor.ordersForVendor(vendor);
-      if (!real.length) return;
-
-      var STATUS_FROM_CLIENT = { 'en-cours': 'commandee', 'livree': 'livree', 'annulee': 'annulee' };
-      var DELIVERY_FROM_FULFILLMENT = { livraison: 'Livraison', retrait: 'Retrait', domicile: 'À domicile' };
-      function initials(name) {
-        var p = String(name || '').trim().split(/\s+/).filter(Boolean);
-        if (!p.length) return 'CL';
-        return p.length === 1 ? p[0].slice(0, 2).toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase();
-      }
-      function escHtml(s) {
-        return String(s == null ? '' : s)
-          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-      }
-
-      var tbody = document.querySelector('#orders-table tbody');
-      real.forEach(function (o) {
-        if (!o || !o.id) return;
-        var key = String(o.id).replace('#', '');
-        if (orderData[key]) return; // déjà présent
-        var st = STATUS_FROM_CLIENT[o.status] || 'commandee';
-        var name = o.clientName || 'Fatou Diop';
-        var service = o.service || 'Service';
-        var amount = o.amount || '—';
-        var delivery = DELIVERY_FROM_FULFILLMENT[o.fulfillment] || 'Livraison';
-        var ts = o.createdAt || o.ts || null;
-        var tzRef = o.clientTz || o.buyerTz || o.clientCity || o.buyerCity || o.city;
-        var realDate = o.date || '';
-        var realTime = o.time || '';
-        if (ts && window.MangooVendor && window.MangooVendor.formatDate && window.MangooVendor.formatTime) {
-          realDate = window.MangooVendor.formatDate(ts, tzRef);
-          realTime = window.MangooVendor.formatTime(ts, tzRef);
-        }
-
-        orderData[key] = {
-          id: '#' + key,
-          date: realDate || 'Aujourd\'hui',
-          time: realTime,
-          avatar: initials(name),
-          name: name,
-          contact: o.clientPhone || 'Non renseigné',
-          email: o.clientEmail || 'Non renseigné',
-          services: [{ name: service, duration: '—', price: amount }],
-          subtotal: amount,
-          fees: '—',
-          delivery: delivery,
-          total: amount,
-          address: o.address || 'Non renseigné',
-          addressNotes: '',
-          status: st
-        };
-        INITIAL_STATUS[key] = st;
-
-        if (tbody) {
-          var tr = document.createElement('tr');
-          tr.className = 'hover:bg-[rgb(var(--mgt-muted))] transition-colors';
-          tr.setAttribute('data-status', STATUS_COARSE[st] || 'en-cours');
-          tr.setAttribute('data-order', '#' + key);
-          tr.innerHTML =
-            '<td class="px-5 py-3.5 font-mono text-xs font-semibold text-[rgb(var(--mgt-primary))]">#' + key + '</td>' +
-            '<td class="px-5 py-3.5"><div class="flex items-center gap-2.5"><div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent))] font-semibold text-xs">' + initials(name) + '</div><span class="font-medium text-[rgb(var(--mgt-foreground))]">' + escHtml(name) + '</span></div></td>' +
-            '<td class="px-5 py-3.5 text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(service) + '</td>' +
-            '<td class="px-5 py-3.5 text-right font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">' + escHtml(amount) + '</td>' +
-            '<td class="px-5 py-3.5 text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(realDate) + '</td>' +
-            '<td class="px-5 py-3.5 tabular-nums text-[rgb(var(--mgt-muted-foreground))]">' + escHtml(realTime) + '</td>' +
-            '<td class="px-5 py-3.5 text-center">' + statusBadgeHTML(st) + '</td>' +
-            '<td class="px-5 py-3.5 text-center"><button onclick="openDrawer(\'' + key + '\')" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-[rgb(var(--mgt-primary))] bg-[rgb(var(--mgt-primary-50))] hover:bg-[rgb(var(--mgt-primary-100))] transition-colors"><i data-lucide="eye" class="w-3.5 h-3.5"></i> Voir detail</button></td>';
-          tbody.insertBefore(tr, tbody.firstChild);
-        }
-
-        if (st === 'livree') KPI_STATE.li += 1; else if (st === 'annulee') KPI_STATE.an += 1; else KPI_STATE.en += 1;
-      });
-
-      renderKpis();
-      applyFilters();
-      if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
-    } catch (e) { /* non bloquant */ }
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', runPresta);
-  else runPresta();
 })();
 </script>
 </body>
