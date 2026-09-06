@@ -381,6 +381,7 @@ html.dark {
             </div>
             <span id="odj-status" class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">Chargement des paliers…</span>
           </div>
+          <div id="odj-active" class="mb-5"><p class="caption text-[rgb(var(--mgt-muted-foreground))]">Chargement de votre offre active…</p></div>
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <div id="odj-tiers" class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
             <div class="space-y-4">
@@ -400,7 +401,6 @@ html.dark {
                 </div>
               </div>
               <button id="odj-publish" class="w-full py-2.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm hover:bg-[rgb(var(--mgt-accent-600))] transition-colors">Publier l'offre</button>
-              <button id="odj-trial" class="w-full py-2.5 rounded-lg border border-[rgb(var(--mgt-success))] text-[rgb(var(--mgt-success))] font-semibold text-sm hover:bg-[rgb(var(--mgt-success)/0.08)] transition-colors mt-2">Essai gratuit 24 h</button>
             </div>
           </div>
         </div>
@@ -1137,6 +1137,7 @@ html.dark {
         if (titleInput) titleInput.value = '';
         if (descInput) descInput.value = '';
         selectTier(null);
+        loadActiveOffer();
       } else {
         toast((res && res.error) || 'Publication refusée.');
       }
@@ -1158,33 +1159,60 @@ html.dark {
     }
   }
 
-  function publishTrial() {
-    var titleInput = document.getElementById('odj-title');
-    var descInput = document.getElementById('odj-desc');
-    var title = (titleInput && titleInput.value || '').trim();
-    var description = (descInput && descInput.value || '').trim();
-    if (!title) { toast('Saisissez un titre pour votre offre.'); if (titleInput) titleInput.focus(); return; }
-    var btn = document.getElementById('odj-trial');
-    if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
-    function done() { if (btn) { btn.disabled = false; btn.style.opacity = '1'; } }
-    postPublish({ trial: true, title: title, description: description }).then(function (res) {
-      done();
-      if (res && res.ok) {
-        toast('Essai gratuit activé (24 h).');
-        if (titleInput) titleInput.value = '';
-        if (descInput) descInput.value = '';
-        selectTier(null);
-      } else {
-        toast((res && res.error) || 'Essai refusé.');
-      }
-    }).catch(function () { done(); toast('Erreur réseau lors de l\'activation de l\'essai.'); });
-  }
-
   function loadTiers() {
     fetch('/api/offres-jour/tiers', { cache: 'no-store' })
       .then(function (r) { return r.json(); })
       .then(function (d) { renderTiers(d && d.ok && Array.isArray(d.tiers) ? d.tiers : []); })
       .catch(function () { renderTiers([]); });
+  }
+
+  function remainingLabel(iso) {
+    try {
+      var ms = new Date(iso).getTime() - Date.now();
+      if (ms <= 0) return '';
+      var h = Math.floor(ms / 3600000);
+      var m = Math.floor((ms % 3600000) / 60000);
+      if (h >= 48) return Math.floor(h / 24) + ' j restants';
+      if (h >= 1) return h + ' h restantes';
+      return m + ' min restantes';
+    } catch (e) { return ''; }
+  }
+
+  function renderActiveOffer(list) {
+    var box = document.getElementById('odj-active');
+    if (!box) return;
+    var active = (list || []).filter(function (o) { return o.status === 'active'; });
+    if (!active.length) {
+      box.innerHTML = '<div class="flex items-center gap-3 rounded-lg border border-dashed border-[rgb(var(--mgt-border))] px-4 py-3">'
+        + '<i data-lucide="megaphone" class="w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>'
+        + '<p class="caption text-[rgb(var(--mgt-muted-foreground))]">Aucune offre du jour active. Publiez-en une pour mettre votre boutique en avant.</p>'
+        + '</div>';
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+    var o = active[0];
+    var pay = o.payment || {};
+    var payLabel = pay.mode === 'wallet' ? 'Portefeuille' : (pay.operatorLabel || 'Mangoo Pay+');
+    var meta = [o.durationLabel || '', fmt(o.price) + ' FCFA', payLabel].filter(Boolean).join(' · ');
+    var rem = remainingLabel(o.endsAt);
+    if (rem) meta += ' · ' + rem;
+    box.innerHTML = '<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-lg border border-[rgb(var(--mgt-primary))] bg-[rgb(var(--mgt-primary-50))] px-4 py-3">'
+      + '<div class="flex items-center gap-3">'
+      + '<div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary))]"><i data-lucide="megaphone" class="w-5 h-5 text-white"></i></div>'
+      + '<div>'
+      + '<p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">' + esc(o.title || 'Offre du jour') + '</p>'
+      + '<p class="caption text-[rgb(var(--mgt-muted-foreground))]">' + esc(meta) + '</p>'
+      + '</div></div>'
+      + '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Active</span>'
+      + '</div>';
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function loadActiveOffer() {
+    fetch('/api/offres-jour/active', { cache: 'no-store', headers: (window.MangooPayment ? MangooPayment.authHeaders() : {}) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { renderActiveOffer(d && d.ok && Array.isArray(d.offres) ? d.offres : []); })
+      .catch(function () { renderActiveOffer([]); });
   }
 
   var publishBtn = document.getElementById('odj-publish');
@@ -1193,11 +1221,10 @@ html.dark {
   var mobileBtn = document.getElementById('odj-pay-mobile');
   if (walletBtn) walletBtn.addEventListener('click', function () { setPayMode('wallet'); });
   if (mobileBtn) mobileBtn.addEventListener('click', function () { setPayMode('mobile'); });
-  var trialBtn = document.getElementById('odj-trial');
-  if (trialBtn) trialBtn.addEventListener('click', publishTrial);
 
   setPayMode('mobile');
   loadTiers();
+  loadActiveOffer();
 })();
 </script>
 <script src="../assets/mangoo-autocorrect.js"></script>

@@ -125,38 +125,6 @@ const MIME = {
  *  État temps réel (en mémoire)
  * ------------------------------------------------------------------ */
 const clients = new Map();        // id -> Array<{ ws, role, name, online, lastSeen }>
-const lastSeenByUser = new Map(); // id canonique -> timestamp de dernière connexion (survit à la déconnexion)
-
-// Persistance « dernière connexion » : le timestamp est conservé en mémoire
-// (accès rapide) ET écrit dans users.json (survie au redémarrage). L'écriture
-// disque est regroupée (debounce) pour absorber les rafales connexion/déconnexion.
-let lastSeenPersistTimer = null;
-function persistLastSeenNow() {
-  lastSeenPersistTimer = null;
-  saveUsers();
-}
-function scheduleLastSeenPersist() {
-  if (lastSeenPersistTimer) return;
-  lastSeenPersistTimer = setTimeout(persistLastSeenNow, 2000);
-}
-function seedLastSeenFromUsers() {
-  users.forEach(function (u) {
-    if (!u) return;
-    const cid = routingIdForUser(u);
-    if (!cid || lastSeenByUser.has(cid) || !u.lastSeenAt) return;
-    const ts = Date.parse(u.lastSeenAt);
-    if (Number.isFinite(ts)) lastSeenByUser.set(cid, ts);
-  });
-}
-function setLastSeen(cid) {
-  if (!cid) return;
-  lastSeenByUser.set(cid, Date.now());
-  const u = userByRoutingId(cid);
-  if (u) {
-    u.lastSeenAt = new Date().toISOString();
-    scheduleLastSeenPersist();
-  }
-}
 const calls = new Map();          // callId -> { callerId, calleeId, callerWs, calleeWs, mode }
 let chatLog = [];               // { msgId, convId, from, to, text, sentAt }
 let callLog = [];               // { callId, callerId, calleeId, mode, status, at }
@@ -175,7 +143,6 @@ function addClient(id, ws, role, name) {
   if (idx !== -1) list.splice(idx, 1);
   list.push({ ws, role, name, online: true, lastSeen: Date.now() });
   clients.set(cid, list);
-  setLastSeen(cid);
   return list;
 }
 
@@ -185,7 +152,6 @@ function removeClient(id, ws) {
   if (!list) return;
   const idx = list.findIndex((c) => c.ws === ws);
   if (idx !== -1) list.splice(idx, 1);
-  setLastSeen(cid);
   if (list.length === 0) clients.delete(cid);
 }
 
@@ -298,16 +264,9 @@ function broadcastToPeer(id, obj, exceptWs) {
 function peersList() {
   const peers = [];
   clients.forEach((list, id) => {
-    // La présence reflète la joignabilité réelle en messagerie : on ne retient
-    // que les identités ayant une socket ouverte sur une page de messagerie
-    // (chat client ou dashboard pro). Une socket ouverte ailleurs (accueil,
-    // carte, live) via autoRegisterClient ne doit pas faire apparaître
-    // l'utilisateur « en ligne » côté messagerie, sinon la présence devient
-    // asymétrique entre le client et le professionnel.
-    if (!isOnMessaging(id)) return;
-    const msgs = onlineMessagingSockets(id);
-    if (msgs.length === 0) return;
-    const last = msgs[msgs.length - 1];
+    const online = list.filter((c) => c.online);
+    if (online.length === 0) return;
+    const last = online[online.length - 1];
     peers.push({ id, role: last.role, name: last.name });
   });
   return peers;
@@ -345,14 +304,6 @@ function createRoom(vendorId, vendorName, vendorWs) {
 }
 
 function roomById(vendorId) { return liveRooms.get(roomKey(vendorId)) || null; }
-
-// Un vendeur est « en live » si une salle active existe pour son id canonique.
-// Utilisé par /api/carte pour exposer un état live réel (au lieu du false codé
-// en dur) et garder cohérents les statuts entre la carte et la messagerie.
-function isVendorLive(vendorId) {
-  const r = roomById(canonicalRoutingId(vendorId));
-  return !!(r && r.active);
-}
 
 // Accepte indifféremment un vendorId brut (« dan-boutique ») ou un roomId
 // préfixé (« room-dan-boutique ») : l'annuaire transmet un roomId, les clients
@@ -1059,10 +1010,8 @@ function saveGalerie() {
  * ------------------------------------------------------------------ */
 const BOOSTERS_FILE = path.join(DATA_DIR, 'boosters.json');
 const BOOSTER_STATS_FILE = path.join(DATA_DIR, 'booster-stats.json');
-const TRIALS_FILE = path.join(DATA_DIR, 'trials.json');
 let boosters = [];          // activations (actives + historique)
 let boosterStats = null;    // KPIs agrégés du mois
-let trials = [];            // essais gratuits (une utilisation par vendeur/type)
 
 /* ------------------------------------------------------------------ *
  *  Profil & configuration du vendeur (source unique pour les modules
@@ -1093,15 +1042,15 @@ function seedVendorConfig() {
         ownerName: 'DANSOKO Fodé',
         email: 'dan@exemple.com',
         phone: '+336423456789',
-        whatsapp: '+221 77 123 45 67',
+        whatsapp: '+33 6 42 34 56 78',
         enseigne: 'DAN Boutique',
         category: 'commerce',
-        description: 'Boutique de prêt-à-porter, accessoires et articles tendance au cœur de Dakar.',
-        city: 'Dakar',
-        country: 'Senegal',
-        address: 'Rue 10, Médina, Dakar',
-        lat: 14.7167,
-        lng: -17.4677,
+        description: 'Boutique de prêt-à-porter, accessoires et articles tendance au cœur de Paris.',
+        city: 'Paris',
+        country: 'France',
+        address: '3 rue de Cambrai, 75019 Paris',
+        lat: 48.89385,
+        lng: 2.37708,
         logo: '',
         cover: ''
       },
@@ -1216,9 +1165,9 @@ function seedVendorConfig() {
       },
       decouverte: {
         public: true,
-        rayonKm: 25,
-        pays: ['Senegal', 'Cameroun', 'Cote d\'Ivoire'],
-        villes: ['Dakar', 'Pikine', 'Guediawaye', 'Rufisque'],
+        rayonKm: 5,
+        pays: ['France'],
+        villes: ['Paris'],
         badges: ['certifie', 'promo'],
         apparaitDans: ['carte', 'recherche', 'recommandations'],
         impressions: 2840,
@@ -1284,12 +1233,6 @@ function blankVendorConfig(vendorId) {
       startedAt: now,
       renewsAt: null,
       autoRenew: false
-    },
-    welcomeAudio: {
-      text: '',
-      dataUrl: '',
-      mime: 'audio/webm',
-      updatedAt: null
     },
     horsLigne: {
       enabled: false,
@@ -1465,6 +1408,8 @@ function isStrongPassword(pw) {
 
 function normalizePhone(p) {
   let s = String(p || '').replace(/[^\d+]/g, '').trim();
+  // Normalise le préfixe international « 00 » en « + » (ex. 0033610498123 → +33610498123)
+  // afin d'éviter qu'un numéro saisi en format 00 ne soit affiché/stocké de façon ambiguë.
   if (/^00\d{7,15}$/.test(s)) s = '+' + s.slice(2);
   return s;
 }
@@ -1618,7 +1563,6 @@ function loadUsers() {
         console.log('[Auth] comptes chargés :', users.length);
         rotateLegacyAdminCredentials();
         applyAdminPasswordReset();
-        seedLastSeenFromUsers();
         return;
       }
     }
@@ -1655,10 +1599,10 @@ function ensureSeedVendorUsers() {
       email: 'dan@exemple.com',
       phone: '+336423456789',
       category: 'commerce',
-      city: 'Dakar',
-      country: 'Senegal',
-      lat: 14.7167,
-      lng: -17.4677,
+      city: 'Paris',
+      country: 'France',
+      lat: 48.89385,
+      lng: 2.37708,
       logo: ''
     }
   ];
@@ -1691,21 +1635,9 @@ function ensureSeedVendorUsers() {
 // Permet d'enregistrer country + lat/lng au moment de la création du compte, afin
 // que la carte Local+ puisse géolocaliser chaque pro sans retomber sur Dakar.
 const GEO_CITIES = {
-  // Europe (France) — centre-ville de chaque commune. Évite qu'une ville
-  // saisie librement (ex. « Vichy ») soit ignorée et retombe sur Dakar.
+  // Europe (test France)
   'paris':        { city: 'Paris',        country: 'France',        lat: 48.8566, lng: 2.3522 },
   'vichy':        { city: 'Vichy',        country: 'France',        lat: 46.1267, lng: 3.4259 },
-  'lyon':         { city: 'Lyon',         country: 'France',        lat: 45.7640, lng: 4.8357 },
-  'marseille':    { city: 'Marseille',    country: 'France',        lat: 43.2965, lng: 5.3698 },
-  'toulouse':     { city: 'Toulouse',     country: 'France',        lat: 43.6047, lng: 1.4442 },
-  'nice':         { city: 'Nice',         country: 'France',        lat: 43.7102, lng: 7.2620 },
-  'nantes':       { city: 'Nantes',       country: 'France',        lat: 47.2184, lng: -1.5536 },
-  'strasbourg':   { city: 'Strasbourg',   country: 'France',        lat: 48.5734, lng: 7.7521 },
-  'montpellier':  { city: 'Montpellier',  country: 'France',        lat: 43.6108, lng: 3.8767 },
-  'bordeaux':     { city: 'Bordeaux',     country: 'France',        lat: 44.8378, lng: -0.5792 },
-  'lille':        { city: 'Lille',        country: 'France',        lat: 50.6292, lng: 3.0573 },
-  'rennes':       { city: 'Rennes',       country: 'France',        lat: 48.1173, lng: -1.6778 },
-  'clermont-ferrand': { city: 'Clermont-Ferrand', country: 'France', lat: 45.7772, lng: 3.0870 },
 
   // Afrique du Nord
   'algiers':      { city: 'Alger',        country: 'Algeria',       lat: 36.7538, lng: 3.0588 },
@@ -1901,21 +1833,25 @@ function normalizeVendorCities() {
     let lat = (profile.lat != null) ? Number(profile.lat) : (u.lat != null ? Number(u.lat) : null);
     let lng = (profile.lng != null) ? Number(profile.lng) : (u.lng != null ? Number(u.lng) : null);
 
+    // Correctif ciblé : fiche connue réaffectée à sa vraie ville d'inscription
+    // (Paris, Vichy…) AVANT toute géolocalisation, pour ne pas re-persister Dakar.
+    const knownFix = knownVendorFix(u.vendorId || u.id, u.email);
+    const hasExactFix = !!(knownFix && knownFix.lat != null && knownFix.lng != null);
+    if (knownFix && knownFix.city) { city = knownFix.city; country = knownFix.country; }
+    if (knownFix && knownFix.lat != null) lat = Number(knownFix.lat);
+    if (knownFix && knownFix.lng != null) lng = Number(knownFix.lng);
+
     const ck = normalizeCityKey(city);
     const needsResolve = !ck || ck === 'other' || ck === 'autre';
-    let geo = geocodeCity(city);
+    let geo = hasExactFix ? null : geocodeCity(city);
 
     if (geo) {
-      // Ville connue : on garde ville/pays canoniques, mais on préserve les
-      // coordonnées GPS réelles si elles sont plausibles (≤ 50 km du centre),
-      // afin de ne plus écraser une vraie position par le centre-ville. On ne
-      // recale sur le centre que si les coordonnées sont absentes ou
-      // manifestement incohérentes (ex. « Paris » avec des coordonnées à Dakar).
+      // Ville connue : on force des coordonnées canoniques pour corriger les
+      // incohérences (ville ≠ coordonnées).
       city = geo.city;
       country = geo.country;
-      const hasReal = typeof lat === 'number' && isFinite(lat) && typeof lng === 'number' && isFinite(lng);
-      const closeEnough = hasReal && haversineKm(lat, lng, geo.lat, geo.lng) <= 50;
-      if (!closeEnough) { lat = geo.lat; lng = geo.lng; }
+      lat = geo.lat;
+      lng = geo.lng;
     } else if (needsResolve) {
       // Ville vide / « other » : on la dérive de la position GPS.
       const resolved = resolveVendorCity(lat, lng, country);
@@ -1976,19 +1912,10 @@ function normalizeVendorCities() {
   }
 }
 
-// Assainit un logo avant exposition dans /api/carte : une image data-URL
-// surdimensionnée (plusieurs centaines de Ko, ex. logo vendeur mal compressé)
-// gonfle la réponse JSON et fige le rendu des cartes côté client (page lente,
-// cartes apparemment inopérantes). Au-delà du seuil, on renvoie une chaîne
-// vide : le client affiche alors l'avatar à initiale, léger et fiable.
-const MAX_LOGO_CHARS = 150000; // ~150 Ko en base64
-function safeLogo(logo) {
-  const s = typeof logo === 'string' ? logo.trim() : '';
-  if (!s) return '';
-  if (s.indexOf('data:') === 0 && s.length > MAX_LOGO_CHARS) return '';
-  return s;
-}
-
+// Correctif défensif ciblé : réaffecte certaines fiches connues à leur vraie
+// ville d'inscription, quel que soit l'état enregistré (ville/coordonnées erronées).
+// S'applique en lecture pour la carte, la liste et l'admin, afin qu'une inscription
+// en province ne remonte pas à tort sur la position par défaut du pays (Paris).
 const KNOWN_VENDOR_FIXES = [
   {
     matchId: 'pro-45624665',
@@ -2004,6 +1931,10 @@ const KNOWN_VENDOR_FIXES = [
       status: 'en_attente'
     }
   },
+  // DAN Boutique — vraie adresse : 3 rue de Cambrai, 75019 Paris.
+  // Le compte « seed » (pro-41cafa4bcb31) et le compte réel d'inscription
+  // (ven-e9e831ccf698) désignent la même boutique physique : on réaffecte les
+  // deux identifiants aux mêmes coordonnées exactes.
   {
     matchId: 'pro-41cafa4bcb31',
     matchEmail: 'dan@exemple.com',
@@ -2012,7 +1943,8 @@ const KNOWN_VENDOR_FIXES = [
       country: 'France',
       lat: 48.89385,
       lng: 2.37708,
-      address: '3 rue de Cambrai, 75019 Paris'
+      address: '3 rue de Cambrai, 75019 Paris',
+      description: 'Boutique de prêt-à-porter, accessoires et articles tendance au cœur de Paris.'
     }
   },
   {
@@ -2023,9 +1955,11 @@ const KNOWN_VENDOR_FIXES = [
       country: 'France',
       lat: 48.89385,
       lng: 2.37708,
-      address: '3 rue de Cambrai, 75019 Paris'
+      address: '3 rue de Cambrai, 75019 Paris',
+      description: 'Boutique de prêt-à-porter, accessoires et articles tendance au cœur de Paris.'
     }
   },
+  // Boutique jeu vidéo — même adresse réelle : 3 rue de Cambrai, 75019 Paris.
   {
     matchId: 'ven-7267d483b4d8',
     matchEmail: '',
@@ -2034,7 +1968,8 @@ const KNOWN_VENDOR_FIXES = [
       country: 'France',
       lat: 48.89385,
       lng: 2.37708,
-      address: '3 rue de Cambrai, 75019 Paris'
+      address: '3 rue de Cambrai, 75019 Paris',
+      description: 'Boutique spécialisée jeux vidéo et consoles au cœur de Paris.'
     }
   }
 ];
@@ -2058,6 +1993,40 @@ function isDemoVendor(id) {
   return !!(id && DEMO_VENDOR_IDS.has(id));
 }
 
+// Vue « publique » de la config d'un vendeur : canonise l'identifiant (doublons
+// seed <-> compte réel) puis applique le correctif géographique connu (ville,
+// pays, coordonnées, adresse, description) en LECTURE, sans réécrire la donnée
+// persistée. Corrige ainsi les fiches restées sur Dakar malgré un compte à Paris.
+function vendorConfigView(vendorId) {
+  const rawId = String(vendorId || '').trim();
+  const canonical = canonicalRoutingId(rawId) || rawId;
+  const doc = vendorConfigFor(canonical);
+  if (!doc) return null;
+  const owner = users.find(function (x) {
+    return x && (x.vendorId === canonical || x.id === canonical || x.vendorId === rawId || x.id === rawId);
+  });
+  const fix = knownVendorFix(canonical, owner ? owner.email : '');
+  const out = Object.assign({}, doc);
+  out.vendorId = canonical;
+  out.profile = Object.assign({}, out.profile);
+  if (fix) {
+    out.profile = Object.assign({}, out.profile, {
+      city: fix.city,
+      country: fix.country,
+      lat: fix.lat,
+      lng: fix.lng,
+      address: fix.address || out.profile.address,
+      description: fix.description || out.profile.description
+    });
+    if (fix.city) {
+      out.decouverte = Object.assign({}, out.decouverte);
+      out.decouverte.villes = [fix.city];
+      out.decouverte.pays = [fix.country];
+    }
+  }
+  return out;
+}
+
 function carteVendors() {
   // Réconcilie l'état des boosters (expiration des badges échus) avant de
   // construire l'annuaire, afin que la carte reflète les badges actifs en
@@ -2079,13 +2048,9 @@ function carteVendors() {
     const category = knownFix && knownFix.category
       ? carteCategory(knownFix.category)
       : carteCategory(profile.category || u.category || (type === 'boutique' ? 'boutique' : 'service'));
-    const rawRating = (cfg && cfg.rating != null)
+    const rating = (cfg && cfg.rating != null)
       ? Number(cfg.rating)
       : ((cfg && cfg.ranking && cfg.ranking.score != null) ? Number((cfg.ranking.score / 20).toFixed(1)) : 4.5);
-    // Ne jamais exposer une note nulle : une note absente ou égale à 0 est
-    // ramenée à la note par défaut (4.5). Corrige les cartes « ★ 0 » vues en
-    // production lorsque vendor-config.json enregistre rating:0.
-    const rating = (Number.isFinite(rawRating) && rawRating > 0) ? rawRating : 4.5;
 
     // Coordonnées + ville normalisées : les comptes « other » (ancienne option
     // « Autre ») sont ré-affectés à une vraie ville pour ne pas disparaître de
@@ -2124,11 +2089,9 @@ function carteVendors() {
       if (!country) country = resolved.country;
     }
 
-    const cid = canonicalRoutingId(u.vendorId || u.id);
     list.push({
       id: nextId++,
-      vendorId: cid,
-      lastSeen: (lastSeenByUser.get(cid) || (u.lastSeenAt ? Date.parse(u.lastSeenAt) : null)) || null,
+      vendorId: canonicalRoutingId(u.vendorId || u.id),
       name: profile.enseigne || u.enseigne || u.name || 'Professionnel',
       type: type,
       category: category,
@@ -2138,12 +2101,11 @@ function carteVendors() {
       lng: lng,
       rating: rating,
       price: '$$',
-      live: isVendorLive(u.vendorId || u.id),
-      desc: profile.description || '',
-      img: safeLogo(profile.logo || profile.cover || ''),
+      live: false,
+      desc: (knownFix && knownFix.description) || profile.description || '',
+      img: profile.logo || profile.cover || '',
       phone: (knownFix && knownFix.phone) || profile.phone || u.phone || '',
-      boosts: activeBoostsFor(u.vendorId || u.id),
-      trialBoosts: trialBoostsFor(u.vendorId || u.id)
+      boosts: activeBoostsFor(u.vendorId || u.id)
     });
   });
   return list;
@@ -2186,9 +2148,9 @@ function userByToken(token) {
 
 // Catalogue d'offres de boosters (fixe, exposé tel quel à l'écran).
 const BOOSTER_OFFERS = [
-  { id: 'boost-sponsorise', type: 'sponsorise', name: 'Sponsorisé', title: 'Passez devant vos concurrents', desc: 'Votre fiche remonte en tête de la carte et de la recherche, là où les clients cliquent en premier.', price: 2000, priceLabel: 'FCFA / 24h', durationText: '24h', durationMs: 24 * 60 * 60 * 1000, icon: 'megaphone', recommended: false, features: ['Première place sur la carte et la recherche', 'Badge « Sponsorisé » mis en avant', 'Visibilité maximale pendant 24 h'] },
-  { id: 'boost-promo', type: 'promo', name: 'En Promo', title: 'Boostez vos ventes', desc: 'Le badge rose « Promo » attire l’œil et crée l’urgence : idéal pour écouler un stock ou lancer une offre.', price: 3000, priceLabel: 'FCFA / 3 jours', durationText: '3 jours', durationMs: 3 * 24 * 60 * 60 * 1000, icon: 'tag', recommended: true, features: ['Badge « Promo » rose, très visible', 'Mise en avant dans l’Offre du jour', 'Visibilité pendant 3 jours'] },
-  { id: 'boost-nouveau', type: 'nouveau', name: 'Nouveau', title: 'Faites-vous remarquer', desc: 'Signalez votre ouverture ou un nouveau service et attirez les clients qui cherchent une nouveauté.', price: 1000, priceLabel: 'FCFA / 48h', durationText: '48h', durationMs: 48 * 60 * 60 * 1000, icon: 'sparkles', recommended: false, features: ['Badge « Nouveau » bleu sur votre fiche', 'Mise en avant des dernières inscriptions', 'Visibilité pendant 48 h'] }
+  { id: 'boost-sponsorise', type: 'sponsorise', name: 'Sponsorisé', title: 'Tête des résultats', desc: 'Votre fiche remonte en premier sur la carte et la recherche', price: 2000, priceLabel: 'FCFA / 24h', durationText: '24h', durationMs: 24 * 60 * 60 * 1000, icon: 'megaphone', recommended: false, features: ['Position en tête des résultats', 'Priorité sur la carte Local+', 'Portée maximale pendant 24h'] },
+  { id: 'boost-promo', type: 'promo', name: 'En Promo', title: 'Badge promo', desc: 'Affichez le badge « Promo » et mettez vos offres en avant', price: 3000, priceLabel: 'FCFA / 3 jours', durationText: '3 jours', durationMs: 3 * 24 * 60 * 60 * 1000, icon: 'tag', recommended: true, features: ['Badge « Promo » sur votre fiche', 'Mise en avant de vos offres', 'Visibilité pendant 3 jours'] },
+  { id: 'boost-nouveau', type: 'nouveau', name: 'Nouveau', title: 'Badge nouveauté', desc: 'Attirez l\'attention des nouveaux clients', price: 1000, priceLabel: 'FCFA / 48h', durationText: '48h', durationMs: 48 * 60 * 60 * 1000, icon: 'sparkles', recommended: false, features: ['Badge « Nouveau » sur votre fiche', 'Signale votre activité récente', 'Visibilité pendant 48h'] }
 ];
 
 function findOffer(idOrType) {
@@ -2220,40 +2182,6 @@ function loadBoosters() {
 
 function saveBoosters() {
   writeJsonAtomic('boosters.json', boosters);
-}
-
-function loadTrials() {
-  try {
-    if (fs.existsSync(TRIALS_FILE)) {
-      const data = JSON.parse(fs.readFileSync(TRIALS_FILE, 'utf8'));
-      if (Array.isArray(data)) { trials = data; console.log('[Essais] essais chargés :', trials.length); return; }
-    }
-  } catch (e) { console.error('[Essais] lecture impossible, réinitialisation :', e.message); }
-  trials = [];
-}
-
-function saveTrials() {
-  writeJsonAtomic('trials.json', trials);
-}
-
-/* Un essai gratuit est accordé UNE seule fois par vendeur et par type
- * (offre du jour, badge « Nouveau », badge « Promo »). Retourne true si le
- * vendeur a déjà consommé son essai pour ce type. */
-function trialUsed(vendorId, type) {
-  const id = canonicalRoutingId(vendorId);
-  return trials.some(function (t) {
-    return t && canonicalRoutingId(t.vendorId) === id && String(t.type || '') === String(type || '');
-  });
-}
-
-function recordTrial(vendorId, type, refId) {
-  trials.push({
-    vendorId: canonicalRoutingId(vendorId),
-    type: String(type || ''),
-    refId: String(refId || ''),
-    createdAt: new Date().toISOString()
-  });
-  saveTrials();
 }
 
 /* Réconcilie l'état des activations : expire les badges actifs échus et
@@ -2302,25 +2230,6 @@ function activeBoostsFor(vendorId) {
     if (t && !seen[t]) { seen[t] = true; types.push(t); }
   });
   types.sort(function (a, b) { return (rankOf[b] || 0) - (rankOf[a] || 0); });
-  return types;
-}
-
-/* Types de badges actifs (non expirés) en mode essai d'un vendeur. Utilisé
- * par /api/carte pour signaler « Essai » à côté des badges concernés. */
-function trialBoostsFor(vendorId) {
-  const id = String(vendorId || '');
-  if (!id) return [];
-  const now = Date.now();
-  const seen = {};
-  const types = [];
-  boosters.forEach(function (b) {
-    if (!b || b.status !== 'active') return;
-    if (String(b.vendorId || '') !== id) return;
-    if (b.mode !== 'essai') return;
-    if (b.expiresAt && Date.parse(b.expiresAt) <= now) return;
-    const t = b.type;
-    if (t && !seen[t]) { seen[t] = true; types.push(t); }
-  });
   return types;
 }
 
@@ -2472,18 +2381,7 @@ function loadOffresJour() {
   try {
     if (fs.existsSync(OFFRES_JOUR_FILE)) {
       const data = JSON.parse(fs.readFileSync(OFFRES_JOUR_FILE, 'utf8'));
-      if (Array.isArray(data)) {
-        let changed = false;
-        data.forEach(function (o) {
-          if (o && typeof o.vendorId === 'string') {
-            const canon = canonicalRoutingId(o.vendorId);
-            if (canon && canon !== o.vendorId) { o.vendorId = canon; changed = true; }
-          }
-        });
-        offresJour = data;
-        if (changed) saveOffresJour();
-        console.log('[Paiement] offres du jour chargées :', offresJour.length); return;
-      }
+      if (Array.isArray(data)) { offresJour = data; console.log('[Paiement] offres du jour chargées :', offresJour.length); return; }
     }
   } catch (e) { console.error('[Paiement] offres du jour illisibles, réinitialisation :', e.message); }
   offresJour = [];
@@ -3323,7 +3221,14 @@ function expireOffresJour() {
 
 function activeOffresJour() {
   const now = Date.now();
-  return offresJour.filter(function (o) { return o.status === 'active' && new Date(o.endsAt).getTime() > now; });
+  return offresJour
+    .filter(function (o) { return o.status === 'active' && new Date(o.endsAt).getTime() > now; })
+    .map(function (o) {
+      const canonical = canonicalRoutingId(o.vendorId) || o.vendorId;
+      const copy = Object.assign({}, o, { vendorId: canonical });
+      if (canonical !== o.vendorId) copy.ownerVendorId = o.vendorId;
+      return copy;
+    });
 }
 
 function parseCookies(req) {
@@ -3482,7 +3387,6 @@ function handleMessage(ws, msg) {
     case 'ice-candidate': handleIce(ws, msg); break;
     case 'chat-message': handleChatMessage(ws, msg); break;
     case 'chat-audio': handleChatAudio(ws, msg); break;
-    case 'chat-video': handleChatVideo(ws, msg); break;
     case 'chat-edit': handleChatEdit(ws, msg); break;
     case 'chat-delete': handleChatDelete(ws, msg); break;
     case 'chat-history': handleChatHistory(ws, msg); break;
@@ -3694,11 +3598,11 @@ function handleChatMessage(ws, msg) {
 }
 
 function handleTyping(ws, msg) {
-  const from = canonicalRoutingId(ws.meta && ws.meta.id);
-  const to = canonicalRoutingId(String(msg.to || '').trim());
+  const from = ws.meta && ws.meta.id;
+  const to = String(msg.to || '').trim();
   if (!from || !to) return;
   broadcastToPeer(to, {
-    type: 'typing', from, fromName: ws.meta && ws.meta.name, isTyping: !!msg.isTyping
+    type: 'typing', from, fromName: ws.meta.name, isTyping: !!msg.isTyping
   });
 }
 
@@ -3795,7 +3699,6 @@ function handleChatVideo(ws, msg) {
     });
   }
 }
-
 // Édition d'un message déjà envoyé. Seul l'auteur peut modifier son message :
 // on résout l'entrée du chatLog par msgId ET par from === ws.meta.id (un pair ne
 // peut pas éditer le message d'un autre). Le texte est mis à jour, daté, puis
@@ -4613,7 +4516,6 @@ function handleHttp(req, res) {
         return {
           id: u.id,
           vendorId: u.vendorId || u.id,
-          routingId: routingIdForUser(u),
           role: u.role,
           name: u.enseigne || u.name || u.fullName || u.phone || u.email || 'Contact',
           enseigne: u.enseigne || '',
@@ -4623,7 +4525,6 @@ function handleHttp(req, res) {
           logo: u.logo || '',
           category: u.category || '',
           online: isOnline(u.id) || isOnline(u.vendorId),
-          lastSeen: (lastSeenByUser.get(routingIdForUser(u)) || (u.lastSeenAt ? Date.parse(u.lastSeenAt) : null)) || null,
           createdAt: u.createdAt || ''
         };
       })
@@ -5080,23 +4981,10 @@ function handleHttp(req, res) {
           if (!offer) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'offre inconnue' })); return; }
           const user = userForVendorId(body.vendorId);
           if (!user) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'compte vendeur introuvable' })); return; }
-          const isTrial = body.trial === true;
-          if (isTrial && offer.type !== 'nouveau' && offer.type !== 'promo') {
-            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Essai gratuit indisponible pour ce badge.' })); return;
-          }
-          if (isTrial && trialUsed(body.vendorId, offer.type)) {
-            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Votre essai gratuit a déjà été utilisé pour ce badge.' })); return;
-          }
+          const pay = recordBoosterPayment(user, offer, 'booster', body);
+          if (!pay.ok) { res.writeHead(402, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(pay)); return; }
           const now = Date.now();
-          const durationMs = isTrial ? (48 * 60 * 60 * 1000) : (Number(offer.durationMs) || 24 * 60 * 60 * 1000);
-          let pay;
-          if (isTrial) {
-            pay = { ok: true, payment: { id: 'ESSAI-' + crypto.randomBytes(6).toString('hex'), amount: 0, paidAt: new Date(now).toISOString(), operator: '', phone: '' } };
-            recordTrial(body.vendorId, offer.type, null);
-          } else {
-            pay = recordBoosterPayment(user, offer, 'booster', body);
-            if (!pay.ok) { res.writeHead(402, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(pay)); return; }
-          }
+          const durationMs = Number(offer.durationMs) || 24 * 60 * 60 * 1000;
           const activation = {
             id: rand(),
             vendorId: String(body.vendorId || ''),
@@ -5105,15 +4993,14 @@ function handleHttp(req, res) {
             type: offer.type,
             name: offer.name,
             status: 'active',
-            mode: isTrial ? 'essai' : 'standard',
             createdAt: new Date(now).toISOString(),
             expiresAt: new Date(now + durationMs).toISOString(),
             paymentId: pay.payment.id,
             startLabel: 'À l\'instant',
-            endLabel: 'Dans ' + (isTrial ? '48h' : offer.durationText),
-            remainingLabel: (isTrial ? '48h' : offer.durationText) + ' / ' + (isTrial ? '48h' : offer.durationText),
+            endLabel: 'Dans ' + offer.durationText,
+            remainingLabel: offer.durationText + ' / ' + offer.durationText,
             remainingPct: 100,
-            price: isTrial ? 0 : offer.price,
+            price: offer.price,
             views: 0,
             clicks: 0,
             orders: 0
@@ -5207,9 +5094,6 @@ function handleHttp(req, res) {
       const cityRaw = String(body.city || '').trim() || 'Dakar';
       const geo = geocodeCity(cityRaw);
       const city = geo ? geo.city : cityRaw;
-      // Coordonnées GPS réelles fournies par le navigateur (bouton « Utiliser ma
-      // position exacte »). Si valides, elles priment sur le centre-ville du
-      // dictionnaire pour placer la fiche à la vraie position du pro.
       const clientLat = (body.lat != null && body.lat !== '' && isFinite(Number(body.lat))) ? Number(body.lat) : null;
       const clientLng = (body.lng != null && body.lng !== '' && isFinite(Number(body.lng))) ? Number(body.lng) : null;
       const category = String(body.category || '').trim() || 'salon';
@@ -5403,42 +5287,24 @@ function handleHttp(req, res) {
       // et le pays, puis on synchronise le vendor-config. Cela permet de
       // « déménager » un compte (ex. de Paris vers Dakar) sans le recréer, et
       // la carte reflète le nouveau lieu immédiatement.
-      // Coordonnées GPS réelles éventuellement fournies par le client
-      // (bouton « Me géolocaliser »). Elles priment sur le centre-ville.
-      const newLat = (body.lat != null && body.lat !== '' && isFinite(Number(body.lat))) ? Number(body.lat) : null;
-      const newLng = (body.lng != null && body.lng !== '' && isFinite(Number(body.lng))) ? Number(body.lng) : null;
-
       if (Object.prototype.hasOwnProperty.call(body, 'city') && user.city) {
         const geo = geocodeCity(user.city);
         if (geo) {
           user.city = geo.city;
           user.country = geo.country;
-          user.lat = newLat != null ? newLat : geo.lat;
-          user.lng = newLng != null ? newLng : geo.lng;
+          user.lat = geo.lat;
+          user.lng = geo.lng;
           if (user.vendorId) {
             const doc = vendorConfigFor(user.vendorId);
             if (doc) {
               doc.profile = Object.assign({}, doc.profile, {
-                city: geo.city, country: geo.country, lat: user.lat, lng: user.lng
+                city: geo.city, country: geo.country, lat: geo.lat, lng: geo.lng
               });
               doc.updatedAt = nowIso();
               saveVendorConfig();
             }
           }
         }
-      } else if (newLat != null && newLng != null) {
-        // Position GPS fournie sans changement de ville : on affine la position seule.
-        user.lat = newLat;
-        user.lng = newLng;
-        if (user.vendorId) {
-          const doc = vendorConfigFor(user.vendorId);
-          if (doc) {
-            doc.profile = Object.assign({}, doc.profile, { lat: newLat, lng: newLng });
-            doc.updatedAt = nowIso();
-            saveVendorConfig();
-          }
-        }
-        changed = true;
       }
 
       if (!changed) {
@@ -5721,7 +5587,7 @@ function handleHttp(req, res) {
         city: p.city || u.city || '—',
         phone: p.phone || u.phone || '',
         email: p.email || u.email || '',
-        address: p.address || '',
+        address: (knownFix && knownFix.address) || p.address || '',
         logo: u.logo || p.logo || '',
         status: status,
         verification: (doc.verification && doc.verification.status) || 'non_soumis',
@@ -5856,7 +5722,7 @@ function handleHttp(req, res) {
         status: status,
         verification: (doc.verification && doc.verification.status) || 'non_soumis',
         badgeLabel: (doc.verification && doc.verification.badgeLabel) || (verified ? 'Prestataire certifié' : ''),
-        plan: (doc.subscription && doc.subscription.plan) || 'decouverte',
+        plan: (knownFix && knownFix.plan) || (doc.subscription && doc.subscription.plan) || 'decouverte',
         createdAt: u.createdAt || doc.createdAt || '',
         updatedAt: doc.updatedAt || '',
         stats: {
@@ -6163,7 +6029,8 @@ function handleHttp(req, res) {
     if (req.method === 'POST') {
       readJsonBody(req, function (err, body) {
         if (err) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
-        const vendor = String(body.vendorId || body.vendor || 'pro-41cafa4bcb31');
+        const vendorRaw = String(body.vendorId || body.vendor || 'pro-41cafa4bcb31');
+        const vendor = canonicalRoutingId(vendorRaw) || vendorRaw;
         const doc = vendorConfigFor(vendor);
         const action = body && body.action;
 
@@ -6246,19 +6113,6 @@ function handleHttp(req, res) {
         if (action === 'toggle-online') {
           const next = body.online !== undefined ? !!body.online : !(doc.horsLigne && doc.horsLigne.online);
           doc.horsLigne = Object.assign({}, doc.horsLigne || {}, { online: next, lastSeenAt: new Date().toISOString() });
-          doc.updatedAt = new Date().toISOString();
-          saveVendorConfig();
-          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ ok: true, config: doc }));
-          return;
-        }
-        if (action === 'set-welcome-audio') {
-          doc.welcomeAudio = Object.assign({}, doc.welcomeAudio || {}, {
-            text: String(body.text || ''),
-            dataUrl: String(body.dataUrl || ''),
-            mime: body.mime || 'audio/webm',
-            updatedAt: new Date().toISOString()
-          });
           doc.updatedAt = new Date().toISOString();
           saveVendorConfig();
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -6424,6 +6278,32 @@ function handleHttp(req, res) {
     return;
   }
 
+  if (urlPath === '/api/offres-jour/active') {
+    expireOffresJour();
+    const user = userFromReq(req);
+    if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
+    const myId = canonicalRoutingId(user.vendorId || user.id) || (user.vendorId || user.id);
+    const mine = activeOffresJour().filter(function (o) { return (canonicalRoutingId(o.vendorId) || o.vendorId) === myId; });
+    const enriched = mine.map(function (o) {
+      const txn = transactions.find(function (t) { return t.id === o.paymentId; });
+      const payment = txn ? {
+        id: txn.id,
+        mode: txn.mode || null,
+        status: txn.status || null,
+        operator: txn.operator || null,
+        operatorLabel: txn.operatorLabel || null,
+        phone: txn.phone || null,
+        amount: Number(txn.amount) || Number(o.price) || 0,
+        feeAmount: Number(txn.feeAmount) || 0,
+        paidAt: txn.updatedAt || txn.createdAt || null
+      } : { mode: 'wallet', status: 'completed', amount: Number(o.price) || 0, feeAmount: 0 };
+      return Object.assign({}, o, { payment: payment });
+    });
+    res.writeHead(200, JSON_HEADERS);
+    res.end(JSON.stringify({ ok: true, offres: enriched, tiers: OFFRE_DU_JOUR_TIERS }));
+    return;
+  }
+
   if (urlPath === '/api/offres-jour/publish') {
     if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
     readJsonBody(req, function (err, body) {
@@ -6432,21 +6312,14 @@ function handleHttp(req, res) {
       const user = userFromReq(req);
       if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
       if (!isSeller(user)) { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Réservé aux vendeurs et prestataires.' })); return; }
-      const isTrial = body.trial === true;
-      const tier = isTrial
-        ? { id: 'essai', durationHours: 24, durationLabel: '24 heures', price: 0 }
-        : tierById(String(body.tierId || ''));
+      const tier = tierById(String(body.tierId || ''));
       if (!tier) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Palier de durée invalide.' })); return; }
       const title = String(body.title || '').trim();
       if (!title) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Titre manquant.' })); return; }
 
-      const vendorId = canonicalRoutingId(user.vendorId || user.id);
+      const vendorId = canonicalRoutingId(user.vendorId || user.id) || (user.vendorId || user.id);
       let payment;
-      if (isTrial) {
-        if (trialUsed(vendorId, 'offre')) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Votre essai gratuit a déjà été utilisé pour l\'offre du jour.' })); return; }
-        payment = { id: 'ESSAI-' + crypto.randomBytes(6).toString('hex'), amount: 0, paidAt: new Date().toISOString(), operator: '', phone: '' };
-        recordTrial(vendorId, 'offre', null);
-      } else if (body.payFromWallet === true) {
+      if (body.payFromWallet === true) {
         const w = walletFor(user.id);
         if ((Number(w.balance) || 0) < tier.price) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Solde portefeuille insuffisant.' })); return; }
         w.balance = Math.round((Number(w.balance) || 0) - tier.price);
@@ -6470,10 +6343,9 @@ function handleHttp(req, res) {
         title: title,
         description: String(body.description || '').trim(),
         tierId: tier.id,
-        durationLabel: isTrial ? '24 heures (essai)' : tier.durationLabel,
+        durationLabel: tier.durationLabel,
         price: tier.price,
         paymentId: payment.id,
-        mode: isTrial ? 'essai' : 'standard',
         productId: String(body.productId || ''),
         status: 'active',
         startsAt: now.toISOString(),
@@ -6497,7 +6369,7 @@ function handleHttp(req, res) {
       if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
       const offre = offresJour.find(function (o) { return o.id === String(body.offreId || body.id || ''); });
       if (!offre) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Offre introuvable.' })); return; }
-      if (canonicalRoutingId(user.vendorId || user.id) !== offre.vendorId && user.role !== 'admin') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès refusé.' })); return; }
+      if ((user.vendorId || user.id) !== offre.vendorId && user.role !== 'admin') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès refusé.' })); return; }
       const tier = tierById(String(body.tierId || offre.tierId || ''));
       if (!tier) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Palier de durée invalide.' })); return; }
       let payment;
@@ -6540,7 +6412,8 @@ function handleHttp(req, res) {
       if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
       const offre = offresJour.find(function (o) { return o.id === String(body.offreId || body.id || ''); });
       if (!offre) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Offre introuvable.' })); return; }
-      if (canonicalRoutingId(user.vendorId || user.id) !== offre.vendorId && user.role !== 'admin') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès refusé.' })); return; }
+      const myVendorId = canonicalRoutingId(user.vendorId || user.id) || (user.vendorId || user.id);
+      if (myVendorId !== (canonicalRoutingId(offre.vendorId) || offre.vendorId) && user.role !== 'admin') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès refusé.' })); return; }
       offre.status = 'expiree';
       offre.expiredAt = new Date().toISOString();
       saveOffresJour();
@@ -7287,7 +7160,6 @@ loadInventaireMouvements();
 loadGalerie();
 loadBoosters();
 loadBoosterStats();
-loadTrials();
 loadVendorConfig();
 loadUsers();
 ensureSeedVendorUsers();
