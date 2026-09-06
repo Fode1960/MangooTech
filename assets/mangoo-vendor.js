@@ -23,26 +23,29 @@
     category: 'commerce',
     phone: '',
     email: '',
-    city: '',
-    rating: '4.8',
-    verified: true,
+    city: 'Paris',
+    rating: '—',
+    verified: false,
     plan: 'decouverte'
   };
 
   // Identités de démonstration publiques (aperçu via ?demo=prestataire|boutique).
   // Permet d'explorer les DEUX rôles sans session : prestataire de service
   // (DAN Coiffure) et vendeur / boutique (DAN Boutique).
+  // Les coordonnées de contact (téléphone/email) restent vides : elles sont
+  // fournies par la source serveur (vendor-config / session) en production,
+  // jamais par un seed fictif.
   var DEMO_VENDORS = {
     prestataire: {
       vendorId: 'pro-eb10536cd12d',
       name: 'DAN Coiffure',
       role: 'prestataire',
       category: 'salon',
-      phone: '+221 77 000 00 00',
-      email: 'dan.coiffure@exemple.com',
-      city: 'Dakar',
-      rating: '4.8',
-      verified: true,
+      phone: '',
+      email: '',
+      city: 'Paris',
+      rating: '—',
+      verified: false,
       plan: 'decouverte'
     },
     boutique: {
@@ -50,11 +53,11 @@
       name: 'DAN Boutique',
       role: 'vendeur',
       category: 'commerce',
-      phone: '+221 77 111 11 11',
-      email: 'contact@dan-boutique.com',
-      city: 'Dakar',
-      rating: '4.8',
-      verified: true,
+      phone: '',
+      email: '',
+      city: 'Paris',
+      rating: '—',
+      verified: false,
       plan: 'decouverte'
     }
   };
@@ -100,7 +103,7 @@
     if (role !== 'prestataire' && role !== 'vendeur') return null;
     return {
       vendorId: user.vendorId || user.id || '',
-      name: user.enseigne || user.name || 'Ma boutique',
+      name: user.enseigne || user.name || 'DAN Boutique',
       role: role,
       category: user.category || 'salon',
       phone: user.phone || '',
@@ -212,6 +215,45 @@
     });
   }
 
+  // ---- Commandes serveur (source de vérité en production) ----
+  // En production, la liste des commandes du pro est servie par GET /api/orders
+  // (filtrée côté serveur par l'identité connectée). Le localStorage ne sert
+  // plus que de repli hors-ligne / démo.
+  function authToken() {
+    try { return localStorage.getItem('mgt_token') || null; } catch (e) { return null; }
+  }
+  function fetchServerOrders(cb) {
+    cb = typeof cb === 'function' ? cb : function () {};
+    var token = authToken();
+    if (!token) { cb({ ok: false, error: 'Non authentifié' }); return; }
+    var headers = { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token };
+    try {
+      fetch('/api/orders', { headers: headers }).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }).then(function (res) {
+        var list = Array.isArray(res && res.orders) ? res.orders : [];
+        cb({ ok: true, orders: list });
+      }).catch(function (err) {
+        cb({ ok: false, error: (err && err.message) || 'Erreur réseau' });
+      });
+    } catch (e) { cb({ ok: false, error: 'Erreur' }); }
+  }
+
+  // Met à jour le statut d'une commande côté serveur (source de vérité).
+  function updateOrderStatus(id, status, cb) {
+    cb = typeof cb === 'function' ? cb : function () {};
+    var token = authToken();
+    if (!token) { cb({ ok: false, error: 'Non authentifié' }); return; }
+    var headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+    try {
+      fetch('/api/orders/status', { method: 'POST', headers: headers, body: JSON.stringify({ id: String(id).replace(/^#/, ''), status: status }) })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (res) { cb({ ok: true, order: res && res.order }); })
+        .catch(function (err) { cb({ ok: false, error: (err && err.message) || 'Erreur réseau' }); });
+    } catch (e) { cb({ ok: false, error: 'Erreur' }); }
+  }
+
   // ---- Portefeuille vendeur (solde disponible, côté démo local) ----
   // Le solde du vendeur est persisté en localStorage : quand un client règle
   // une commande (fiche-boutique.html / fiche.html), le montant est crédité
@@ -219,8 +261,8 @@
   var WALLETS_KEY = 'mgt_vendor_wallets_v1';
 
   var SEED_WALLETS = [
-    { vendorId: 'pro-41cafa4bcb31', name: 'DAN Boutique', balance: 58500, currency: 'XOF' },
-    { vendorId: 'pro-eb10536cd12d', name: 'DAN Coiffure', balance: 42000, currency: 'XOF' }
+    { vendorId: 'pro-41cafa4bcb31', name: 'DAN Boutique', balance: 0, currency: 'XOF' },
+    { vendorId: 'pro-eb10536cd12d', name: 'DAN Coiffure', balance: 0, currency: 'XOF' }
   ];
 
   function readWallets() {
@@ -367,9 +409,9 @@
   }
   function vendorTimeZone(cityOrZone) {
     var s = String(cityOrZone || '').trim();
-    if (!s) return detectVendorTz() || 'Africa/Dakar';
+    if (!s) return detectVendorTz() || 'Europe/Paris';
     if (s.indexOf('/') !== -1) return s; // déjà un fuseau IANA
-    return VENDOR_CITY_TZ[s.toLowerCase()] || 'Africa/Dakar';
+    return VENDOR_CITY_TZ[s.toLowerCase()] || 'Europe/Paris';
   }
   var VENDOR_MONTHS = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aout', 'Sep', 'Oct', 'Nov', 'Dec'];
   function pad2tz(n) { n = Number(n) || 0; return (n < 10 ? '0' : '') + n; }
@@ -421,13 +463,15 @@
     connectedVendorId: connectedVendorId,
     readClientOrders: readClientOrders,
     ordersForVendor: ordersForVendor,
+    fetchServerOrders: fetchServerOrders,
+    updateOrderStatus: updateOrderStatus,
     WALLETS_KEY: WALLETS_KEY,
     SEED_WALLETS: SEED_WALLETS,
     getVendorWallet: getVendorWallet,
     getVendorBalance: getVendorBalance,
     creditVendor: creditVendor,
     debitVendor: debitVendor,
-    timeZone: 'Africa/Dakar',
+    timeZone: 'Europe/Paris',
     vendorTimeZone: vendorTimeZone,
     formatTime: formatTime,
     formatDate: formatDate

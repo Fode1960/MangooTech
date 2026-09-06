@@ -85,10 +85,10 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
       </nav>
       <div class="border-t border-white/10 px-4 py-4">
         <div class="flex items-center gap-3">
-          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>CA</div>
+          <div class="flex items-center justify-center w-9 h-9 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm" data-vendor-initials>DB</div>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium truncate" data-vendor-name>DAN Boutique</p>
-            <p class="text-xs text-white/60 truncate" data-vendor-role>Prestataire certifié</p>
+            <p class="text-xs text-white/60 truncate" data-vendor-role>Boutique</p>
           </div>
         </div>
       </div>
@@ -106,12 +106,12 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
             <span id="btn-notifications-badge" class="absolute top-1 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[rgb(var(--mgt-accent))] text-white text-[10px] font-bold leading-4 text-center" style="display:none;"></span>
           </button>
           <div id="btn-account" class="flex items-center gap-3 pl-2 border-l border-[rgb(var(--mgt-border))] cursor-pointer" role="button" tabindex="0">
-            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>CA</div>
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[rgb(var(--mgt-accent))] text-white font-semibold text-xs" data-vendor-initials>DB</div>
             <div class="hidden sm:block text-right">
               <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]" data-vendor-name>DAN Boutique</p>
               <div class="flex items-center gap-1 text-xs text-[rgb(var(--mgt-accent))]">
                 <i data-lucide="star" class="w-3 h-3 fill-current"></i>
-                <span data-vendor-rating>4.8</span>
+                <span data-vendor-rating>—</span>
               </div>
             </div>
           </div>
@@ -145,8 +145,8 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
         <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
           <div class="flex items-center justify-between mb-4"><h3 class="h3">Synchronisation</h3><button id="offline-sync-btn" type="button" class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors"><i data-lucide="refresh-cw" class="w-4 h-4"></i><span id="offline-sync-label">Synchroniser maintenant</span></button></div>
           <div class="space-y-3 text-sm text-[rgb(var(--mgt-muted-foreground))]">
-            <div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))]"><span class="flex items-center gap-2"><i data-lucide="cloud-download" class="w-4 h-4 text-[rgb(var(--mgt-primary))]"></i>Carte locale</span><span id="offline-carte-size" class="font-semibold tabular-nums">2,4 Mo</span></div>
-            <div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))]"><span class="flex items-center gap-2"><i data-lucide="cloud-download" class="w-4 h-4 text-[rgb(var(--mgt-primary))]"></i>Fiche & favoris</span><span id="offline-fav-size" class="font-semibold tabular-nums">840 Ko</span></div>
+            <div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))]"><span class="flex items-center gap-2"><i data-lucide="cloud-download" class="w-4 h-4 text-[rgb(var(--mgt-primary))]"></i>Carte locale</span><span id="offline-carte-size" class="font-semibold tabular-nums">0 Mo</span></div>
+            <div class="flex items-center justify-between p-3 rounded-lg bg-[rgb(var(--mgt-muted))]"><span class="flex items-center gap-2"><i data-lucide="cloud-download" class="w-4 h-4 text-[rgb(var(--mgt-primary))]"></i>Fiche & favoris</span><span id="offline-fav-size" class="font-semibold tabular-nums">0 Ko</span></div>
           </div>
         </div>
       </main>
@@ -251,8 +251,8 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     if (statusDot) { statusDot.style.background = enabled ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-warning))'; }
     if (lastSync) { lastSync.textContent = 'Dernière synchronisation : ' + fmtSync(h.lastSyncAt); }
     if (toggle) { toggle.textContent = enabled ? 'Désactiver le mode hors-ligne' : 'Activer le mode hors-ligne'; }
-    if (carte) { carte.textContent = h.carte || '2,4 Mo'; }
-    if (fav) { fav.textContent = h.ficheFavoris || '840 Ko'; }
+    if (carte) { carte.textContent = h.carte || '0 Mo'; }
+    if (fav) { fav.textContent = h.ficheFavoris || '0 Ko'; }
   }
 
   var toggle = document.getElementById('offline-toggle');
@@ -291,14 +291,8 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     });
   }
 
-  if (window.MangooVendorConfig) {
-    MangooVendorConfig.get().then(function (res) {
-      if (res && res.ok) {
-        currentConfig = res.config || {};
-        render();
-      }
-    }).catch(function () {});
-  }
+  currentConfig = {};
+  render();
 })();
 </script>
 </body>

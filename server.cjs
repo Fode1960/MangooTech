@@ -1050,8 +1050,8 @@ function seedVendorConfig() {
         liveAlerts: true
       },
       verification: {
-        status: 'certifie',
-        badgeLabel: 'Boutique certifiée',
+        status: 'en_attente',
+        badgeLabel: '',
         submittedAt: '2026-07-01T10:00:00.000Z',
         reviewedAt: '2026-08-19T21:45:36.312Z',
         reviewerNote: 'Documents conformes, activité vérifiée.',
@@ -1069,26 +1069,26 @@ function seedVendorConfig() {
       },
       horsLigne: {
         enabled: true,
-        lastSyncAt: '2026-08-18T08:40:00.000Z',
-        carte: '2,4 Mo',
-        ficheFavoris: '840 Ko',
+        lastSyncAt: '',
+        carte: '0 Ko',
+        ficheFavoris: '0 Ko',
         online: true,
         lastSeenAt: new Date().toISOString(),
         reason: ''
       },
       ranking: {
-        score: 92,
-        position: 2,
-        positionLabel: '2e sur 48',
-        factors: { boost: 30, verification: 25, avis: 20, completude: 17 }
+        score: 0,
+        position: 0,
+        positionLabel: '',
+        factors: { boost: 0, verification: 0, avis: 0, completude: 0 }
       },
       fidelite: {
         enabled: true,
         pointsPerOrder: 10,
-        members: 128,
-        pointsDistributed: 6400,
-        redeemed: 64,
-        retention: 72,
+        members: 0,
+        pointsDistributed: 0,
+        redeemed: 0,
+        retention: 0,
         rewards: [
           { id: 'rw-1', name: '-10% sur une prestation', cost: 100 },
           { id: 'rw-2', name: 'Soin du visage offert', cost: 250 },
@@ -1098,35 +1098,33 @@ function seedVendorConfig() {
       parrainage: {
         enabled: true,
         code: 'DAN10',
-        invited: 24,
+        invited: 0,
         rewardPerInvite: 500,
-        earned: 12000
+        earned: 0
       },
       rapports: {
         period: '2026-08',
-        revenue: 485000,
-        orders: 86,
-        views: 1240,
-        conversion: 6.9,
-        generated: 12,
-        downloads: 46,
-        scheduled: 3,
-        storage: '2,4 Mo',
-        lastExportAt: '2026-08-17T09:30:00.000Z',
+        revenue: 0,
+        orders: 0,
+        views: 0,
+        conversion: 0,
+        generated: 0,
+        downloads: 0,
+        scheduled: 0,
+        storage: '0 Ko',
+        lastExportAt: '',
         periods: {
-          '7j': { orders: 12, revenue: 485000 },
-          '30j': { orders: 45, revenue: 1200000 },
-          '90j': { orders: 128, revenue: 3400000 }
+          '7j': { orders: 0, revenue: 0 },
+          '30j': { orders: 0, revenue: 0 },
+          '90j': { orders: 0, revenue: 0 }
         }
       },
       support: {
-        openTickets: 1,
-        resolvedTickets: 18,
-        avgResponseHours: 3,
-        articles: 24,
-        tickets: [
-          { id: 'tk-1043', subject: 'Compte & accès', status: 'ouvert', updatedAt: '2026-08-19T17:38:16.474Z' }
-        ]
+        openTickets: 0,
+        resolvedTickets: 0,
+        avgResponseHours: 0,
+        articles: 0,
+        tickets: []
       },
       promotions: {
         enabled: true,
@@ -1139,12 +1137,12 @@ function seedVendorConfig() {
         rayonKm: 5,
         pays: ['France'],
         villes: ['Paris'],
-        badges: ['certifie', 'promo'],
+        badges: ['promo'],
         apparaitDans: ['carte', 'recherche', 'recommandations'],
-        impressions: 2840,
-        clics: 416,
-        tauxClic: 14.6,
-        recommandations: 132
+        impressions: 0,
+        clics: 0,
+        tauxClic: 0,
+        recommandations: 0
       }
     }
   };
@@ -1315,12 +1313,46 @@ function vendorLogoFor(vendorId) {
   return String(profile.logo || profile.cover || '');
 }
 
+// Retire des comptes DAN (boutique + coiffure) toutes les données fictives
+// persistées (revenus, commandes, vues, fidélité, parrainage, note, badge
+// « certifié », stats de découverte…) tout en conservant leur identité réelle
+// (enseigne, adresse, géolocalisation, logo, horaires).
+function sanitizeVendorConfig(config) {
+  const DEMO_IDS = ['pro-41cafa4bcb31', 'pro-eb10536cd12d'];
+  DEMO_IDS.forEach(function (vid) {
+    const c = config[vid];
+    if (!c) return;
+    c.verification = Object.assign({}, c.verification || {}, { status: 'en_attente', badgeLabel: '', badgeVisible: false });
+    c.ranking = { score: 0, position: 0, positionLabel: '', factors: { boost: 0, verification: 0, avis: 0, completude: 0 } };
+    c.fidelite = Object.assign({}, c.fidelite || {}, { members: 0, pointsDistributed: 0, redeemed: 0, retention: 0 });
+    c.parrainage = Object.assign({}, c.parrainage || {}, { invited: 0, earned: 0 });
+    c.rapports = Object.assign({}, c.rapports || {}, { revenue: 0, orders: 0, views: 0, conversion: 0, generated: 0, downloads: 0, scheduled: 0, storage: '0 Ko', lastExportAt: '', periods: { '7j': { orders: 0, revenue: 0 }, '30j': { orders: 0, revenue: 0 }, '90j': { orders: 0, revenue: 0 } } });
+    c.support = Object.assign({}, c.support || {}, { openTickets: 0, resolvedTickets: 0, avgResponseHours: 0, articles: 0, tickets: [] });
+    c.promotions = Object.assign({}, c.promotions || {}, { ca: 0, codes: [], campaigns: [] });
+    if (c.decouverte) {
+      c.decouverte.impressions = 0;
+      c.decouverte.clics = 0;
+      c.decouverte.tauxClic = 0;
+      c.decouverte.recommandations = 0;
+      if (Array.isArray(c.decouverte.badges)) {
+        c.decouverte.badges = c.decouverte.badges.filter(function (b) { return b !== 'certifie'; });
+      }
+    }
+    if (c.horsLigne) {
+      c.horsLigne.carte = '0 Ko';
+      c.horsLigne.ficheFavoris = '0 Ko';
+    }
+  });
+  return config;
+}
+
 function loadVendorConfig() {
   try {
     if (fs.existsSync(VENDOR_CONFIG_FILE)) {
       const data = JSON.parse(fs.readFileSync(VENDOR_CONFIG_FILE, 'utf8'));
       if (data && typeof data === 'object' && !Array.isArray(data)) {
-        vendorConfig = data;
+        vendorConfig = sanitizeVendorConfig(data);
+        saveVendorConfig();
         console.log('[VendorConfig] config chargée :', Object.keys(data).length, 'vendeur(s)');
         return;
       }
@@ -2034,7 +2066,7 @@ function carteVendors() {
       : carteCategory(profile.category || u.category || (type === 'boutique' ? 'boutique' : 'service'));
     const rating = (cfg && cfg.rating != null)
       ? Number(cfg.rating)
-      : ((cfg && cfg.ranking && cfg.ranking.score != null) ? Number((cfg.ranking.score / 20).toFixed(1)) : 4.5);
+      : ((cfg && cfg.ranking && cfg.ranking.score != null) ? Number((cfg.ranking.score / 20).toFixed(1)) : 0);
 
     // Coordonnées + ville normalisées : les comptes « other » (ancienne option
     // « Autre ») sont ré-affectés à une vraie ville pour ne pas disparaître de
