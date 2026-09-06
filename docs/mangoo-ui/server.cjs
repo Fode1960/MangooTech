@@ -4815,7 +4815,7 @@ function handleHttp(req, res) {
       const vendor = queryParam(req, 'vendor');
       const category = queryParam(req, 'category');
       let list = catalogue;
-      if (vendor) list = list.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; });
+      if (vendor) { const vcanon = canonicalRoutingId(vendor); list = list.filter(function (p) { return canonicalRoutingId(p.vendorId) === vcanon || p.vendorName === vendor; }); }
       else list = list.filter(function (p) { return !isDemoVendor(p.vendorId); });
       if (category && category !== 'all') list = list.filter(function (p) { return p.category === category; });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -4925,7 +4925,7 @@ function handleHttp(req, res) {
       const vendor = queryParam(req, 'vendor');
       const category = queryParam(req, 'category');
       let list = inventaire;
-      if (vendor) list = list.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; });
+      if (vendor) { const vcanon = canonicalRoutingId(vendor); list = list.filter(function (p) { return canonicalRoutingId(p.vendorId) === vcanon || p.vendorName === vendor; }); }
       if (category && category !== 'all') list = list.filter(function (p) { return p.category === category; });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ inventaire: list }));
@@ -4983,7 +4983,7 @@ function handleHttp(req, res) {
       const vendor = queryParam(req, 'vendor');
       const category = queryParam(req, 'category');
       let list = galerie;
-      if (vendor) list = list.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; });
+      if (vendor) { const vcanon = canonicalRoutingId(vendor); list = list.filter(function (p) { return canonicalRoutingId(p.vendorId) === vcanon || p.vendorName === vendor; }); }
       else list = list.filter(function (p) { return !isDemoVendor(p.vendorId); });
       if (category && category !== 'all') list = list.filter(function (p) { return p.category === category; });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -5042,7 +5042,7 @@ function handleHttp(req, res) {
       reconcileBoosters();
       const vendor = queryParam(req, 'vendor');
       let list = boosters;
-      if (vendor) list = list.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; });
+      if (vendor) { const vcanon = canonicalRoutingId(vendor); list = list.filter(function (p) { return canonicalRoutingId(p.vendorId) === vcanon || p.vendorName === vendor; }); }
       const active = list.filter(function (p) { return p.status === 'active'; });
       // Historique des badges = registre complet de TOUTES les activations
       // (actives et passées), la plus récente d'abord. Un badge payé apparaît
