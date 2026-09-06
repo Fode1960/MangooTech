@@ -1400,18 +1400,71 @@ function vendorLogoFor(vendorId) {
   return String(profile.logo || profile.cover || '');
 }
 
+// Retire des comptes DAN (boutique + coiffure) toutes les données fictives
+// persistées (revenus, commandes, vues, fidélité, parrainage, note, badge
+// « certifié », stats de découverte…) tout en conservant leur identité réelle
+// (enseigne, adresse, géolocalisation, logo, horaires).
+function sanitizeVendorConfig(config) {
+  const DEMO_IDS = ['pro-41cafa4bcb31', 'pro-eb10536cd12d'];
+  DEMO_IDS.forEach(function (vid) {
+    const c = config[vid];
+    if (!c) return;
+    const fix = knownVendorFix(vid);
+    if (fix) {
+      c.profile = Object.assign({}, c.profile || {}, {
+        city: fix.city,
+        country: fix.country,
+        lat: fix.lat,
+        lng: fix.lng,
+        address: fix.address || (c.profile && c.profile.address) || '',
+        description: fix.description || (c.profile && c.profile.description) || ''
+      });
+      if (fix.city) {
+        c.decouverte = Object.assign({}, c.decouverte || {});
+        c.decouverte.villes = [fix.city];
+        c.decouverte.pays = [fix.country];
+      }
+    }
+    if (vid === 'pro-41cafa4bcb31' && !(c.profile && c.profile.logo)) {
+      c.profile = Object.assign({}, c.profile || {}, { logo: '/assets/dan-boutique-logo.svg' });
+    }
+    c.verification = Object.assign({}, c.verification || {}, { status: 'en_attente', badgeLabel: '', badgeVisible: false });
+    c.ranking = { score: 0, position: 0, positionLabel: '', factors: { boost: 0, verification: 0, avis: 0, completude: 0 } };
+    c.fidelite = Object.assign({}, c.fidelite || {}, { members: 0, pointsDistributed: 0, redeemed: 0, retention: 0 });
+    c.parrainage = Object.assign({}, c.parrainage || {}, { invited: 0, earned: 0 });
+    c.rapports = Object.assign({}, c.rapports || {}, { revenue: 0, orders: 0, views: 0, conversion: 0, generated: 0, downloads: 0, scheduled: 0, storage: '0 Ko', lastExportAt: '', periods: { '7j': { orders: 0, revenue: 0 }, '30j': { orders: 0, revenue: 0 }, '90j': { orders: 0, revenue: 0 } } });
+    c.support = Object.assign({}, c.support || {}, { openTickets: 0, resolvedTickets: 0, avgResponseHours: 0, articles: 0, tickets: [] });
+    c.promotions = Object.assign({}, c.promotions || {}, { ca: 0, codes: [], campaigns: [] });
+    if (c.decouverte) {
+      c.decouverte.impressions = 0;
+      c.decouverte.clics = 0;
+      c.decouverte.tauxClic = 0;
+      c.decouverte.recommandations = 0;
+      if (Array.isArray(c.decouverte.badges)) {
+        c.decouverte.badges = c.decouverte.badges.filter(function (b) { return b !== 'certifie'; });
+      }
+    }
+    if (c.horsLigne) {
+      c.horsLigne.carte = '0 Ko';
+      c.horsLigne.ficheFavoris = '0 Ko';
+    }
+  });
+  return config;
+}
+
 function loadVendorConfig() {
   try {
     if (fs.existsSync(VENDOR_CONFIG_FILE)) {
       const data = JSON.parse(fs.readFileSync(VENDOR_CONFIG_FILE, 'utf8'));
       if (data && typeof data === 'object' && !Array.isArray(data)) {
-        vendorConfig = data;
+        vendorConfig = sanitizeVendorConfig(data);
+        saveVendorConfig();
         console.log('[VendorConfig] config chargée :', Object.keys(data).length, 'vendeur(s)');
         return;
       }
     }
   } catch (e) { console.error('[VendorConfig] lecture impossible, réinitialisation :', e.message); }
-  vendorConfig = seedVendorConfig();
+  vendorConfig = sanitizeVendorConfig(seedVendorConfig());
   saveVendorConfig();
   console.log('[VendorConfig] seed initial');
 }
@@ -2011,7 +2064,8 @@ const KNOWN_VENDOR_FIXES = [
       country: 'France',
       lat: 48.89385,
       lng: 2.37708,
-      address: '3 rue de Cambrai, 75019 Paris'
+      address: '3 rue de Cambrai, 75019 Paris',
+      description: 'Boutique de prêt-à-porter, accessoires et articles tendance au cœur de Paris.'
     }
   },
   {
@@ -2022,7 +2076,20 @@ const KNOWN_VENDOR_FIXES = [
       country: 'France',
       lat: 48.89385,
       lng: 2.37708,
-      address: '3 rue de Cambrai, 75019 Paris'
+      address: '3 rue de Cambrai, 75019 Paris',
+      description: 'Boutique de prêt-à-porter, accessoires et articles tendance au cœur de Paris.'
+    }
+  },
+  {
+    matchId: 'pro-eb10536cd12d',
+    matchEmail: '',
+    patch: {
+      city: 'Paris',
+      country: 'France',
+      lat: 48.89385,
+      lng: 2.37708,
+      address: '3 rue de Cambrai, 75019 Paris',
+      description: 'Salon de coiffure et soins capillaires au cœur de Paris.'
     }
   },
   {
@@ -2033,7 +2100,8 @@ const KNOWN_VENDOR_FIXES = [
       country: 'France',
       lat: 48.89385,
       lng: 2.37708,
-      address: '3 rue de Cambrai, 75019 Paris'
+      address: '3 rue de Cambrai, 75019 Paris',
+      description: 'Boutique spécialisée jeux vidéo et consoles au cœur de Paris.'
     }
   }
 ];
@@ -2046,6 +2114,40 @@ function knownVendorFix(id, email) {
     if (f.matchEmail && mail === f.matchEmail) return f.patch;
   }
   return null;
+}
+
+// Vue « publique » de la config d'un vendeur : canonise l'identifiant (doublons
+// seed <-> compte réel) puis applique le correctif géographique connu (ville,
+// pays, coordonnées, adresse, description) en LECTURE, sans réécrire la donnée
+// persistée. Corrige ainsi les fiches restées sur Dakar malgré un compte à Paris.
+function vendorConfigView(vendorId) {
+  const rawId = String(vendorId || '').trim();
+  const canonical = canonicalRoutingId(rawId) || rawId;
+  const doc = vendorConfigFor(canonical);
+  if (!doc) return null;
+  const owner = users.find(function (x) {
+    return x && (x.vendorId === canonical || x.id === canonical || x.vendorId === rawId || x.id === rawId);
+  });
+  const fix = knownVendorFix(canonical, owner ? owner.email : '');
+  const out = Object.assign({}, doc);
+  out.vendorId = canonical;
+  out.profile = Object.assign({}, out.profile);
+  if (fix) {
+    out.profile = Object.assign({}, out.profile, {
+      city: fix.city,
+      country: fix.country,
+      lat: fix.lat,
+      lng: fix.lng,
+      address: fix.address || out.profile.address,
+      description: fix.description || out.profile.description
+    });
+    if (fix.city) {
+      out.decouverte = Object.assign({}, out.decouverte);
+      out.decouverte.villes = [fix.city];
+      out.decouverte.pays = [fix.country];
+    }
+  }
+  return out;
 }
 
 // Plus aucun compte de démonstration : DAN Boutique (vendeur) et DAN Coiffure
@@ -6155,7 +6257,7 @@ function handleHttp(req, res) {
       const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || cookieFromReq(req, 'mgt_session');
       const authedUser = userByToken(token);
       const vendor = queryParam(req, 'vendor') || (authedUser && authedUser.vendorId) || 'pro-41cafa4bcb31';
-      const doc = vendorConfigFor(vendor);
+      const doc = vendorConfigView(vendor) || vendorConfigFor(vendor);
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ ok: true, config: doc, plans: ABONNEMENT_PLANS }));
       return;
