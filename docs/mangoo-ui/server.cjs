@@ -890,26 +890,37 @@ function savePrestations() {
  * ------------------------------------------------------------------ */
 const CATALOGUE_FILE = path.join(DATA_DIR, 'catalogue.json');
 let catalogue = [];
+// Purge des données de démonstration (seed historique) par préfixe d'ID.
+// Les produits réels portent un UUID généré par crypto.randomUUID() ; ils ne
+// correspondent jamais aux préfixes de démo. Cette migration garantit qu'aucun
+// produit fictif ne reste affiché en production après neutralisation des seeds.
+function purgeDemoByIdPrefix(list, prefixes) {
+  if (!Array.isArray(list)) return list;
+  const cleaned = list.filter(function (item) {
+    const id = String(item && item.id ? item.id : '');
+    for (let i = 0; i < prefixes.length; i++) {
+      if (id.indexOf(prefixes[i]) === 0) return false;
+    }
+    return true;
+  });
+  return cleaned.length === list.length ? list : cleaned;
+}
 
 function seedCatalogue() {
-  return [
-    // DAN Boutique — vendeur-boutique (commerce général, Dakar)
-    { id: 'c-dan-1', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Robe wax élégante', description: 'Robe en wax authentique, coupe moderne.', price: 12500, stock: 8, unit: 'unité', category: 'mode', available: true, image: '' },
-    { id: 'c-dan-2', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Chemise homme premium', description: 'Chemise coton, coupe ajustée.', price: 9000, stock: 15, unit: 'unité', category: 'mode', available: true, image: '' },
-    { id: 'c-dan-3', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Baskets tendance', description: 'Baskets légères, semelle confort.', price: 15000, stock: 6, unit: 'paire', category: 'chaussures', available: true, image: '' },
-    { id: 'c-dan-4', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sandales cuir', description: 'Sandales en cuir véritable.', price: 11000, stock: 0, unit: 'paire', category: 'chaussures', available: false, image: '' },
-    { id: 'c-dan-5', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sac à main cuir', description: 'Sac à main en cuir, finitions soignées.', price: 22000, stock: 4, unit: 'unité', category: 'sacs', available: true, image: '' },
-    { id: 'c-dan-6', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Smartphone 128 Go', description: 'Smartphone débloqué, double SIM.', price: 145000, stock: 3, unit: 'unité', category: 'electronique', available: true, image: '' },
-    { id: 'c-dan-7', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Lampe déco LED', description: 'Lampe d\'ambiance à intensité variable.', price: 8500, stock: 20, unit: 'unité', category: 'maison', available: true, image: '' },
-    { id: 'c-dan-8', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Parfum boisé 50 ml', description: 'Parfum boisé longue tenue.', price: 18000, stock: 9, unit: 'flacon', category: 'beaute', available: true, image: '' }
-  ];
+  return [];
 }
 
 function loadCatalogue() {
   try {
     if (fs.existsSync(CATALOGUE_FILE)) {
       const data = JSON.parse(fs.readFileSync(CATALOGUE_FILE, 'utf8'));
-      if (Array.isArray(data)) { catalogue = data; backfillCatalogueFloors(); console.log('[Catalogue] chargé :', catalogue.length); return; }
+      if (Array.isArray(data)) {
+        catalogue = purgeDemoByIdPrefix(data, ['c-dan-']);
+        if (catalogue.length !== data.length) { console.log('[Catalogue] produits de démonstration purgés (' + (data.length - catalogue.length) + ').'); saveCatalogue(); }
+        backfillCatalogueFloors();
+        console.log('[Catalogue] chargé :', catalogue.length);
+        return;
+      }
     }
   } catch (e) { console.error('[Catalogue] lecture impossible, réinitialisation :', e.message); }
   catalogue = seedCatalogue();
@@ -963,35 +974,23 @@ let inventaire = [];
 let inventaireMouvements = [];
 
 function seedInventaire() {
-  return [
-    // DAN Boutique — vendeur-boutique (commerce général, Dakar)
-    { id: 'inv-dan-1', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Robe wax élégante', category: 'mode', stock: 8, threshold: 5, unit: 'unité', costPrice: 7000, salePrice: 12500, supplier: 'Atelier Dakar', available: true },
-    { id: 'inv-dan-2', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Chemise homme premium', category: 'mode', stock: 2, threshold: 6, unit: 'unité', costPrice: 5000, salePrice: 9000, supplier: 'Atelier Dakar', available: true },
-    { id: 'inv-dan-3', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Baskets tendance', category: 'chaussures', stock: 6, threshold: 4, unit: 'paire', costPrice: 9000, salePrice: 15000, supplier: 'Import Chine', available: true },
-    { id: 'inv-dan-4', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sandales cuir', category: 'chaussures', stock: 0, threshold: 5, unit: 'paire', costPrice: 6500, salePrice: 11000, supplier: 'Maroquinerie Ndiaye', available: true },
-    { id: 'inv-dan-5', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sac à main cuir', category: 'sacs', stock: 4, threshold: 3, unit: 'unité', costPrice: 13000, salePrice: 22000, supplier: 'Maroquinerie Ndiaye', available: true },
-    { id: 'inv-dan-6', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Smartphone 128 Go', category: 'electronique', stock: 3, threshold: 5, unit: 'unité', costPrice: 120000, salePrice: 145000, supplier: 'Import Dubaï', available: true },
-    { id: 'inv-dan-7', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Lampe déco LED', category: 'maison', stock: 20, threshold: 8, unit: 'unité', costPrice: 5000, salePrice: 8500, supplier: 'Import Turquie', available: true },
-    { id: 'inv-dan-8', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Parfum boisé 50 ml', category: 'beaute', stock: 9, threshold: 4, unit: 'flacon', costPrice: 11000, salePrice: 18000, supplier: 'Import Paris', available: true }
-  ];
+  return [];
 }
 
 function seedInventaireMouvements() {
-  return [
-    // DAN Boutique — vendeur-boutique
-    { id: 'mov-dan-1', itemId: 'inv-dan-1', vendorId: 'pro-41cafa4bcb31', name: 'Robe wax élégante', type: 'entree', quantity: 12, reason: 'Réception atelier', time: 'Il y a 3 h' },
-    { id: 'mov-dan-2', itemId: 'inv-dan-6', vendorId: 'pro-41cafa4bcb31', name: 'Smartphone 128 Go', type: 'sortie', quantity: 2, reason: 'Vente #3051', time: 'Il y a 6 h' },
-    { id: 'mov-dan-3', itemId: 'inv-dan-3', vendorId: 'pro-41cafa4bcb31', name: 'Baskets tendance', type: 'entree', quantity: 10, reason: 'Réception import', time: 'Hier' },
-    { id: 'mov-dan-4', itemId: 'inv-dan-5', vendorId: 'pro-41cafa4bcb31', name: 'Sac à main cuir', type: 'sortie', quantity: 1, reason: 'Vente #3047', time: 'Hier' },
-    { id: 'mov-dan-5', itemId: 'inv-dan-7', vendorId: 'pro-41cafa4bcb31', name: 'Lampe déco LED', type: 'entree', quantity: 20, reason: 'Réception import', time: 'Il y a 2 j' }
-  ];
+  return [];
 }
 
 function loadInventaire() {
   try {
     if (fs.existsSync(INVENTAIRE_FILE)) {
       const data = JSON.parse(fs.readFileSync(INVENTAIRE_FILE, 'utf8'));
-      if (Array.isArray(data)) { inventaire = data; console.log('[Inventaire] chargé :', inventaire.length); return; }
+      if (Array.isArray(data)) {
+        inventaire = purgeDemoByIdPrefix(data, ['inv-dan-']);
+        if (inventaire.length !== data.length) { console.log('[Inventaire] produits de démonstration purgés (' + (data.length - inventaire.length) + ').'); saveInventaire(); }
+        console.log('[Inventaire] chargé :', inventaire.length);
+        return;
+      }
     }
   } catch (e) { console.error('[Inventaire] lecture impossible, réinitialisation :', e.message); }
   inventaire = seedInventaire();
@@ -1027,19 +1026,19 @@ const GALERIE_FILE = path.join(DATA_DIR, 'galerie.json');
 let galerie = [];
 
 function seedGalerie() {
-  return [
-    { id: 'g-dan-1', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Robe wax élégante', category: 'vetements', type: 'photo', views: 210, likes: 34, featured: true, author: 'DAN Boutique', date: 'Hier' },
-    { id: 'g-dan-2', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Baskets tendance', category: 'chaussures', type: 'photo', views: 165, likes: 28, featured: false, author: 'DAN Boutique', date: 'Il y a 2 jours' },
-    { id: 'g-dan-3', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sac à main cuir', category: 'sacs', type: 'photo', views: 140, likes: 22, featured: true, author: 'DAN Boutique', date: 'Il y a 3 jours' },
-    { id: 'g-dan-4', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Lampe déco LED', category: 'maison', type: 'photo', views: 98, likes: 15, featured: false, author: 'DAN Boutique', date: 'Il y a 4 jours' }
-  ];
+  return [];
 }
 
 function loadGalerie() {
   try {
     if (fs.existsSync(GALERIE_FILE)) {
       const data = JSON.parse(fs.readFileSync(GALERIE_FILE, 'utf8'));
-      if (Array.isArray(data)) { galerie = data; console.log('[Galerie] chargée :', galerie.length); return; }
+      if (Array.isArray(data)) {
+        galerie = purgeDemoByIdPrefix(data, ['g-dan-']);
+        if (galerie.length !== data.length) { console.log('[Galerie] éléments de démonstration purgés (' + (data.length - galerie.length) + ').'); saveGalerie(); }
+        console.log('[Galerie] chargée :', galerie.length);
+        return;
+      }
     }
   } catch (e) { console.error('[Galerie] lecture impossible, réinitialisation :', e.message); }
   galerie = seedGalerie();

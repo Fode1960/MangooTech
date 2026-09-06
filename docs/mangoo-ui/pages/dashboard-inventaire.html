@@ -729,16 +729,6 @@ html.dark {
   function renderAll() { renderKPIs(); renderCategoryBars(); renderTable(); renderMovements(); renderReapproOrders(); }
 
   /* ---------- Actions ---------- */
-  var SEED_COMMERCE = [
-    { id: 'inv-dan-1', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Robe wax élégante', category: 'mode', stock: 8, threshold: 5, unit: 'unité', costPrice: 7000, salePrice: 12500, supplier: 'Atelier Dakar', available: true },
-    { id: 'inv-dan-2', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Chemise homme premium', category: 'mode', stock: 2, threshold: 6, unit: 'unité', costPrice: 5000, salePrice: 9000, supplier: 'Atelier Dakar', available: true },
-    { id: 'inv-dan-3', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Baskets tendance', category: 'chaussures', stock: 6, threshold: 4, unit: 'paire', costPrice: 9000, salePrice: 15000, supplier: 'Import Chine', available: true },
-    { id: 'inv-dan-4', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sandales cuir', category: 'chaussures', stock: 0, threshold: 5, unit: 'paire', costPrice: 6500, salePrice: 11000, supplier: 'Maroquinerie Ndiaye', available: true },
-    { id: 'inv-dan-5', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Sac à main cuir', category: 'sacs', stock: 4, threshold: 3, unit: 'unité', costPrice: 13000, salePrice: 22000, supplier: 'Maroquinerie Ndiaye', available: true },
-    { id: 'inv-dan-6', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Smartphone 128 Go', category: 'electronique', stock: 3, threshold: 5, unit: 'unité', costPrice: 120000, salePrice: 145000, supplier: 'Import Dubaï', available: true },
-    { id: 'inv-dan-7', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Lampe déco LED', category: 'maison', stock: 20, threshold: 8, unit: 'unité', costPrice: 5000, salePrice: 8500, supplier: 'Import Turquie', available: true },
-    { id: 'inv-dan-8', vendorId: 'pro-41cafa4bcb31', vendorName: 'DAN Boutique', name: 'Parfum boisé 50 ml', category: 'beaute', stock: 9, threshold: 4, unit: 'flacon', costPrice: 11000, salePrice: 18000, supplier: 'Import Paris', available: true }
-  ];
 
   var REAPPRO_SALON = [
     { id: 'CMD-2041', label: 'Huiles capillaires', supplier: 'Grossiste Aminata · Dakar', source: 'local', status: 'Livraison demain' },
@@ -784,7 +774,6 @@ html.dark {
       MI.api.listMovements(vendorId)
     ]).then(function (res) {
       items = res[0] || [];
-      if (!items.length && domain === 'commerce') items = SEED_COMMERCE;
       movements = res[1] || [];
       renderAll();
     });
