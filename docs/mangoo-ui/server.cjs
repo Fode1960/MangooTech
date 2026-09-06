@@ -2048,19 +2048,12 @@ function knownVendorFix(id, email) {
   return null;
 }
 
-// Comptes de démonstration (DAN Coiffure prestataire + DAN Boutique vendeur).
-// Exclus de l'annuaire public et des listes publiques en production pour ne
-// pas mélanger les données de démo avec les vrais prestataires. Ils restent
-// accessibles uniquement via le mode démo (?demo=...).
-//
-// INVARIANT CRITIQUE : isDemoVendor() doit être appelé UNIQUEMENT sur un id
-// BRUT (ex. u.vendorId || u.id), JAMAIS sur un id déjà canonisé. Le compte
-// réel DAN Boutique (ven-e9e831ccf698) est canonisé vers pro-41cafa4bcb31 via
-// ROUTING_ALIASES : ces deux chaînes désignent le MÊME vendeur réel. Canoniser
-// avant isDemoVendor() masquerait donc à tort ce vendeur sur la carte. Le
-// marqueur démo vise ici le compte « seed » pro-41cafa4bcb31 (aucun produit,
-// créé par ensureSeedVendorUsers), distinct du compte réel issu de l'inscription.
-const DEMO_VENDOR_IDS = new Set(['pro-41cafa4bcb31', 'pro-eb10536cd12d']);
+// Plus aucun compte de démonstration : DAN Boutique (vendeur) et DAN Coiffure
+// (prestataire) sont désormais des profils de production réels et doivent
+// apparaître dans l'annuaire public et les listes publiques. isDemoVendor()
+// conserve une garde vide : appelée sur un id BRUT (u.vendorId || u.id), elle
+// ne masque plus aucun vendeur.
+const DEMO_VENDOR_IDS = new Set([]);
 function isDemoVendor(id) {
   return !!(id && DEMO_VENDOR_IDS.has(id));
 }
@@ -7279,6 +7272,79 @@ function handleHttp(req, res) {
   });
 }
 
+  /* ------------------------------------------------------------------ *
+   *  Nettoyage des données fictives (démo/test) au démarrage
+   * ------------------------------------------------------------------ *
+   *  Les comptes réels (DAN Boutique, DAN Coiffure, client, admin) sont
+   *  conservés. Seules les INFORMATIONS de test sont retirées : transactions
+   *  sandbox, livraisons, négociations, offres du jour et coursiers fictifs,
+   *  ainsi que les soldes crédités par ces données fictives.
+   *  Appelée APRÈS le chargement de tous les fichiers, avant l'écoute réseau.
+   * ------------------------------------------------------------------ */
+  function sanitizeRuntimeData() {
+    const changes = {};
+
+    // Transactions : ne conserver que les paiements réels (hors modes démo).
+    if (Array.isArray(transactions) && transactions.length) {
+      const kept = transactions.filter(function (t) {
+        return t && !['sandbox', 'wallet', 'internal'].includes(t.mode);
+      });
+      if (kept.length !== transactions.length) {
+        transactions = kept;
+        saveTransactions();
+        changes.transactions = kept.length;
+      }
+    }
+
+    // Livraisons fictives (Dakar) : supprimées.
+    if (Array.isArray(deliveries) && deliveries.length) {
+      deliveries = [];
+      saveDeliveries();
+      changes.deliveries = 0;
+    }
+
+    // Négociations fictives : supprimées.
+    if (Array.isArray(negotiations) && negotiations.length) {
+      negotiations = [];
+      saveNegotiations();
+      changes.negotiations = 0;
+    }
+
+    // Offres du jour fictives : supprimées.
+    if (Array.isArray(offresJour) && offresJour.length) {
+      offresJour = [];
+      saveOffresJour();
+      changes.offresJour = 0;
+    }
+
+    // Coursiers fictifs (Dakar) : supprimés.
+    if (Array.isArray(couriers) && couriers.length) {
+      couriers = [];
+      saveCouriers();
+      changes.couriers = 0;
+    }
+
+    // Portefeuilles : soldes remis à zéro (crédités par les données fictives).
+    if (Array.isArray(wallets)) {
+      let touched = false;
+      wallets.forEach(function (w) {
+        if (w && (Number(w.balance) > 0 || Number(w.pending) > 0)) {
+          w.balance = 0;
+          w.pending = 0;
+          touched = true;
+        }
+      });
+      if (touched) {
+        saveWallets();
+        changes.wallets = 'remis à zéro';
+      }
+    }
+
+    if (Object.keys(changes).length) {
+      console.log('[Data] données fictives retirées :', JSON.stringify(changes));
+    }
+  }
+
 /* ------------------------------------------------------------------ *
  *  Démarrage
  * ------------------------------------------------------------------ *
@@ -7312,6 +7378,7 @@ loadPushSubscriptions();
 loadPushPrefs();
 ensureVapidKeys();
 guardVapidRotation();
+sanitizeRuntimeData();
 
 const httpServer = http.createServer(handleHttp);
 

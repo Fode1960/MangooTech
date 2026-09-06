@@ -578,8 +578,8 @@ html.dark {
     // afin que la carte et la liste restent strictement cohérentes. Sans ce
     // garde-fou, un commerce sans coordonnées exploitables serait affiché en liste
     // (même ville) mais ignoré par renderMarkers() -> « visible en liste, absent
-    // de la carte ». On l'ancre sur Dakar (centre par défaut de l'app).
-    var _anchor = FALLBACK_CITIES['Dakar'];
+    // de la carte ». On l'ancre sur Paris (centre par défaut de l'app).
+    var _anchor = FALLBACK_CITIES['Paris'];
     vendors.forEach(function(v) {
       if (typeof v.lat !== 'number' || typeof v.lng !== 'number' || !isFinite(v.lat) || !isFinite(v.lng)) {
         v.lat = _anchor.lat;
@@ -608,9 +608,9 @@ html.dark {
   var lpDistanceTierIndex = 0;  // démarre à 5 km
   var lpManualRadius = false;   // true dès que l'utilisateur choisit un rayon précis
   var maxDistanceKm = LP_DISTANCE_TIERS[0];
-  var userPosition = { lat: 14.7167, lng: -17.4677 }; // Dakar par defaut (mis a jour par geolocalisation)
-  var userCity = 'Dakar';        // ville de scope (Dakar par défaut)
-  var userCountry = 'Senegal';   // pays de scope dérivé de la ville
+  var userPosition = { lat: 48.8566, lng: 2.3522 }; // Paris par défaut (mis à jour par géolocalisation)
+  var userCity = '';        // ville de scope (déterminée par géolocalisation)
+  var userCountry = '';     // pays de scope dérivé de la ville
   var radiusCircle = null;
 
   // Réinitialise le rayon au palier le plus proche (5 km) en mode auto.
@@ -797,7 +797,7 @@ html.dark {
   /* ===== INIT CARTE LEAFLET ===== */
   var mapEl = document.getElementById('map-container');
   var map = L.map(mapEl, {
-    center: [14.7167, -17.4677],
+    center: [48.8566, 2.3522],
     zoom: 12,
     zoomControl: false,
     minZoom: 2,
