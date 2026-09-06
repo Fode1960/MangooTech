@@ -2174,7 +2174,7 @@ function carteVendors() {
   });
   let nextId = 1;
   eligible.forEach(function (u) {
-    const cfg = u.vendorId ? vendorConfigFor(u.vendorId) : null;
+    const cfg = vendorConfigView(u.vendorId || u.id) || (u.vendorId ? vendorConfigFor(u.vendorId) : null);
     const profile = (cfg && cfg.profile) || {};
     const type = u.role === 'vendeur' ? 'boutique' : 'prestataire';
     const knownFix = knownVendorFix(u.vendorId || u.id, u.email);
