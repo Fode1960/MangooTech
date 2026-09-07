@@ -590,6 +590,27 @@ html.dark {
             </div>
             <div class="flex items-center justify-between py-3">
               <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">MTN Mobile Money</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Paiement mobile MTN</span>
+              </div>
+              <button type="button" class="mgt-switch on" data-payment="mtn_momo" aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between py-3">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Moov Money</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Paiement mobile Moov</span>
+              </div>
+              <button type="button" class="mgt-switch on" data-payment="moov_money" aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between py-3">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Free Mobile Sénégal</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Paiement mobile Free</span>
+              </div>
+              <button type="button" class="mgt-switch on" data-payment="free_mobile" aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between py-3">
+              <div class="flex flex-col gap-0.5">
                 <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Espèces</span>
                 <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Paiement à la livraison</span>
               </div>
@@ -713,7 +734,7 @@ html.dark {
     <script>
     (function(){
       var JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
-      var METHODS = ['orange_money', 'wave', 'cash', 'card'];
+      var METHODS = ['orange_money', 'wave', 'mtn_momo', 'moov_money', 'free_mobile', 'cash', 'card'];
       var NOTIFS = ['newOrder', 'messages', 'avis', 'promotions'];
       var currentConfig = null;
       var pendingLogo = '';

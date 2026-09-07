@@ -1114,7 +1114,7 @@ function seedVendorConfig() {
         dimanche: { open: false, openTime: '', closeTime: '' }
       },
       paiements: {
-        methods: ['wave', 'orange_money', 'cash'],
+        methods: ['wave', 'orange_money', 'mtn_momo', 'moov_money', 'free_mobile', 'cash'],
         acceptOnline: true
       },
       notifications: {
@@ -1261,7 +1261,7 @@ function blankVendorConfig(vendorId) {
       dimanche: { open: false, openTime: '', closeTime: '' }
     },
     paiements: {
-      methods: ['wave', 'orange_money', 'cash'],
+      methods: ['wave', 'orange_money', 'mtn_momo', 'moov_money', 'free_mobile', 'cash'],
       acceptOnline: true
     },
     notifications: {
