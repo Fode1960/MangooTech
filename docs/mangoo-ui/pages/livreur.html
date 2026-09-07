@@ -171,7 +171,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap">
             <h2 class="text-lg font-bold" id="profile-name" style="color: rgb(var(--mgt-foreground));">Livreur</h2>
-            <span id="profile-rating" class="hidden text-xs px-2 py-0.5 rounded-full font-semibold" style="background-color: rgb(var(--mgt-warning)/.15); color: rgb(var(--mgt-warning));"></span>
+            <span id="profile-rating" class="hidden text-xs px-2 py-0.5 rounded-full font-semibold" style="background-color: rgb(var(--mgt-warning)/.15); color: rgb(var(--mgt-warning));"></span> <button id="btn-edit-profile" class="h-8 px-3 rounded-lg text-xs font-semibold inline-flex items-center gap-1 transition-colors" style="background-color: rgb(var(--mgt-primary)/.1); color: rgb(var(--mgt-primary));"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Modifier</button>
           </div>
           <div class="caption mt-0.5" style="color: rgb(var(--mgt-muted-foreground));" id="profile-meta"></div>
         </div>
@@ -232,6 +232,62 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     <div class="flex gap-2.5">
       <button id="proof-cancel" class="flex-1 h-12 rounded-lg text-sm font-semibold" style="background-color: rgb(var(--mgt-muted)); color: rgb(var(--mgt-foreground));">Annuler</button>
       <button id="proof-confirm" class="flex-1 h-12 rounded-lg text-sm font-semibold" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal édition du profil livreur -->
+<div id="profile-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background: rgba(15 23 42 / .55);">
+  <div class="rounded-2xl w-full max-w-md p-5 slide-in" style="background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-lg);">
+    <div class="flex items-start justify-between mb-4">
+      <h3 class="h3" style="color: rgb(var(--mgt-foreground));">Mon profil livreur</h3>
+      <button id="profile-close" class="text-sm" style="color: rgb(var(--mgt-muted-foreground));">Fermer</button>
+    </div>
+    <div class="space-y-3.5">
+      <div>
+        <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Nom complet</label>
+        <input id="pf-name" type="text" class="w-full h-11 px-4 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+      </div>
+      <div>
+        <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Téléphone</label>
+        <input id="pf-phone" type="tel" class="w-full h-11 px-4 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+      </div>
+      <div>
+        <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Email <span class="font-normal" style="color: rgb(var(--mgt-muted-foreground));">(optionnel)</span></label>
+        <input id="pf-email" type="email" class="w-full h-11 px-4 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Ville</label>
+          <select id="pf-city" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+            <option value="Dakar">Dakar</option>
+            <option value="Pikine">Pikine</option>
+            <option value="Guédiawaye">Guédiawaye</option>
+            <option value="Rufisque">Rufisque</option>
+            <option value="Thiès">Thiès</option>
+            <option value="Saint-Louis">Saint-Louis</option>
+            <option value="Abidjan">Abidjan</option>
+          </select>
+        </div>
+        <div>
+          <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Véhicule</label>
+          <select id="pf-vehicle" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+            <option value="moto">Moto</option>
+            <option value="velo">Vélo</option>
+            <option value="voiture">Voiture</option>
+            <option value="camion">Camion</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Zone de travail <span class="font-normal" style="color: rgb(var(--mgt-muted-foreground));">(optionnel)</span></label>
+        <input id="pf-zone" type="text" placeholder="Ex. Plateau, Médina, Almadies" class="w-full h-11 px-4 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+      </div>
+    </div>
+    <p id="pf-msg" class="caption mt-3 hidden"></p>
+    <div class="flex gap-2.5 mt-4">
+      <button id="pf-cancel" class="flex-1 h-12 rounded-lg text-sm font-semibold" style="background-color: rgb(var(--mgt-muted)); color: rgb(var(--mgt-foreground));">Annuler</button>
+      <button id="pf-save" class="flex-1 h-12 rounded-lg text-sm font-semibold" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -428,6 +484,50 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     var totalEarned = delivered.reduce(function (s, d) { return s + (Number(d.amount) || 0); }, 0);
     $('profile-completed').textContent = num(me.completedDeliveries || 0);
     $('profile-earnings').textContent = money(totalEarned);
+  }
+
+  function openProfileModal() {
+    if (!me) return;
+    $('pf-name').value = me.name || '';
+    $('pf-phone').value = me.phone || '';
+    $('pf-email').value = me.email || '';
+    $('pf-city').value = me.city || '';
+    $('pf-vehicle').value = me.vehicle || 'moto';
+    $('pf-zone').value = me.zone || '';
+    $('pf-msg').classList.add('hidden');
+    $('profile-modal').classList.remove('hidden');
+    $('profile-modal').classList.add('flex');
+  }
+  function closeProfileModal() {
+    $('profile-modal').classList.add('hidden');
+    $('profile-modal').classList.remove('flex');
+  }
+  function pfError(m) { var el = $('pf-msg'); el.textContent = m; el.style.color = 'rgb(var(--mgt-error))'; el.classList.remove('hidden'); }
+  function saveProfile() {
+    var name = $('pf-name').value.trim();
+    var phone = $('pf-phone').value.trim();
+    if (!name) { pfError('Renseignez votre nom complet.'); return; }
+    if (!phone) { pfError('Renseignez votre numéro de téléphone.'); return; }
+    var btn = $('pf-save');
+    btn.disabled = true; btn.style.opacity = '.6'; btn.textContent = 'Enregistrement…';
+    apiPost('/api/delivery/courier/profile', {
+      name: name, phone: phone, email: $('pf-email').value.trim(),
+      city: $('pf-city').value, vehicle: $('pf-vehicle').value, zone: $('pf-zone').value.trim()
+    }).then(function (res) {
+      btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Enregistrer';
+      if (res.ok && res.data.ok) {
+        me = res.data.courier;
+        if (res.data.user) { myUser = res.data.user; localStorage.setItem(USER_KEY, JSON.stringify(res.data.user)); }
+        closeProfileModal();
+        renderProfile();
+        showToast('Profil mis à jour.', 'ok');
+      } else {
+        pfError((res.data && res.data.error) || 'Impossible d'enregistrer le profil.');
+      }
+    }).catch(function () {
+      btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Enregistrer';
+      pfError('Impossible de joindre le serveur.');
+    });
   }
 
   function renderStatusToggle() {
@@ -799,6 +899,12 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     }
   });
   document.querySelectorAll('.tab-btn').forEach(function (b) { b.addEventListener('click', function () { switchTab(b.dataset.tab); }); });
+
+  $('btn-edit-profile').addEventListener('click', openProfileModal);
+  $('profile-close').addEventListener('click', closeProfileModal);
+  $('pf-cancel').addEventListener('click', closeProfileModal);
+  $('pf-save').addEventListener('click', saveProfile);
+  $('profile-modal').addEventListener('click', function (e) { if (e.target === this) closeProfileModal(); });
 
   // Preuve de remise
   $('proof-close').addEventListener('click', closeProofModal);

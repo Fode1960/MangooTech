@@ -6948,6 +6948,44 @@ function handleHttp(req, res) {
     return;
   }
 
+  if (urlPath === '/api/delivery/courier/profile') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    readJsonBody(req, function (err, body) {
+      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+      body = body || {};
+      const user = userFromReq(req);
+      if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
+      const c = ensureCourierForUser(user);
+      if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
+
+      const newName = String(body.name || '').trim();
+      if (newName) c.name = newName;
+      if (body.phone != null) {
+        const phone = normalizePhone(body.phone);
+        if (phone) c.phone = phone;
+      }
+      if (body.email != null) c.email = String(body.email).trim() || null;
+      if (body.city != null) c.city = String(body.city).trim();
+      if (body.zone != null) c.zone = String(body.zone).trim();
+      if (body.vehicle != null) {
+        const vehicle = String(body.vehicle).trim().toLowerCase();
+        if (VEHICLE_RANK[vehicle]) c.vehicle = vehicle;
+      }
+
+      if (newName) user.name = newName;
+      if (c.phone) user.phone = c.phone;
+      if (c.email != null) user.email = c.email;
+      if (c.city) user.city = c.city;
+      if (c.zone) user.zone = c.zone;
+      if (c.vehicle) user.vehicle = c.vehicle;
+      saveCouriers();
+      saveUsers();
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, courier: publicCourier(c), user: publicUser(user) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/delivery/courier/location') {
     if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
     readJsonBody(req, function (err, body) {
