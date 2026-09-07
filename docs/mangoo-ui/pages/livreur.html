@@ -787,7 +787,17 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
   $('btn-register').addEventListener('click', doRegister);
   $('login-identifier').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
   $('btn-toggle').addEventListener('click', toggleOnline);
-  $('btn-logout').addEventListener('click', function () { clearSession(); showAuth(); showToast('Déconnecté.', 'info'); });
+  $('btn-logout').addEventListener('click', function () {
+    var t = token;
+    clearSession();
+    showAuth();
+    showToast('Déconnecté.', 'info');
+    if (t) {
+      try {
+        fetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t } }).catch(function () {});
+      } catch (err) {}
+    }
+  });
   document.querySelectorAll('.tab-btn').forEach(function (b) { b.addEventListener('click', function () { switchTab(b.dataset.tab); }); });
 
   // Preuve de remise

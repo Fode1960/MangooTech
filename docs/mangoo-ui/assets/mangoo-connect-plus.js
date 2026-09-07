@@ -1539,3 +1539,68 @@
     injectLiveBanner();
   }
 })(window);
+
+/* ==========================================================================
+ * Mangoo Logout - intercepts logout links pointing to auth.html across the
+ * client pages (dashboard / orders / favorites / chat / carte) and fully
+ * revokes the session before redirecting: clears localStorage (mgt_token,
+ * mgt_user, mgt_vendor_identity_v1) and revokes the httpOnly mgt_session
+ * cookie via POST /api/auth/logout.
+ * ========================================================================== */
+(function (global) {
+  'use strict';
+  if (global.__MangooLogoutInterceptor) return;
+  global.__MangooLogoutInterceptor = true;
+
+  var KEYS = ['mgt_token', 'mgt_user', 'mgt_vendor_identity_v1'];
+
+  function isAuthHref(href) {
+    if (!href) return false;
+    var s = String(href).split('#')[0].split('?')[0].toLowerCase();
+    return s.indexOf('auth.html') !== -1;
+  }
+
+  function normalizeText(s) {
+    return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function isLogoutLink(el) {
+    if (!el || el.tagName !== 'A') return false;
+    if (!isAuthHref(el.getAttribute('href'))) return false;
+    if (normalizeText(el.textContent || '').indexOf('deconnexion') !== -1) return true;
+    return !!(el.querySelector('[data-lucide="log-out"], .lucide-log-out'));
+  }
+
+  function clearLocal() {
+    try { for (var i = 0; i < KEYS.length; i++) localStorage.removeItem(KEYS[i]); } catch (e) {}
+  }
+
+  function performLogout() {
+    var token = null;
+    try { token = localStorage.getItem('mgt_token'); } catch (e) {}
+    var go = function () { clearLocal(); window.location.href = './auth.html'; };
+    if (token) {
+      try {
+        fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+        }).catch(function () {}).then(go);
+      } catch (e) { go(); }
+    } else {
+      go();
+    }
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.defaultPrevented) return;
+    var el = e.target;
+    while (el && el.nodeType === 1) {
+      if (el.tagName === 'A' && isLogoutLink(el)) {
+        e.preventDefault();
+        performLogout();
+        return;
+      }
+      el = el.parentNode;
+    }
+  });
+})(window);
