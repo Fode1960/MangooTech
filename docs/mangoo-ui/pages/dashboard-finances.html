@@ -591,6 +591,24 @@ html.dark {
               <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]">Inactif</span>
               <button class="js-reveal-pm shrink-0 p-1.5 rounded-lg text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-primary))] hover:bg-[rgb(var(--mgt-muted))] transition-colors" title="Afficher le numéro complet" aria-label="Afficher le numéro complet"><i data-lucide="eye" class="w-4 h-4"></i></button>
             </div>
+            <div class="p-4 rounded-lg border border-[rgb(var(--mgt-border))] flex items-center gap-3" data-payment-id="mtn">
+              <span class="w-10 h-10 rounded-lg bg-[rgb(var(--mgt-warning)/0.15)] flex items-center justify-center text-[rgb(var(--mgt-warning))]"><i data-lucide="smartphone" class="w-5 h-5"></i></span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">MTN Mobile Money</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] js-pm-number" data-masked="Non renseigné">Non renseigné</p>
+              </div>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]">Inactif</span>
+              <button class="js-reveal-pm shrink-0 p-1.5 rounded-lg text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-primary))] hover:bg-[rgb(var(--mgt-muted))] transition-colors" title="Afficher le numéro complet" aria-label="Afficher le numéro complet"><i data-lucide="eye" class="w-4 h-4"></i></button>
+            </div>
+            <div class="p-4 rounded-lg border border-[rgb(var(--mgt-border))] flex items-center gap-3" data-payment-id="moov">
+              <span class="w-10 h-10 rounded-lg bg-[rgb(var(--mgt-info)/0.15)] flex items-center justify-center text-[rgb(var(--mgt-info))]"><i data-lucide="smartphone" class="w-5 h-5"></i></span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Moov Money</p>
+                <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] js-pm-number" data-masked="Non renseigné">Non renseigné</p>
+              </div>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]">Inactif</span>
+              <button class="js-reveal-pm shrink-0 p-1.5 rounded-lg text-[rgb(var(--mgt-muted-foreground))] hover:text-[rgb(var(--mgt-primary))] hover:bg-[rgb(var(--mgt-muted))] transition-colors" title="Afficher le numéro complet" aria-label="Afficher le numéro complet"><i data-lucide="eye" class="w-4 h-4"></i></button>
+            </div>
             <div class="p-4 rounded-lg border border-[rgb(var(--mgt-border))] flex items-center gap-3" data-payment-id="bank">
               <span class="w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))] flex items-center justify-center text-[rgb(var(--mgt-primary))]"><i data-lucide="landmark" class="w-5 h-5"></i></span>
               <div class="flex-1 min-w-0">
@@ -874,7 +892,7 @@ html.dark {
           '<button id="pay-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:20px;cursor:pointer;">&times;</button></div>' +
           '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Type</label>' +
           '<select id="pay-type" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">' +
-          '<option value="Wave">Wave</option><option value="Orange Money">Orange Money</option><option value="Free Mobile Sénégal">Free Mobile Sénégal</option><option value="Virement bancaire">Virement bancaire</option></select>' +
+          '<option value="Wave">Wave</option><option value="Orange Money">Orange Money</option><option value="MTN Mobile Money">MTN Mobile Money</option><option value="Moov Money">Moov Money</option><option value="Free Mobile Sénégal">Free Mobile Sénégal</option><option value="Virement bancaire">Virement bancaire</option></select>' +
           '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Numéro / IBAN</label>' +
           '<input id="pay-number" placeholder="Ex. 77 000 00 00" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:16px;">' +
           '<div style="display:flex;gap:10px;">' +
@@ -933,6 +951,8 @@ html.dark {
       var SECURE_ACCOUNTS = {
         wave: '',
         orange: '',
+        mtn: '',
+        moov: '',
         free: '',
         bank: ''
       };

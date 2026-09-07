@@ -409,6 +409,10 @@ html.dark {
             <span id="chat-video-rec-timer" style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));white-space:nowrap;">0:00 / 0:30</span>
             <span id="chat-video-rec-hint" style="font-size:12px;color:rgb(var(--mgt-muted-foreground));flex:1;">Relâchez pour arrêter</span>
           </div>
+          <!-- Aperçu caméra en direct pendant l'enregistrement -->
+          <div id="chat-video-live" style="display:none;justify-content:center;margin-bottom:8px;">
+            <video data-video-live playsinline muted autoplay style="width:100%;max-width:320px;max-height:240px;border-radius:12px;background:#000;object-fit:cover;transform:scaleX(-1);"></video>
+          </div>
           <!-- Aperçu du message vocal avant envoi -->
           <div id="chat-rec-preview" style="display:none;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;">
             <button type="button" data-voice-preview-play style="width:34px;height:34px;border-radius:50%;border:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgb(var(--mgt-accent));color:#fff;cursor:pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
@@ -1103,6 +1107,8 @@ html.dark {
   var recPreview = document.getElementById('chat-rec-preview');
   var recTimerEl = document.getElementById('chat-rec-timer');
   var videoPreview = document.getElementById('chat-video-preview');
+  var videoLive = document.getElementById('chat-video-live');
+  var liveVideo = videoLive ? videoLive.querySelector('[data-video-live]') : null;
 
   function pickVideoMime(){
     if (window.MediaRecorder && typeof MediaRecorder.isTypeSupported === 'function'){
@@ -1152,6 +1158,8 @@ html.dark {
     }
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true }).then(function(stream){
       videoStream = stream;
+      if (liveVideo){ try { liveVideo.srcObject = stream; liveVideo.play().catch(function(){}); } catch(e){} }
+      if (videoLive) videoLive.style.display = 'flex';
       var mime = pickVideoMime();
       var mr;
       var recOpts = { videoBitsPerSecond: 1500000 };
@@ -1202,6 +1210,8 @@ html.dark {
   function stopVideoRecord(){
     if (videoRecorder && videoRecorder.state === 'recording'){ try { videoRecorder.stop(); } catch(e){} }
     if (videoTimerId){ clearInterval(videoTimerId); videoTimerId = null; }
+    if (videoLive) videoLive.style.display = 'none';
+    if (liveVideo){ try { liveVideo.pause(); } catch(e){} liveVideo.srcObject = null; }
     if (recBar) recBar.style.display = 'none';
     if (videoRecBar) videoRecBar.style.display = 'none';
   }
@@ -1632,7 +1642,12 @@ html.dark {
       delete autoReplyPending[vendorId];
       hideTyping();
       if (!ACTIVE || ACTIVE !== vendorId) return;
-      var replies = [
+      var c = convById(vendorId);
+      var isBoutique = c && c.type === 'boutique';
+      var replies = isBoutique ? [
+        'Merci pour votre message ! Notre boutique est momentanément indisponible, mais nous vous répondrons dès que possible. En attendant, vous pouvez passer commande directement depuis notre page Boutique.',
+        'Bien reçu ✅. Un conseiller de la boutique revient vers vous très vite. En attendant, vous pouvez explorer nos produits et commander depuis notre page Boutique.'
+      ] : [
         'Merci pour votre message ! Nous sommes actuellement indisponibles, mais nous vous répondrons dès que possible. Vous pouvez aussi réserver un créneau directement depuis notre page Boutique.',
         'Bien reçu ✅. Un conseiller revient vers vous très vite. En attendant, vous pouvez prendre rendez-vous depuis notre page Boutique.'
       ];

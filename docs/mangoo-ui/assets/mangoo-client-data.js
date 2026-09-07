@@ -315,7 +315,11 @@
     return list;
   }
   function getOrders() {
-    return ensureOrdersSeeded();
+    return ensureOrdersSeeded().filter(function (o) {
+      // Exclut la commande de démonstration fantôme (même règle que côté vendeur).
+      if (!o) return false;
+      return String(o.id || '').toUpperCase() !== 'CMD-2026-4931';
+    });
   }
   function getOrder(id) {
     return getOrders().find(function (o) { return o.id === id; }) || null;
