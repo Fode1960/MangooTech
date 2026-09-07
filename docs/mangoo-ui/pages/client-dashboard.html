@@ -1026,6 +1026,10 @@ html.dark {
   list.querySelectorAll('a').forEach(function(a){a.addEventListener('click',close);});
   drawer.querySelector('.mgt-nav-foot a').addEventListener('click',close);
 
+  // À l'atterrissage sur client-dashboard.html#menu (mobile), ouvre d'emblée le
+  // tiroir de navigation pour afficher la colonne des modules.
+  if (location.hash === '#menu' && window.innerWidth <= 768) { open(); }
+
   var topbar=document.querySelector('.client-header')||document.querySelector('header.topbar')||document.querySelector('header.sticky')||document.querySelector('header');
   if(topbar&&!topbar.querySelector('.mgt-nav-btn')){
     var btn=document.createElement('button');btn.className='mgt-nav-btn';

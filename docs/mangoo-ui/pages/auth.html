@@ -921,7 +921,7 @@ html.dark {
         }
         var target;
         if (role === 'admin') target = 'admin.html';
-        else if (role === 'client') target = 'client-dashboard.html';
+        else if (role === 'client' || role === 'cliente') target = 'client-dashboard.html';
         else if (role === 'livreur') target = 'livreur.html';
         else target = 'dashboard-overview.html';
         // Sur mobile, ouvre automatiquement la colonne de modules du dashboard
@@ -929,6 +929,7 @@ html.dark {
         // afin d'arriver sur le tableau de bord AVEC sa sidebar verticale, et non
         // sur la seule « Vue d'ensemble » sans menu.
         if (role === 'prestataire' || role === 'vendeur') target += '#menu';
+        if (role === 'client' || role === 'cliente') target += '#menu';
         window.location.href = base + target;
       }
 

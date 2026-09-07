@@ -3070,6 +3070,31 @@ function courierForUser(userId) {
   return couriers.find(function (c) { return c.userId === id; }) || null;
 }
 
+function ensureCourierForUser(user) {
+  if (!user || user.role !== 'livreur') return null;
+  const existing = courierForUser(user.id);
+  if (existing) return existing;
+  const vehicle = (user.vehicle && VEHICLE_RANK[user.vehicle]) ? user.vehicle : 'moto';
+  const courier = {
+    id: 'cour-' + crypto.randomBytes(5).toString('hex'),
+    userId: user.id,
+    name: user.name,
+    phone: user.phone,
+    email: user.email || null,
+    vehicle: vehicle,
+    city: user.city || '',
+    zone: String(user.zone || '').trim(),
+    status: 'offline',
+    approved: true,
+    rating: null,
+    completedDeliveries: 0,
+    createdAt: nowIso()
+  };
+  couriers.push(courier);
+  saveCouriers();
+  return courier;
+}
+
 function publicCourier(c) {
   if (!c) return null;
   return {
@@ -6900,7 +6925,7 @@ function handleHttp(req, res) {
     const user = userFromReq(req);
     if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
     res.writeHead(200, JSON_HEADERS);
-    res.end(JSON.stringify({ ok: true, courier: publicCourier(courierForUser(user.id)), user: publicUser(user) }));
+    res.end(JSON.stringify({ ok: true, courier: publicCourier(ensureCourierForUser(user)), user: publicUser(user) }));
     return;
   }
 
@@ -6911,7 +6936,7 @@ function handleHttp(req, res) {
       body = body || {};
       const user = userFromReq(req);
       if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
-      const c = courierForUser(user.id);
+      const c = ensureCourierForUser(user);
       if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
       const status = String(body.status || '').trim();
       if (status !== 'online' && status !== 'offline' && status !== 'busy') { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Statut invalide (online/offline/busy).' })); return; }
@@ -6930,7 +6955,7 @@ function handleHttp(req, res) {
       body = body || {};
       const user = userFromReq(req);
       if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
-      const c = courierForUser(user.id);
+      const c = ensureCourierForUser(user);
       if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
       const lat = toNum(body.lat), lng = toNum(body.lng);
       if (lat == null || lng == null) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Coordonnées lat/lng requises.' })); return; }
@@ -7036,7 +7061,7 @@ function handleHttp(req, res) {
       if (!user) {
         list = list.filter(function (d) { return d.status === 'available'; });
       } else if (user.role === 'livreur') {
-        const c = courierForUser(user.id);
+        const c = ensureCourierForUser(user);
         list = list.filter(function (d) {
           if (d.courierId === (c && c.id)) return true;
           if (d.status === 'available') return courierMatchesDelivery(c, d);
@@ -7079,7 +7104,7 @@ function handleHttp(req, res) {
     if (action === 'accept' && req.method === 'POST') {
       const user = userFromReq(req);
       if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
-      const c = courierForUser(user.id);
+      const c = ensureCourierForUser(user);
       if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
       if (delivery.status !== 'available' && delivery.status !== 'dispatched') {
         res.writeHead(409, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Cette course n\'est plus disponible.' }));
@@ -7442,11 +7467,20 @@ function handleHttp(req, res) {
       changes.offresJour = 0;
     }
 
-    // Coursiers fictifs (Dakar) : supprimés.
+    // Coursiers : on ne conserve que ceux rattachés à un vrai compte livreur.
+    // Les coursiers fictifs (Dakar) sont supprimés, mais pas les profils des
+    // livreurs réellement inscrits, sinon ces derniers deviennent introuvables
+    // au moment de passer en ligne.
     if (Array.isArray(couriers) && couriers.length) {
-      couriers = [];
-      saveCouriers();
-      changes.couriers = 0;
+      const kept = couriers.filter(function (c) {
+        const u = c && users.find(function (x) { return x.id === c.userId; });
+        return u && u.role === 'livreur';
+      });
+      if (kept.length !== couriers.length) {
+        couriers = kept;
+        saveCouriers();
+        changes.couriers = kept.length;
+      }
     }
 
     // Portefeuilles : soldes remis à zéro (crédités par les données fictives).
@@ -7600,7 +7634,7 @@ function handleDeliveryConnection(ws, req) {
   if (user.role === 'livreur') {
     ws.deliveryRole = 'livreur';
     courierSockets.set(user.id, ws);
-    sendDelivery(ws, { type: 'delivery-ready', courier: publicCourier(courierForUser(user.id)) });
+    sendDelivery(ws, { type: 'delivery-ready', courier: publicCourier(ensureCourierForUser(user)) });
   } else if (isSeller(user)) {
     ws.deliveryRole = 'vendeur';
     vendorSockets.set(user.vendorId || user.id, ws);
@@ -7621,7 +7655,7 @@ function handleDeliveryConnection(ws, req) {
     try { msg = JSON.parse(typeof data === 'string' ? data : data.toString()); } catch (e) { return; }
     if (!msg || typeof msg.type !== 'string') return;
     if (msg.type === 'courier-status') {
-      const c = courierForUser(user.id);
+      const c = ensureCourierForUser(user);
       if (c && (msg.status === 'online' || msg.status === 'offline' || msg.status === 'busy')) {
         c.status = msg.status;
         saveCouriers();
@@ -7629,7 +7663,7 @@ function handleDeliveryConnection(ws, req) {
       }
     }
     if (msg.type === 'courier-location') {
-      const c = courierForUser(user.id);
+      const c = ensureCourierForUser(user);
       const lat = toNum(msg.lat), lng = toNum(msg.lng);
       if (c && lat != null && lng != null) {
         c.lat = lat; c.lng = lng; c.locationUpdatedAt = nowIso();
