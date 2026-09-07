@@ -2460,7 +2460,7 @@ html.dark {
     try {
       var _h = JSON.parse(localStorage.getItem('mgt_user') || 'null');
       var _hr = _h && String(_h.role || '').toLowerCase();
-      return (_hr === 'vendeur' || _hr === 'prestataire') ? 'dashboard-overview.html' : 'client-dashboard.html';
+      return (_hr === 'vendeur' || _hr === 'prestataire') ? 'dashboard-overview.html#menu' : 'client-dashboard.html';
     } catch (e) { return 'client-dashboard.html'; }
   })();
   var rdvTarget = (function(){

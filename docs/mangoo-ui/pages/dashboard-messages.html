@@ -301,9 +301,20 @@ html.dark {
         30% { opacity: 1; transform: translateY(-3px); }
       }
       /* Actions d'un message : masquées par défaut, révélées au clic sur la
-         bulle, empilées verticalement pour rester lisibles sur mobile. */
-      .mgt-msg-actions { display: none; flex-direction: column; gap: 4px; align-items: flex-start; margin-bottom: 2px; }
+         bulle, empilées verticalement en pastilles uniformes (icône + libellé)
+         avec un espacement régulier et des largeurs alignées, pour rester
+         lisibles sur mobile. */
+      .mgt-msg-actions { display: none; flex-direction: column; gap: 6px; align-items: stretch; min-width: 148px; margin-bottom: 2px; }
       .msg-bubble.mgt-actions-open .mgt-msg-actions { display: flex; }
+      .mgt-msg-actions .mgt-msg-action {
+        display: inline-flex; align-items: center; justify-content: flex-start; gap: 8px;
+        width: 100%; box-sizing: border-box; font-size: 12px; font-weight: 600; line-height: 1;
+        padding: 8px 10px; border-radius: 8px; cursor: pointer; white-space: nowrap; text-align: left;
+        background: transparent; border: 1px solid transparent; font-family: var(--mgt-font-sans);
+        transition: background .15s ease, color .15s ease;
+      }
+      .mgt-msg-actions .mgt-msg-action svg { flex-shrink: 0; width: 15px; height: 15px; }
+      .mgt-msg-actions .mgt-msg-action:hover { background: rgb(var(--mgt-muted)); }
     </style>
 </head>
 <body class="h-screen overflow-hidden antialiased flex bg-[rgb(var(--mgt-muted))]">
@@ -1356,6 +1367,26 @@ html.dark {
         overlay.appendChild(panel);
         document.body.appendChild(overlay);
       }
+      // ---- Icônes + pastilles d'action unifiées (icône + libellé) ----
+      function msgActionIcon(name) {
+        var I = {
+          copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+          forward: '<polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/>',
+          edit: '<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>',
+          trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+          reply: '<polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>',
+          star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'
+        };
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (I[name] || '') + '</svg>';
+      }
+      function msgActionBtn(label, icon, color) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'mgt-msg-action';
+        b.style.color = color;
+        b.innerHTML = msgActionIcon(icon) + '<span>' + label + '</span>';
+        return b;
+      }
       // ---- « Enregistrer un message et le Consulter » ----
       function saveBtnLabel(on) { return on ? 'Favori ✓' : 'Favori'; }
       function toggleSaved(msgId) {
@@ -1367,19 +1398,24 @@ html.dark {
           MC.toggleSavedMessage(msgId, peerId);
         }
         document.querySelectorAll('[data-save-msg="' + msgId + '"]').forEach(function (b) {
-          b.textContent = saveBtnLabel(!!SAVED[msgId]);
-          b.style.color = SAVED[msgId] ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
+          var on = !!SAVED[msgId];
+          var span = b.querySelector('span');
+          if (span) span.textContent = saveBtnLabel(on);
+          var svg = b.querySelector('svg');
+          if (svg) svg.setAttribute('fill', on ? 'currentColor' : 'none');
+          b.style.color = on ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
         });
         toast(SAVED[msgId] ? 'Ajouté aux favoris.' : 'Retiré des favoris.');
       }
       function addSaveButton(container, msgId, forOutgoing) {
         if (!container || !msgId) return;
+        var on = !!SAVED[msgId];
         var b = document.createElement('button');
         b.type = 'button';
+        b.className = 'mgt-msg-action';
         b.setAttribute('data-save-msg', msgId);
-        b.textContent = saveBtnLabel(!!SAVED[msgId]);
-        var border = forOutgoing ? 'rgba(255,255,255,.25)' : 'rgb(var(--mgt-border))';
-        b.style.cssText = 'font-size:11px;font-weight:600;color:' + (SAVED[msgId] ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))') + ';background:transparent;border:1px solid ' + border + ';cursor:pointer;padding:2px 6px;border-radius:6px;';
+        b.style.color = on ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
+        b.innerHTML = '<svg viewBox="0 0 24 24" fill="' + (on ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>' + saveBtnLabel(on) + '</span>';
         b.addEventListener('click', function (e) { e.stopPropagation(); toggleSaved(msgId); });
         container.appendChild(b);
       }
@@ -1499,25 +1535,14 @@ html.dark {
         actions.className = 'mgt-msg-actions';
         // Masquées par défaut, révélées au clic sur la bulle (toggleBubbleActions).
         actions.style.cssText = '';
-        function makeBtn(label, color) {
-          var b = document.createElement('button');
-          b.type = 'button';
-          b.textContent = label;
-          b.style.cssText = 'font-size:11px;font-weight:600;color:' + color + ';background:transparent;border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:2px 6px;border-radius:6px;';
-          return b;
-        }
-        var copyBtn = makeBtn('Copier', 'rgb(var(--mgt-muted-foreground))');
+        var copyBtn = msgActionBtn('Copier', 'copy', 'rgb(var(--mgt-muted-foreground))');
         copyBtn.addEventListener('click', function (e) { e.stopPropagation(); copyTextToClipboard(messageTextOf(wrap)); });
-        var editBtn = makeBtn('Modifier', 'rgb(var(--mgt-muted-foreground))');
-        editBtn.addEventListener('click', function (e) { e.stopPropagation(); beginEditMessage(msgId); });
-        var delBtn = makeBtn('Supprimer', 'rgb(var(--mgt-error))');
-        delBtn.addEventListener('click', function (e) { e.stopPropagation(); confirmDeleteMessage(msgId); });
-        var fwdBtn = document.createElement('button');
-        fwdBtn.type = 'button';
-        fwdBtn.title = 'Transférer';
-        fwdBtn.style.cssText = 'font-size:11px;font-weight:600;color:rgba(255,255,255,.85);background:transparent;border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:2px 6px;border-radius:6px;display:inline-flex;align-items:center;gap:3px;';
-        fwdBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>Transférer';
+        var fwdBtn = msgActionBtn('Transférer', 'forward', 'rgb(var(--mgt-muted-foreground))');
         fwdBtn.addEventListener('click', function (e) { e.stopPropagation(); openForwardModal(messageTextOf(wrap)); });
+        var editBtn = msgActionBtn('Modifier', 'edit', 'rgb(var(--mgt-muted-foreground))');
+        editBtn.addEventListener('click', function (e) { e.stopPropagation(); beginEditMessage(msgId); });
+        var delBtn = msgActionBtn('Supprimer', 'trash', 'rgb(var(--mgt-error))');
+        delBtn.addEventListener('click', function (e) { e.stopPropagation(); confirmDeleteMessage(msgId); });
         actions.appendChild(copyBtn);
         actions.appendChild(fwdBtn);
         actions.appendChild(editBtn);
@@ -1531,26 +1556,15 @@ html.dark {
         var actions = document.createElement('div');
         actions.className = 'mgt-msg-actions';
         actions.style.cssText = '';
-        function makeBtn(label, color) {
-          var b = document.createElement('button');
-          b.type = 'button';
-          b.textContent = label;
-          b.style.cssText = 'font-size:11px;font-weight:600;color:' + color + ';background:transparent;border:1px solid rgb(var(--mgt-border));cursor:pointer;padding:2px 6px;border-radius:6px;';
-          return b;
-        }
-        var copyBtn = makeBtn('Copier', 'rgb(var(--mgt-muted-foreground))');
+        var copyBtn = msgActionBtn('Copier', 'copy', 'rgb(var(--mgt-muted-foreground))');
         copyBtn.addEventListener('click', function (e) { e.stopPropagation(); copyTextToClipboard(messageTextOf(greyBubble)); });
-        var replyBtn = makeBtn('Répondre', 'rgb(var(--mgt-primary))');
+        var fwdBtn = msgActionBtn('Transférer', 'forward', 'rgb(var(--mgt-muted-foreground))');
+        fwdBtn.addEventListener('click', function (e) { e.stopPropagation(); openForwardModal(messageTextOf(greyBubble)); });
+        var replyBtn = msgActionBtn('Répondre', 'reply', 'rgb(var(--mgt-primary))');
         replyBtn.addEventListener('click', function (e) {
           e.stopPropagation();
           setReplyTo(msgId, (currentConv ? currentConv.getAttribute('data-peer-id') : ''), messageTextOf(greyBubble));
         });
-        var fwdBtn = document.createElement('button');
-        fwdBtn.type = 'button';
-        fwdBtn.title = 'Transférer';
-        fwdBtn.style.cssText = 'font-size:11px;font-weight:600;color:rgb(var(--mgt-muted-foreground));background:transparent;border:1px solid rgb(var(--mgt-border));cursor:pointer;padding:2px 6px;border-radius:6px;display:inline-flex;align-items:center;gap:3px;';
-        fwdBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>Transférer';
-        fwdBtn.addEventListener('click', function (e) { e.stopPropagation(); openForwardModal(messageTextOf(greyBubble)); });
         actions.appendChild(copyBtn);
         actions.appendChild(fwdBtn);
         actions.appendChild(replyBtn);

@@ -631,6 +631,15 @@
       overlay.classList.toggle('show');
     });
     overlay.addEventListener('click', close);
+    // Ouvre la sidebar automatiquement à l'arrivée sur mobile quand le lien
+    // porte le marqueur #menu (ex. « Accueil » de la barre basse fixe), afin
+    // que l'utilisateur puisse choisir son module au lieu d'arriver
+    // directement sur « Vue d'ensemble ».
+    if (location.hash === '#menu' && window.innerWidth <= 768) {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+    }
     var navLinks = sidebar.querySelectorAll('a');
     for (var i = 0; i < navLinks.length; i++) {
       (function (a) {
