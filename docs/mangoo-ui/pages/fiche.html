@@ -1286,7 +1286,22 @@ html.dark {
     new: 'Nouveau chez nous : découvrez nos dernières offres et nouveautés du moment.'
   };
   var BADGE_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-eb10536cd12d';
+  function hydrateBadges() {
+    if (!window.MangooWelcomeAudio || !window.MangooWelcomeAudio.hydrateBadge) return;
+    fetch('/api/vendor-config?vendor=' + encodeURIComponent(BADGE_VENDOR), { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var c = d && d.config;
+        var ba = c && c.badgeAudio;
+        if (ba) {
+          window.MangooWelcomeAudio.hydrateBadge(BADGE_VENDOR, 'promo', ba.promo || null);
+          window.MangooWelcomeAudio.hydrateBadge(BADGE_VENDOR, 'new', ba.new || null);
+        }
+      })
+      .catch(function () {});
+  }
   function bind() {
+    hydrateBadges();
     var els = document.querySelectorAll('[data-badge-audio]');
     for (var i = 0; i < els.length; i++) {
       (function (el) {

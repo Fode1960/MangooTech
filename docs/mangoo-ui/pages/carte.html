@@ -2547,7 +2547,25 @@ html.dark {
     var type = el.getAttribute('data-badge-audio');
     var text = el.getAttribute('data-badge-text') || BADGE_TEXTS[type] || '';
     var vendorId = el.getAttribute('data-badge-vendor') || (window._mcpVendor && window._mcpVendor.vendorId) || '';
-    if (window.MangooWelcomeAudio) window.MangooWelcomeAudio.playBadge(vendorId, type, text);
+    var WA = window.MangooWelcomeAudio;
+    if (!WA) return;
+    var playNow = function () { WA.playBadge(vendorId, type, text); };
+    // « nouveau » côté carte correspond au badge « new » côté serveur.
+    var serverType = type === 'nouveau' ? 'new' : type;
+    var isBadge = type === 'promo' || type === 'nouveau';
+    if (!isBadge) { playNow(); return; }
+    // Enregistrement déjà hydraté (même session) → lecture immédiate.
+    if (WA.hasRecording(WA.badgeKey(vendorId, type))) { playNow(); return; }
+    // Sinon on hydrate l'audio personnalisé depuis la config publique avant de lire.
+    fetch('/api/vendor-config?vendor=' + encodeURIComponent(vendorId), { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var c = d && d.config;
+        var ba = c && c.badgeAudio;
+        if (ba && WA.hydrateBadge) WA.hydrateBadge(vendorId, type, ba[serverType] || null);
+        playNow();
+      })
+      .catch(function () { playNow(); });
   }, true);
 })();
 </script>

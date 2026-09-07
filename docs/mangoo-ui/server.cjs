@@ -1290,6 +1290,10 @@ function blankVendorConfig(vendorId) {
       mime: 'audio/webm',
       updatedAt: null
     },
+    badgeAudio: {
+      promo: { dataUrl: '', mime: 'audio/webm', updatedAt: null },
+      new: { dataUrl: '', mime: 'audio/webm', updatedAt: null }
+    },
     horsLigne: {
       enabled: false,
       lastSyncAt: null,
@@ -6361,6 +6365,25 @@ function handleHttp(req, res) {
             mime: body.mime || 'audio/webm',
             updatedAt: new Date().toISOString()
           });
+          doc.updatedAt = new Date().toISOString();
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, config: doc }));
+          return;
+        }
+        if (action === 'set-badge-audio') {
+          const bt = body.badgeType === 'nouveau' ? 'new' : (body.badgeType === 'promo' ? 'promo' : String(body.badgeType || ''));
+          if (!bt) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ ok: false, error: 'badgeType requis' }));
+            return;
+          }
+          doc.badgeAudio = Object.assign({}, doc.badgeAudio || {});
+          doc.badgeAudio[bt] = {
+            dataUrl: String(body.dataUrl || ''),
+            mime: body.mime || 'audio/webm',
+            updatedAt: new Date().toISOString()
+          };
           doc.updatedAt = new Date().toISOString();
           saveVendorConfig();
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });

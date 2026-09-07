@@ -209,8 +209,6 @@
       if (vid && o.vendorId === vid) return true;
       // Correspondance par enseigne/nom du professionnel (seed orders).
       if (nameLc && o.provider && String(o.provider).toLowerCase() === nameLc) return true;
-      // Correspondance par catégorie de rôle.
-      if (vid === 'pro-41cafa4bcb31' && o.kind === 'commerce') return true;
       return false;
     });
   }

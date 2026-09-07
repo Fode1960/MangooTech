@@ -300,6 +300,10 @@ html.dark {
         0%, 60%, 100% { opacity: .25; transform: translateY(0); }
         30% { opacity: 1; transform: translateY(-3px); }
       }
+      /* Actions d'un message : masquées par défaut, révélées au clic sur la
+         bulle, empilées verticalement pour rester lisibles sur mobile. */
+      .mgt-msg-actions { display: none; flex-direction: column; gap: 4px; align-items: flex-start; margin-top: 2px; }
+      .msg-bubble.mgt-actions-open .mgt-msg-actions { display: flex; }
     </style>
 </head>
 <body class="h-screen overflow-hidden antialiased flex bg-[rgb(var(--mgt-muted))]">
@@ -1236,7 +1240,7 @@ html.dark {
         function cancel() {
           box.remove();
           showOriginal();
-          if (actions) actions.style.display = 'flex';
+          if (actions) actions.style.display = '';
         }
         function save() {
           var newText = ta.value.trim();
@@ -1244,7 +1248,7 @@ html.dark {
           if (newText === current) { cancel(); return; }
           box.remove();
           showOriginal();
-          if (actions) actions.style.display = 'flex';
+          if (actions) actions.style.display = '';
           var peer = activePeer();
           if (peer && window.MangooConnect && typeof window.MangooConnect.editMessage === 'function') {
             window.MangooConnect.editMessage(msgId, peer.id, newText);
@@ -1493,10 +1497,8 @@ html.dark {
         if (!wrap || !msgId) return;
         var actions = document.createElement('div');
         actions.className = 'mgt-msg-actions';
-        // Toujours visibles : sur Android (tactile), il n'y a pas de survol
-        // (mouseenter/mouseleave), les boutons Modifier/Supprimer restaient donc
-        // invisibles et inutilisables. On les affiche en permanence.
-        actions.style.cssText = 'display:flex;gap:4px;align-items:center;margin-top:2px;';
+        // Masquées par défaut, révélées au clic sur la bulle (toggleBubbleActions).
+        actions.style.cssText = '';
         function makeBtn(label, color) {
           var b = document.createElement('button');
           b.type = 'button';
@@ -1528,7 +1530,7 @@ html.dark {
         if (!greyBubble || !msgId) return;
         var actions = document.createElement('div');
         actions.className = 'mgt-msg-actions';
-        actions.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:2px;';
+        actions.style.cssText = '';
         function makeBtn(label, color) {
           var b = document.createElement('button');
           b.type = 'button';
@@ -1863,7 +1865,7 @@ html.dark {
           // via le bouton lecture et se supprime via cette action.
           var actions = document.createElement('div');
           actions.className = 'mgt-msg-actions';
-          actions.style.cssText = 'display:flex;gap:4px;align-items:center;margin-top:2px;';
+          actions.style.cssText = '';
           var delBtn = document.createElement('button');
           delBtn.type = 'button';
           delBtn.textContent = 'Supprimer';
@@ -2199,12 +2201,21 @@ html.dark {
           '<p style="margin:2px 0 0;font-size:12px;line-height:1.35;color:' + textColor + ';overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;word-break:break-word;">' + esc(replyPreview.text) + '</p>' +
         '</div>';
       }
-      // Clic sur une bulle : on l'utilise comme cible de réponse (hors boutons).
+      // Ouvre/ferme la liste d'actions d'une bulle (une seule ouverte à la fois).
+      function toggleBubbleActions(wrap) {
+        if (!wrap) return;
+        var open = wrap.classList.contains('mgt-actions-open');
+        var others = thread ? thread.querySelectorAll('.msg-bubble.mgt-actions-open') : [];
+        Array.prototype.forEach.call(others, function (n) { if (n !== wrap) n.classList.remove('mgt-actions-open'); });
+        if (open) wrap.classList.remove('mgt-actions-open');
+        else wrap.classList.add('mgt-actions-open');
+      }
+      // Clic sur une bulle : bascule l'affichage des actions (Copier/Répondre/…).
       if (thread) {
         thread.addEventListener('click', function (e) {
           if (e.target && e.target.closest && e.target.closest('.mgt-msg-actions, textarea, input, button, a')) return;
           // L'utilisateur est en train de sélectionner du texte pour le copier :
-          // on ne déclenche pas la réponse (sinon le focus volé annulerait la
+          // on ne déclenche pas la bascule (sinon le focus volé annulerait la
           // sélection et la copie deviendrait impossible).
           var sel = (window.getSelection && window.getSelection()) || null;
           if (sel && String(sel.toString() || '').trim()) return;
@@ -2215,12 +2226,8 @@ html.dark {
             el = el.parentNode;
           }
           if (!wrap) return;
-          var msgId = wrap.getAttribute('data-msg-id');
-          if (!msgId) return;
-          var p = wrap.querySelector('p.text-sm');
-          var text = p ? (p.textContent || '') : '';
-          var fromId = wrap.querySelector('.mgt-msg-text') ? myCanonicalId() : (currentConv ? currentConv.getAttribute('data-peer-id') : '');
-          setReplyTo(msgId, fromId, text);
+          if (!wrap.getAttribute('data-msg-id')) return;
+          toggleBubbleActions(wrap);
         });
       }
 
