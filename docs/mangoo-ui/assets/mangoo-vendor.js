@@ -194,7 +194,14 @@
       var raw = localStorage.getItem(ORDERS_KEY);
       if (!raw) return [];
       var list = JSON.parse(raw);
-      return Array.isArray(list) ? list : [];
+      if (!Array.isArray(list)) return [];
+      // Exclut la commande de démonstration persistée côté client : elle
+      // n’est pas réelle et ne doit jamais apparaître dans les indicateurs.
+      return list.filter(function (o) {
+        if (!o) return false;
+        var id = String(o.id || '').toUpperCase();
+        return id !== 'CMD-2026-4931';
+      });
     } catch (e) { return []; }
   }
 

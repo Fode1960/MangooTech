@@ -616,6 +616,10 @@
     }
 
     if (!btn || !sidebar) return;
+    // Si le bouton existait déjà (page gérant son propre menu hamburger),
+    // on n'attache pas de second gestionnaire : un double toggle ferait
+    // apparaître puis disparaître immédiatement la barre latérale.
+    if (!injected) return;
 
     var overlay = document.createElement('div');
     overlay.className = 'mgt-menu-overlay';

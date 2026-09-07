@@ -302,7 +302,7 @@ html.dark {
       }
       /* Actions d'un message : masquées par défaut, révélées au clic sur la
          bulle, empilées verticalement pour rester lisibles sur mobile. */
-      .mgt-msg-actions { display: none; flex-direction: column; gap: 4px; align-items: flex-start; margin-top: 2px; }
+      .mgt-msg-actions { display: none; flex-direction: column; gap: 4px; align-items: flex-start; margin-bottom: 2px; }
       .msg-bubble.mgt-actions-open .mgt-msg-actions { display: flex; }
     </style>
 </head>
@@ -1523,11 +1523,11 @@ html.dark {
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
         addSaveButton(actions, msgId, true);
-        wrap.appendChild(actions);
+        wrap.insertBefore(actions, wrap.firstChild);
       }
       // Actions Copier/Répondre/Transférer pour une bulle entrante.
-      function addIncomingActions(greyBubble, msgId) {
-        if (!greyBubble || !msgId) return;
+      function addIncomingActions(container, greyBubble, msgId) {
+        if (!container || !greyBubble || !msgId) return;
         var actions = document.createElement('div');
         actions.className = 'mgt-msg-actions';
         actions.style.cssText = '';
@@ -1555,7 +1555,7 @@ html.dark {
         actions.appendChild(fwdBtn);
         actions.appendChild(replyBtn);
         addSaveButton(actions, msgId, false);
-        greyBubble.appendChild(actions);
+        container.insertBefore(actions, container.firstChild);
       }
       function appendVendorBubble(html, attachList, msgId, replyPreview) {
         if (!thread) return null;
@@ -1872,7 +1872,7 @@ html.dark {
           delBtn.style.cssText = 'font-size:11px;font-weight:600;color:rgb(var(--mgt-error));background:transparent;border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:2px 6px;border-radius:6px;';
           delBtn.addEventListener('click', function (e) { e.stopPropagation(); confirmDeleteMessage(msgId); });
           actions.appendChild(delBtn);
-          wrap.appendChild(actions);
+          wrap.insertBefore(actions, wrap.firstChild);
         }
         thread.appendChild(wrap);
         thread.scrollTop = thread.scrollHeight;
@@ -2599,26 +2599,30 @@ html.dark {
         if (emptyEl && emptyEl.parentNode) emptyEl.parentNode.removeChild(emptyEl);
         var name = currentConv ? currentConv.getAttribute('data-name') : '';
         var quote = quoteHtml(replyPreview, false);
-        var bubble = document.createElement('div');
-        bubble.className = 'flex items-end gap-2 max-w-[70%]';
-        bubble.style.cssText = 'display:flex;align-items:flex-end;gap:8px;max-width:75%;box-sizing:border-box;min-width:0;';
-        if (msgId) { bubble.setAttribute('data-msg-id', msgId); bubble.classList.add('msg-bubble'); }
-        bubble.innerHTML =
+        var container = document.createElement('div');
+        container.className = 'flex flex-col items-start gap-1.5 max-w-[70%]';
+        container.style.cssText = 'display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:75%;box-sizing:border-box;min-width:0;';
+        var row = document.createElement('div');
+        row.className = 'flex items-end gap-2 max-w-[100%]';
+        row.style.cssText = 'display:flex;align-items:flex-end;gap:8px;max-width:100%;box-sizing:border-box;min-width:0;';
+        if (msgId) { container.setAttribute('data-msg-id', msgId); container.classList.add('msg-bubble'); }
+        row.innerHTML =
           '<div class="w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-[10px] flex-shrink-0">' + esc(initials(name)) + '</div>' +
           '<div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-4 py-2.5" style="min-width:0;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;">' +
             quote +
             '<p class="text-sm text-[rgb(var(--mgt-foreground))]">' + esc(text) + '</p>' +
             '<span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))] mt-1 block">' + nowTime() + '</span>' +
           '</div>';
+        container.appendChild(row);
         if (msgId) {
-          var grey = bubble.lastElementChild;
-          if (grey) addIncomingActions(grey, msgId);
+          var grey = row.lastElementChild;
+          if (grey) addIncomingActions(container, grey, msgId);
         }
-        thread.appendChild(bubble);
+        thread.appendChild(container);
         thread.scrollTop = thread.scrollHeight;
         // Fiabilise le défilement (les polices/images peuvent modifier la hauteur après coup).
         requestAnimationFrame(function () { thread.scrollTop = thread.scrollHeight; });
-        return bubble;
+        return container;
       }
       function appendIncomingFile(name, size, blob) {
         if (!thread) return;
