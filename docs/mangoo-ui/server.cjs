@@ -30,11 +30,34 @@ try {
   console.warn('[Push] module `web-push` indisponible — notifications web désactivées :', e.message);
 }
 
+// Module de génération des images de partage (Open Graph) 1200×630. Chargé de
+// façon défensive : si @resvg/resvg-js n'est pas installé, le serveur continue
+// de fonctionner et l'endpoint /og/ répondra 404 (sans casser le reste).
+let ogImage = null;
+try {
+  ogImage = require('./og-image.cjs');
+} catch (e) {
+  console.warn("[OG] module d'image de partage indisponible :", e.message);
+}
+
 const ROOT = __dirname;
 const HOST = '0.0.0.0';
 const HTTP_PORT = Number(process.env.PORT || 8080);
 const HTTPS_PORT = Number(process.env.HTTPS_PORT || 8443);
-const SITE_BASE = String(process.env.SITE_URL || 'https://mangoo.tech').replace(/\/+$/, '');
+const SITE_BASE = String(process.env.SITE_URL || '').replace(/\/+$/, '');
+
+// Base absolue du site, résolue dynamiquement à partir de la requête (aucun
+// domaine en dur). Priorité : SITE_URL (config explicite) → Host /
+// X-Forwarded-Host + schéma dérivé de X-Forwarded-Proto. Utilisée pour le
+// sitemap, robots.txt, les métadonnées SEO des fiches et les images OG.
+function siteBase(req) {
+  if (SITE_BASE) return SITE_BASE;
+  if (!req) return '';
+  const scheme = isSecureRequest(req) ? 'https' : 'http';
+  let host = String((req.headers && (req.headers['x-forwarded-host'] || req.headers.host)) || '').trim();
+  host = host.split(',')[0].trim();
+  return host ? (scheme + '://' + host) : '';
+}
 
 const rand = () => crypto.randomUUID();
 
@@ -2256,8 +2279,8 @@ function carteVendors() {
   return list;
 }
 
-function buildSitemap() {
-  const BASE = 'https://mangoo.tech';
+function buildSitemap(base) {
+  const BASE = (base || SITE_BASE || '').replace(/\/+$/, '');
   const STATIC_PAGES = [
     '/pages/accueil.html',
     '/pages/carte.html',
@@ -2310,15 +2333,17 @@ function resolveVendorForSeo(vendorId) {
   }
   return null;
 }
-function seoImage(url) {
+function seoImage(url, base) {
+  const BASE = (base || SITE_BASE || '').replace(/\/+$/, '');
   const s = String(url || '').trim();
-  if (!s) return SITE_BASE + '/assets/icon-512.png';
-  if (s.indexOf('data:') === 0) return SITE_BASE + '/assets/icon-512.png';
+  if (!s) return BASE + '/assets/icon-512.png';
+  if (s.indexOf('data:') === 0) return BASE + '/assets/icon-512.png';
   if (/^https?:\/\//i.test(s)) return s;
-  if (s.charAt(0) === '/') return SITE_BASE + s;
+  if (s.charAt(0) === '/') return BASE + s;
   return s;
 }
-function injectFicheSeo(html, vendor, pageType, vendorId) {
+function injectFicheSeo(html, vendor, pageType, vendorId, base) {
+  const BASE = (base || SITE_BASE || '').replace(/\/+$/, '');
   const isBoutique = pageType === 'boutique';
   const page = isBoutique ? '/pages/fiche-boutique.html' : '/pages/fiche.html';
   const label = isBoutique ? 'Boutique' : 'Prestataire';
@@ -2327,8 +2352,11 @@ function injectFicheSeo(html, vendor, pageType, vendorId) {
   const descRaw = vendor ? String(vendor.desc || '').replace(/\s+/g, ' ').trim() : '';
   const desc = descRaw || (name ? ('Découvrez ' + name + ' sur MangooTech.') : (isBoutique ? 'Découvrez cette boutique sur MangooTech : produits, horaires, contact et commande en ligne.' : 'Découvrez ce prestataire sur MangooTech : services, horaires, avis et réservation en ligne.'));
   const title = name ? (name + ' · ' + label + ' · MangooTech') : (label + ' · MangooTech');
-  const url = SITE_BASE + page + (vendorId ? ('?vendorId=' + encodeURIComponent(vendorId)) : '');
-  const img = seoImage(vendor && vendor.img);
+  const url = BASE + page + (vendorId ? ('?vendorId=' + encodeURIComponent(vendorId)) : '');
+  // Image de partage dédiée (1200×630) générée côté serveur : /og/<vendorId>.png
+  // (repli sur /og/default.png si vendeur inconnu). On n'utilise plus le logo
+  // brut du vendeur (ratio et taille non optimisés pour les aperçus sociaux).
+  const img = BASE + '/og/' + (vendorId ? encodeURIComponent(vendorId) : 'default') + '.png';
   let out = html;
   out = out.replace(/<title>[\s\S]*?<\/title>/, '<title>' + escHtml(title) + '</title>');
   out = out.replace(/<meta name="description" content="[^"]*">/, '<meta name="description" content="' + escAttr(desc) + '">');
@@ -2357,6 +2385,33 @@ function injectFicheSeo(html, vendor, pageType, vendorId) {
   out = out.replace(/<script type="application\/ld\+json" id="seo-jsonld">[\s\S]*?<\/script>/, '<script type="application/ld+json" id="seo-jsonld">' + jsonStr + '</script>');
   return out;
 }
+function serveOgImage(req, res, vendorId) {
+  if (!ogImage) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Not Found');
+    return;
+  }
+  const id = (vendorId && vendorId !== 'default') ? vendorId : '';
+  let png = null;
+  try {
+    const vendor = id ? resolveVendorForSeo(id) : null;
+    png = ogImage.renderPng(vendor, { tagline: 'Connectez-vous à vos prestataires et boutiques de proximité' });
+  } catch (e) {
+    console.error("[OG] génération de l'image impossible :", e.message);
+  }
+  if (!png || !png.length) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Not Found');
+    return;
+  }
+  res.writeHead(200, {
+    'Content-Type': 'image/png',
+    'Cache-Control': 'public, max-age=3600',
+    'Content-Length': png.length
+  });
+  res.end(png);
+}
+
 function loadSessions() {
   try {
     if (fs.existsSync(SESSIONS_FILE)) {
@@ -7635,14 +7690,19 @@ function handleHttp(req, res) {
     return;
   }
 
+  const ogMatch = urlPath.match(/^\/og\/([^/]+)\.png$/);
+  if (ogMatch) {
+    serveOgImage(req, res, ogMatch[1]);
+    return;
+  }
   if (urlPath === '/robots.txt') {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=86400' });
-    res.end('User-agent: *\nAllow: /\nDisallow: /pages/auth.html\nDisallow: /pages/dashboard-\nDisallow: /pages/client-\nDisallow: /pages/admin\nDisallow: /pages/checkout.html\nDisallow: /pages/chat.html\nDisallow: /pages/livreur.html\nDisallow: /pages/live-vendor.html\nDisallow: /pages/live-client.html\nDisallow: /api/\n\nSitemap: https://mangoo.tech/sitemap.xml\n');
+    res.end('User-agent: *\nAllow: /\nDisallow: /pages/auth.html\nDisallow: /pages/dashboard-\nDisallow: /pages/client-\nDisallow: /pages/admin\nDisallow: /pages/checkout.html\nDisallow: /pages/chat.html\nDisallow: /pages/livreur.html\nDisallow: /pages/live-vendor.html\nDisallow: /pages/live-client.html\nDisallow: /api/\n\nSitemap: ' + siteBase(req) + '/sitemap.xml\n');
     return;
   }
   if (urlPath === '/sitemap.xml') {
     res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
-    res.end(buildSitemap());
+    res.end(buildSitemap(siteBase(req)));
     return;
   }
   if (urlPath === '/pages/fiche.html' || urlPath === '/pages/fiche-boutique.html') {
@@ -7652,7 +7712,7 @@ function handleHttp(req, res) {
     fs.readFile(seoFile, 'utf8', function (err, html) {
       if (err || !html) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('404 Not Found'); return; }
       const seoVendor = seoVendorId ? resolveVendorForSeo(seoVendorId) : null;
-      const seoOut = seoVendor ? injectFicheSeo(html, seoVendor, seoPageType, seoVendorId) : html;
+      const seoOut = seoVendor ? injectFicheSeo(html, seoVendor, seoPageType, seoVendorId, siteBase(req)) : html;
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate', 'Pragma': 'no-cache', 'Expires': '0' });
       res.end(seoOut);
     });

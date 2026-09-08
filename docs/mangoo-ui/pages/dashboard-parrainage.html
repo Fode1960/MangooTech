@@ -406,7 +406,7 @@ html.dark {
         <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
           <div class="flex items-center justify-between mb-4">
             <h3 class="h3">Partager votre lien</h3>
-            <span class="caption text-[rgb(var(--mgt-muted-foreground))]" id="ref-link-label">Lien unique : mangoo.tech/invite/—</span>
+            <span class="caption text-[rgb(var(--mgt-muted-foreground))]" id="ref-link-label">Lien unique : —</span>
           </div>
           <div class="flex flex-wrap gap-3">
             <button id="btn-share-whatsapp" class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">
@@ -447,7 +447,7 @@ html.dark {
         var el = document.getElementById('ref-code');
         return (el && el.textContent || '').trim();
       }
-      function getLink() { return 'https://mangoo.tech/invite/' + getCode(); }
+      function getLink() { return (window.location && window.location.origin ? window.location.origin : '') + '/invite/' + getCode(); }
       function getInviteText() {
         var c = getCode();
         return 'Rejoignez-moi sur Mangoo Tech ! Utilisez mon code ' + c + ' : ' + getLink();
@@ -565,7 +565,8 @@ html.dark {
     if (reward) reward.textContent = fmtNum(p.rewardPerInvite) + ' FCFA de crédit';
 
     var linkLabel = document.getElementById('ref-link-label');
-    if (linkLabel) linkLabel.textContent = code ? ('Lien unique : mangoo.tech/invite/' + code) : 'Lien unique : mangoo.tech/invite/—';
+    var hostLabel = (window.location && window.location.host) || 'mangoo.tech';
+    if (linkLabel) linkLabel.textContent = code ? ('Lien unique : ' + hostLabel + '/invite/' + code) : ('Lien unique : ' + hostLabel + '/invite/—');
   }
 
   function hydrate(res){

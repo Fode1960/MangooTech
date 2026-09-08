@@ -1,6 +1,6 @@
 # Note équipe — SEO & partage social de Mangoo
 
-Date : septembre 2026 · Objet : fondations techniques SEO + rendu serveur des fiches (aperçus de partage)
+Date : septembre 2026 · Objet : fondations techniques SEO, rendu serveur des fiches (aperçus de partage) et images de partage dédiées 1200×630
 
 ---
 
@@ -35,19 +35,32 @@ Disponible sur `https://mangoo.tech/sitemap.xml`. Généré dynamiquement à cha
 
 **Pourquoi c'était nécessaire :** les aperçus de partage (WhatsApp, Facebook, Telegram) et certains moteurs **n'exécutent pas le JavaScript**. Avant ce correctif, partager le lien d'une fiche affichait un titre et une image génériques, quel que soit le vendeur.
 
-**Comment c'est résolu :** le serveur intercepte les requêtes vers `fiche.html` et `fiche-boutique.html` lorsqu'elles contiennent `?vendorId=…`. Il résout le vendeur côté serveur et réinjecte les vraies balises (titre, description, image = logo du vendeur, URL, JSON-LD) dans le HTML **avant** de répondre.
+**Comment c'est résolu :** le serveur intercepte les requêtes vers `fiche.html` et `fiche-boutique.html` lorsqu'elles contiennent `?vendorId=…`. Il résout le vendeur côté serveur et réinjecte les vraies balises (titre, description, image, URL, JSON-LD) dans le HTML **avant** de répondre.
 
-**Résultat concret :** partager le lien d'une boutique affiche désormais son nom, sa description et son logo. Google voit aussi ces balises sans avoir à exécuter le JS, ce qui renforce le référencement.
+**Résultat concret :** partager le lien d'une boutique affiche désormais son nom, sa description et son image de partage. Google voit aussi ces balises sans avoir à exécuter le JS, ce qui renforce le référencement.
+
+### 5. Images de partage dédiées (1200×630)
+
+Chaque fiche dispose maintenant d'une **image de partage dédiée** au format recommandé par les réseaux sociaux (1200×630), générée côté serveur à la demande :
+
+- `https://mangoo.tech/og/<vendorId>.png` → image de la fiche (nom, catégorie, ville, note, initiales)
+- `https://mangoo.tech/og/default.png` → image générique MangooTech (repli)
+
+L'image est un PNG rendu à partir d'un SVG (police Poppins embarquée, couleurs de marque) via `@resvg/resvg-js`, puis **mis en cache** dans `DATA_DIR/og-cache` (régénéré uniquement si le contenu change). Aucun appel réseau au moment du rendu : l'image est servie directement par le serveur.
 
 ---
 
 ## Comment ça marche (technique, bref)
 
-Tout est dans `server.cjs` :
+Tout est dans `server.cjs` (et `og-image.cjs`) :
 
-- `SITE_BASE` : domaine de référence, configurable via la variable d'environnement `SITE_URL` (défaut `https://mangoo.tech`).
+- **Domaine centralisé** : plus aucun `https://mangoo.tech` en dur dans le code SEO. Le domaine est résolu dynamiquement :
+  - `SITE_URL` (variable d'environnement) si définie — recommandé en production ;
+  - sinon déduit de la requête via `X-Forwarded-Host`/`Host` + schéma `http(s)` selon `X-Forwarded-Proto`.
+  - La fonction `siteBase(req)` centralise cette logique ; sitemap, robots.txt, métadonnées et images OG l'utilisent.
 - `resolveVendorForSeo(vendorId)` : retrouve le vendeur via l'annuaire interne.
-- `injectFicheSeo(html, vendor, type, id)` : remplace les balises `<title>`, `meta description`, Open Graph, Twitter et le bloc JSON-LD dans le HTML servi.
+- `injectFicheSeo(html, vendor, type, id, base)` : remplace les balises `<title>`, `meta description`, Open Graph, Twitter et le bloc JSON-LD dans le HTML servi.
+- `serveOgImage(req, res, vendorId)` + route `/og/<vendorId>.png` : génère/sert le PNG de partage (module `og-image.cjs`).
 - Une route dédiée, placée avant le gestionnaire de fichiers statiques, sert les fiches avec ces balises injectées.
 
 La logique côté serveur est volontairement identique à celle côté client (fonction `applySeo` dans les pages), pour garantir une cohérence parfaite.
@@ -56,20 +69,19 @@ La logique côté serveur est volontairement identique à celle côté client (f
 
 ## Points d'attention / limites connues
 
-1. **Image de partage** : l'`og:image` utilise actuellement le **logo du vendeur**. Ce n'est pas une image au format idéal 1200×630. Amélioration possible : générer une image de partage dédiée par fiche (nom + logo + ville) pour des aperçus encore plus soignés.
-2. **Domaine codé en dur** : le domaine `https://mangoo.tech` est aussi présent dans les fichiers clients (`fiche.html`, `fiche-boutique.html`) et dans le sitemap. En cas de changement de domaine, il faut régler `SITE_URL` **et** mettre à jour ces fichiers.
-3. **Contenu JavaScript** : le corps de la fiche (catalogue, avis) reste chargé en JS. Google l'exécute donc l'indexe, mais l'idéal à terme serait un pré-rendu complet de la page.
+1. **Contenu JavaScript** : le corps de la fiche (catalogue, avis) reste chargé en JS. Google l'exécute et l'indexe, mais l'idéal à terme serait un pré-rendu complet de la page.
+2. **Cache des images OG** : les PNG sont mis en cache dans `DATA_DIR/og-cache` (jamais versionné). Si les données d'un vendeur changent (nom, note, ville), le PNG est régénéré automatiquement (cache indexé par le contenu). Veiller à ce que ce dossier vive sur le Persistent Disk en production.
+3. **Domaine** : en production, définir `SITE_URL=https://mangoo.tech` (ou le domaine réel) pour des URLs absolues stables. Sans `SITE_URL`, le domaine est déduit de la requête, ce qui fonctionne aussi (y compris multi-domaines `demo.`, `preview.`, `admin.`).
 
 ---
 
 ## Prochaines étapes recommandées
 
 1. **Vérifier l'indexation** : ajouter le site dans Google Search Console et Bing Webmaster Tools, puis soumettre `https://mangoo.tech/sitemap.xml`.
-2. **Contrôler les aperçus** : tester un partage réel via Facebook Sharing Debugger (`developers.facebook.com/tools/debug`) et valider les aperçus WhatsApp/Telegram.
-3. **Image de partage dédiée** (1200×630) par fiche, pour un rendu optimal.
-4. **Contenu longue traîne** : alimenter le blog avec des guides locaux (« ouvrir un salon à Dakar », « combien coûte une livraison ») pour capter les recherches informatives et gagner des backlinks.
-5. **Backlinks locaux** : encourager chaque vendeur à lier sa fiche Mangoo depuis son site / Google Business / Facebook.
+2. **Contrôler les aperçus** : tester un partage réel via Facebook Sharing Debugger (`developers.facebook.com/tools/debug`) et valider les aperçus WhatsApp/Telegram (l'image 1200×630 doit apparaître).
+3. **Contenu longue traîne** : alimenter le blog avec des guides locaux (« ouvrir un salon à Dakar », « combien coûte une livraison ») pour capter les recherches informatives et gagner des backlinks.
+4. **Backlinks locaux** : encourager chaque vendeur à lier sa fiche Mangoo depuis son site / Google Business / Facebook.
 
 ---
 
-Récapitulatif des commits associés : `ea97dcb` (fondations SEO) et `9974f14` (rendu serveur des fiches).
+Récapitulatif des commits associés : `ea97dcb` (fondations SEO), `9974f14` (rendu serveur des fiches), puis le commit « domaine centralisé + images de partage 1200×630 ».

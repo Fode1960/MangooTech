@@ -290,21 +290,21 @@ html.dark {
       }
     <!-- SEO -->
     <meta name="description" content="Découvrez ce prestataire sur MangooTech : services, horaires, avis et réservation en ligne.">
-    <link rel="canonical" href="https://mangoo.tech/pages/fiche.html">
+    <link rel="canonical" href="./fiche.html">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#1a5c2a">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="MangooTech">
     <meta property="og:title" content="Fiche Prestataire · MangooTech">
     <meta property="og:description" content="Découvrez ce prestataire sur MangooTech : services, horaires, avis et réservation en ligne.">
-    <meta property="og:image" content="https://mangoo.tech/assets/icon-512.png">
-    <meta property="og:url" content="https://mangoo.tech/pages/fiche.html">
+    <meta property="og:image" content="/assets/icon-512.png">
+    <meta property="og:url" content="./fiche.html">
     <meta property="og:locale" content="fr_FR">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Fiche Prestataire · MangooTech">
     <meta name="twitter:description" content="Découvrez ce prestataire sur MangooTech : services, horaires, avis et réservation en ligne.">
-    <meta name="twitter:image" content="https://mangoo.tech/assets/icon-512.png">
-    <script type="application/ld+json" id="seo-jsonld">{"@context":"https://schema.org","@type":"ProfessionalService","name":"Fiche Prestataire","url":"https://mangoo.tech/pages/fiche.html","image":"https://mangoo.tech/assets/icon-512.png"}</script>
+    <meta name="twitter:image" content="/assets/icon-512.png">
+    <script type="application/ld+json" id="seo-jsonld">{"@context":"https://schema.org","@type":"ProfessionalService","name":"Fiche Prestataire","url":"./fiche.html","image":"/assets/icon-512.png"}</script>
 </head>
 
 <body class="min-h-screen font-sans antialiased" style="background-color: rgb(var(--mgt-background));">
@@ -1069,10 +1069,13 @@ html.dark {
     }
   }
 
+  function seoOrigin() {
+    return (window.location && window.location.origin) || '';
+  }
   function seoAbsUrl(src) {
-    if (!src) return 'https://mangoo.tech/assets/icon-512.png';
+    if (!src) return seoOrigin() + '/assets/icon-512.png';
     if (/^https?:\/\//i.test(src)) return src;
-    if (src.charAt(0) === '/') return 'https://mangoo.tech' + src;
+    if (src.charAt(0) === '/') return seoOrigin() + src;
     return src;
   }
   function seoSetMeta(attr, name, content) {
@@ -1093,8 +1096,8 @@ html.dark {
     var desc = (match.desc || '').replace(/\s+/g, ' ').trim() || ('Découvrez ' + name + ' sur MangooTech.');
     var title = name ? (name + ' · Prestataire · MangooTech') : 'Prestataire · MangooTech';
     var vid = match.vendorId || (window._mcpVendor && window._mcpVendor.vendorId) || '';
-    var url = 'https://mangoo.tech/pages/fiche.html' + (vid ? ('?vendorId=' + encodeURIComponent(vid)) : '');
-    var img = seoAbsUrl(match.img);
+    var url = seoOrigin() + '/pages/fiche.html' + (vid ? ('?vendorId=' + encodeURIComponent(vid)) : '');
+    var img = seoOrigin() + '/og/' + (vid ? encodeURIComponent(vid) : 'default') + '.png';
     document.title = title;
     seoSetMeta('name', 'description', desc);
     seoSetMeta('property', 'og:title', title);
