@@ -30,6 +30,7 @@
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const crypto = require('crypto');
 
 const ROOT = __dirname;
 
@@ -59,6 +60,14 @@ const BACKUP_ENABLED = String(process.env.BACKUP_ENABLED || 'false').toLowerCase
 // conteneur. BACKUP_DIR peut être redirigé vers un emplacement persistant dédié.
 const BACKUP_DIR = path.resolve(process.env.BACKUP_DIR || path.join(DATA_DIR, 'backups'));
 const RETENTION_DAYS = parseInt(process.env.BACKUP_RETENTION_DAYS || '7', 10) || 7;
+
+// --- Sauvegarde externe (S3-compatible : Cloudflare R2 / S3 / Backblaze B2) ---
+const BACKUP_EXTERNAL = String(process.env.BACKUP_EXTERNAL || 'false').toLowerCase() === 'true';
+const S3_ENDPOINT = String(process.env.BACKUP_S3_ENDPOINT || '').replace(/\/+$/, '');
+const S3_BUCKET = String(process.env.BACKUP_S3_BUCKET || '');
+const S3_REGION = String(process.env.BACKUP_S3_REGION || 'auto');
+const S3_ACCESS_KEY = String(process.env.BACKUP_S3_ACCESS_KEY_ID || '');
+const S3_SECRET_KEY = String(process.env.BACKUP_S3_SECRET_ACCESS_KEY || '');
 
 function log(msg) { console.log('[Backup]', msg); }
 
@@ -96,7 +105,71 @@ function cleanupOldBackups() {
   if (removed > 0) log('rétention : ' + removed + ' ancienne(s) archive(s) supprimée(s) (conservation ' + RETENTION_DAYS + ' j).');
 }
 
-function run() {
+function sha256Hex(data) {
+  return crypto.createHash('sha256').update(data).digest('hex');
+}
+
+function hmac(key, data) {
+  return crypto.createHmac('sha256', key).update(data).digest();
+}
+
+// Signe une requête PUT object S3 avec AWS Signature Version 4.
+function awsSignV4(accessKey, secretKey, region, service, method, url, payload, contentType, amzDate) {
+  const u = new URL(url);
+  const host = u.host;
+  const canonicalUri = u.pathname;
+  const canonicalQuery = u.search ? u.search.slice(1) : '';
+  const payloadHash = sha256Hex(payload);
+  const headers = {
+    'content-type': contentType,
+    'host': host,
+    'x-amz-content-sha256': payloadHash,
+    'x-amz-date': amzDate
+  };
+  const sortedKeys = Object.keys(headers).sort();
+  const canonicalHeaders = sortedKeys.map(function (k) { return k + ':' + String(headers[k]).trim() + '\n'; }).join('');
+  const signedHeaders = sortedKeys.join(';');
+  const canonicalRequest = [method, canonicalUri, canonicalQuery, canonicalHeaders, signedHeaders, payloadHash].join('\n');
+  const dateStamp = amzDate.slice(0, 8);
+  const scope = dateStamp + '/' + region + '/' + service + '/aws4_request';
+  const stringToSign = ['AWS4-HMAC-SHA256', amzDate, scope, sha256Hex(canonicalRequest)].join('\n');
+  const kDate = hmac('AWS4' + secretKey, dateStamp);
+  const kRegion = hmac(kDate, region);
+  const kService = hmac(kRegion, service);
+  const kSigning = hmac(kService, 'aws4_request');
+  const signature = crypto.createHmac('sha256', kSigning).update(stringToSign).digest('hex');
+  const authorization = 'AWS4-HMAC-SHA256 Credential=' + accessKey + '/' + scope + ', SignedHeaders=' + signedHeaders + ', Signature=' + signature;
+  return { payloadHash: payloadHash, authorization: authorization };
+}
+
+// Upload une archive vers le bucket externe (timestamp + latest.json.gz).
+async function uploadExternal(key, body) {
+  if (!BACKUP_EXTERNAL) return;
+  if (!S3_ENDPOINT || !S3_BUCKET || !S3_ACCESS_KEY || !S3_SECRET_KEY) {
+    log('AVERTISSEMENT : upload externe activé mais paramètres S3 incomplets — ignoré.');
+    return;
+  }
+  const amzDate = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const contentType = 'application/gzip';
+  const url = S3_ENDPOINT + '/' + S3_BUCKET + '/' + encodeURIComponent(key);
+  const sig = awsSignV4(S3_ACCESS_KEY, S3_SECRET_KEY, S3_REGION, 's3', 'PUT', url, body, contentType, amzDate);
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'content-type': contentType,
+      'x-amz-content-sha256': sig.payloadHash,
+      'x-amz-date': amzDate,
+      'Authorization': sig.authorization
+    },
+    body: body
+  });
+  if (!res.ok) {
+    throw new Error('upload S3 ' + key + ' : HTTP ' + res.status + ' ' + (res.statusText || ''));
+  }
+  log('upload externe : ' + key + ' (' + body.length + ' octets)');
+}
+
+async function run() {
   if (!BACKUP_ENABLED) {
     log('désactivé (BACKUP_ENABLED != true). Rien à faire.');
     return 0;
@@ -131,14 +204,20 @@ function run() {
   }
   log('archive créée : ' + dest + ' (' + stat.size + ' octets, ' + count + ' fichier(s) JSON)');
 
-  // 4. Rétention.
+  // 4. Upload externe (R2/S3/B2), si activé.
+  await uploadExternal(archiveName, gz);
+  await uploadExternal('latest.json.gz', gz);
+
+  // 5. Rétention.
   cleanupOldBackups();
   return 0;
 }
 
-try {
-  process.exit(run());
-} catch (e) {
-  log('ERREUR FATALE : ' + e.message);
-  process.exit(1);
-}
+(async function main() {
+  try {
+    process.exit(await run());
+  } catch (e) {
+    log('ERREUR FATALE : ' + e.message);
+    process.exit(1);
+  }
+})();

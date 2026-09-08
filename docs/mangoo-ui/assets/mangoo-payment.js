@@ -260,6 +260,40 @@
           return mobileOperators[0];
         }
 
+        // Un opérateur en mode « live » (Wave, Orange Money) se règle par une
+        // redirection vers sa page hébergée, et non par la modale OTP.
+        function isRedirectOperator(op) {
+          return !!op && op.mode === 'live';
+        }
+
+        function beginRedirect(op) {
+          var returnUrl = location.href.split('#')[0];
+          returnUrl += (returnUrl.indexOf('?') >= 0 ? '&' : '?') + 'mgt_checkout=1';
+          close();
+          fetch(BASE + '/checkout/session', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+              operator: op.id,
+              amount: amount,
+              kind: opts.kind || 'mobile-money-payment',
+              reference: opts.reference || '',
+              description: opts.subtitle || '',
+              returnUrl: returnUrl
+            })
+          }).then(function (r) { return r.json(); })
+            .then(function (d) {
+              if (d && d.ok && d.checkoutUrl) {
+                try { sessionStorage.setItem('mgt_pending_txn', d.transactionId); } catch (e) {}
+                window.location.href = d.checkoutUrl;
+              } else {
+                reject(new Error((d && d.error) || 'Paiement indisponible.'));
+              }
+            }).catch(function (e) {
+              reject(e);
+            });
+        }
+
         function feeSummary() {
           var op = selectedOperator();
           var fee = feeFor(op, amount);
@@ -295,7 +329,11 @@
           var back = secondaryBtn('Annuler');
           back.onclick = close;
           var next = primaryBtn('Continuer');
-          next.onclick = renderStep2;
+          next.onclick = function () {
+            var op = selectedOperator();
+            if (isRedirectOperator(op)) { beginRedirect(op); return; }
+            renderStep2();
+          };
           footer.appendChild(back);
           footer.appendChild(next);
         }
@@ -384,6 +422,43 @@
       { id: 'moov', label: 'Moov Money', code: 'MOOV', fee: 0.015, feeLabel: '1,5 %', mode: 'sandbox' },
       { id: 'free', label: 'Free Mobile Sénégal', code: 'FREE', fee: 0.01, feeLabel: '1 %', mode: 'sandbox' }
     ];
+  }
+
+  function toast(msg) {
+    try {
+      var t = document.createElement('div');
+      t.textContent = msg;
+      t.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgb(15,23,42);color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 8px 30px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);';
+      document.body.appendChild(t);
+      setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 4000);
+    } catch (e) {}
+  }
+
+  // Après redirection, interroge le statut et confirme à l'utilisateur.
+  function pollCheckout(txnId, attempts) {
+    fetch(BASE + '/checkout/status?txn=' + encodeURIComponent(txnId), { headers: authHeaders(), cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.completed) { toast('Paiement confirmé. Merci !'); return; }
+        if (attempts < 6) { setTimeout(function () { pollCheckout(txnId, attempts + 1); }, 2000); }
+        else { toast('Paiement en attente de confirmation.'); }
+      })
+      .catch(function () { toast('Impossible de vérifier le paiement.'); });
+  }
+
+  function handleCheckoutReturn() {
+    try {
+      if (location.search.indexOf('mgt_checkout') < 0) return;
+      var txnId = sessionStorage.getItem('mgt_pending_txn');
+      if (!txnId) return;
+      sessionStorage.removeItem('mgt_pending_txn');
+      pollCheckout(txnId, 0);
+    } catch (e) {}
+  }
+
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', handleCheckoutReturn);
+    else handleCheckoutReturn();
   }
 
   global.MangooPayment = {

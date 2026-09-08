@@ -50,6 +50,16 @@ try {
   console.warn('[Paiement] module wave-payment.cjs indisponible — paiement Wave désactivé :', e.message);
 }
 
+// Module d'intégration Orange Money (Web Payment, redirect). Chargé de façon
+// défensive : si orange-money.cjs est absent ou si les clés manquent, Orange
+// Money reste en démo (le mode démo reste actif).
+let orangeMoney = null;
+try {
+  orangeMoney = require('./orange-money.cjs');
+} catch (e) {
+  console.warn('[Paiement] module orange-money.cjs indisponible — Orange Money désactivé :', e.message);
+}
+
 const ROOT = __dirname;
 const HOST = '0.0.0.0';
 const HTTP_PORT = Number(process.env.PORT || 8080);
@@ -2673,7 +2683,7 @@ const DEVISE = 'XOF';
 const DEVISE_LABEL = 'FCFA'; // Libellé affiché (le code ISO « XOF » reste utilisé dans les données).
 
 const MOBILE_MONEY_OPERATORS = {
-  orange: { id: 'orange', label: 'Orange Money', code: 'OM', fee: 0.01, feeLabel: '1 %', configKeys: ['ORANGE_MONEY_API_KEY', 'ORANGE_MONEY_CLIENT_ID'], countries: ['SN', 'CI', 'ML', 'GN', 'BF', 'CM'] },
+  orange: { id: 'orange', label: 'Orange Money', code: 'OM', fee: 0.01, feeLabel: '1 %', configKeys: ['ORANGE_MONEY_CLIENT_ID', 'ORANGE_MONEY_CLIENT_SECRET', 'ORANGE_MONEY_MERCHANT_KEY'], countries: ['SN', 'CI', 'ML', 'GN', 'BF', 'CM'] },
   wave: { id: 'wave', label: 'Wave', code: 'WAVE', fee: 0.01, feeLabel: '1 %', configKeys: ['WAVE_API_KEY', 'WAVE_SECRET_KEY'], countries: ['SN', 'CI', 'ML', 'BF', 'GN', 'GM', 'BJ', 'TG'] },
   mtn: { id: 'mtn', label: 'MTN Mobile Money', code: 'MOMO', fee: 0.015, feeLabel: '1,5 %', configKeys: ['MTN_MOMO_API_KEY', 'MTN_MOMO_SUBSCRIPTION_KEY'], countries: ['SN', 'CI', 'CM', 'GH', 'UG', 'ZM', 'GN', 'BJ'] },
   moov: { id: 'moov', label: 'Moov Money', code: 'MOOV', fee: 0.015, feeLabel: '1,5 %', configKeys: ['MOOV_API_KEY', 'MOOV_CLIENT_ID'], countries: ['SN', 'CI', 'BF', 'TG', 'NE', 'BJ'] },
@@ -3551,12 +3561,13 @@ const DemoPaymentProvider = {
 const activePaymentProvider = DemoPaymentProvider;
 
 // Sélection du provider par opérateur. En mode démo, on conserve toujours le
-// DemoPaymentProvider (aucun appel réel). En mode live, seul Wave est branché
-// pour l'instant ; les autres opérateurs (Orange, MTN, Moov, Free) restent en
-// démo tant que leur provider n'est pas implémenté.
+// DemoPaymentProvider (aucun appel réel). En mode live, Wave et Orange Money
+// sont branchés en réel (checkout redirect) ; les autres opérateurs (MTN, Moov,
+// Free) restent en démo tant que leur provider n'est pas implémenté.
 function paymentProviderFor(op) {
   if (paymentModeActive() !== 'live') return DemoPaymentProvider;
   if (op && op.id === 'wave' && wavePayment && wavePayment.configured()) return wavePayment.WavePaymentProvider;
+  if (op && op.id === 'orange' && orangeMoney && orangeMoney.configured()) return orangeMoney.OrangeMoneyProvider;
   return DemoPaymentProvider;
 }
 
@@ -6764,6 +6775,115 @@ function handleHttp(req, res) {
         txn.mode = 'live';
         txn.paidAt = new Date().toISOString();
         txn.providerRef = sessionId;
+        saveTransactions();
+      }
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true }));
+    });
+    req.on('error', function () { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'corps illisible' })); });
+    return;
+  }
+
+  /* -------- Checkout redirect générique (Wave + Orange Money) -------- */
+  if (urlPath === '/api/payment/checkout/session') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    readJsonBody(req, function (err, body) {
+      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+      body = body || {};
+      const opId = String(body.operator || '').toLowerCase();
+      const op = operatorById(opId);
+      if (!op) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Opérateur inconnu : ' + opId })); return; }
+      const provider = paymentProviderFor(op);
+      if (provider.id !== op.id) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Paiement ' + op.label + ' non disponible (clés ou mode live manquants).' })); return; }
+      const user = userFromReq(req);
+      const amount = Math.round(Number(body.amount) || 0);
+      if (amount <= 0) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Montant invalide.' })); return; }
+      const reference = String(body.reference || ('MGO-' + Date.now()));
+      const returnUrl = String(body.returnUrl || siteBase(req) + '/');
+      const txn = recordTransaction({
+        userId: user ? user.id : String(body.userId || ''),
+        userType: user ? user.role : (body.userType || 'client'),
+        kind: String(body.kind || 'mobile-money-payment'),
+        operator: op.id,
+        operatorLabel: op.label,
+        phone: String(body.phone || '').trim(),
+        amount: amount,
+        feeAmount: Math.round(amount * op.fee),
+        description: String(body.description || ''),
+        reference: reference,
+        mode: 'live',
+        status: 'initiated'
+      });
+      provider.initiate({
+        amount: amount,
+        reference: reference,
+        returnUrl: returnUrl,
+        cancelUrl: returnUrl,
+        notifUrl: siteBase(req) + '/api/payment/orange/webhook',
+        successUrl: returnUrl,
+        errorUrl: returnUrl
+      }).then(function (sim) {
+        txn.operatorRef = sim.operatorRef;
+        txn.checkoutUrl = sim.checkoutUrl;
+        txn.instructions = sim.instructions;
+        saveTransactions();
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, transactionId: txn.id, operatorRef: sim.operatorRef, checkoutUrl: sim.checkoutUrl, paymentMode: 'live' }));
+      }).catch(function (e) {
+        txn.status = 'failed';
+        txn.failedReason = 'Initiation ' + op.label + ' impossible : ' + e.message;
+        saveTransactions();
+        res.writeHead(502, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: e.message }));
+      });
+    });
+    return;
+  }
+
+  if (urlPath === '/api/payment/checkout/status') {
+    const txnId = queryParam(req, 'txn') || queryParam(req, 'id');
+    if (!txnId) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'transactionId manquant.' })); return; }
+    const txn = transactions.find(function (t) { return t.id === txnId; });
+    if (!txn) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Transaction introuvable.' })); return; }
+    const op = operatorById(txn.operator);
+    const provider = paymentProviderFor(op);
+    if (provider.id !== op.id) { res.writeHead(200, JSON_HEADERS); res.end(JSON.stringify({ ok: true, status: txn.status, completed: txn.status === 'completed', transaction: txn })); return; }
+    provider.confirm(txn).then(function (outcome) {
+      if (outcome && outcome.success) saveTransactions();
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, status: txn.status, completed: txn.status === 'completed', transaction: txn }));
+    }).catch(function (e) {
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, status: txn.status, completed: txn.status === 'completed', transaction: txn, error: e.message }));
+    });
+    return;
+  }
+
+  /* -------- Webhook Orange Money (notification serveur→serveur) -------- */
+  if (urlPath === '/api/payment/orange/webhook') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    let raw = '';
+    req.on('data', function (c) { raw += c; if (raw.length > 1024 * 1024) req.destroy(); });
+    req.on('end', function () {
+      let event = {};
+      try { event = JSON.parse(raw || '{}'); } catch (e) { event = {}; }
+      const notifToken = event.notif_token || event.notifToken || null;
+      if (!orangeMoney || !orangeMoney.verifyNotificationToken(notifToken)) {
+        res.writeHead(401, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: 'Notification invalide.' }));
+        return;
+      }
+      const payToken = event.pay_token || event.payToken || event.payment_token || null;
+      const orderId = event.order_id || event.orderId || event.reference || null;
+      const status = event.status || event.payment_status || '';
+      const txn = transactions.find(function (t) {
+        return (payToken && t.operatorRef === payToken) || (orderId && t.reference === orderId);
+      });
+      if (txn && orangeMoney.isCompletedStatus(status)) {
+        txn.status = 'completed';
+        txn.mode = 'live';
+        txn.paidAt = new Date().toISOString();
+        txn.providerRef = payToken || txn.operatorRef;
         saveTransactions();
       }
       res.writeHead(200, JSON_HEADERS);
