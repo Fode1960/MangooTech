@@ -4,6 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accueil MangooTech</title>
+    <script>
+    /* Garde-fou PWA (start_url = accueil.html) : un utilisateur deja connecte
+       qui rouvre l'app via son icone est renvoye vers son propre espace :
+       livreur -> livreur.html, vendeur/prestataire -> dashboard-overview.html,
+       client -> client-dashboard.html, admin -> admin.html. Sans session
+       valide, l'accueil public reste affiche (bouton Connexion). */
+    (function () {
+      try {
+        var _u = null;
+        try { _u = JSON.parse(localStorage.getItem('mgt_user') || 'null'); } catch (e) { _u = null; }
+        var _tok = null;
+        try { _tok = localStorage.getItem('mgt_token'); } catch (e) { _tok = null; }
+        /* localStorage est hote-specifique (perdu entre www.mangoo.tech et le
+           point final). Si l'identite OU le token manque, on resynchronise
+           depuis le cookie httpOnly mgt_session (source de verite serveur) pour
+           que la page cible (ex. livreur.html) puisse demarrer sans rebond. */
+        if (!_u || !_tok) {
+          try {
+            var _x = new XMLHttpRequest();
+            _x.open('GET', '/api/auth/session', false);
+            _x.setRequestHeader('Accept', 'application/json');
+            _x.send(null);
+            if (_x.status >= 200 && _x.status < 300) {
+              var _d = JSON.parse(_x.responseText);
+              if (_d && _d.ok && _d.user) {
+                _u = _d.user;
+                try { localStorage.setItem('mgt_user', JSON.stringify(_d.user)); } catch (e) {}
+                if (_d.token) { try { localStorage.setItem('mgt_token', _d.token); } catch (e) {} }
+              }
+            }
+          } catch (e) {}
+        }
+        if (_u) {
+          var _r = String(_u.role || '').toLowerCase();
+          var _target = '';
+          if (_r === 'livreur') _target = '/pages/livreur.html';
+          else if (_r === 'vendeur' || _r === 'prestataire') _target = '/pages/dashboard-overview.html';
+          else if (_r === 'client' || _r === 'cliente') _target = '/pages/client-dashboard.html';
+          else if (_r === 'admin') _target = '/pages/admin.html';
+          if (_target) window.location.replace(_target);
+        }
+      } catch (e) {}
+    })();
+    </script>
     <style id="theme-vars">
 /* ===== MangooTech Brand Design Tokens ===== */
 /* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
