@@ -34,6 +34,7 @@ const ROOT = __dirname;
 const HOST = '0.0.0.0';
 const HTTP_PORT = Number(process.env.PORT || 8080);
 const HTTPS_PORT = Number(process.env.HTTPS_PORT || 8443);
+const SITE_BASE = String(process.env.SITE_URL || 'https://mangoo.tech').replace(/\/+$/, '');
 
 const rand = () => crypto.randomUUID();
 
@@ -2291,6 +2292,69 @@ function buildSitemap() {
     out += '  <url><loc>' + esc(loc) + '</loc><lastmod>' + lastmod + '</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n';
   });
   out += '</urlset>\n';
+  return out;
+}
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function escAttr(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function resolveVendorForSeo(vendorId) {
+  if (!vendorId) return null;
+  const id = canonicalRoutingId(vendorId);
+  let list = [];
+  try { list = carteVendors() || []; } catch (e) { list = []; }
+  for (let i = 0; i < list.length; i++) {
+    if (list[i].vendorId === id) return list[i];
+  }
+  return null;
+}
+function seoImage(url) {
+  const s = String(url || '').trim();
+  if (!s) return SITE_BASE + '/assets/icon-512.png';
+  if (s.indexOf('data:') === 0) return SITE_BASE + '/assets/icon-512.png';
+  if (/^https?:\/\//i.test(s)) return s;
+  if (s.charAt(0) === '/') return SITE_BASE + s;
+  return s;
+}
+function injectFicheSeo(html, vendor, pageType, vendorId) {
+  const isBoutique = pageType === 'boutique';
+  const page = isBoutique ? '/pages/fiche-boutique.html' : '/pages/fiche.html';
+  const label = isBoutique ? 'Boutique' : 'Prestataire';
+  const schemaType = isBoutique ? 'Store' : 'ProfessionalService';
+  const name = vendor ? (vendor.name || '') : '';
+  const descRaw = vendor ? String(vendor.desc || '').replace(/\s+/g, ' ').trim() : '';
+  const desc = descRaw || (name ? ('Découvrez ' + name + ' sur MangooTech.') : (isBoutique ? 'Découvrez cette boutique sur MangooTech : produits, horaires, contact et commande en ligne.' : 'Découvrez ce prestataire sur MangooTech : services, horaires, avis et réservation en ligne.'));
+  const title = name ? (name + ' · ' + label + ' · MangooTech') : (label + ' · MangooTech');
+  const url = SITE_BASE + page + (vendorId ? ('?vendorId=' + encodeURIComponent(vendorId)) : '');
+  const img = seoImage(vendor && vendor.img);
+  let out = html;
+  out = out.replace(/<title>[\s\S]*?<\/title>/, '<title>' + escHtml(title) + '</title>');
+  out = out.replace(/<meta name="description" content="[^"]*">/, '<meta name="description" content="' + escAttr(desc) + '">');
+  out = out.replace(/<link rel="canonical" href="[^"]*">/, '<link rel="canonical" href="' + escAttr(url) + '">');
+  out = out.replace(/<meta property="og:title" content="[^"]*">/, '<meta property="og:title" content="' + escAttr(title) + '">');
+  out = out.replace(/<meta property="og:description" content="[^"]*">/, '<meta property="og:description" content="' + escAttr(desc) + '">');
+  out = out.replace(/<meta property="og:image" content="[^"]*">/, '<meta property="og:image" content="' + escAttr(img) + '">');
+  out = out.replace(/<meta property="og:url" content="[^"]*">/, '<meta property="og:url" content="' + escAttr(url) + '">');
+  out = out.replace(/<meta name="twitter:title" content="[^"]*">/, '<meta name="twitter:title" content="' + escAttr(title) + '">');
+  out = out.replace(/<meta name="twitter:description" content="[^"]*">/, '<meta name="twitter:description" content="' + escAttr(desc) + '">');
+  out = out.replace(/<meta name="twitter:image" content="[^"]*">/, '<meta name="twitter:image" content="' + escAttr(img) + '">');
+  const json = {
+    '@context': 'https://schema.org',
+    '@type': schemaType,
+    name: name || (label + ' MangooTech'),
+    description: desc,
+    url: url,
+    image: img
+  };
+  if (vendor) {
+    if (vendor.phone) json.telephone = vendor.phone;
+    if (vendor.city || vendor.country) json.address = { '@type': 'PostalAddress', addressLocality: vendor.city, addressCountry: vendor.country };
+    if (vendor.rating != null) json.aggregateRating = { '@type': 'AggregateRating', ratingValue: String(vendor.rating), bestRating: '5', worstRating: '1', ratingCount: '1' };
+  }
+  const jsonStr = JSON.stringify(json).replace(/</g, '\\u003c');
+  out = out.replace(/<script type="application\/ld\+json" id="seo-jsonld">[\s\S]*?<\/script>/, '<script type="application/ld+json" id="seo-jsonld">' + jsonStr + '</script>');
   return out;
 }
 function loadSessions() {
@@ -7579,6 +7643,19 @@ function handleHttp(req, res) {
   if (urlPath === '/sitemap.xml') {
     res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
     res.end(buildSitemap());
+    return;
+  }
+  if (urlPath === '/pages/fiche.html' || urlPath === '/pages/fiche-boutique.html') {
+    const seoVendorId = queryParam(req, 'vendorId') || queryParam(req, 'id') || '';
+    const seoPageType = urlPath === '/pages/fiche-boutique.html' ? 'boutique' : 'prestataire';
+    const seoFile = path.join(ROOT, urlPath);
+    fs.readFile(seoFile, 'utf8', function (err, html) {
+      if (err || !html) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('404 Not Found'); return; }
+      const seoVendor = seoVendorId ? resolveVendorForSeo(seoVendorId) : null;
+      const seoOut = seoVendor ? injectFicheSeo(html, seoVendor, seoPageType, seoVendorId) : html;
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate', 'Pragma': 'no-cache', 'Expires': '0' });
+      res.end(seoOut);
+    });
     return;
   }
   // Fichier statique (protection anti-traversal + anti-exposition des secrets)
