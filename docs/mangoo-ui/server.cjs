@@ -3005,7 +3005,14 @@ const MAX_FREIGHT = { tons: 32, m3: 60 };
 // si son véhicule est au moins aussi capable que le véhicule requis par le fret.
 const VEHICLE_RANK = { velo: 1, moto: 2, voiture: 3, van: 4, camion: 5, semi: 6 };
 
+// Forfait de rémunération du livreur par véhicule requis (FCFA).
+const COURIER_FEE_BY_VEHICLE = { velo: 750, moto: 1500, voiture: 3000, van: 4500, camion: 7500, semi: 12000 };
+
 function vehicleRank(v) { return VEHICLE_RANK[String(v || '').toLowerCase()] || 0; }
+function courierFeeForVehicle(v) {
+  const key = String(v || '').toLowerCase();
+  return COURIER_FEE_BY_VEHICLE[key] != null ? COURIER_FEE_BY_VEHICLE[key] : 0;
+}
 function catalogEntry(type) { return FREIGHT_CATALOG[type] || null; }
 
 // Résumé « fret » exposé avec chaque course (label, véhicule requis, pesée…).
@@ -3088,6 +3095,8 @@ function ensureCourierForUser(user) {
     approved: true,
     rating: null,
     completedDeliveries: 0,
+    earnings: 0,
+    logo: null,
     createdAt: nowIso()
   };
   couriers.push(courier);
@@ -3100,7 +3109,9 @@ function publicCourier(c) {
   return {
     id: c.id, userId: c.userId, name: c.name, phone: c.phone, email: c.email,
     vehicle: c.vehicle, city: c.city, zone: c.zone, status: c.status,
+    logo: c.logo || null,
     approved: !!c.approved, rating: c.rating, completedDeliveries: c.completedDeliveries || 0,
+    earnings: Math.round(Number(c.earnings) || 0),
     lat: c.lat != null ? c.lat : null, lng: c.lng != null ? c.lng : null,
     createdAt: c.createdAt
   };
@@ -6971,6 +6982,10 @@ function handleHttp(req, res) {
         const vehicle = String(body.vehicle).trim().toLowerCase();
         if (VEHICLE_RANK[vehicle]) c.vehicle = vehicle;
       }
+      if (body.logo !== undefined) {
+        const l = String(body.logo || '').slice(0, 500000); // data URL (max 500 Ko)
+        c.logo = l; user.logo = l;
+      }
 
       if (newName) user.name = newName;
       if (c.phone) user.phone = c.phone;
@@ -6982,6 +6997,67 @@ function handleHttp(req, res) {
       saveUsers();
       res.writeHead(200, JSON_HEADERS);
       res.end(JSON.stringify({ ok: true, courier: publicCourier(c), user: publicUser(user) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/delivery/courier/finances') {
+    if (req.method !== 'GET') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    const user = userFromReq(req);
+    if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
+    const c = ensureCourierForUser(user);
+    if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
+    const w = walletFor(user.id);
+    const history = transactions.filter(function (t) {
+      return t.userId === user.id && (t.kind === 'delivery-earning' || t.kind === 'courier-withdrawal');
+    }).slice(0, 100).map(function (t) {
+      return {
+        id: t.id, kind: t.kind, amount: t.amount, status: t.status,
+        description: t.description, mode: t.mode, operator: t.operatorLabel || t.operator || null,
+        createdAt: t.createdAt, paidAt: t.paidAt || t.createdAt
+      };
+    });
+    const withdrawn = transactions.filter(function (t) {
+      return t.userId === user.id && t.kind === 'courier-withdrawal' && t.status === 'completed';
+    }).reduce(function (s, t) { return s + (Number(t.amount) || 0); }, 0);
+    res.writeHead(200, JSON_HEADERS);
+    res.end(JSON.stringify({
+      ok: true,
+      balance: Math.round(Number(w.balance) || 0),
+      earnings: Math.round(Number(c.earnings) || 0),
+      withdrawn: Math.round(withdrawn),
+      devise: DEVISE,
+      transactions: history
+    }));
+    return;
+  }
+
+  if (urlPath === '/api/delivery/courier/withdraw') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    readJsonBody(req, function (err, body) {
+      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+      body = body || {};
+      const user = userFromReq(req);
+      if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
+      const c = ensureCourierForUser(user);
+      if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
+      const amount = Math.round(Number(body.amount) || 0);
+      if (amount <= 0) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Montant invalide.' })); return; }
+      const operator = String(body.operator || 'wave').trim();
+      const phone = String(body.phone || user.phone || '').trim();
+      const w = walletFor(user.id);
+      if ((Number(w.balance) || 0) < amount) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Solde disponible insuffisant.' })); return; }
+      w.balance = Math.round((Number(w.balance) || 0) - amount);
+      w.updatedAt = nowIso();
+      const txn = recordTransaction({
+        userId: user.id, userType: 'livreur', kind: 'courier-withdrawal',
+        amount: amount, feeAmount: 0, status: 'completed', mode: 'demo',
+        operator: operator, operatorLabel: (operatorById(operator) || {}).label || operator,
+        phone: phone, description: 'Retrait gains livreur', paidAt: nowIso()
+      });
+      saveWallets();
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, balance: Math.round(Number(w.balance) || 0), transaction: txn }));
     });
     return;
   }
@@ -7226,7 +7302,22 @@ function handleHttp(req, res) {
             const assigned = couriers.find(function (x) { return x.id === delivery.courierId; });
             if (assigned) {
               assigned.status = 'online';
-              if (next === 'delivered') assigned.completedDeliveries = (assigned.completedDeliveries || 0) + 1;
+              if (next === 'delivered') {
+                assigned.completedDeliveries = (assigned.completedDeliveries || 0) + 1;
+                // Rémunération du livreur : forfait selon le véhicule requis.
+                const fee = courierFeeForVehicle(delivery.vehicle || assigned.vehicle);
+                const w = walletFor(assigned.userId);
+                w.balance = Math.round((Number(w.balance) || 0) + fee);
+                w.updatedAt = nowIso();
+                assigned.earnings = Math.round((Number(assigned.earnings) || 0) + fee);
+                recordTransaction({
+                  userId: assigned.userId, userType: 'livreur', kind: 'delivery-earning',
+                  amount: fee, feeAmount: 0, status: 'completed', mode: 'internal',
+                  description: 'Course livrée — ' + (delivery.ref || delivery.id),
+                  reference: String(delivery.id || ''), paidAt: nowIso()
+                });
+                saveWallets();
+              }
               saveCouriers();
             }
           }
