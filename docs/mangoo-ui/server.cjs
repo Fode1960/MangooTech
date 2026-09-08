@@ -7043,7 +7043,9 @@ function handleHttp(req, res) {
       if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
       const amount = Math.round(Number(body.amount) || 0);
       if (amount <= 0) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Montant invalide.' })); return; }
-      const operator = String(body.operator || 'wave').trim();
+      const operatorRaw = String(body.operator || '').trim();
+      const operator = operatorRaw || 'wave';
+      if (!operatorById(operator)) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Opérateur invalide.' })); return; }
       const phone = String(body.phone || user.phone || '').trim();
       const w = walletFor(user.id);
       if ((Number(w.balance) || 0) < amount) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Solde disponible insuffisant.' })); return; }
