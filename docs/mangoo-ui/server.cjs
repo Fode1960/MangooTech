@@ -40,6 +40,16 @@ try {
   console.warn("[OG] module d'image de partage indisponible :", e.message);
 }
 
+// Module d'intégration paiement Wave (checkout redirect). Chargé de façon
+// défensive : si wave-payment.cjs est absent ou si les clés manquent, le
+// paiement réel Wave est simplement désactivé (le mode démo reste actif).
+let wavePayment = null;
+try {
+  wavePayment = require('./wave-payment.cjs');
+} catch (e) {
+  console.warn('[Paiement] module wave-payment.cjs indisponible — paiement Wave désactivé :', e.message);
+}
+
 const ROOT = __dirname;
 const HOST = '0.0.0.0';
 const HTTP_PORT = Number(process.env.PORT || 8080);
@@ -3540,6 +3550,16 @@ const DemoPaymentProvider = {
 // Provider actif (point de bascule unique vers les opérateurs réels).
 const activePaymentProvider = DemoPaymentProvider;
 
+// Sélection du provider par opérateur. En mode démo, on conserve toujours le
+// DemoPaymentProvider (aucun appel réel). En mode live, seul Wave est branché
+// pour l'instant ; les autres opérateurs (Orange, MTN, Moov, Free) restent en
+// démo tant que leur provider n'est pas implémenté.
+function paymentProviderFor(op) {
+  if (paymentModeActive() !== 'live') return DemoPaymentProvider;
+  if (op && op.id === 'wave' && wavePayment && wavePayment.configured()) return wavePayment.WavePaymentProvider;
+  return DemoPaymentProvider;
+}
+
 function recordTransaction(fields) {
   const now = new Date().toISOString();
   const t = Object.assign({
@@ -6652,6 +6672,104 @@ function handleHttp(req, res) {
       res.writeHead(200, JSON_HEADERS);
       res.end(JSON.stringify(result));
     });
+    return;
+  }
+
+  /* -------- Paiement Wave (checkout redirect, mode live) -------- */
+  if (urlPath === '/api/payment/wave/session') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    readJsonBody(req, function (err, body) {
+      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+      body = body || {};
+      const provider = paymentProviderFor({ id: 'wave' });
+      if (provider.id !== 'wave') { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Paiement Wave non disponible (clés ou mode live manquants).' })); return; }
+      const user = userFromReq(req);
+      const amount = Math.round(Number(body.amount) || 0);
+      if (amount <= 0) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Montant invalide.' })); return; }
+      const reference = String(body.reference || ('MGO-' + Date.now()));
+      const txn = recordTransaction({
+        userId: user ? user.id : String(body.userId || ''),
+        userType: user ? user.role : (body.userType || 'client'),
+        kind: String(body.kind || 'mobile-money-payment'),
+        operator: 'wave',
+        operatorLabel: 'Wave',
+        phone: String(body.phone || '').trim(),
+        amount: amount,
+        feeAmount: Math.round(amount * MOBILE_MONEY_OPERATORS.wave.fee),
+        description: String(body.description || ''),
+        reference: reference,
+        mode: 'live',
+        status: 'initiated'
+      });
+      provider.initiate({ amount: amount, reference: reference }).then(function (sim) {
+        txn.operatorRef = sim.operatorRef;
+        txn.checkoutUrl = sim.checkoutUrl;
+        txn.instructions = sim.instructions;
+        saveTransactions();
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, transaction: txn, checkoutUrl: sim.checkoutUrl, paymentMode: 'live' }));
+      }).catch(function (e) {
+        txn.status = 'failed';
+        txn.failedReason = 'Initiation Wave impossible : ' + e.message;
+        saveTransactions();
+        res.writeHead(502, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: e.message }));
+      });
+    });
+    return;
+  }
+
+  if (urlPath === '/api/payment/wave/status') {
+    const sessionId = queryParam(req, 'sessionId') || queryParam(req, 'id');
+    if (!sessionId) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'sessionId manquant.' })); return; }
+    if (!wavePayment) { res.writeHead(503, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Wave non disponible.' })); return; }
+    const txn = transactions.find(function (t) { return t.operatorRef === sessionId; });
+    wavePayment.getCheckoutSession(sessionId).then(function (s) {
+      const completed = wavePayment.isCompletedStatus(s.status);
+      if (completed && txn && txn.status !== 'completed') {
+        txn.status = 'completed';
+        txn.mode = 'live';
+        txn.paidAt = new Date().toISOString();
+        txn.providerRef = sessionId;
+        saveTransactions();
+      }
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, status: s.status, completed: completed, transaction: txn || null }));
+    }).catch(function (e) {
+      res.writeHead(502, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/payment/wave/webhook') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    let raw = '';
+    req.on('data', function (c) { raw += c; if (raw.length > 1024 * 1024) req.destroy(); });
+    req.on('end', function () {
+      const sig = String(req.headers['wave-signature'] || req.headers['Wave-Signature'] || '');
+      if (!wavePayment || !wavePayment.verifyWebhookSignature(raw, sig)) {
+        res.writeHead(401, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: 'Signature invalide.' }));
+        return;
+      }
+      let event = {};
+      try { event = JSON.parse(raw || '{}'); } catch (e) { event = {}; }
+      const data = event.data || event;
+      const sessionId = data.id || event.session_id || event.id || null;
+      const status = data.status || event.status || event.type || '';
+      const txn = sessionId ? transactions.find(function (t) { return t.operatorRef === sessionId; }) : null;
+      if (txn && wavePayment.isCompletedStatus(status)) {
+        txn.status = 'completed';
+        txn.mode = 'live';
+        txn.paidAt = new Date().toISOString();
+        txn.providerRef = sessionId;
+        saveTransactions();
+      }
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true }));
+    });
+    req.on('error', function () { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'corps illisible' })); });
     return;
   }
 
