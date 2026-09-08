@@ -12,6 +12,11 @@
        valide, l'accueil public reste affiche (bouton Connexion). */
     (function () {
       try {
+        // Ne déclencher la redirection automatique vers l'espace perso que si
+        // l'app est ouverte en mode PWA (icône / "standalone"). En navigation
+        // directe dans Chrome (URL tapée), l'accueil public reste affiché,
+        // même si une session (livreur, vendeur, client…) est encore active.
+        var _standalone = !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
         var _u = null;
         try { _u = JSON.parse(localStorage.getItem('mgt_user') || 'null'); } catch (e) { _u = null; }
         var _tok = null;
@@ -43,7 +48,7 @@
           else if (_r === 'vendeur' || _r === 'prestataire') _target = '/pages/dashboard-overview.html';
           else if (_r === 'client' || _r === 'cliente') _target = '/pages/client-dashboard.html';
           else if (_r === 'admin') _target = '/pages/admin.html';
-          if (_target) window.location.replace(_target);
+          if (_target && _standalone) window.location.replace(_target);
         }
       } catch (e) {}
     })();
