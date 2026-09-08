@@ -288,8 +288,25 @@ html.dark {
         mask-position: center;
         background-color: currentColor;
       }
-    </style>
+    <!-- SEO -->
+    <meta name="description" content="Découvrez ce prestataire sur MangooTech : services, horaires, avis et réservation en ligne.">
+    <link rel="canonical" href="https://mangoo.tech/pages/fiche.html">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#1a5c2a">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="MangooTech">
+    <meta property="og:title" content="Fiche Prestataire · MangooTech">
+    <meta property="og:description" content="Découvrez ce prestataire sur MangooTech : services, horaires, avis et réservation en ligne.">
+    <meta property="og:image" content="https://mangoo.tech/assets/icon-512.png">
+    <meta property="og:url" content="https://mangoo.tech/pages/fiche.html">
+    <meta property="og:locale" content="fr_FR">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Fiche Prestataire · MangooTech">
+    <meta name="twitter:description" content="Découvrez ce prestataire sur MangooTech : services, horaires, avis et réservation en ligne.">
+    <meta name="twitter:image" content="https://mangoo.tech/assets/icon-512.png">
+    <script type="application/ld+json" id="seo-jsonld">{"@context":"https://schema.org","@type":"ProfessionalService","name":"Fiche Prestataire","url":"https://mangoo.tech/pages/fiche.html","image":"https://mangoo.tech/assets/icon-512.png"}</script>
 </head>
+
 <body class="min-h-screen font-sans antialiased" style="background-color: rgb(var(--mgt-background));">
 
 <!-- ===== HEADER / NAVIGATION ===== -->
@@ -1052,7 +1069,49 @@ html.dark {
     }
   }
 
+  function seoAbsUrl(src) {
+    if (!src) return 'https://mangoo.tech/assets/icon-512.png';
+    if (/^https?:\/\//i.test(src)) return src;
+    if (src.charAt(0) === '/') return 'https://mangoo.tech' + src;
+    return src;
+  }
+  function seoSetMeta(attr, name, content) {
+    var el = document.querySelector('meta[' + attr + '="' + name + '"]');
+    if (el) el.setAttribute('content', content);
+  }
+  function seoSetCanonical(url) {
+    var el = document.querySelector('link[rel="canonical"]');
+    if (el) el.setAttribute('href', url);
+  }
+  function seoSetJsonLd(obj) {
+    var el = document.getElementById('seo-jsonld');
+    if (el) el.textContent = JSON.stringify(obj);
+  }
+  function applySeo(match) {
+    if (!match) return;
+    var name = match.name || '';
+    var desc = (match.desc || '').replace(/\s+/g, ' ').trim() || ('Découvrez ' + name + ' sur MangooTech.');
+    var title = name ? (name + ' · Prestataire · MangooTech') : 'Prestataire · MangooTech';
+    var vid = match.vendorId || (window._mcpVendor && window._mcpVendor.vendorId) || '';
+    var url = 'https://mangoo.tech/pages/fiche.html' + (vid ? ('?vendorId=' + encodeURIComponent(vid)) : '');
+    var img = seoAbsUrl(match.img);
+    document.title = title;
+    seoSetMeta('name', 'description', desc);
+    seoSetMeta('property', 'og:title', title);
+    seoSetMeta('property', 'og:description', desc);
+    seoSetMeta('property', 'og:image', img);
+    seoSetMeta('property', 'og:url', url);
+    seoSetMeta('name', 'twitter:title', title);
+    seoSetMeta('name', 'twitter:description', desc);
+    seoSetMeta('name', 'twitter:image', img);
+    seoSetCanonical(url);
+    var obj = { '@context': 'https://schema.org', '@type': 'ProfessionalService', name: name, description: desc, url: url, image: img };
+    if (match.phone) obj.telephone = match.phone;
+    if (match.city || match.country) obj.address = { '@type': 'PostalAddress', addressLocality: match.city, addressCountry: match.country };
+    seoSetJsonLd(obj);
+  }
   function applyVendor(match) {
+
     if (!match) return;
     var meta = categoryMeta(match.category);
     window._mcpVendor.id = match.id || window._mcpVendor.id;
@@ -1076,7 +1135,7 @@ html.dark {
     if (match.rating != null) setText(document.getElementById('vendor-rating'), String(match.rating));
     setText(document.getElementById('vendor-city'), (match.city || '') + (match.country ? ', ' + match.country : ''));
     setText(document.getElementById('vendor-description'), match.desc);
-    if (match.name && document.title) document.title = match.name + ' · Prestataire · MangooTech';
+    applySeo(match);
 
     initReviews(match.rating);
     if (window.lucide) window.lucide.createIcons();

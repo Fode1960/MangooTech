@@ -2255,6 +2255,44 @@ function carteVendors() {
   return list;
 }
 
+function buildSitemap() {
+  const BASE = 'https://mangoo.tech';
+  const STATIC_PAGES = [
+    '/pages/accueil.html',
+    '/pages/carte.html',
+    '/pages/annuaire-prestataires.html',
+    '/pages/comparatif-prestataire-boutique.html',
+    '/pages/lives-en-direct.html',
+    '/pages/blog.html',
+    '/pages/aide.html',
+    '/pages/faq.html',
+    '/pages/contact.html',
+    '/pages/paiements.html',
+    '/pages/cgv.html',
+    '/pages/conditions-utilisation.html',
+    '/pages/confidentialite.html',
+    '/pages/mentions-legales.html',
+    '/pages/installer-ios.html'
+  ];
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  }
+  const lastmod = new Date().toISOString().slice(0, 10);
+  let out = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  out += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+  STATIC_PAGES.forEach(function (p) {
+    out += '  <url><loc>' + esc(BASE + p) + '</loc><lastmod>' + lastmod + '</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>\n';
+  });
+  let vendors = [];
+  try { vendors = carteVendors() || []; } catch (e) { vendors = []; }
+  vendors.forEach(function (v) {
+    const page = v.type === 'boutique' ? '/pages/fiche-boutique.html' : '/pages/fiche.html';
+    const loc = BASE + page + '?vendorId=' + encodeURIComponent(v.vendorId || '');
+    out += '  <url><loc>' + esc(loc) + '</loc><lastmod>' + lastmod + '</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n';
+  });
+  out += '</urlset>\n';
+  return out;
+}
 function loadSessions() {
   try {
     if (fs.existsSync(SESSIONS_FILE)) {
@@ -7533,6 +7571,16 @@ function handleHttp(req, res) {
     return;
   }
 
+  if (urlPath === '/robots.txt') {
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=86400' });
+    res.end('User-agent: *\nAllow: /\nDisallow: /pages/auth.html\nDisallow: /pages/dashboard-\nDisallow: /pages/client-\nDisallow: /pages/admin\nDisallow: /pages/checkout.html\nDisallow: /pages/chat.html\nDisallow: /pages/livreur.html\nDisallow: /pages/live-vendor.html\nDisallow: /pages/live-client.html\nDisallow: /api/\n\nSitemap: https://mangoo.tech/sitemap.xml\n');
+    return;
+  }
+  if (urlPath === '/sitemap.xml') {
+    res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
+    res.end(buildSitemap());
+    return;
+  }
   // Fichier statique (protection anti-traversal + anti-exposition des secrets)
   let filePath = path.normalize(path.join(ROOT, urlPath));
   if (!filePath.startsWith(ROOT)) { res.writeHead(403); res.end('Forbidden'); return; }
