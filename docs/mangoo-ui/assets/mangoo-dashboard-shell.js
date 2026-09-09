@@ -624,7 +624,11 @@
     var overlay = document.createElement('div');
     overlay.className = 'mgt-menu-overlay';
     document.body.appendChild(overlay);
-    function close() { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+    function close() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      try { sessionStorage.removeItem('mgt_sidebar_open'); sessionStorage.removeItem('mgt_sidebar_open_ts'); } catch (e) {}
+    }
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
       sidebar.classList.toggle('open');
@@ -635,9 +639,26 @@
     // porte le marqueur #menu (ex. « Accueil » de la barre basse fixe), afin
     // que l'utilisateur puisse choisir son module au lieu d'arriver
     // directement sur « Vue d'ensemble ».
-    if (location.hash === '#menu' && window.innerWidth <= 768) {
+    //
+    // Durable face à un rechargement : mangoo-push.js recharge la page quand le
+    // service worker prend le contrôle (mise à jour post-déploiement). Ce
+    // rechargement survient après le replaceState() qui retire #menu, si bien
+    // qu'au second chargement le hash a disparu et la sidebar restait fermée
+    // (« elle apparaît puis disparaît aussitôt »). On mémorise donc l'intention
+    // d'ouverture en sessionStorage (survit au reload, expirée après 20 s pour
+    // ne pas rouvrir le menu lors d'une visite ultérieure sans #menu).
+    var mgtOpen = false;
+    try {
+      mgtOpen = sessionStorage.getItem('mgt_sidebar_open') === '1'
+        && (Date.now() - parseInt(sessionStorage.getItem('mgt_sidebar_open_ts') || '0', 10)) < 20000;
+    } catch (e) {}
+    if ((location.hash === '#menu' || mgtOpen) && window.innerWidth <= 768) {
       sidebar.classList.add('open');
       overlay.classList.add('show');
+      try {
+        sessionStorage.setItem('mgt_sidebar_open', '1');
+        sessionStorage.setItem('mgt_sidebar_open_ts', String(Date.now()));
+      } catch (e) {}
       try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
     }
     var navLinks = sidebar.querySelectorAll('a');
