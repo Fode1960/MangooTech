@@ -2776,6 +2776,31 @@ function saveOffresJour() {
   writeJsonAtomic('offres-jour.json', offresJour);
 }
 
+/* Boutique : commandes persistées pour la réconciliation des paiements live.
+ * Contrairement au flux démo (localStorage), ces commandes existent côté
+ * serveur AVANT le paiement et sont marquées « payee » par le settlement. */
+const BOUTIQUE_ORDERS_FILE = path.join(DATA_DIR, 'boutique-orders.json');
+let boutiqueOrders = [];
+
+function loadBoutiqueOrders() {
+  try {
+    if (fs.existsSync(BOUTIQUE_ORDERS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(BOUTIQUE_ORDERS_FILE, 'utf8'));
+      if (Array.isArray(data)) { boutiqueOrders = data; console.log('[Boutique] commandes chargées :', boutiqueOrders.length); return; }
+    }
+  } catch (e) { console.error('[Boutique] commandes illisibles, réinitialisation :', e.message); }
+  boutiqueOrders = [];
+}
+
+function saveBoutiqueOrders() {
+  writeJsonAtomic('boutique-orders.json', boutiqueOrders);
+}
+
+function boutiqueOrderForId(id) {
+  const i = String(id || '');
+  return boutiqueOrders.find(function (o) { return o && (o.id === i || o.orderNo === i); }) || null;
+}
+
 /* ------------------------------------------------------------------ *
  *  Mangoo Négociation — module IA déterministe (sans LLM / clé API)
  *  ------------------------------------------------------------------ *
@@ -3756,6 +3781,40 @@ function settleTransaction(txn) {
       boosters[idx].remainingLabel = (offer.durationText || '24h') + ' / ' + (offer.durationText || '24h');
       boosters[idx].remainingPct = 100;
       saveBoosters();
+    }
+  } else if (kind === 'boutique-order') {
+    const orderId = String(meta.orderId || meta.id || '');
+    const order = boutiqueOrderForId(orderId);
+    if (order && order.status !== 'payee') {
+      order.status = 'payee';
+      order.paidAt = now;
+      order.transactionId = txn.id;
+      order.updatedAt = now;
+      // Décrémente le stock des produits commandés (idempotent : une seule fois).
+      (order.items || []).forEach(function (it) {
+        const pid = String((it && it.productId) || '');
+        if (!pid) return;
+        const product = catalogue.find(function (p) { return p && p.id === pid; });
+        if (product && Number(product.stock) > 0) {
+          product.stock = Math.max(0, Number(product.stock) - Math.max(1, Math.round(Number((it && it.qty) || 1))));
+        }
+      });
+      saveCatalogue();
+      // Crédite le vendeur (net de commission) pour la cohérence comptable.
+      const vendorUser = userByRoutingId(order.vendorId);
+      const vendorKey = vendorUser ? vendorUser.id : canonicalRoutingId(order.vendorId);
+      const gross = Math.round(Number(order.total) || 0);
+      const rate = planCommissionFor(order.vendorId);
+      const commission = Math.round(gross * rate / 100);
+      const net = gross - commission;
+      const w = walletFor(vendorKey);
+      w.balance = Math.round((Number(w.balance) || 0) + net);
+      w.updatedAt = now;
+      saveWallets();
+      order.commissionRate = rate;
+      order.commissionAmount = commission;
+      order.settlementAmount = net;
+      saveBoutiqueOrders();
     }
   }
 
@@ -6814,6 +6873,124 @@ function handleHttp(req, res) {
     return;
   }
 
+  /* -------- Commande boutique (endpoint dédié + settlement) -------- *
+   *  Crée une commande serveur AVANT le paiement (traçabilité), puis
+   *  déclenche le checkout redirect. Le settlement (kind boutique-order)
+   *  marquera la commande « payee », décrémentera le stock et créditera
+   *  le vendeur au retour du webhook / du polling. */
+  if (urlPath === '/api/boutique/order') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    readJsonBody(req, function (err, body) {
+      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+      body = body || {};
+      const user = userFromReq(req);
+      const opId = String(body.operator || '').toLowerCase();
+      const op = operatorById(opId);
+      if (!op) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Opérateur inconnu : ' + opId })); return; }
+      const provider = paymentProviderFor(op);
+      if (provider.id !== op.id) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Paiement ' + op.label + ' non disponible (clés ou mode live manquants).' })); return; }
+
+      const rawItems = Array.isArray(body.items) ? body.items : [];
+      const items = rawItems.map(function (it) {
+        const qty = Math.max(1, Math.round(Number((it && it.qty) || 1)));
+        const price = Math.max(0, Math.round(Number((it && it.price) || 0)));
+        const name = String((it && it.name) || 'Article').trim();
+        return { productId: String((it && (it.productId || it.id)) || '').trim(), name: name, price: price, qty: qty, lineTotal: price * qty };
+      }).filter(function (it) { return it.name && it.qty > 0; });
+      if (!items.length) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Panier vide.' })); return; }
+
+      const subtotal = items.reduce(function (s, it) { return s + it.lineTotal; }, 0);
+      const fulfillment = String(body.fulfillment || '').trim() === 'livraison' ? 'livraison' : 'retrait';
+      const deliveryFee = fulfillment === 'livraison' ? Math.max(0, Math.round(Number(body.deliveryFee) || 500)) : 0;
+      const total = subtotal + deliveryFee;
+
+      const vendorId = canonicalRoutingId(String(body.vendorId || ''));
+      const vendorName = String(body.vendorName || '').trim() || 'Boutique';
+      const orderNo = 'CMD-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
+      const order = {
+        id: 'cmd-' + crypto.randomBytes(6).toString('hex'),
+        orderNo: orderNo,
+        vendorId: vendorId,
+        vendorName: vendorName,
+        clientId: user ? user.id : '',
+        clientName: String(body.clientName || '').trim() || 'Client',
+        clientPhone: String(body.clientPhone || '').trim(),
+        clientEmail: String(body.clientEmail || '').trim(),
+        clientCity: String(body.clientCity || '').trim(),
+        items: items,
+        subtotal: subtotal,
+        deliveryFee: deliveryFee,
+        total: total,
+        fulfillment: fulfillment,
+        address: String(body.address || '').trim(),
+        status: 'en_attente',
+        operator: op.id,
+        operatorLabel: op.label,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+        paidAt: null,
+        transactionId: null,
+        commissionRate: null,
+        commissionAmount: null,
+        settlementAmount: null
+      };
+
+      const reference = String(body.reference || ('MGO-' + orderNo + '-' + Date.now()));
+      const txn = recordTransaction({
+        userId: user ? user.id : String(body.userId || ''),
+        userType: user ? user.role : 'client',
+        kind: 'boutique-order',
+        operator: op.id,
+        operatorLabel: op.label,
+        phone: String(body.phone || '').trim(),
+        amount: total,
+        feeAmount: Math.round(total * op.fee),
+        description: 'Commande ' + orderNo + ' - ' + vendorName,
+        reference: reference,
+        meta: {
+          orderId: order.id,
+          orderNo: order.orderNo,
+          vendorId: vendorId,
+          vendorName: vendorName,
+          items: items,
+          total: total,
+          fulfillment: fulfillment,
+          address: order.address
+        },
+        mode: 'live',
+        status: 'initiated'
+      });
+      order.transactionId = txn.id;
+      boutiqueOrders.unshift(order);
+      saveBoutiqueOrders();
+
+      const returnUrl = String(body.returnUrl || siteBase(req) + '/pages/fiche-boutique.html?vendorId=' + encodeURIComponent(vendorId) + '&mgt_checkout=1');
+      provider.initiate({
+        amount: total,
+        reference: reference,
+        returnUrl: returnUrl,
+        cancelUrl: returnUrl,
+        notifUrl: siteBase(req) + '/api/payment/orange/webhook',
+        successUrl: returnUrl,
+        errorUrl: returnUrl
+      }).then(function (sim) {
+        txn.operatorRef = sim.operatorRef;
+        txn.checkoutUrl = sim.checkoutUrl;
+        txn.instructions = sim.instructions;
+        saveTransactions();
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, orderId: order.id, orderNo: orderNo, transactionId: txn.id, checkoutUrl: sim.checkoutUrl, paymentMode: 'live' }));
+      }).catch(function (e) {
+        txn.status = 'failed';
+        txn.failedReason = 'Initiation ' + op.label + ' impossible : ' + e.message;
+        saveTransactions();
+        res.writeHead(502, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: e.message }));
+      });
+    });
+    return;
+  }
+
   /* -------- Paiement Wave (checkout redirect, mode live) -------- */
   if (urlPath === '/api/payment/wave/session') {
     if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
@@ -8216,6 +8393,7 @@ loadPaymentMethods();
 loadTransactions();
 loadWallets();
 loadOffresJour();
+loadBoutiqueOrders();
 loadAdminConfig();
 loadCouriers();
 loadDeliveries();

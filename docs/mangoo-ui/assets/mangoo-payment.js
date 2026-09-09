@@ -270,18 +270,23 @@
           var returnUrl = location.href.split('#')[0];
           returnUrl += (returnUrl.indexOf('?') >= 0 ? '&' : '?') + 'mgt_checkout=1';
           close();
-          fetch(BASE + '/checkout/session', {
+          var isOrder = !!(opts.order && typeof opts.order === 'object');
+          var endpoint = isOrder ? '/api/boutique/order' : (BASE + '/checkout/session');
+          var payload = isOrder
+            ? Object.assign({}, opts.order, { operator: op.id, amount: amount, returnUrl: returnUrl })
+            : {
+                operator: op.id,
+                amount: amount,
+                kind: opts.kind || 'mobile-money-payment',
+                reference: opts.reference || '',
+                description: opts.subtitle || '',
+                meta: opts.meta || {},
+                returnUrl: returnUrl
+              };
+          fetch(endpoint, {
             method: 'POST',
             headers: authHeaders(),
-            body: JSON.stringify({
-              operator: op.id,
-              amount: amount,
-              kind: opts.kind || 'mobile-money-payment',
-              reference: opts.reference || '',
-              description: opts.subtitle || '',
-              meta: opts.meta || {},
-              returnUrl: returnUrl
-            })
+            body: JSON.stringify(payload)
           }).then(function (r) { return r.json(); })
             .then(function (d) {
               if (d && d.ok && d.checkoutUrl) {

@@ -826,6 +826,7 @@ window.__mgtInitBoutique = function () {
       price: priceEl ? priceFromText(priceEl.textContent) : 0,
       category: badge ? badge.textContent.trim() : 'Produit',
       catId: card.getAttribute('data-category') || '',
+      id: card.getAttribute('data-id') || '',
       stock: stock,
       sold: 0
     };
@@ -1482,13 +1483,40 @@ window.__mgtInitBoutique = function () {
         return;
       }
 
-      // Paiement via Mangoo Pay+ (mobile money) : opérateur → numéro → OTP.
+      // Paiement via Mangoo Pay+ (mobile money) : en démo, opérateur → numéro
+      // → OTP ; en live, redirection vers une commande serveur (endpoint
+      // /api/boutique/order) dont le settlement enregistrera l'effet de bord.
       if (window.MangooPayment && typeof window.MangooPayment.collect === 'function') {
         confirmBtn.disabled = true;
+        var orderVendorId = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
+        var clientName = 'Client', clientPhone = '', clientEmail = '', clientCity = '';
+        try {
+          if (window.MangooClient && window.MangooClient.getUser) {
+            var _cu = window.MangooClient.getUser();
+            clientName = _cu.fullName || _cu.name || 'Client';
+            clientPhone = _cu.phone || '';
+            clientEmail = _cu.email || '';
+            clientCity = _cu.city || _cu.clientCity || '';
+          }
+        } catch (e) {}
         window.MangooPayment.collect({
           amount: total(),
           title: 'Mangoo Pay+',
           subtitle: 'Paiement de votre commande chez ' + vendorName,
+          order: {
+            vendorId: orderVendorId,
+            vendorName: vendorName,
+            items: cart.items.map(function (it) {
+              return { productId: (it.product && it.product.id) || '', name: it.name, price: it.price, qty: it.qty };
+            }),
+            fulfillment: cart.fulfillment,
+            deliveryFee: deliveryFee(),
+            address: (cart.fulfillment === 'livraison' && addr && addr.value) ? addr.value.trim() : '',
+            clientName: clientName,
+            clientPhone: clientPhone,
+            clientEmail: clientEmail,
+            clientCity: clientCity
+          },
           onCancel: function () { confirmBtn.disabled = false; }
         }).then(function (res) {
           confirmBtn.disabled = false;
