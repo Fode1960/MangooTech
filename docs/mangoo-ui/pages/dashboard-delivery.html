@@ -186,7 +186,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     document.querySelectorAll('[data-vendor-initials]').forEach(function (el) { el.textContent = initials(name); });
     $('subtitle').textContent = name + ' · gestion des livraisons';
   }
-  function redirectLogin() { window.location.href = './auth.html'; }
+  function redirectLogin() { window.location.replace('./auth.html'); }
 
   function loadAll() {
     return Promise.all([ apiGet('/api/delivery/orders'), apiGet('/api/delivery/couriers') ]).then(function (res) {

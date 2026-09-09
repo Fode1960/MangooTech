@@ -52,7 +52,8 @@
       if (isClient()) {
         href = './client-dashboard.html'; label = 'Mon espace';
       } else if (isPro()) {
-        href = './dashboard-overview.html'; label = 'Mon dashboard';
+        if (role() === 'livreur') { href = './livreur.html'; label = 'Mon espace livreur'; }
+        else { href = './dashboard-overview.html'; label = 'Mon dashboard'; }
       } else {
         var d = demoRole();
         if (d) {
@@ -73,6 +74,7 @@
       var bk = backs[k];
       bk.style.display = showBack ? '' : 'none';
       if (showBack && isClient()) bk.setAttribute('href', './client-dashboard.html');
+      else if (showBack && role() === 'livreur') bk.setAttribute('href', './livreur.html');
       else if (showBack) bk.setAttribute('href', './dashboard-overview.html' + (demoRole() ? '?demo=' + demoRole() : ''));
     }
   }

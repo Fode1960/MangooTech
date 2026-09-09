@@ -442,7 +442,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
   // L'inscription/connexion des livreurs est désormais unifiée dans auth.html.
   // Cette page est réservée à l'application : toute session invalide renvoie
   // vers la page d'authentification unique.
-  function goToAuth() { window.location.href = './auth.html'; }
+  function goToAuth() { window.location.replace('./auth.html'); }
   function showAuth() { goToAuth(); }
   function switchAuthTab(which) {
     var isLogin = which === 'login';
@@ -1117,10 +1117,34 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
   }
 
   // ===== Démarrage =====
+  // Resynchronise la session depuis le cookie httpOnly mgt_session (source de
+  // vérité serveur) AVANT de décider de renvoyer vers la connexion. Un livreur
+  // qui rouvre l'app via le logo PWA ou un nouvel onglet peut arriver avec un
+  // localStorage vide (hôte mangoo.tech vs www.mangoo.tech) alors que le cookie
+  // serveur reste valide ; sans cette étape, il était renvoyé à tort vers auth.html.
   var saved = localStorage.getItem(USER_KEY);
-  if (token && saved) {
-    try { var su = JSON.parse(saved); if (su && su.role === 'livreur') { myUser = su; enterApp(); } else { goToAuth(); } }
-    catch (e) { goToAuth(); }
+  var myRoleUser = null;
+  try { var su = JSON.parse(saved); if (su && su.role === 'livreur') myRoleUser = su; } catch (e) {}
+  if (!(token && myRoleUser)) {
+    try {
+      var sx = new XMLHttpRequest();
+      sx.open('GET', '/api/auth/session', false);
+      sx.setRequestHeader('Accept', 'application/json');
+      sx.send(null);
+      if (sx.status >= 200 && sx.status < 300) {
+        var sd = JSON.parse(sx.responseText);
+        if (sd && sd.ok && sd.token && sd.user && sd.user.role === 'livreur') {
+          token = sd.token;
+          localStorage.setItem(TOKEN_KEY, sd.token);
+          localStorage.setItem(USER_KEY, JSON.stringify(sd.user));
+          myRoleUser = sd.user;
+        }
+      }
+    } catch (e) { /* non bloquant */ }
+  }
+  if (token && myRoleUser) {
+    myUser = myRoleUser;
+    enterApp();
   } else {
     goToAuth();
   }

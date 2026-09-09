@@ -291,6 +291,45 @@ html.dark {
     </style>
 </head>
 <body class="min-h-screen font-sans antialiased">
+    <script>
+    /* Garde « session déjà active » : si un utilisateur connecté retombe sur
+       auth.html (ex. bouton Retour du téléphone après une connexion), on ne
+       réaffiche PAS le formulaire de connexion — on le renvoie immédiatement
+       vers son espace (via replace, pour ne pas laisser auth.html dans
+       l'historique de navigation). */
+    (function () {
+      function home(r) {
+        if (r === 'admin') return 'admin.html';
+        if (r === 'client' || r === 'cliente') return 'client-dashboard.html#menu';
+        if (r === 'livreur') return 'livreur.html';
+        if (r === 'prestataire' || r === 'vendeur') return 'dashboard-overview.html#menu';
+        return '';
+      }
+      function go(u) {
+        var t = home(String((u && u.role) || '').toLowerCase());
+        if (!t) return;
+        var base = window.location.pathname.replace(/[^/]*$/, '');
+        window.location.replace(base + t);
+      }
+      try {
+        var u = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+        var tok = localStorage.getItem('mgt_token');
+        if (u && tok) { go(u); return; }
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/auth/session', false);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.send(null);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          var d = JSON.parse(xhr.responseText);
+          if (d && d.ok && d.user) {
+            try { localStorage.setItem('mgt_user', JSON.stringify(d.user)); } catch (e) {}
+            if (d.token) { try { localStorage.setItem('mgt_token', d.token); } catch (e) {} }
+            go(d.user);
+          }
+        }
+      } catch (e) {}
+    })();
+    </script>
     <style id="critical-layout">
       /* ===== AUTH PAGE CRITICAL LAYOUT ===== */
       .auth-split { display: flex; min-height: 100vh; }
