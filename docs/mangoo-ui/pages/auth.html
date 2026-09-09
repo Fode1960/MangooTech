@@ -902,7 +902,7 @@ html.dark {
         var next = null;
         try { next = new URLSearchParams(window.location.search).get('next'); } catch (e) { next = null; }
         if (next && /^\/pages\/[A-Za-z0-9._-]+\.html$/.test(next) && next.indexOf('//') < 0) {
-          window.location.href = next;
+          window.location.replace(next);
           return;
         }
         // Rejoue l'atterrissage d'une notification push mémorisé avant la
@@ -915,7 +915,7 @@ html.dark {
           try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
           var isPro = role === 'prestataire' || role === 'vendeur' || role === 'livreur';
           if (isPro && /^\/pages\/[A-Za-z0-9._-]+\.html(\?.*)?$/.test(pushLanding) && pushLanding.indexOf('//') < 0) {
-            window.location.href = pushLanding;
+            window.location.replace(pushLanding);
             return;
           }
         }
@@ -930,7 +930,7 @@ html.dark {
         // sur la seule « Vue d'ensemble » sans menu.
         if (role === 'prestataire' || role === 'vendeur') target += '#menu';
         if (role === 'client' || role === 'cliente') target += '#menu';
-        window.location.href = base + target;
+        window.location.replace(base + target);
       }
 
       // ===== Connexion « l'un ou l'autre » (téléphone OU PIN) =====

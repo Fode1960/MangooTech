@@ -723,8 +723,21 @@ html.dark {
         lucide.createIcons();
       }
 
-      var newBtn = document.getElementById('btn-new-appointment');
-      if (newBtn) newBtn.addEventListener('click', openNewAppointment);
+      // Délégation au niveau document : ouvre le formulaire « Nouveau
+      // rendez-vous » même si le bouton de la topbar est re-rendu / remplacé par un
+      // autre script (un gestionnaire direct attaché une seule fois serait alors
+      // perdu et la « case de prise de RDV » resterait fermée sur mobile).
+      document.addEventListener('click', function (e) {
+        var el = e.target;
+        while (el && el !== document) {
+          if (el.id === 'btn-new-appointment') {
+            e.preventDefault();
+            openNewAppointment();
+            return;
+          }
+          el = el.parentNode;
+        }
+      });
 
       var bookingToggle = document.querySelector('input[type="checkbox"].sr-only');
       if (bookingToggle) {
