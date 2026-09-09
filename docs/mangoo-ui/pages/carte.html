@@ -2467,7 +2467,12 @@ html.dark {
     try {
       var _rv = JSON.parse(localStorage.getItem('mgt_user') || 'null');
       var _rr = _rv && String(_rv.role || '').toLowerCase();
-      return (_rr === 'vendeur' || _rr === 'prestataire') ? 'dashboard-agenda.html' : 'chat.html#rdv';
+      // Un vendeur (boutique) n'a pas de module « Rendez-vous » : on masque
+      // l'entrée (cohérent avec la sidebar du Dashboard qui masque « Rendez-vous »
+      // aux vendeurs). Sinon « RDV » menait à dashboard-agenda.html, qui renvoie le
+      // vendeur vers la « Vue d'ensemble ».
+      if (_rr === 'vendeur') return '';
+      return (_rr === 'prestataire') ? 'dashboard-agenda.html' : 'chat.html#rdv';
     } catch (e) { return 'chat.html#rdv'; }
   })();
   var rdvFlag = (rdvTarget.indexOf('#rdv') >= 0) ? 'rdv' : '';
@@ -2486,14 +2491,14 @@ html.dark {
     ['client-favorites.html','heart','Mes favoris'],
     ['carte.html','map','Boutique &amp; Prestataires'],
     [profileTarget,'user','Mon profil']
-  ];
+  ].filter(function (entry) { return entry[0]; });
   var BOTTOM=[
     [homeTarget,'home','Accueil'],
     [msgTarget,'message-circle','Messages'],
     ['carte.html','map','Boutiques'],
     [rdvTarget,'calendar-days','RDV',rdvFlag],
     [profileTarget,'user','Profil']
-  ];
+  ].filter(function (entry) { return entry[0]; });
   var path=location.pathname.toLowerCase();
   function isActive(h){var f=h.split('/').pop().toLowerCase();return path.indexOf(f)!==-1;}
 

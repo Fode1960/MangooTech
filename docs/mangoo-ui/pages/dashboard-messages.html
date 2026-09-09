@@ -1010,15 +1010,12 @@ html.dark {
         }
         if (empty) empty.style.display = 'none';
         contacts.forEach(buildContactRow);
-        // Ouvre la première conversation (l'annuaire fournit déjà l'id réel via
-        // data-peer-id ; ne plus privilégier un id codé en dur) — SAUF si un
-        // atterrissage push est en attente : dans ce cas, applyPushLanding() se
-        // chargera de sélectionner la conversation exacte de l'émetteur de la
-        // notification (résolution stricte par data-peer-id). Sélectionner la
-        // première ici écraserait ce ciblage et ouvrirait une conversation « au
-        // hasard ».
-        var first = list.querySelector('.msg-conv');
-        if (first && !pendingPushLanding) setActive(first);
+        // Ne pas ouvrir automatiquement de conversation à l'arrivée : le pro doit
+        // voir la colonne de ses contacts et choisir lui-même la conversation à
+        // ouvrir (sinon cliquer « Message » dans la barre basse menait directement
+        // au premier contact, ex. « B1 »). L'atterrissage push ciblé (kind / from /
+        // fromName / convId) reste géré par applyPushLanding(), qui sélectionne la
+        // conversation exacte de l'émetteur de la notification.
         updateUnreadBadge();
         if (window.lucide) window.lucide.createIcons();
       }
