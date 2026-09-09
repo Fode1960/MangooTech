@@ -995,7 +995,7 @@ html.dark {
     // confirmation, ce qui rend la carte active réellement « payante ».
     var MP = window.MangooPayment;
     if (MP && typeof MP.collect === 'function') {
-      MP.collect({ amount: amount, title: title, subtitle: 'Boosters' }).then(function (payment) {
+      MP.collect({ amount: amount, title: title, subtitle: 'Boosters', kind: 'booster', meta: { boosterId: offerId, vendorId: state.vendorId, vendorName: state.vendorName } }).then(function (payment) {
         doActivate(payment || null);
       }).catch(function (err) {
         if (err) flashError('Paiement annulé : ' + (err.message || err));
@@ -1022,7 +1022,7 @@ html.dark {
     // ne se fait qu'après confirmation du débit (opérateur → numéro → OTP).
     var MP = window.MangooPayment;
     if (MP && typeof MP.collect === 'function' && amount > 0) {
-      MP.collect({ amount: amount, title: 'Renouveler ' + label, subtitle: 'Boosters' }).then(function (payment) {
+      MP.collect({ amount: amount, title: 'Renouveler ' + label, subtitle: 'Boosters', kind: 'booster-renew', meta: { boosterId: (badge && (badge.boosterId || badge.type)) || '', activationId: id, vendorId: state.vendorId, vendorName: state.vendorName } }).then(function (payment) {
         doRenew(payment || null);
       }).catch(function (err) {
         if (err) flashError('Paiement annulé : ' + (err.message || err));

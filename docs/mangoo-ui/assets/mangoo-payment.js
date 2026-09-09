@@ -279,6 +279,7 @@
               kind: opts.kind || 'mobile-money-payment',
               reference: opts.reference || '',
               description: opts.subtitle || '',
+              meta: opts.meta || {},
               returnUrl: returnUrl
             })
           }).then(function (r) { return r.json(); })

@@ -1241,7 +1241,8 @@ html.dark {
     MangooPayment.collect({
       amount: amount,
       title: 'Recharger le portefeuille',
-      subtitle: 'Mangoo Pay+'
+      subtitle: 'Mangoo Pay+',
+      kind: 'topup'
     }).then(function (pay) {
       return fetch('/api/wallet/topup', {
         method: 'POST',

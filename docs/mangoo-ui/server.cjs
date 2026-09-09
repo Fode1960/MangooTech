@@ -3637,6 +3637,134 @@ function confirmMobilePayment(txnId, opts) {
   return { ok: true, transaction: txn, success: result.success, paymentMode: txn.mode || 'demo' };
 }
 
+/* ------------------------------------------------------------------ *
+ *  Règlement des paiements live (effets de bord métier)
+ * ------------------------------------------------------------------ *
+ *  Le checkout redirect (Wave / Orange Money) marque la transaction
+ *  « completed » mais n'applique AUCUN effet de bord métier. Cette
+ *  fonction applique ces effets une seule fois (idempotente, gardée par
+ *  `txn.settled`), que la notification arrive via le webhook serveur ou
+ *  via le polling /checkout/status. Chaque `kind` rejoue l'effet déjà
+ *  réalisé en mode démo (portefeuille, offres du jour, boosters,
+ *  négociation), sans toucher au flux démo existant.
+ * ------------------------------------------------------------------ */
+function settleTransaction(txn) {
+  if (!txn) return { ok: false, reason: 'missing' };
+  if (txn.settled) return { ok: true, reason: 'already-settled' };
+  if (txn.status !== 'completed') return { ok: false, reason: 'not-completed' };
+  const meta = txn.meta || {};
+  const kind = String(txn.kind || '');
+  const now = nowIso();
+
+  if (kind === 'topup') {
+    const amount = Math.round(Number(txn.amount) || 0);
+    if (amount > 0) {
+      const w = walletFor(txn.userId);
+      w.balance = Math.round((Number(w.balance) || 0) + amount);
+      w.updatedAt = now;
+      saveWallets();
+    }
+  } else if (kind === 'offre-jour') {
+    const tier = tierById(String(meta.tierId || ''));
+    const user = users.find(function (u) { return u && u.id === txn.userId; }) || null;
+    const vendorId = canonicalRoutingId(user ? (user.vendorId || user.id) : (meta.vendorId || txn.userId));
+    if (tier) {
+      const endsAt = new Date(Date.now() + Number(tier.durationHours || 24) * 3600 * 1000);
+      offresJour.unshift({
+        id: 'offre-' + crypto.randomBytes(5).toString('hex'),
+        vendorId: vendorId,
+        vendorName: (user && (user.enseigne || user.name)) || String(meta.vendorName || ''),
+        title: String(meta.title || '').trim() || 'Offre du jour',
+        description: String(meta.description || '').trim(),
+        tierId: tier.id,
+        durationLabel: tier.durationLabel,
+        price: tier.price,
+        paymentId: txn.id,
+        mode: 'standard',
+        productId: String(meta.productId || ''),
+        status: 'active',
+        startsAt: now,
+        endsAt: endsAt.toISOString(),
+        createdAt: now
+      });
+      saveOffresJour();
+    }
+  } else if (kind === 'offre-jour-renouvellement') {
+    const tier = tierById(String(meta.tierId || ''));
+    const offre = offresJour.find(function (o) { return o && o.id === String(meta.offreId || meta.id || ''); });
+    if (tier && offre) {
+      const base = offre.status === 'active' && new Date(offre.endsAt).getTime() > Date.now() ? new Date(offre.endsAt) : new Date();
+      offre.status = 'active';
+      offre.tierId = tier.id;
+      offre.durationLabel = tier.durationLabel;
+      offre.price = tier.price;
+      offre.paymentId = txn.id;
+      offre.endsAt = new Date(base.getTime() + Number(tier.durationHours || 24) * 3600 * 1000).toISOString();
+      offre.updatedAt = now;
+      saveOffresJour();
+    }
+  } else if (kind === 'negotiation-payment') {
+    const nego = negotiationForId(String(meta.negotiationId || meta.id || ''));
+    if (nego && nego.status !== 'paid') {
+      nego.status = 'paid';
+      nego.transactionId = txn.id;
+      nego.paidAt = now;
+      nego.updatedAt = now;
+      settleNegotiationToVendor(nego);
+      const product = catalogue.find(function (p) { return p && p.id === nego.productId; });
+      if (product && Number(product.stock) > 0) { product.stock = Number(product.stock) - 1; saveCatalogue(); }
+      saveNegotiations();
+    }
+  } else if (kind === 'booster') {
+    const offer = findOffer(meta.boosterId || meta.type);
+    if (offer) {
+      const durationMs = Number(offer.durationMs) || 24 * 60 * 60 * 1000;
+      boosters.unshift({
+        id: rand(),
+        vendorId: String(meta.vendorId || ''),
+        vendorName: String(meta.vendorName || ''),
+        boosterId: offer.id,
+        type: offer.type,
+        name: offer.name,
+        status: 'active',
+        mode: 'standard',
+        createdAt: now,
+        expiresAt: new Date(Date.now() + durationMs).toISOString(),
+        paymentId: txn.id,
+        startLabel: 'À l\'instant',
+        endLabel: 'Dans ' + (offer.durationText || '24h'),
+        remainingLabel: (offer.durationText || '24h') + ' / ' + (offer.durationText || '24h'),
+        remainingPct: 100,
+        price: offer.price,
+        views: 0,
+        clicks: 0,
+        orders: 0
+      });
+      saveBoosters();
+    }
+  } else if (kind === 'booster-renew') {
+    const offer = findOffer(meta.boosterId || meta.type);
+    const idx = boosters.findIndex(function (x) { return x && x.id === String(meta.activationId || meta.id || ''); });
+    if (idx >= 0 && offer) {
+      const durationMs = Number(offer.durationMs) || 24 * 60 * 60 * 1000;
+      boosters[idx].status = 'active';
+      boosters[idx].createdAt = now;
+      boosters[idx].expiresAt = new Date(Date.now() + durationMs).toISOString();
+      boosters[idx].paymentId = txn.id;
+      boosters[idx].startLabel = 'À l\'instant';
+      boosters[idx].endLabel = 'Dans ' + (offer.durationText || '24h');
+      boosters[idx].remainingLabel = (offer.durationText || '24h') + ' / ' + (offer.durationText || '24h');
+      boosters[idx].remainingPct = 100;
+      saveBoosters();
+    }
+  }
+
+  txn.settled = true;
+  txn.settledAt = now;
+  saveTransactions();
+  return { ok: true, kind: kind };
+}
+
 function expireOffresJour() {
   const now = Date.now();
   let changed = false;
@@ -6709,6 +6837,7 @@ function handleHttp(req, res) {
         feeAmount: Math.round(amount * MOBILE_MONEY_OPERATORS.wave.fee),
         description: String(body.description || ''),
         reference: reference,
+        meta: (body.meta && typeof body.meta === 'object') ? body.meta : (body.context && typeof body.context === 'object' ? body.context : {}),
         mode: 'live',
         status: 'initiated'
       });
@@ -6743,6 +6872,7 @@ function handleHttp(req, res) {
         txn.paidAt = new Date().toISOString();
         txn.providerRef = sessionId;
         saveTransactions();
+        settleTransaction(txn);
       }
       res.writeHead(200, JSON_HEADERS);
       res.end(JSON.stringify({ ok: true, status: s.status, completed: completed, transaction: txn || null }));
@@ -6776,6 +6906,7 @@ function handleHttp(req, res) {
         txn.paidAt = new Date().toISOString();
         txn.providerRef = sessionId;
         saveTransactions();
+        settleTransaction(txn);
       }
       res.writeHead(200, JSON_HEADERS);
       res.end(JSON.stringify({ ok: true }));
@@ -6811,6 +6942,7 @@ function handleHttp(req, res) {
         feeAmount: Math.round(amount * op.fee),
         description: String(body.description || ''),
         reference: reference,
+        meta: (body.meta && typeof body.meta === 'object') ? body.meta : (body.context && typeof body.context === 'object' ? body.context : {}),
         mode: 'live',
         status: 'initiated'
       });
@@ -6849,7 +6981,7 @@ function handleHttp(req, res) {
     const provider = paymentProviderFor(op);
     if (provider.id !== op.id) { res.writeHead(200, JSON_HEADERS); res.end(JSON.stringify({ ok: true, status: txn.status, completed: txn.status === 'completed', transaction: txn })); return; }
     provider.confirm(txn).then(function (outcome) {
-      if (outcome && outcome.success) saveTransactions();
+      if (outcome && outcome.success) { saveTransactions(); if (txn.status === 'completed') settleTransaction(txn); }
       res.writeHead(200, JSON_HEADERS);
       res.end(JSON.stringify({ ok: true, status: txn.status, completed: txn.status === 'completed', transaction: txn }));
     }).catch(function (e) {
@@ -6885,6 +7017,7 @@ function handleHttp(req, res) {
         txn.paidAt = new Date().toISOString();
         txn.providerRef = payToken || txn.operatorRef;
         saveTransactions();
+        settleTransaction(txn);
       }
       res.writeHead(200, JSON_HEADERS);
       res.end(JSON.stringify({ ok: true }));

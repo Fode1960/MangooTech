@@ -1152,7 +1152,9 @@ html.dark {
       MangooPayment.collect({
         amount: tier.price,
         title: 'Offre du jour — ' + tier.durationLabel,
-        subtitle: 'Publication · Mangoo Pay+'
+        subtitle: 'Publication · Mangoo Pay+',
+        kind: 'offre-jour',
+        meta: { tierId: selectedTierId, title: title, description: description }
       }).then(function (pay) {
         postPublish({ tierId: selectedTierId, title: title, description: description, operator: pay.operator, phone: pay.phone, otp: pay.otp }).then(onSuccess).catch(onError);
       }).catch(function () { done(); });
