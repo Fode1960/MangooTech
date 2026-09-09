@@ -165,13 +165,13 @@ Active la copie de chaque archive vers un bucket S3-compatible (upload signé AW
 
 ---
 
-## 7. Points de vigilance production (⚠️ à traiter avant le live)
+## 7. Points de vigilance production
 
-**Gap de settlement (bloquant).** Le checkout redirect live enregistre la transaction et la marque `completed` (via `/checkout/status` ou les webhooks), **mais n'applique pas encore les effets de bord métier** : crédit portefeuille (`kind: topup`), publication/renouvellement de l'offre du jour (`offre-jour`, `offre-jour-renouvellement`), paiement de négociation (`negotiation-payment`), activation/renouvellement des boosters et encaissement boutique.
+**Settlement des effets de bord (résolu).** Le checkout redirect live applique désormais les effets de bord métier via `settleTransaction(txn)` dans `server.cjs`, déclenché depuis `/checkout/status`, le webhook Orange et les endpoints Wave (status + webhook). Branches couvertes : crédit portefeuille (`topup`), publication/renouvellement de l'offre du jour (`offre-jour`, `offre-jour-renouvellement`), paiement de négociation (`negotiation-payment`), activation/renouvellement des boosters (`booster`, `booster-renew`). Les appelants transmettent `kind` + `meta` (via `assets/mangoo-payment.js`) et le checkout générique stocke `meta` sur la transaction.
 
-En mode démo, ces effets sont appliqués par l'appelant après résolution de la modal OTP ; en redirect live, `collect()` redirige sans résoudre, donc l'effet final n'est jamais déclenché. **Ne pas activer `PAYMENT_MODE=live` tant qu'un mécanisme de settlement idempotent (ré-application de l'effet à partir de `kind` + `meta` de la transaction, appelé depuis `/checkout/status` et les webhooks) n'est pas implémenté et testé.**
+**Idempotence.** Le settlement est gardé par le flag `txn.settled` : un double webhook ou un double poll ne peut pas entraîner de double crédit ni de double activation.
 
-**Idempotence.** Un double webhook (ou un double poll) ne doit jamais entraîner un double crédit / double activation. Le settlement doit être gardé par un flag `settled` sur la transaction.
+**Limite boutique (à traiter avant de l'activer en live).** Le paiement de commande sur la fiche boutique (`fiche-boutique.html`) ne crée aucune commande côté serveur ; en redirect live, le paiement serait encaissé sans commande à rapprocher. Ce flux reste hors périmètre du présent settlement et doit faire l'objet d'une implémentation dédiée (endpoint de commande + settlement) avant activation en `live`.
 
 **Réconciliation (recommandé).** Mettre en place un job quotidien qui rapproche les transactions `initiated`/`pending` du statut réel Wave/Orange et ferme les orphelines (`failed`/`expired`).
 
