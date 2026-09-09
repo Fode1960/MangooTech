@@ -290,7 +290,29 @@
           }).then(function (r) { return r.json(); })
             .then(function (d) {
               if (d && d.ok && d.checkoutUrl) {
-                try { sessionStorage.setItem('mgt_pending_txn', d.transactionId); } catch (e) {}
+                try {
+                  sessionStorage.setItem('mgt_pending_txn', d.transactionId);
+                  if (isOrder) {
+                    var soItems = (opts.order.items || []).map(function (it) {
+                      return { productId: String(it && it.productId || ''), name: String(it && it.name || 'Article'), price: Number(it && it.price || 0), qty: Number(it && it.qty || 1) };
+                    });
+                    var soSubtotal = soItems.reduce(function (s, it) { return s + it.price * it.qty; }, 0);
+                    sessionStorage.setItem('mgt_pending_order', JSON.stringify({
+                      orderNo: d.orderNo || '',
+                      orderId: d.orderId || '',
+                      transactionId: d.transactionId || '',
+                      items: soItems,
+                      subtotal: soSubtotal,
+                      deliveryFee: Number(opts.order.deliveryFee || 0),
+                      total: Number(amount || 0),
+                      fulfillment: String(opts.order.fulfillment || 'retrait'),
+                      vendorId: String(opts.order.vendorId || ''),
+                      vendorName: String(opts.order.vendorName || ''),
+                      address: String(opts.order.address || ''),
+                      operatorLabel: String(op && op.label || 'Mobile money')
+                    }));
+                  }
+                } catch (e) {}
                 window.location.href = d.checkoutUrl;
               } else {
                 reject(new Error((d && d.error) || 'Paiement indisponible.'));
@@ -445,7 +467,16 @@
     fetch(BASE + '/checkout/status?txn=' + encodeURIComponent(txnId), { headers: authHeaders(), cache: 'no-store' })
       .then(function (r) { return r.json(); })
       .then(function (d) {
-        if (d && d.completed) { toast('Paiement confirmé. Merci !'); return; }
+        if (d && d.completed) {
+          toast('Paiement confirmé. Merci !');
+          var orderInfo = null;
+          try { orderInfo = JSON.parse(sessionStorage.getItem('mgt_pending_order') || 'null'); } catch (e) {}
+          if (orderInfo && orderInfo.orderNo) {
+            try { sessionStorage.setItem('mgt_pending_confirmed', '1'); } catch (e) {}
+            try { document.dispatchEvent(new CustomEvent('mgt:checkout:success', { detail: orderInfo })); } catch (e) {}
+          }
+          return;
+        }
         if (attempts < 6) { setTimeout(function () { pollCheckout(txnId, attempts + 1); }, 2000); }
         else { toast('Paiement en attente de confirmation.'); }
       })

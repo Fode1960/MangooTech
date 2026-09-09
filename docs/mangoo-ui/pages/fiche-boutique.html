@@ -901,6 +901,7 @@ window.__mgtInitBoutique = function () {
   var lastOrder = null;
   var trackingTimer = null;
   var pendingPaymentLabel = '';
+  var pendingAddress = '';
   var pendingPaymentMethod = 'payplus'; // 'payplus' (mobile money) ou 'wallet' (solde client)
   var OP_LABELS = {
     orange: 'Orange Money',
@@ -1222,7 +1223,7 @@ window.__mgtInitBoutique = function () {
     } catch (e) {}
   }
 
-  function renderCheckout(state) {
+  function renderCheckout(state, pending) {
     if (!checkoutCard) return;
     if (state === 'success') {
       // Assure une session client minimale pour accéder à l'historique des commandes.
@@ -1232,15 +1233,21 @@ window.__mgtInitBoutique = function () {
           localStorage.setItem('mgt_user', JSON.stringify({ role: 'client', name: 'Client invité', email: '' }));
         }
       } catch (e) {}
-      var orderNo = 'CMD-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
-      var orderItems = cart.items.map(function (it) {
+      // En retour de paiement live (mgt_checkout=1), le panier en mémoire a été
+      // perdu au rechargement : on restaure la commande depuis `pending` (fourni
+      // par mangoo-payment.js à partir de la réponse /api/boutique/order).
+      var liveSettlement = !!(pending && pending.live);
+      var orderNo = (pending && pending.orderNo) || ('CMD-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000));
+      var orderItems = (pending && pending.items) ? pending.items : cart.items.map(function (it) {
         return { name: it.name, price: it.price, qty: it.qty };
       });
+      var orderTotal = (pending && typeof pending.total === 'number') ? pending.total : total();
+      var orderFulfillment = (pending && pending.fulfillment) || cart.fulfillment;
       lastOrder = {
         orderNo: orderNo,
         items: orderItems,
-        total: total(),
-        fulfillment: cart.fulfillment,
+        total: orderTotal,
+        fulfillment: orderFulfillment,
         statusIndex: 0,
         createdAt: Date.now(),
         payment: pendingPaymentLabel || 'Orange Money'
@@ -1274,14 +1281,14 @@ window.__mgtInitBoutique = function () {
           provider: vendorName,
           initials: 'DB',
           service: serviceLabel,
-          amount: formatFCFA(total()),
+          amount: formatFCFA(orderTotal),
           date: '',
           status: 'en-cours',
           payment: lastOrder.payment,
           vendorId: vendorId,
           kind: 'commerce',
           items: orderItems,
-          fulfillment: cart.fulfillment,
+          fulfillment: orderFulfillment,
           createdAt: lastOrder.createdAt,
           clientName: clientName,
           clientPhone: clientPhone,
@@ -1293,7 +1300,9 @@ window.__mgtInitBoutique = function () {
       }
 
       // Crédite le solde du vendeur (DAN Boutique) au paiement de la commande.
-      if (window.MangooVendor && window.MangooVendor.creditVendor) {
+      // En live, ce crédit est déjà appliqué côté serveur par le settlement
+      // (net de commission) : on évite un double-crédit local.
+      if (!liveSettlement && window.MangooVendor && window.MangooVendor.creditVendor) {
         window.MangooVendor.creditVendor(vendorId, Number(lastOrder.total) || 0, 'Commande ' + orderNo);
       }
 
@@ -1530,6 +1539,33 @@ window.__mgtInitBoutique = function () {
       }
     });
   }
+
+  // Retour de paiement live (mgt_checkout=1) : reconstruit la confirmation de
+  // commande à partir de la commande serveur (numéro + montant réels), sans
+  // double-créditer le vendeur (déjà fait côté serveur par le settlement).
+  function __handleLiveOrderSuccess(detail) {
+    try { sessionStorage.removeItem('mgt_pending_order'); sessionStorage.removeItem('mgt_pending_confirmed'); } catch (e) {}
+    if (!detail || !detail.orderNo) return;
+    pendingPaymentLabel = detail.operatorLabel || 'Mobile money';
+    if (detail.address) pendingAddress = detail.address;
+    renderCheckout('success', {
+      orderNo: detail.orderNo,
+      items: detail.items || [],
+      total: typeof detail.total === 'number' ? detail.total : 0,
+      fulfillment: detail.fulfillment || 'retrait',
+      live: true
+    });
+    // Affiche la modale (fermée au rechargement post-redirection).
+    if (checkoutModal) { checkoutModal.classList.remove('hidden'); checkoutModal.classList.add('flex'); }
+  }
+  document.addEventListener('mgt:checkout:success', function (e) { __handleLiveOrderSuccess(e && e.detail); });
+  // Filet de sécurité : si le paiement s'est confirmé avant l'enregistrement du
+  // listener (catalogue lent), on relit la commande confirmée depuis sessionStorage.
+  try {
+    if (sessionStorage.getItem('mgt_pending_confirmed') === '1') {
+      __handleLiveOrderSuccess(JSON.parse(sessionStorage.getItem('mgt_pending_order') || 'null'));
+    }
+  } catch (e) {}
 
   /* ==== Liaisons ==== */
   products.forEach(function (p) {
