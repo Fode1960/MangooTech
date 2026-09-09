@@ -149,11 +149,13 @@
   }
   // ---- Modules propres à chaque rôle (liste partagée nav + garde) ----
   // Modules réellement propres à chaque rôle.
-  // Prestataire : rendez-vous, équipe, prestations, découverte.
+  // Prestataire : équipe, prestations, découverte.
+  // NB : « Rendez-vous » (dashboard-agenda.html) est TRANSVERSE et reste visible
+  // pour le vendeur ET le prestataire (les deux peuvent prendre des rendez-vous).
   // Vendeur : catalogue, inventaire, livraisons, promotions, fidélité.
   // Tout le reste (Live, Hors-ligne, Classement, Parrainage, Performance,
   // Galerie, Finances, Avis, etc.) est TRANSVERSE et reste visible pour les deux.
-  var PRESTA_ONLY = ['dashboard-agenda.html', 'dashboard-team.html', 'dashboard-services.html', 'dashboard-recommandation.html'];
+  var PRESTA_ONLY = ['dashboard-team.html', 'dashboard-services.html', 'dashboard-recommandation.html'];
   var VENDEUR_ONLY = ['dashboard-catalogue.html', 'dashboard-inventaire.html', 'dashboard-delivery.html', 'dashboard-promotions.html', 'dashboard-fidelite.html'];
 
   function currentPageName() {
