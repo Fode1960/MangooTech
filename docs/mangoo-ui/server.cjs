@@ -125,6 +125,8 @@ const ADMIN_SEED_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const ADMIN_SEED_PIN = process.env.ADMIN_PIN || '';
 const ADMIN_PASSWORD_RESET = process.env.ADMIN_PASSWORD_RESET || '';
 const ADMIN_PIN_RESET = process.env.ADMIN_PIN_RESET || '';
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@mangoo.tech';
+const SUPPORT_PIN = process.env.SUPPORT_PIN || '';
 const FORCE_HTTPS_ADMIN = String(process.env.FORCE_HTTPS_ADMIN || 'true').toLowerCase() !== 'false';
 // Hôte canonique de l'application (apex). `www.<CANONICAL_HOST>` est redirigé
 // vers `<CANONICAL_HOST>` pour garantir une origine unique à localStorage (qui
@@ -1781,6 +1783,81 @@ function ensureSeedVendorUsers() {
   }
 }
 
+// Compte « Support MangooTech » : identité pro interne dédiée, joignable via
+// l'appel in-app Mangoo Connect+ (bouton « Contacter le support »). Le compte
+// est réconcilié au démarrage sans jamais écraser un compte existant.
+// L'équipe se connecte par email + PIN (SUPPORT_EMAIL / SUPPORT_PIN) ; sans
+// SUPPORT_PIN, un PIN aléatoire est généré et affiché une seule fois en
+// développement (jamais journalisé ni persisté en production).
+function ensureSupportAccount() {
+  const isProd = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
+  const vendorId = 'support-mangoo';
+  const existing = users.find(function (u) {
+    return u && (canonicalRoutingId(u.vendorId) === vendorId || canonicalRoutingId(u.id) === vendorId);
+  });
+  let changed = false;
+  let generatedPin = null;
+
+  if (!existing) {
+    let pin = SUPPORT_PIN;
+    if (!pin) {
+      if (isProd) {
+        console.error('[Auth] ERREUR : compte support requis — définissez SUPPORT_PIN via les variables d\'environnement Render.');
+        process.exit(1);
+      }
+      generatedPin = String(Math.floor(1000 + Math.random() * 9000));
+      pin = generatedPin;
+    }
+    users.push({
+      id: 'pro-support-mangoo',
+      vendorId: vendorId,
+      role: 'prestataire',
+      name: 'Support MangooTech',
+      enseigne: 'Support MangooTech',
+      email: SUPPORT_EMAIL,
+      phone: '+33962014080',
+      category: 'service',
+      city: 'Paris',
+      country: 'France',
+      lat: 48.8566,
+      lng: 2.3522,
+      logo: '',
+      pinHash: hashSecret(pin),
+      passwordHash: null,
+      createdAt: new Date().toISOString()
+    });
+    changed = true;
+    console.log('[Auth] compte support créé (Support MangooTech).');
+  } else if (SUPPORT_PIN && (!existing.pinHash || !verifySecret(SUPPORT_PIN, existing.pinHash))) {
+    existing.pinHash = hashSecret(SUPPORT_PIN);
+    changed = true;
+    console.log('[Auth] PIN du compte support défini/mis à jour via SUPPORT_PIN.');
+  } else if (!existing.pinHash && !SUPPORT_PIN) {
+    if (isProd) {
+      console.error('[Auth] ERREUR : compte support sans PIN — définissez SUPPORT_PIN via les variables d\'environnement Render.');
+      process.exit(1);
+    }
+    generatedPin = String(Math.floor(1000 + Math.random() * 9000));
+    existing.pinHash = hashSecret(generatedPin);
+    changed = true;
+  }
+
+  if (changed) saveUsers();
+
+  if (generatedPin && !isProd) {
+    console.log([
+      '',
+      '============================================================',
+      '  COMPTE SUPPORT MANGOO — connexion équipe (email + PIN)',
+      '  Email : ' + SUPPORT_EMAIL,
+      '  PIN    : ' + generatedPin,
+      '  (définissez SUPPORT_PIN pour le fixer)',
+      '============================================================',
+      ''
+    ].join('\n'));
+  }
+}
+
 /* ------------------------------------------------------------------ *
  *  Annuaire public (Local+ / carte)
  * ------------------------------------------------------------------ *
@@ -2198,12 +2275,12 @@ function vendorConfigView(vendorId) {
   return out;
 }
 
-// Plus aucun compte de démonstration : DAN Boutique (vendeur) et DAN Coiffure
-// (prestataire) sont désormais des profils de production réels et doivent
-// apparaître dans l'annuaire public et les listes publiques. isDemoVendor()
-// conserve une garde vide : appelée sur un id BRUT (u.vendorId || u.id), elle
-// ne masque plus aucun vendeur.
-const DEMO_VENDOR_IDS = new Set([]);
+// Aucun compte de démonstration : DAN Boutique (vendeur) et DAN Coiffure
+// (prestataire) sont des profils de production réels et restent visibles dans
+// l'annuaire public. En revanche, le compte « Support MangooTech » est une
+// identité interne non commerçante : il doit rester joignable via l'appel in-app
+// mais NE PAS apparaître sur la carte ni dans les listes publiques.
+const DEMO_VENDOR_IDS = new Set(['support-mangoo']);
 function isDemoVendor(id) {
   return !!(id && DEMO_VENDOR_IDS.has(id));
 }
@@ -8387,6 +8464,7 @@ loadTrials();
 loadVendorConfig();
 loadUsers();
 ensureSeedVendorUsers();
+ensureSupportAccount();
 loadSessions();
 normalizeVendorCities();
 loadPaymentMethods();
