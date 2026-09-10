@@ -1786,11 +1786,12 @@ function ensureSeedVendorUsers() {
 // Compte « Support MangooTech » : identité pro interne dédiée, joignable via
 // l'appel in-app Mangoo Connect+ (bouton « Contacter le support »). Le compte
 // est réconcilié au démarrage sans jamais écraser un compte existant.
-// L'équipe se connecte par email + PIN (SUPPORT_EMAIL / SUPPORT_PIN) ; sans
-// SUPPORT_PIN, un PIN aléatoire est généré et affiché une seule fois en
-// développement (jamais journalisé ni persisté en production).
+// L'équipe se connecte par email + PIN (SUPPORT_EMAIL / SUPPORT_PIN). Sans
+// SUPPORT_PIN, un PIN aléatoire est généré et affiché UNE SEULE FOIS au
+// démarrage (logs du service). Le compte support est non critique : on ne
+// bloque JAMAIS le démarrage (contrairement au compte admin). Définir
+// SUPPORT_PIN pour figer le PIN.
 function ensureSupportAccount() {
-  const isProd = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
   const vendorId = 'support-mangoo';
   const existing = users.find(function (u) {
     return u && (canonicalRoutingId(u.vendorId) === vendorId || canonicalRoutingId(u.id) === vendorId);
@@ -1801,10 +1802,6 @@ function ensureSupportAccount() {
   if (!existing) {
     let pin = SUPPORT_PIN;
     if (!pin) {
-      if (isProd) {
-        console.error('[Auth] ERREUR : compte support requis — définissez SUPPORT_PIN via les variables d\'environnement Render.');
-        process.exit(1);
-      }
       generatedPin = String(Math.floor(1000 + Math.random() * 9000));
       pin = generatedPin;
     }
@@ -1832,11 +1829,7 @@ function ensureSupportAccount() {
     existing.pinHash = hashSecret(SUPPORT_PIN);
     changed = true;
     console.log('[Auth] PIN du compte support défini/mis à jour via SUPPORT_PIN.');
-  } else if (!existing.pinHash && !SUPPORT_PIN) {
-    if (isProd) {
-      console.error('[Auth] ERREUR : compte support sans PIN — définissez SUPPORT_PIN via les variables d\'environnement Render.');
-      process.exit(1);
-    }
+  } else if (!existing.pinHash) {
     generatedPin = String(Math.floor(1000 + Math.random() * 9000));
     existing.pinHash = hashSecret(generatedPin);
     changed = true;
@@ -1844,7 +1837,7 @@ function ensureSupportAccount() {
 
   if (changed) saveUsers();
 
-  if (generatedPin && !isProd) {
+  if (generatedPin) {
     console.log([
       '',
       '============================================================',
