@@ -472,6 +472,7 @@
       case 'registered': registered = true; setConnState(connState); flushOutbox(); break;
       case 'presence': emit(presenceCbs, msg.peers || []); break;
       case 'call-ring': onCallRing(msg); break;
+      case 'call-cancelled': onCallCancelled(msg); break;
       case 'call-accepted': onCallAccepted(msg); break;
       case 'call-rejected': onCallRejected(msg); break;
       case 'call-ended': onCallEndedFromPeer(msg); break;
@@ -741,6 +742,14 @@
   function onCallEndedFromPeer(msg) {
     setCallState('Appel terminé par l’autre partie');
     setTimeout(function () { endCall(false); }, 800);
+  }
+
+  function onCallCancelled(msg) {
+    // Un autre agent a déjà pris l'appel (sonnerie de groupe) : on arrête la
+    // sonnerie locale sans rien renvoyer à l'appelant.
+    if (callState.callId !== msg.callId) return;
+    stopIncomingRing();
+    endCall(false);
   }
 
   function onCallError(msg) {

@@ -4154,16 +4154,70 @@ function updateCall(callId, patch) {
   return e;
 }
 
+// Compte « Support MangooTech » : identité partagée par plusieurs membres de
+// l'équipe. Lorsqu'un client appelle le support, TOUS les agents connectés
+// sonnent en même temps (sonnerie de groupe) ; le premier qui décroche prend
+// l'appel, les autres cessent de sonner immédiatement.
+const SUPPORT_RING_GROUP_ID = 'support-mangoo';
+
+function isRingGroup(id) {
+  return canonicalRoutingId(id) === SUPPORT_RING_GROUP_ID;
+}
+
+// Toutes les sockets visibles (app ouverte, quel que soit l'onglet) d'une
+// identité donnée — les candidats à la sonnerie de groupe.
+function ringGroupPeers(id) {
+  return onlineSockets(id).filter(function (c) {
+    return c.ws && c.ws.readyState === 1 && (c.ws.meta ? c.ws.meta.visible !== false : true);
+  });
+}
+
 function handleCallOffer(ws, msg) {
   const callId = msg.callId || rand();
   const to = String(msg.to || '').trim();
   const cto = canonicalRoutingId(to);
+  const callMode = msg.mode || 'audio';
+  const callerName = (ws.meta && ws.meta.name) || 'Quelqu\'un';
+
+  // Sonnerie de groupe (support) : tous les agents connectés sonnent en même
+  // temps. Le premier qui décroche prend l'appel.
+  if (isRingGroup(cto)) {
+    const candidates = ringGroupPeers(cto);
+    if (candidates.length === 0) {
+      const pushed = sendPush(to, {
+        title: 'Appel entrant',
+        body: callerName + ' souhaite vous joindre',
+        url: pushLandingUrl({ routingId: to, kind: 'call', from: ws.meta.id, fromName: ws.meta.name, callId: callId, mode: callMode }),
+        tag: 'call-' + callId,
+        ttl: 60,
+        data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode }
+      });
+      recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName);
+      send(ws, { type: 'call-error', callId, reason: 'offline', pushed: pushed });
+      return;
+    }
+    calls.set(callId, {
+      callerId: ws.meta.id, calleeId: cto,
+      callerWs: ws,
+      group: true,
+      candidates: candidates,
+      answeredWs: null,
+      mode: callMode
+    });
+    recordCall(callId, ws.meta.id, cto, callMode, 'ringing', callerName);
+    candidates.forEach(function (cand) {
+      send(cand.ws, {
+        type: 'call-ring', callId,
+        from: ws.meta.id, fromName: ws.meta.name,
+        sdp: msg.sdp, mode: callMode
+      });
+    });
+    return;
+  }
+
+  // Appel 1:1 classique.
   const target = callablePeer(to);
   if (!target || !target.online) {
-    // Dashboard fermé (ou hors ligne) : on tente de réveiller le destinataire
-    // par notification Web Push native (même sans onglet ouvert).
-    const callerName = (ws.meta && ws.meta.name) || 'Quelqu\'un';
-    const callMode = msg.mode || 'audio';
     const pushed = sendPush(to, {
       title: 'Appel entrant',
       body: callerName + ' souhaite vous joindre',
@@ -4172,26 +4226,37 @@ function handleCallOffer(ws, msg) {
       ttl: 60,
       data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode }
     });
-    recordCall(callId, ws.meta.id, cto, callMode, 'missed', (ws.meta && ws.meta.name) || '');
+    recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName);
     send(ws, { type: 'call-error', callId, reason: 'offline', pushed: pushed });
     return;
   }
   calls.set(callId, {
     callerId: ws.meta.id, calleeId: cto,
     callerWs: ws, calleeWs: target.ws,
-    mode: msg.mode || 'audio'
+    mode: callMode
   });
-  recordCall(callId, ws.meta.id, cto, msg.mode || 'audio', 'ringing', (ws.meta && ws.meta.name) || '');
+  recordCall(callId, ws.meta.id, cto, callMode, 'ringing', callerName);
   send(target.ws, {
     type: 'call-ring', callId,
     from: ws.meta.id, fromName: ws.meta.name,
-    sdp: msg.sdp, mode: msg.mode || 'audio'
+    sdp: msg.sdp, mode: callMode
   });
 }
 
 function handleCallAnswer(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
+  if (c.group) {
+    if (c.answeredWs) return; // un autre agent a déjà décroché
+    c.answeredWs = ws;
+    updateCall(msg.callId, { status: 'answered' });
+    send(c.callerWs, { type: 'call-accepted', callId: msg.callId, sdp: msg.sdp, name: ws.meta.name });
+    // Les autres agents cessent de sonner immédiatement.
+    c.candidates.forEach(function (cand) {
+      if (cand.ws !== ws) send(cand.ws, { type: 'call-cancelled', callId: msg.callId });
+    });
+    return;
+  }
   updateCall(msg.callId, { status: 'answered' });
   send(c.callerWs, { type: 'call-accepted', callId: msg.callId, sdp: msg.sdp, name: ws.meta.name });
 }
@@ -4199,6 +4264,17 @@ function handleCallAnswer(ws, msg) {
 function handleCallReject(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
+  if (c.group) {
+    if (c.answeredWs) return;
+    // Un agent refuse : on le retire de la sonnerie, les autres continuent.
+    c.candidates = c.candidates.filter(function (cand) { return cand.ws !== ws; });
+    if (c.candidates.length === 0) {
+      updateCall(msg.callId, { status: 'rejected' });
+      send(c.callerWs, { type: 'call-rejected', callId: msg.callId, name: ws.meta.name });
+      calls.delete(msg.callId);
+    }
+    return;
+  }
   updateCall(msg.callId, { status: 'rejected' });
   send(c.callerWs, { type: 'call-rejected', callId: msg.callId, name: ws.meta.name });
   calls.delete(msg.callId);
@@ -4208,6 +4284,18 @@ function handleCallEnd(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
   updateCall(msg.callId, { status: 'ended' });
+  if (c.group) {
+    // L'appelant raccroche : on arrête la sonnerie partout. Un agent raccroche :
+    // on prévient l'appelant et on arrête la sonnerie des autres candidats.
+    if (c.callerWs === ws) {
+      c.candidates.forEach(function (cand) { send(cand.ws, { type: 'call-cancelled', callId: msg.callId }); });
+    } else {
+      send(c.callerWs, { type: 'call-ended', callId: msg.callId });
+      c.candidates.forEach(function (cand) { if (cand.ws !== ws) send(cand.ws, { type: 'call-cancelled', callId: msg.callId }); });
+    }
+    calls.delete(msg.callId);
+    return;
+  }
   const other = (c.callerWs === ws) ? c.calleeWs : c.callerWs;
   send(other, { type: 'call-ended', callId: msg.callId });
   calls.delete(msg.callId);
@@ -4216,6 +4304,12 @@ function handleCallEnd(ws, msg) {
 function handleIce(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
+  if (c.group) {
+    // ICE ne circule qu'entre l'appelant et l'agent qui a décroché.
+    const other = (c.callerWs === ws) ? c.answeredWs : (c.answeredWs === ws ? c.callerWs : null);
+    if (other) send(other, { type: 'ice-candidate', callId: msg.callId, candidate: msg.candidate });
+    return;
+  }
   const other = (c.callerWs === ws) ? c.calleeWs : c.callerWs;
   send(other, { type: 'ice-candidate', callId: msg.callId, candidate: msg.candidate });
 }
