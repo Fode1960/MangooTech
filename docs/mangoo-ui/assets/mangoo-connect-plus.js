@@ -79,6 +79,7 @@
     '.mcp-call-overlay .mcp-btn.accept{background:#22c55e;color:#fff;}',
     '.mcp-call-overlay .mcp-btn.mute{background:rgba(255,255,255,.18);color:#fff;}',
     '.mcp-call-overlay .mcp-btn.mute.off{background:rgba(255,255,255,.1);color:rgba(255,255,255,.85);}',
+    '.mcp-call-overlay .mcp-btn.chat{background:rgba(255,255,255,.18);color:#fff;}',
     '.mcp-call-overlay .mcp-hint{position:absolute;bottom:24px;left:0;right:0;text-align:center;color:rgba(255,255,255,.55);font-size:11px;z-index:2;}',
     '.mcp-call-overlay.has-video .mcp-center{position:absolute;bottom:26px;left:0;right:0;margin:0 auto;justify-content:flex-end;max-width:100%;padding:0 18px;z-index:3;pointer-events:none;}',
     '.mcp-call-overlay.has-video .mcp-avatar{display:none;}',
@@ -98,6 +99,9 @@
     '.mcp-chat .mcp-close{background:none;border:none;color:inherit;cursor:pointer;padding:4px;display:flex;opacity:.9;}',
     '.mcp-chat .mcp-close:hover{opacity:1;}',
     '.mcp-chat .mcp-close svg{width:18px;height:18px;}',
+    '.mcp-chat .mcp-call{background:none;border:none;color:inherit;cursor:pointer;padding:4px;display:flex;opacity:.9;}',
+    '.mcp-chat .mcp-call:hover{opacity:1;}',
+    '.mcp-chat .mcp-call svg{width:18px;height:18px;}',
     '.mcp-chat .mcp-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:rgb(var(--mgt-muted,248,250,252));}',
     '.mcp-chat .mcp-msg{max-width:82%;padding:9px 12px;border-radius:14px;font-size:13px;line-height:1.45;}',
     '.mcp-chat .mcp-msg.in{background:rgb(var(--mgt-card,255,255,255));color:rgb(var(--mgt-foreground,15,23,42));border:1px solid rgb(var(--mgt-border,226,232,240));align-self:flex-start;border-bottom-left-radius:4px;}',
@@ -146,6 +150,9 @@
         '<button class="mcp-btn mute" data-mcp="mute" aria-label="Couper le micro" title="Couper le micro">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>' +
         '</button>' +
+        '<button class="mcp-btn chat" data-mcp="chat" aria-label="Basculer vers le chat" title="Basculer vers le chat" style="display:none;">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+        '</button>' +
         '<button class="mcp-btn accept" data-mcp="accept" aria-label="Répondre" title="Répondre" style="display:none;">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
         '</button>' +
@@ -168,6 +175,9 @@
     '<div class="mcp-chat-head">' +
       '<div class="mcp-avatar" data-mcp="avatar">MT</div>' +
       '<div class="mcp-who"><b data-mcp="name">—</b><span>Mangoo Connect+ · en ligne</span></div>' +
+      '<button class="mcp-call" data-mcp="chat-call" aria-label="Appeler" title="Appeler">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
+      '</button>' +
       '<button class="mcp-close" data-mcp="close" aria-label="Fermer">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
       '</button>' +
@@ -282,6 +292,7 @@
     stopRingback();
     callState.seconds = 0;
     callState.connected = true;
+    q('[data-mcp="chat"]', callOverlay).style.display = '';
     q('[data-mcp="timer"]', callOverlay).textContent = formatTimer(0);
     setCallState('Connecté');
     callState.timer = setInterval(function () {
@@ -320,6 +331,7 @@
     callState.incoming = false;
     callOverlay.classList.remove('open');
     q('[data-mcp="accept"]', callOverlay).style.display = 'none';
+    q('[data-mcp="chat"]', callOverlay).style.display = 'none';
     q('[data-mcp="mute"]', callOverlay).style.display = '';
     if (notify && callState.callId) {
       sendWS({ type: 'call-end', callId: callState.callId });
@@ -1141,9 +1153,20 @@
     if (isReal() && callState.callId) { acceptIncoming(); }
     else { simulateIncomingAccept(); }
   });
+  q('[data-mcp="chat"]', callOverlay).addEventListener('click', function () {
+    var peer = callState.target;
+    if (callState.callId && isReal()) sendWS({ type: 'call-end', callId: callState.callId });
+    endCall(false);
+    if (peer && (peer.id || peer.vendorId || peer.name)) openChat(peer);
+  });
   q('[data-mcp="close"]', chatEl).addEventListener('click', function () {
     chatEl.classList.remove('open');
     hideChatTyping();
+  });
+  q('[data-mcp="chat-call"]', chatEl).addEventListener('click', function () {
+    var peer = chatTarget;
+    if (!peer || !(peer.id || peer.vendorId || peer.name)) return;
+    api.call(peer, { mode: 'audio' });
   });
   q('[data-mcp="send"]', chatEl).addEventListener('click', sendChat);
   q('[data-mcp="input"]', chatEl).addEventListener('keydown', function (e) {
