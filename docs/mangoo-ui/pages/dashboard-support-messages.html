@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Messagerie Support — MangooTech</title>
+<style>
+:root{
+  --mgt-primary:26 92 42;
+  --mgt-primary-50:232 245 233;
+  --mgt-primary-100:200 230 201;
+  --mgt-primary-700:38 112 42;
+  --mgt-primary-foreground:255 255 255;
+  --mgt-accent:232 97 12;
+  --mgt-accent-50:255 243 224;
+  --mgt-accent-foreground:255 255 255;
+  --mgt-background:255 255 255;
+  --mgt-foreground:15 23 42;
+  --mgt-card:255 255 255;
+  --mgt-muted:248 250 252;
+  --mgt-muted-foreground:100 116 139;
+  --mgt-border:226 232 240;
+  --mgt-success:129 199 134;
+  --mgt-warning:255 183 77;
+  --mgt-radius-md:8px;
+  --mgt-radius-lg:16px;
+  --mgt-radius-full:9999px;
+  --mgt-font-sans:'Inter','Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+  --mgt-shadow-sm:0 1px 2px rgba(15 23 42 / .05),0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md:0 8px 24px -8px rgba(15 23 42 / .18);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--mgt-font-sans);background:rgb(var(--mgt-muted));color:rgb(var(--mgt-foreground));min-height:100vh;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit}
+.topbar{position:sticky;top:0;z-index:40;background:rgb(var(--mgt-primary));color:rgb(var(--mgt-primary-foreground))}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;max-width:1100px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-logo{width:32px;height:32px;border-radius:9px;background:rgb(var(--mgt-accent));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:rgb(var(--mgt-accent-foreground));flex-shrink:0}
+.brand-title{font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-sub{font-size:11px;color:rgb(var(--mgt-primary-100));font-weight:400}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:600;background:rgba(255,255,255,.12);color:#fff;white-space:nowrap}
+.pill .dot{width:8px;height:8px;border-radius:50%;background:rgb(var(--mgt-warning));flex-shrink:0}
+.pill .dot.on{background:rgb(var(--mgt-success))}
+.nav-link{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border-radius:var(--mgt-radius-md);font-size:13px;font-weight:600;color:rgb(var(--mgt-primary-50));background:rgba(255,255,255,.10);transition:background .15s;white-space:nowrap}
+.nav-link:hover{background:rgba(255,255,255,.18)}
+.shell{max-width:1100px;margin:18px auto;padding:0 16px}
+.layout{display:grid;grid-template-columns:320px 1fr;gap:16px;height:calc(100vh - 118px);min-height:480px}
+@media(max-width:760px){.layout{grid-template-columns:1fr;height:auto;min-height:0}}
+.pane{background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:var(--mgt-radius-lg);box-shadow:var(--mgt-shadow-sm);display:flex;flex-direction:column;overflow:hidden}
+.list-pane{display:flex;flex-direction:column}
+.list-head{padding:14px;border-bottom:1px solid rgb(var(--mgt-border))}
+.search{width:100%;padding:10px 12px;border:1px solid rgb(var(--mgt-border));border-radius:10px;font-size:13px;background:rgb(var(--mgt-muted));color:rgb(var(--mgt-foreground));font-family:inherit}
+.search:focus{outline:none;border-color:rgb(var(--mgt-primary));box-shadow:0 0 0 3px rgb(var(--mgt-primary)/.15)}
+.conv-list{flex:1;overflow-y:auto;min-height:0}
+.conv-empty{padding:32px 16px;text-align:center;font-size:13px;color:rgb(var(--mgt-muted-foreground))}
+.conv{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;border-left:3px solid transparent;border-bottom:1px solid rgb(var(--mgt-border))}
+.conv:hover{background:rgb(var(--mgt-muted))}
+.conv.active{border-left-color:rgb(var(--mgt-primary));background:rgb(var(--mgt-primary-50))}
+.conv-avatar{width:38px;height:38px;border-radius:50%;background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary-700));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.conv-meta{flex:1;min-width:0}
+.conv-name{font-size:13.5px;font-weight:600;color:rgb(var(--mgt-foreground));display:flex;align-items:center;gap:6px}
+.conv-name .status-dot{width:7px;height:7px;border-radius:50%;background:rgb(var(--mgt-muted-foreground));flex-shrink:0}
+.conv-name .status-dot.on{background:rgb(var(--mgt-success))}
+.conv-last{font-size:12px;color:rgb(var(--mgt-muted-foreground));margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-time{font-size:11px;color:rgb(var(--mgt-muted-foreground));flex-shrink:0}
+.conv-unread{min-width:18px;height:18px;border-radius:999px;background:rgb(var(--mgt-accent));color:#fff;font-size:10.5px;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 5px}
+.thread-pane{display:flex;flex-direction:column;min-height:0}
+.thread-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid rgb(var(--mgt-border));min-height:60px}
+.thread-avatar{width:38px;height:38px;border-radius:50%;background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary-700));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.thread-meta{flex:1;min-width:0}
+.thread-name{font-size:14px;font-weight:700;color:rgb(var(--mgt-foreground))}
+.thread-status{font-size:12px;color:rgb(var(--mgt-muted-foreground))}
+.back-btn{display:none;align-items:center;gap:4px;padding:7px 10px;border:1px solid rgb(var(--mgt-border));border-radius:8px;background:transparent;color:rgb(var(--mgt-foreground));font-size:13px;font-weight:600;cursor:pointer}
+@media(max-width:760px){.back-btn{display:inline-flex}.list-pane.hidden-mobile{display:none}.thread-pane.hidden-mobile{display:none}}
+.thread{flex:1;overflow-y:auto;min-height:0;padding:16px;display:flex;flex-direction:column;gap:8px}
+.thread-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:rgb(var(--mgt-muted-foreground));gap:8px;font-size:13.5px}
+.thread-empty svg{opacity:.5}
+.bubble{max-width:76%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.45;word-break:break-word}
+.bubble .time{display:block;font-size:10px;opacity:.6;margin-top:4px;text-align:right}
+.bubble.in{align-self:flex-start;background:rgb(var(--mgt-muted));color:rgb(var(--mgt-foreground));border-bottom-left-radius:4px}
+.bubble.out{align-self:flex-end;background:rgb(var(--mgt-primary));color:rgb(var(--mgt-primary-foreground));border-bottom-right-radius:4px}
+.bubble.out .time{color:rgb(var(--mgt-primary-100))}
+.composer{display:flex;gap:8px;padding:12px;border-top:1px solid rgb(var(--mgt-border));background:rgb(var(--mgt-card))}
+.composer input{flex:1;padding:11px 13px;border:1px solid rgb(var(--mgt-border));border-radius:999px;font-size:14px;background:rgb(var(--mgt-muted));color:rgb(var(--mgt-foreground));font-family:inherit}
+.composer input:focus{outline:none;border-color:rgb(var(--mgt-primary));box-shadow:0 0 0 3px rgb(var(--mgt-primary)/.15)}
+.send-btn{width:42px;height:42px;border-radius:50%;border:none;background:rgb(var(--mgt-primary));color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.send-btn:active{transform:scale(.96)}
+.ring-badge{display:none;align-items:center;gap:8px;margin:0 16px 12px;padding:10px 12px;border-radius:10px;background:rgb(var(--mgt-accent-50));color:rgb(var(--mgt-accent));font-size:13px;font-weight:600}
+.ring-badge .dot{width:9px;height:9px;border-radius:50%;background:rgb(var(--mgt-accent));animation:pulse 1.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(232,97,12,.55)}70%{box-shadow:0 0 0 10px rgba(232,97,12,0)}100%{box-shadow:0 0 0 0 rgba(232,97,12,0)}}
+.footer-note{text-align:center;font-size:12px;color:rgb(var(--mgt-muted-foreground));padding:18px 0 28px}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-logo">M</div>
+        <div>
+          <div class="brand-title">Support MangooTech</div>
+          <div class="brand-sub">Messagerie dédiée</div>
+        </div>
+      </div>
+      <div class="pill"><span class="dot" id="status-dot"></span><span id="status-text">Connexion…</span></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <a href="./dashboard-support-console.html" class="nav-link" aria-label="Retour à la console">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Console
+        </a>
+        <a href="./auth.html" class="nav-link" aria-label="Déconnexion">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Déconnexion
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="ring-badge" id="ring-badge"><span class="dot"></span><span id="ring-text">Appel entrant…</span></div>
+
+    <div class="layout">
+      <section class="pane list-pane" id="list-pane">
+        <div class="list-head">
+          <input id="msg-search" type="text" class="search" placeholder="Rechercher une conversation…">
+        </div>
+        <div class="conv-list" id="conv-list">
+          <div class="conv-empty">Chargement des conversations…</div>
+        </div>
+      </section>
+
+      <section class="pane thread-pane" id="thread-pane">
+        <div class="thread-head">
+          <button class="back-btn" id="back-btn" aria-label="Retour">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Retour
+          </button>
+          <div class="thread-avatar" id="thread-avatar">—</div>
+          <div class="thread-meta">
+            <div class="thread-name" id="thread-name">Sélectionnez une conversation</div>
+            <div class="thread-status" id="thread-status"></div>
+          </div>
+        </div>
+        <div class="thread" id="thread">
+          <div class="thread-empty" id="thread-empty">
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Sélectionnez une conversation pour lire et répondre.</span>
+          </div>
+        </div>
+        <div class="composer" id="composer" style="display:none;">
+          <input id="msg-input" type="text" placeholder="Écrire un message…" autocomplete="off">
+          <button class="send-btn" id="send-btn" aria-label="Envoyer">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <p class="footer-note">MangooTech — 3 rue de Cambrai, 75019 Paris, France · contact@mangoo.tech</p>
+  </main>
+
+  <script src="../assets/mangoo-connect-plus.js"></script>
+  <script src="../assets/mangoo-push.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var TOKEN_KEY = 'mgt_token', USER_KEY = 'mgt_user';
+    var SUPPORT_ID = 'support-mangoo', SUPPORT_ACCOUNT_ID = 'pro-support-mangoo';
+    var RT = window.MangooConnect;
+
+    function isSupport(u) {
+      return !!(u && (u.vendorId === SUPPORT_ID || u.id === SUPPORT_ACCOUNT_ID || u.id === SUPPORT_ID));
+    }
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function initials(name) {
+      var parts = (name || '').trim().split(/s+/);
+      var a = (parts[0] || '?').charAt(0);
+      var b = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
+      return (a + b).toUpperCase();
+    }
+    function nowTime() {
+      var d = new Date();
+      return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+    function fmtTime(iso) {
+      try {
+        var d = iso ? new Date(iso) : new Date();
+        if (isNaN(d.getTime())) d = new Date();
+        return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+      } catch (e) { return nowTime(); }
+    }
+
+    var user = null;
+    try { user = JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch (e) { user = null; }
+
+    var livePeers = [];
+    var currentConv = null;
+
+    function setStatus(state) {
+      var dot = document.getElementById('status-dot');
+      var txt = document.getElementById('status-text');
+      var connecting = state === 'connecting' || state === 'reconnecting';
+      var online = state === 'online';
+      if (dot) dot.classList.toggle('on', online);
+      if (txt) txt.textContent = online ? 'En ligne' : (connecting ? 'Connexion…' : 'Hors ligne');
+    }
+
+    function toast(msg) {
+      var t = document.getElementById('mgt-toast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'mgt-toast';
+        t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translate(-50%,16px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:11px 18px;border-radius:12px;font-size:13.5px;font-weight:600;font-family:var(--mgt-font-sans);z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;';
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translate(-50%,0)'; });
+      clearTimeout(t._timer);
+      t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2400);
+    }
+
+    function convs() { return document.querySelectorAll('.conv'); }
+
+    function findConv(peerId) {
+      var list = convs();
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].getAttribute('data-peer-id') === peerId) return list[i];
+      }
+      return null;
+    }
+
+    function setOnlineDot(conv, online) {
+      var dot = conv.querySelector('.status-dot');
+      if (dot) dot.classList.toggle('on', online);
+    }
+
+    function syncPresence() {
+      var onlineIds = {};
+      livePeers.forEach(function (p) { if (p.id) onlineIds[String(p.id)] = true; });
+      convs().forEach(function (conv) {
+        var peerId = conv.getAttribute('data-peer-id') || '';
+        setOnlineDot(conv, !!onlineIds[peerId]);
+      });
+      updateThreadStatus();
+    }
+
+    function updateThreadStatus() {
+      var el = document.getElementById('thread-status');
+      if (!el || !currentConv) return;
+      var peerId = currentConv.getAttribute('data-peer-id') || '';
+      var online = false;
+      livePeers.forEach(function (p) { if (String(p.id) === peerId) online = true; });
+      el.textContent = online ? 'En ligne' : 'Hors ligne';
+      el.style.color = online ? 'rgb(var(--mgt-primary-700))' : '';
+    }
+
+    function buildConversation(name, peerId) {
+      var list = document.getElementById('conv-list');
+      var empty = list.querySelector('.conv-empty');
+      if (empty) empty.remove();
+      var conv = document.createElement('div');
+      conv.className = 'conv';
+      conv.setAttribute('data-name', name || peerId || 'Contact');
+      conv.setAttribute('data-peer-id', peerId || '');
+      conv.innerHTML =
+        '<div class="conv-avatar">' + esc(initials(name || peerId || '?')) + '</div>' +
+        '<div class="conv-meta">' +
+          '<div class="conv-name"><span class="status-dot"></span>' + esc(name || peerId || 'Contact') + '</div>' +
+          '<div class="conv-last"></div>' +
+        '</div>' +
+        '<span class="conv-unread" data-unread></span>' +
+        '<span class="conv-time"></span>';
+      conv.addEventListener('click', function () { setActive(conv); });
+      list.insertBefore(conv, list.firstElementChild);
+      return conv;
+    }
+
+    function ensureConversation(name, peerId) {
+      var conv = peerId ? findConv(peerId) : null;
+      if (!conv) conv = buildConversation(name, peerId);
+      else if (peerId && !conv.getAttribute('data-peer-id')) conv.setAttribute('data-peer-id', peerId);
+      return conv;
+    }
+
+    function clearThread() {
+      var t = document.getElementById('thread');
+      var empty = document.getElementById('thread-empty');
+      if (!t) return;
+      var kids = Array.prototype.slice.call(t.children);
+      kids.forEach(function (n) { if (n.id !== 'thread-empty') n.remove(); });
+      if (!empty) {
+        empty = document.createElement('div');
+        empty.id = 'thread-empty';
+        empty.className = 'thread-empty';
+        empty.innerHTML = '<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Sélectionnez une conversation pour lire et répondre.</span>';
+        t.appendChild(empty);
+      } else {
+        empty.style.display = '';
+      }
+    }
+
+    function appendBubble(text, mine, time) {
+      var t = document.getElementById('thread');
+      var empty = document.getElementById('thread-empty');
+      if (empty) empty.style.display = 'none';
+      var b = document.createElement('div');
+      b.className = 'bubble ' + (mine ? 'out' : 'in');
+      b.innerHTML = esc(text) + '<span class="time">' + esc(time) + '</span>';
+      t.appendChild(b);
+      t.scrollTop = t.scrollHeight;
+    }
+
+    function setActive(conv) {
+      convs().forEach(function (c) { c.classList.remove('active'); });
+      conv.classList.add('active');
+      currentConv = conv;
+      var name = conv.getAttribute('data-name') || 'Contact';
+      document.getElementById('thread-avatar').textContent = initials(name);
+      document.getElementById('thread-name').textContent = name;
+      document.getElementById('composer').style.display = 'flex';
+      document.getElementById('list-pane').classList.add('hidden-mobile');
+      document.getElementById('thread-pane').classList.remove('hidden-mobile');
+      updateThreadStatus();
+      loadHistory(conv);
+    }
+
+    function loadHistory(conv) {
+      var peerId = conv.getAttribute('data-peer-id');
+      if (!peerId) { clearThread(); return; }
+      var token = null;
+      try { token = localStorage.getItem(TOKEN_KEY); } catch (e) {}
+      fetch('/api/messages?peer=' + encodeURIComponent(peerId), {
+        headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+      }).then(function (r) { return r.json().catch(function () { return {}; }); })
+      .then(function (d) {
+        if (currentConv !== conv) return;
+        var msgs = (d && d.ok && Array.isArray(d.messages)) ? d.messages : [];
+        clearThread();
+        if (!msgs.length) return;
+        msgs.forEach(function (m) {
+          var mine = (m.mine === true) || (m.from === SUPPORT_ID);
+          if (m.kind === 'audio') {
+            appendBubble('🎤 Message vocal (' + Math.max(1, Math.round(m.duration || 0)) + ' s)', mine, fmtTime(m.sentAt));
+          } else if (m.kind === 'video') {
+            appendBubble('🎥 Message vidéo', mine, fmtTime(m.sentAt));
+          } else {
+            appendBubble(m.text || '', mine, fmtTime(m.sentAt));
+          }
+        });
+      });
+    }
+
+    function loadContacts() {
+      var token = null;
+      try { token = localStorage.getItem(TOKEN_KEY); } catch (e) {}
+      fetch('/api/contacts', {
+        headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+      }).then(function (r) { return r.json().catch(function () { return {}; }); })
+      .then(function (d) {
+        var list = document.getElementById('conv-list');
+        if (!d || !d.ok || !Array.isArray(d.contacts)) {
+          if (list && !list.querySelector('.conv')) {
+            list.innerHTML = '<div class="conv-empty">Impossible de charger les conversations.</div>';
+          }
+          return;
+        }
+        d.contacts.forEach(function (c) {
+          var role = String(c.role || '').toLowerCase();
+          if (role !== 'client' && role !== 'cliente') return;
+          ensureConversation(c.name || c.routingId || c.id, c.routingId || c.id);
+        });
+        var empty = list.querySelector('.conv-empty');
+        if (empty && list.querySelector('.conv')) empty.remove();
+        if (!list.querySelector('.conv')) {
+          list.innerHTML = '<div class="conv-empty">Aucune conversation pour le moment.</div>';
+        }
+        applyLanding();
+      });
+    }
+
+    function sendMessage() {
+      if (!currentConv) { toast('Sélectionnez une conversation.'); return; }
+      var input = document.getElementById('msg-input');
+      var text = input.value.trim();
+      if (!text) return;
+      var peerId = currentConv.getAttribute('data-peer-id') || '';
+      if (!peerId) { toast('Destinataire inconnu.'); return; }
+      var time = nowTime();
+      appendBubble(text, true, time);
+      var last = currentConv.querySelector('.conv-last');
+      if (last) last.textContent = text;
+      var t = currentConv.querySelector('.conv-time');
+      if (t) t.textContent = time;
+      input.value = '';
+      if (RT && typeof RT.sendMessage === 'function') {
+        RT.sendMessage(peerId, text);
+      }
+    }
+
+    function showIncoming(m) {
+      var name = m.fromName || m.from || 'Client';
+      var conv = ensureConversation(name, m.from);
+      var list = document.getElementById('conv-list');
+      if (list && conv.parentNode === list && list.firstElementChild !== conv) {
+        list.insertBefore(conv, list.firstElementChild);
+      }
+      var last = conv.querySelector('.conv-last');
+      var display = m.kind === 'audio'
+        ? '🎤 Message vocal (' + Math.max(1, Math.round(m.duration || 0)) + ' s)'
+        : (m.kind === 'video' ? '🎥 Message vidéo' : m.text);
+      if (last) last.textContent = display;
+      var t = conv.querySelector('.conv-time');
+      if (t) t.textContent = fmtTime(m.sentAt);
+      if (currentConv && currentConv.getAttribute('data-peer-id') === m.from) {
+        appendBubble(display || '', false, fmtTime(m.sentAt));
+      } else {
+        var badge = conv.querySelector('[data-unread]');
+        if (badge) {
+          badge.style.display = 'flex';
+          var n = parseInt(badge.textContent || '0', 10) || 0;
+          badge.textContent = String(n + 1);
+        }
+        toast('Nouveau message de ' + name);
+      }
+    }
+
+    function applyLanding() {
+      var qp;
+      try { qp = new URLSearchParams(location.search); } catch (e) { return; }
+      if (qp.get('kind') !== 'message') return;
+      var from = qp.get('from');
+      var fromName = qp.get('fromName');
+      if (!from && !fromName) return;
+      var conv = ensureConversation(fromName || from || 'Client', from);
+      setActive(conv);
+      try {
+        var url = new URL(location.href);
+        url.searchParams.delete('kind'); url.searchParams.delete('from'); url.searchParams.delete('fromName'); url.searchParams.delete('convId');
+        history.replaceState(null, '', url.pathname + url.search);
+      } catch (e) {}
+    }
+
+    function boot() {
+      if (!isSupport(user)) {
+        try {
+          var x = new XMLHttpRequest();
+          x.open('GET', '/api/auth/session', false);
+          x.setRequestHeader('Accept', 'application/json');
+          x.send(null);
+          if (x.status >= 200 && x.status < 300) {
+            var d = JSON.parse(x.responseText);
+            if (d && d.ok && d.user && isSupport(d.user)) {
+              user = d.user;
+              if (d.token) localStorage.setItem(TOKEN_KEY, d.token);
+              localStorage.setItem(USER_KEY, JSON.stringify(d.user));
+            }
+          }
+        } catch (e) {}
+      }
+      if (!isSupport(user)) { window.location.replace('./auth.html'); return; }
+
+      if (RT) {
+        if (typeof RT.disableAutoOpenChat === 'function') RT.disableAutoOpenChat();
+        RT.register('vendor', SUPPORT_ID, 'Support MangooTech');
+        RT.onStatus(setStatus);
+        setStatus(RT.status && RT.status());
+        if (typeof RT.onPresence === 'function') {
+          RT.onPresence(function (peers) { livePeers = peers || []; syncPresence(); });
+        }
+        RT.onMessage(function (m) { if (m) showIncoming(m); });
+        RT.onIncomingCall(function (c) {
+          var badge = document.getElementById('ring-badge');
+          var txt = document.getElementById('ring-text');
+          if (badge) badge.style.display = 'flex';
+          if (txt) {
+            var name = (c && c.fromName) ? c.fromName : '';
+            txt.textContent = name ? ('Appel entrant : ' + name + (c.country ? ' (' + c.country + ')' : '')) : 'Appel entrant…';
+          }
+        });
+        RT.onCallEnded(function () {
+          var badge = document.getElementById('ring-badge');
+          if (badge) badge.style.display = 'none';
+        });
+      }
+
+      loadContacts();
+
+      var sendBtn = document.getElementById('send-btn');
+      var input = document.getElementById('msg-input');
+      if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+      if (input) {
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') sendMessage(); });
+      }
+      var backBtn = document.getElementById('back-btn');
+      if (backBtn) {
+        backBtn.addEventListener('click', function () {
+          document.getElementById('list-pane').classList.remove('hidden-mobile');
+          document.getElementById('thread-pane').classList.add('hidden-mobile');
+        });
+      }
+      var search = document.getElementById('msg-search');
+      if (search) {
+        search.addEventListener('input', function () {
+          var q = search.value.toLowerCase().trim();
+          convs().forEach(function (conv) {
+            var name = (conv.getAttribute('data-name') || '').toLowerCase();
+            conv.style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
+          });
+        });
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', boot);
+    } else {
+      boot();
+    }
+  })();
+  </script>
+</body>
+</html>

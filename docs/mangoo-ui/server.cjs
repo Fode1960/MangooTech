@@ -905,8 +905,9 @@ function pushLandingUrl(opts) {
   if (isClient) add('vendorId', opts.from);
   const qs = q.length ? ('?' + q.join('&')) : '';
   if (isClient) return '/pages/chat.html' + qs;
-  // Le compte Support (rôle « prestataire » dédié) atterrit sur sa console dédiée.
-  if (isSupportAccount(u)) return '/pages/dashboard-support-console.html' + qs;
+  // Le compte Support (rôle « prestataire » dédié) atterrit sur sa console pour
+  // les appels et sur sa messagerie dédiée pour les messages.
+  if (isSupportAccount(u)) return kind === 'call' ? '/pages/dashboard-support-console.html' + qs : '/pages/dashboard-support-messages.html' + qs;
   if (role === 'vendeur' || role === 'prestataire' || role === 'livreur') return '/pages/dashboard-messages.html' + qs;
   return '/pages/accueil.html' + qs;
 }
@@ -8798,6 +8799,39 @@ function enrichWsCountry(ws, ip) {
 }
 
 // Pays effectif d'un appelant : donnée client > méta (IP déjà résolue) > cache IP.
+function countryLabelFr(raw) {
+  const label = String(raw || '').trim();
+  if (!label) return '';
+  const key = label.toLowerCase();
+  const map = {
+    'senegal': 'Sénégal', 'cote d\'ivoire': 'Côte d\'Ivoire', 'ivory coast': 'Côte d\'Ivoire',
+    'cameroon': 'Cameroun', 'gabon': 'Gabon', 'congo': 'Congo', 'dr congo': 'RD Congo',
+    'democratic republic of the congo': 'RD Congo', 'mali': 'Mali', 'burkina faso': 'Burkina Faso',
+    'niger': 'Niger', 'mauritania': 'Mauritanie', 'guinea': 'Guinée', 'togo': 'Togo',
+    'benin': 'Bénin', 'central african republic': 'Centrafrique', 'chad': 'Tchad',
+    'algeria': 'Algérie', 'egypt': 'Égypte', 'libya': 'Libye', 'morocco': 'Maroc',
+    'tunisia': 'Tunisie', 'france': 'France', 'belgium': 'Belgique', 'luxembourg': 'Luxembourg',
+    'monaco': 'Monaco', 'spain': 'Espagne', 'canada': 'Canada', 'guadeloupe': 'Guadeloupe',
+    'martinique': 'Martinique', 'french guiana': 'Guyane', 'guyana': 'Guyane',
+    'reunion': 'La Réunion', 'réunion': 'La Réunion', 'mauritius': 'Maurice', 'comoros': 'Comores',
+    'madagascar': 'Madagascar', 'united states': 'États-Unis', 'united kingdom': 'Royaume-Uni',
+    'portugal': 'Portugal', 'switzerland': 'Suisse', 'italy': 'Italie', 'germany': 'Allemagne'
+  };
+  return map[key] || label;
+}
+
+// Dernier recours : le pays déclaré sur le compte de l'appelant (ex. un client
+// connecté). Garantit une provenance affichée même quand la détection côté
+// navigateur échoue et que l'IP est privée (localhost / réseau local).
+function profileCountryFallback(ws) {
+  if (!ws || !ws.meta || !ws.meta.id) return { country: '', countryCode: '' };
+  const u = userByRoutingId(ws.meta.id);
+  if (!u) return { country: '', countryCode: '' };
+  const raw = String(u.country || '').trim();
+  if (!raw) return { country: '', countryCode: '' };
+  return { country: countryLabelFr(raw), countryCode: String(u.countryCode || '').trim().toUpperCase() };
+}
+
 function effectiveCallerCountry(ws, msg) {
   let country = String((msg && msg.country) || '').trim();
   let countryCode = String((msg && msg.countryCode) || '').trim();
@@ -8808,6 +8842,11 @@ function effectiveCallerCountry(ws, msg) {
   if (!country && ws && ws.meta && ws.meta.ip) {
     const cached = countryFromIp(ws.meta.ip);
     if (cached) { country = cached.country; countryCode = cached.countryCode; }
+  }
+  if (!country) {
+    const prof = profileCountryFallback(ws);
+    country = prof.country;
+    countryCode = prof.countryCode || countryCode;
   }
   return { country: country, countryCode: countryCode };
 }

@@ -870,6 +870,7 @@
       if (/chat\.html/.test(tp) && !isClient) { clearLastLandingCache(); return; }
       if (/dashboard-messages\.html/.test(tp) && !isPro) { clearLastLandingCache(); return; }
       if (/dashboard-support-console\.html/.test(tp) && !isSupport) { clearLastLandingCache(); return; }
+      if (/dashboard-support-messages\.html/.test(tp) && !isSupport) { clearLastLandingCache(); return; }
 
       global.__mgtLandingRedirected = true;
       clearLastLandingCache();

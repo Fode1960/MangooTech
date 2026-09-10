@@ -670,6 +670,7 @@
     var name = m ? m[1] : p;
     if (name === 'chat.html' || name === 'messages.html') return 'chat';
     if (name === 'dashboard-messages.html') return 'dashboard';
+    if (name === 'dashboard-support-messages.html') return 'dashboard';
     return 'browse';
   }
 
