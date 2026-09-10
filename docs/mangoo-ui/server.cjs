@@ -4189,13 +4189,29 @@ function ringGroupPeers(id) {
   });
 }
 
-function handleCallOffer(ws, msg) {
+async function handleCallOffer(ws, msg) {
   const callId = msg.callId || rand();
   const to = String(msg.to || '').trim();
   const cto = canonicalRoutingId(to);
   const callMode = msg.mode || 'audio';
   const callerName = (ws.meta && ws.meta.name) || 'Quelqu\'un';
-  const callerGeo = effectiveCallerCountry(ws, msg);
+
+  // Pays de l'appelant : donnée client d'abord, sinon résolution par IP (attente
+  // bornée ~1,5 s, dédupliquée + mise en cache). Garantit que le pays est connu
+  // AVANT d'envoyer le push / la sonnerie, donc présent dans le landing.
+  let callerGeo = effectiveCallerCountry(ws, msg);
+  if (!callerGeo.country && ws.meta && ws.meta.ip) {
+    try {
+      const resolved = await resolveIpCountry(ws.meta.ip);
+      if (resolved && resolved.country) {
+        callerGeo = { country: resolved.country, countryCode: resolved.countryCode || '' };
+        if (ws.meta) {
+          if (!ws.meta.country) ws.meta.country = callerGeo.country;
+          if (!ws.meta.countryCode) ws.meta.countryCode = callerGeo.countryCode;
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }
   const callerCountry = callerGeo.country;
   const callerCountryCode = callerGeo.countryCode;
   const callerLabel = callerCountry ? (callerName + ' (' + callerCountry + ')') : callerName;

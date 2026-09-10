@@ -68,7 +68,20 @@
               if (!_ok) return '';
               try { return new URL(landing.url, location.origin).href; } catch (e) { return ''; }
             }
+            function _clearPwa() {
+              try { if (window.navigator && typeof window.navigator.clearAppBadge === 'function') window.navigator.clearAppBadge(); } catch (e) {}
+              try {
+                if ('serviceWorker' in navigator) {
+                  var _sw = navigator.serviceWorker.controller;
+                  if (_sw) { _sw.postMessage({ type: 'CLEAR_NOTIFICATIONS' }); }
+                  else if (navigator.serviceWorker.ready) {
+                    navigator.serviceWorker.ready.then(function (reg) { if (reg && reg.active) reg.active.postMessage({ type: 'CLEAR_NOTIFICATIONS' }); }).catch(function () {});
+                  }
+                }
+              } catch (e) {}
+            }
             function _go(dest) {
+              _clearPwa();
               var _url = dest || _target;
               try { window.location.replace(_url); } catch (e) { try { window.location.href = _url; } catch (e2) {} }
             }
