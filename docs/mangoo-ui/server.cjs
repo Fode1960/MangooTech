@@ -2529,6 +2529,13 @@ function findUserByIdentifier(identifier) {
   return null;
 }
 
+// Compte « Support MangooTech » (vendorId support-mangoo). Ce compte
+// partagé par l'équipe interne se connecte uniquement par son PIN à 4
+// chiffres (défini via SUPPORT_PIN), jamais par simple email/téléphone.
+function isSupportAccount(u) {
+  return !!(u && (u.vendorId === 'support-mangoo' || u.id === 'pro-support-mangoo' || u.id === 'support-mangoo'));
+}
+
 function userByToken(token) {
   const t = String(token || '').trim();
   if (!t) return null;
@@ -5989,6 +5996,7 @@ function handleHttp(req, res) {
         } else {
           user = findUserByIdentifier(identifier);
           if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Compte introuvable.' })); return; }
+          if (isSupportAccount(user)) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Ce compte se connecte avec son PIN à 4 chiffres (support).' })); return; }
           ok = true;
         }
       } else if (mode === 'pin') {
