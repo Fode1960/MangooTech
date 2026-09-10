@@ -901,14 +901,21 @@ html.dark {
       ? '<img src="' + escHtml(logo) + '" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:var(--mgt-radius-sm);display:block;">'
       : '<div style="width:44px;height:44px;border-radius:var(--mgt-radius-sm);background:rgb(var(--mgt-primary));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;">' + escHtml(String(v.name || '?').charAt(0).toUpperCase()) + '</div>';
     var rating = (v.rating != null && v.rating !== '') ? String(v.rating) : '—';
-    return '<div class="favorites-card" data-vendor-id="' + escHtml(v.vendorId) + '" ' +
+    return '<div class="favorites-card" data-vendor-id="' + escHtml(v.vendorId) + '" data-vendor-name="' + escHtml(v.name) + '" ' +
       'style="width:100%;min-width:0;display:flex;flex-direction:column;gap:12px;padding:16px;background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:var(--mgt-radius-md);box-shadow:var(--mgt-shadow-sm);color:rgb(var(--mgt-foreground));">' +
       '<div style="display:flex;align-items:center;gap:12px;">' + avatar +
         '<div style="min-width:0;"><h3 style="margin:0;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(v.name) + '</h3>' +
         '<div class="caption" style="color:rgb(var(--mgt-muted-foreground));">' + label + (v.city ? ' &middot; ' + escHtml(v.city) : '') + '</div></div>' +
       '</div>' +
       '<div style="display:flex;flex-direction:column;gap:8px;margin-top:auto;">' +
-        '<button type="button" data-action="contact" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;background:rgb(var(--mgt-accent));color:#fff;border:none;border-radius:var(--mgt-radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--mgt-font-sans);">Contacter</button>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button type="button" data-action="message" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgb(var(--mgt-primary));color:rgb(var(--mgt-primary-foreground));border:none;border-radius:var(--mgt-radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--mgt-font-sans);">' +
+            '<i data-lucide="message-circle" style="width:16px;height:16px;"></i>Message' +
+          '</button>' +
+          '<button type="button" data-action="appeler" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:transparent;color:rgb(var(--mgt-primary));border:1px solid rgb(var(--mgt-primary));border-radius:var(--mgt-radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--mgt-font-sans);">' +
+            '<i data-lucide="phone" style="width:16px;height:16px;"></i>Appeler' +
+          '</button>' +
+        '</div>' +
         '<a href="./' + href + '" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;font-size:12px;font-weight:600;color:rgb(var(--mgt-primary));">' +
           '<span>' + cta + '</span><span style="color:rgb(var(--mgt-muted-foreground));">&#9733; ' + escHtml(rating) + '</span>' +
         '</a>' +
@@ -935,12 +942,23 @@ html.dark {
   // attachement par bouton après chaque re-rendu.
   document.addEventListener('click', function (e) {
     var t = e.target;
-    var btn = (t && t.closest) ? t.closest('[data-action="contact"]') : null;
+    var btn = (t && t.closest) ? t.closest('[data-action="message"], [data-action="appeler"]') : null;
     if (!btn) return;
     e.preventDefault();
+    var action = btn.getAttribute('data-action');
     var card = btn.closest('.favorites-card');
     var vid = card ? card.getAttribute('data-vendor-id') : '';
-    location.href = './chat.html' + (vid ? '?vendorId=' + encodeURIComponent(vid) : '');
+    var name = card ? card.getAttribute('data-vendor-name') : '';
+    var peer = { vendorId: vid, name: name || 'Professionnel' };
+    if (action === 'appeler') {
+      if (window.MangooConnect && typeof window.MangooConnect.call === 'function') {
+        window.MangooConnect.call(peer, { mode: 'audio' });
+      }
+    } else if (window.MangooConnect && typeof window.MangooConnect.chat === 'function') {
+      window.MangooConnect.chat(peer);
+    } else {
+      location.href = './chat.html' + (vid ? '?vendorId=' + encodeURIComponent(vid) : '');
+    }
   });
 
   syncStoreKpis();
