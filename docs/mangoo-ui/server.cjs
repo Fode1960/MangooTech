@@ -906,8 +906,12 @@ function pushLandingUrl(opts) {
   const qs = q.length ? ('?' + q.join('&')) : '';
   if (isClient) return '/pages/chat.html' + qs;
   // Le compte Support (rôle « prestataire » dédié) atterrit sur sa console pour
-  // les appels et sur sa messagerie dédiée pour les messages.
-  if (isSupportAccount(u)) return kind === 'call' ? '/pages/dashboard-support-console.html' + qs : '/pages/dashboard-support-messages.html' + qs;
+  // les appels et sur sa messagerie dédiée pour les messages. On reconnaît aussi
+  // le routingId Support directement : ainsi, même si la résolution utilisateur
+  // échoue (compte pas encore chargé, alias), le clic ne retombe JAMAIS sur la
+  // page d'accueil.
+  const isSupportRoute = /^(support-mangoo|pro-support-mangoo|support)$/i.test(canonicalRoutingId(routingId));
+  if (isSupportAccount(u) || (isSupportRoute && !u)) return kind === 'call' ? '/pages/dashboard-support-console.html' + qs : '/pages/dashboard-support-messages.html' + qs;
   if (role === 'vendeur' || role === 'prestataire' || role === 'livreur') return '/pages/dashboard-messages.html' + qs;
   return '/pages/accueil.html' + qs;
 }

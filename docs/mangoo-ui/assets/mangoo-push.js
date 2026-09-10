@@ -840,7 +840,7 @@
   function maybeRedirectFromLanding() {
     var path = (location.pathname || '').toLowerCase();
     var isEntry = path === '/' || /(^|\/)(index|accueil)\.html$/.test(path);
-    if (!isEntry) { clearAppBadge(); return; }
+    if (!isEntry) { clearAppBadge(); postClearNotifications(); return; }
     if (global.__mgtLandingRedirected) return;
 
     readLastLanding().then(function (landing) {

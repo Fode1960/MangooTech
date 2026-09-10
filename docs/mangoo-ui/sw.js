@@ -21,7 +21,7 @@ self.addEventListener('install', function () {
 // purge des anciens caches (dont « mgt-push-state » qui mémorisait un landing de
 // notification). Cela garantit qu'aucun vieux routage — ex. renvoyer un
 // professionnel vers la page client chat.html — n'est rejoué après coup.
-var SW_VERSION = 'mgt-sw-2026-09-10-1';
+var SW_VERSION = 'mgt-sw-2026-09-10-2';
 
 self.addEventListener('activate', function (event) {
   event.waitUntil(
@@ -216,4 +216,11 @@ self.addEventListener('notificationclick', function (event) {
       return self.clients.openWindow(target).then(function () { return clearLastLanding(); });
     })
   );
+});
+
+// Si l'utilisateur fait glisser / ferme la notification sans cliquer dessus, on
+// purge quand même le badge du logo et les notifications restantes afin qu'aucun
+// point résiduel ne persiste sur l'icône de la PWA.
+self.addEventListener('notificationclose', function (event) {
+  event.waitUntil(clearAppBadge().then(function () { return closeAllNotifications(); }));
 });

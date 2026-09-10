@@ -298,7 +298,15 @@ html.dark {
        vers son espace (via replace, pour ne pas laisser auth.html dans
        l'historique de navigation). */
     (function () {
-      function home(r) {
+      function isSupportUser(u) {
+        return !!(u && (u.vendorId === 'support-mangoo' || u.id === 'pro-support-mangoo' || u.id === 'support-mangoo'));
+      }
+      function home(u) {
+        var r = String((u && u.role) || '').toLowerCase();
+        // Le compte Support est un prestataire « spécial » : il ne doit jamais
+        // être envoyé vers le dashboard prestataire (sidebar + modules), mais
+        // vers sa console de réception dédiée.
+        if (isSupportUser(u)) return 'dashboard-support-console.html';
         if (r === 'admin') return 'admin.html';
         if (r === 'client' || r === 'cliente') return 'client-dashboard.html#menu';
         if (r === 'livreur') return 'livreur.html';
@@ -306,7 +314,19 @@ html.dark {
         return '';
       }
       function go(u) {
-        var t = home(String((u && u.role) || '').toLowerCase());
+        // Rejoue l'atterrissage d'une notification push mémorisé avant la
+        // redirection (appel -> console, message -> messagerie Support), sinon
+        // renvoie le compte Support vers sa console.
+        var landing = null;
+        try { landing = localStorage.getItem('mgt_push_landing_v1'); } catch (e) { landing = null; }
+        if (landing) {
+          try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
+          if (isSupportUser(u) && /^\/pages\/(dashboard-support-console|dashboard-support-messages)\.html(\?.*)?$/.test(landing) && landing.indexOf('//') < 0) {
+            window.location.replace(landing);
+            return;
+          }
+        }
+        var t = home(u);
         if (!t) return;
         var base = window.location.pathname.replace(/[^/]*$/, '');
         window.location.replace(base + t);
@@ -959,7 +979,7 @@ html.dark {
           }
         }
         var target;
-        if (user && user.vendorId === 'support-mangoo') target = 'dashboard-support-console.html';
+        if (user && (user.vendorId === 'support-mangoo' || user.id === 'pro-support-mangoo' || user.id === 'support-mangoo')) target = 'dashboard-support-console.html';
         else if (role === 'admin') target = 'admin.html';
         else if (role === 'client' || role === 'cliente') target = 'client-dashboard.html';
         else if (role === 'livreur') target = 'livreur.html';
@@ -968,7 +988,7 @@ html.dark {
         // prestataire/vendeur (marqueur #menu relu par mangoo-dashboard-shell.js)
         // afin d'arriver sur le tableau de bord AVEC sa sidebar verticale, et non
         // sur la seule « Vue d'ensemble » sans menu.
-        if ((role === 'prestataire' || role === 'vendeur') && !(user && user.vendorId === 'support-mangoo')) target += '#menu';
+        if ((role === 'prestataire' || role === 'vendeur') && !(user && (user.vendorId === 'support-mangoo' || user.id === 'pro-support-mangoo' || user.id === 'support-mangoo'))) target += '#menu';
         if (role === 'client' || role === 'cliente') target += '#menu';
         window.location.replace(base + target);
       }
