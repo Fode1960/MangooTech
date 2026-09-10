@@ -4199,6 +4199,7 @@ function handleCallOffer(ws, msg) {
   const callerCountry = callerGeo.country;
   const callerCountryCode = callerGeo.countryCode;
   const callerLabel = callerCountry ? (callerName + ' (' + callerCountry + ')') : callerName;
+  console.log('[Call] pays effectif', { callId: callId, to: cto, fromIp: (ws.meta && ws.meta.ip) || '', country: callerCountry || '—', countryCode: callerCountryCode || '—' });
 
   // Sonnerie de groupe (support) : tous les agents connectés sonnent en même
   // temps. Le premier qui décroche prend l'appel.
@@ -8754,6 +8755,7 @@ function resolveIpCountry(ip) {
             const country = String(data.country || '').trim();
             const countryCode = String(data.country_code || '').trim().toUpperCase();
             cacheIpCountry(key, country, countryCode);
+            console.log('[IP] pays résolu', { ip: key, country: country, countryCode: countryCode });
             return done({ country: country, countryCode: countryCode });
           }
         } catch (e) { /* ignore */ }
