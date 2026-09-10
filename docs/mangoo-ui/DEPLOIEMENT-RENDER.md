@@ -40,7 +40,7 @@ Le serveur écoute sur `0.0.0.0`. Il ne démarre le HTTPS interne (`8443`) que s
 | `ADMIN_PASSWORD_RESET` | *(vide)* | Rotation d'urgence du mot de passe (usage unique) |
 | `ADMIN_PIN_RESET` | *(vide)* | Rotation d'urgence du PIN (usage unique) |
 | `SUPPORT_EMAIL` | `support@mangoo.tech` | Email du compte « Support MangooTech » (équipe interne, appel in-app) |
-| `SUPPORT_PIN` | *(vide)* | PIN 4 chiffres du compte support. **Requis pour se connecter** (l'email seul ne suffit plus). À définir sur Render comme `ADMIN_PIN` |
+| `SUPPORT_PIN` | *(vide)* | PIN 4 chiffres du compte support. La connexion se fait par **email** (`SUPPORT_EMAIL`) **ou** ce PIN. À définir sur Render comme `ADMIN_PIN` |
 | `FORCE_HTTPS_ADMIN` | `true` | Forçage HTTPS espace admin (peut rester `true`, `X-Forwarded-Proto` est reconnu) |
 | `BACKUP_ENABLED` | `false` | Mettre `true` en production |
 | `BACKUP_DIR` | `<DATA_DIR>/backups` | Dossier des archives (par défaut sur le Persistent Disk) |
