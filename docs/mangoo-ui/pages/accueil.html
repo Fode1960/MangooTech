@@ -50,7 +50,7 @@
           else if (_r === 'client' || _r === 'cliente') _target = '/pages/client-dashboard.html';
           else if (_r === 'admin') _target = '/pages/admin.html';
           if (_target && _standalone) {
-            var _isSupport = !!(_u && _u.vendorId === 'support-mangoo');
+            var _isSupport = !!(_u && (_u.vendorId === 'support-mangoo' || _u.id === 'pro-support-mangoo' || _u.id === 'support-mangoo'));
             function _destFromLanding(landing) {
               if (!landing || !landing.url) return '';
               if (landing.ts && (Date.now() - Number(landing.ts)) > 240000) return '';
@@ -59,6 +59,7 @@
               if (_tp === '/' || /(^|\/)(index|accueil)\.html$/.test(_tp)) return '';
               var _ok = false;
               if (/dashboard-support-console\.html/.test(_tp)) _ok = _isSupport;
+              else if (/dashboard-support-messages\.html/.test(_tp)) _ok = _isSupport;
               else if (/chat\.html/.test(_tp)) _ok = (_r === 'client' || _r === 'cliente');
               else if (/dashboard-messages\.html/.test(_tp)) _ok = (_r === 'vendeur' || _r === 'prestataire' || _r === 'livreur');
               else if (/dashboard-overview\.html/.test(_tp)) _ok = (_r === 'vendeur' || _r === 'prestataire');

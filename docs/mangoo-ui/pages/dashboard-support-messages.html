@@ -462,7 +462,16 @@ button{font-family:inherit}
           }
         } catch (e) {}
       }
-      if (!isSupport(user)) { window.location.replace('./auth.html'); return; }
+      if (!isSupport(user)) {
+        try {
+          var _lp = new URLSearchParams(location.search);
+          if (_lp.get('from') || _lp.get('fromName') || _lp.get('kind')) {
+            localStorage.setItem('mgt_push_landing_v1', location.pathname + location.search);
+          }
+        } catch (e) {}
+        window.location.replace('./auth.html');
+        return;
+      }
 
       if (RT) {
         if (typeof RT.disableAutoOpenChat === 'function') RT.disableAutoOpenChat();
