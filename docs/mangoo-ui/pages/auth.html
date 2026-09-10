@@ -959,7 +959,8 @@ html.dark {
           }
         }
         var target;
-        if (role === 'admin') target = 'admin.html';
+        if (user && user.vendorId === 'support-mangoo') target = 'dashboard-support-console.html';
+        else if (role === 'admin') target = 'admin.html';
         else if (role === 'client' || role === 'cliente') target = 'client-dashboard.html';
         else if (role === 'livreur') target = 'livreur.html';
         else target = 'dashboard-overview.html';
@@ -967,7 +968,7 @@ html.dark {
         // prestataire/vendeur (marqueur #menu relu par mangoo-dashboard-shell.js)
         // afin d'arriver sur le tableau de bord AVEC sa sidebar verticale, et non
         // sur la seule « Vue d'ensemble » sans menu.
-        if (role === 'prestataire' || role === 'vendeur') target += '#menu';
+        if ((role === 'prestataire' || role === 'vendeur') && !(user && user.vendorId === 'support-mangoo')) target += '#menu';
         if (role === 'client' || role === 'cliente') target += '#menu';
         window.location.replace(base + target);
       }

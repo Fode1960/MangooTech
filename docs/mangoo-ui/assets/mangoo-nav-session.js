@@ -43,6 +43,10 @@
     var r = role();
     return r === 'prestataire' || r === 'vendeur' || r === 'livreur';
   }
+  function isSupport() {
+    var u = readJSON('mgt_user');
+    return !!(u && (u.vendorId === 'support-mangoo' || u.id === 'pro-support-mangoo' || u.id === 'support-mangoo'));
+  }
 
   function apply() {
     var btns = document.querySelectorAll('[data-nav-auth]');
@@ -51,6 +55,8 @@
       var href, label;
       if (isClient()) {
         href = './client-dashboard.html'; label = 'Mon espace';
+      } else if (isSupport()) {
+        href = './dashboard-support-console.html'; label = 'Console support';
       } else if (isPro()) {
         if (role() === 'livreur') { href = './livreur.html'; label = 'Mon espace livreur'; }
         else { href = './dashboard-overview.html'; label = 'Mon dashboard'; }
@@ -74,6 +80,7 @@
       var bk = backs[k];
       bk.style.display = showBack ? '' : 'none';
       if (showBack && isClient()) bk.setAttribute('href', './client-dashboard.html');
+      else if (showBack && isSupport()) bk.setAttribute('href', './dashboard-support-console.html');
       else if (showBack && role() === 'livreur') bk.setAttribute('href', './livreur.html');
       else if (showBack) bk.setAttribute('href', './dashboard-overview.html' + (demoRole() ? '?demo=' + demoRole() : ''));
     }

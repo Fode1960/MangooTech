@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Console Support — MangooTech</title>
+<style>
+:root{
+  --mgt-primary:26 92 42;
+  --mgt-primary-50:232 245 233;
+  --mgt-primary-100:200 230 201;
+  --mgt-primary-600:56 142 60;
+  --mgt-primary-700:38 112 42;
+  --mgt-primary-foreground:255 255 255;
+  --mgt-accent:232 97 12;
+  --mgt-accent-50:255 243 224;
+  --mgt-accent-foreground:255 255 255;
+  --mgt-background:255 255 255;
+  --mgt-foreground:15 23 42;
+  --mgt-card:255 255 255;
+  --mgt-muted:248 250 252;
+  --mgt-muted-foreground:100 116 139;
+  --mgt-border:226 232 240;
+  --mgt-success:129 199 134;
+  --mgt-warning:255 183 77;
+  --mgt-error:239 68 68;
+  --mgt-info:59 130 246;
+  --mgt-radius-md:8px;
+  --mgt-radius-lg:16px;
+  --mgt-radius-full:9999px;
+  --mgt-font-sans:'Inter','Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+  --mgt-shadow-sm:0 1px 2px rgba(15 23 42 / .05),0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md:0 8px 24px -8px rgba(15 23 42 / .18);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--mgt-font-sans);background:rgb(var(--mgt-muted));color:rgb(var(--mgt-foreground));min-height:100vh;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+.topbar{position:sticky;top:0;z-index:40;background:rgb(var(--mgt-primary));color:rgb(var(--mgt-primary-foreground))}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{width:34px;height:34px;border-radius:9px;background:rgb(var(--mgt-accent));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:rgb(var(--mgt-accent-foreground))}
+.brand-title{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.brand-sub{font-size:12px;color:rgb(var(--mgt-primary-100));font-weight:400}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(255,255,255,.12);color:#fff}
+.pill .dot{width:8px;height:8px;border-radius:50%;background:rgb(var(--mgt-warning));transition:background .3s}
+.logout-link{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:var(--mgt-radius-md);font-size:13px;font-weight:600;color:rgb(var(--mgt-primary-50));background:rgba(255,255,255,.10);transition:background .15s}
+.logout-link:hover{background:rgba(255,255,255,.18)}
+.hero{margin-top:26px}
+.hero-card{background:linear-gradient(135deg,rgb(var(--mgt-primary)) 0%,rgb(var(--mgt-primary-700)) 100%);color:#fff;border-radius:20px;padding:30px 26px;position:relative;overflow:hidden;box-shadow:var(--mgt-shadow-md)}
+.hero-card::after{content:'';position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08)}
+.hero-eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:rgb(var(--mgt-primary-100));font-weight:600;margin:0 0 10px}
+.hero-title{font-size:26px;font-weight:700;letter-spacing:-.02em;margin:0 0 8px;line-height:1.15}
+.hero-desc{font-size:15px;color:rgb(var(--mgt-primary-100));margin:0;line-height:1.5;max-width:520px}
+.hero-status{display:flex;align-items:center;gap:10px;margin-top:20px;font-size:14px;font-weight:600}
+.hero-status .dot{width:12px;height:12px;border-radius:50%;background:rgb(var(--mgt-warning));box-shadow:0 0 0 0 rgba(129,199,134,.6);transition:background .3s}
+.hero-status .dot.on{background:rgb(var(--mgt-success));animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(129,199,134,.55)}70%{box-shadow:0 0 0 10px rgba(129,199,134,0)}100%{box-shadow:0 0 0 0 rgba(129,199,134,0)}}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+.card{background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:var(--mgt-radius-lg);padding:22px;box-shadow:var(--mgt-shadow-sm)}
+.card-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.card h2{font-size:17px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
+.card p{font-size:14px;color:rgb(var(--mgt-muted-foreground));margin:0 0 16px;line-height:1.55}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:var(--mgt-radius-md);font-size:14px;font-weight:600;font-family:inherit;border:none;cursor:pointer;transition:transform .12s,opacity .15s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:rgb(var(--mgt-primary));color:rgb(var(--mgt-primary-foreground))}
+.btn-accent{background:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground))}
+.btn[disabled]{opacity:.55;cursor:default}
+.ring-badge{display:none;align-items:center;gap:8px;margin-top:14px;padding:10px 12px;border-radius:10px;background:rgb(var(--mgt-accent-50));color:rgb(var(--mgt-accent));font-size:13px;font-weight:600}
+.ring-badge .dot{width:9px;height:9px;border-radius:50%;background:rgb(var(--mgt-accent));animation:pulse 1.4s infinite}
+.notice{margin-top:16px;background:rgb(var(--mgt-info)/.08);border:1px solid rgb(var(--mgt-info)/.25);border-radius:var(--mgt-radius-lg);padding:18px 20px}
+.notice h3{font-size:15px;font-weight:600;margin:0 0 8px}
+.notice p{font-size:13.5px;color:rgb(var(--mgt-muted-foreground));margin:0;line-height:1.55}
+.footer-note{text-align:center;font-size:12.5px;color:rgb(var(--mgt-muted-foreground));padding:28px 0 34px}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <div class="brand-logo">M</div>
+        <div>
+          <div class="brand-title">Support MangooTech</div>
+          <div class="brand-sub">Console de réception des appels &amp; messages</div>
+        </div>
+      </div>
+      <div class="pill"><span class="dot" id="status-dot"></span><span id="status-text">Connexion…</span></div>
+      <a href="./auth.html" class="logout-link" aria-label="Déconnexion">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-card">
+        <p class="hero-eyebrow">Espace de travail</p>
+        <h1 class="hero-title">Prêt à recevoir les demandes</h1>
+        <p class="hero-desc">Restez sur cette page (ou sur la Messagerie) avec les notifications activées : les appels et messages des clients arrivent ici en temps réel.</p>
+        <div class="hero-status"><span class="dot" id="hero-dot"></span><span id="hero-status-text">Connexion…</span></div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <div class="card-icon" style="background:rgb(var(--mgt-accent-50))">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgb(var(--mgt-accent))" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <h2>Appels entrants</h2>
+        <p>Quand un client clique sur « Contacter le support », une sonnerie plein écran s'affiche automatiquement ici. Répondez ou déclinez en un geste.</p>
+        <div class="ring-badge" id="ring-badge"><span class="dot"></span><span id="caller-name">Appel entrant…</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-icon" style="background:rgb(var(--mgt-primary-50))">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgb(var(--mgt-primary))" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h2>Messages</h2>
+        <p>Les conversations avec les clients se traitent dans la Messagerie dédiée. Ouvrez-la pour lire et répondre en temps réel.</p>
+        <a class="btn btn-primary" href="./dashboard-messages.html">
+          Ouvrir la messagerie
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <section class="notice">
+      <h3>Activer les notifications</h3>
+      <p>Pour recevoir un appel ou un message même quand l'application est fermée ou en arrière-plan, activez les notifications sur cet appareil. Chaque membre de l'équipe connecté avec <strong>support@mangoo.tech</strong> sonne en même temps ; le premier qui décroche prend l'appel.</p>
+      <button type="button" class="btn btn-accent" id="btn-notif" style="margin-top:14px">Activer les notifications</button>
+    </section>
+
+    <p class="footer-note">MangooTech — 3 rue de Cambrai, 75019 Paris, France · contact@mangoo.tech</p>
+  </main>
+
+  <script src="../assets/mangoo-connect-plus.js"></script>
+  <script src="../assets/mangoo-push.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var TOKEN_KEY = 'mgt_token', USER_KEY = 'mgt_user';
+    var SUPPORT_ID = 'support-mangoo', SUPPORT_ACCOUNT_ID = 'pro-support-mangoo';
+
+    function isSupport(u) {
+      return !!(u && (u.vendorId === SUPPORT_ID || u.id === SUPPORT_ACCOUNT_ID || u.id === SUPPORT_ID));
+    }
+
+    var user = null;
+    try { user = JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch (e) { user = null; }
+
+    function setStatus(online) {
+      var heroDot = document.getElementById('hero-dot');
+      var heroTxt = document.getElementById('hero-status-text');
+      var pillDot = document.getElementById('status-dot');
+      var pillTxt = document.getElementById('status-text');
+      var connecting = online === 'connecting' || online === 'reconnecting';
+      var isOn = online === 'online';
+      var label = isOn ? 'En ligne — prêt à recevoir les appels' : (connecting ? 'Connexion…' : 'Hors ligne');
+      [heroDot, pillDot].forEach(function (d) {
+        if (!d) return;
+        d.classList.toggle('on', isOn);
+        d.style.background = isOn ? 'rgb(var(--mgt-success))' : (connecting ? 'rgb(var(--mgt-warning))' : 'rgb(var(--mgt-muted-foreground))');
+      });
+      if (heroTxt) heroTxt.textContent = label;
+      if (pillTxt) pillTxt.textContent = isOn ? 'En ligne' : (connecting ? 'Connexion…' : 'Hors ligne');
+    }
+
+    function boot() {
+      if (!isSupport(user)) {
+        try {
+          var x = new XMLHttpRequest();
+          x.open('GET', '/api/auth/session', false);
+          x.setRequestHeader('Accept', 'application/json');
+          x.send(null);
+          if (x.status >= 200 && x.status < 300) {
+            var d = JSON.parse(x.responseText);
+            if (d && d.ok && d.user && isSupport(d.user)) {
+              user = d.user;
+              if (d.token) localStorage.setItem(TOKEN_KEY, d.token);
+              localStorage.setItem(USER_KEY, JSON.stringify(d.user));
+            }
+          }
+        } catch (e) {}
+      }
+      if (!isSupport(user)) { window.location.replace('./auth.html'); return; }
+
+      if (window.MangooConnect) {
+        window.MangooConnect.register('vendor', SUPPORT_ID, 'Support MangooTech');
+        window.MangooConnect.onStatus(setStatus);
+        window.MangooConnect.onIncomingCall(function (c) {
+          var badge = document.getElementById('ring-badge');
+          var name = document.getElementById('caller-name');
+          if (badge) badge.style.display = 'flex';
+          if (name) name.textContent = (c && c.fromName) ? ('Appel entrant : ' + c.fromName) : 'Appel entrant…';
+        });
+        window.MangooConnect.onCallEnded(function () {
+          var badge = document.getElementById('ring-badge');
+          if (badge) badge.style.display = 'none';
+        });
+        setStatus(window.MangooConnect.status());
+      } else {
+        setStatus('offline');
+      }
+    }
+
+    function setupNotifications() {
+      var btn = document.getElementById('btn-notif');
+      if (!btn) return;
+      if (!window.MangooPush) { btn.style.display = 'none'; return; }
+      function render() {
+        var granted = false;
+        try { granted = window.MangooPush.isGranted && window.MangooPush.isGranted(); } catch (e) {}
+        if (granted) {
+          btn.textContent = 'Notifications activées';
+          btn.disabled = true;
+        } else {
+          btn.textContent = 'Activer les notifications';
+          btn.disabled = false;
+        }
+      }
+      btn.addEventListener('click', function () {
+        try { window.MangooPush.enable().then(render); } catch (e) {}
+      });
+      render();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { boot(); setupNotifications(); });
+    } else {
+      boot(); setupNotifications();
+    }
+  })();
+  </script>
+</body>
+</html>
