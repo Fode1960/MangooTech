@@ -811,6 +811,7 @@ function sendPushOne(sub, payload) {
     icon: payload.icon || '/assets/favicon.png',
     data: payload.data || {}
   };
+  if (payload.requireInteraction) p.requireInteraction = true;
   webpush.sendNotification(
     { endpoint: sub.endpoint, keys: sub.keys },
     JSON.stringify(p),
@@ -4126,7 +4127,9 @@ function handleRegister(ws, msg) {
   if (!id) { send(ws, { type: 'register-error', reason: 'id manquant' }); return; }
   const role = String(msg.role || 'client').trim();
   const name = String(msg.name || id || 'Inconnu').trim();
-  ws.meta = { id, role, name, page: String(msg.page || '').trim(), visible: msg.visible !== false };
+  const prev = ws.meta || {};
+  ws.meta = { id, role, name, page: String(msg.page || '').trim(), visible: msg.visible !== false, ip: prev.ip || '', country: prev.country || '', countryCode: prev.countryCode || '' };
+  if (!ws.meta.country && ws.meta.ip) enrichWsCountry(ws, ws.meta.ip);
   addClient(id, ws, role, name);
   console.log('[WS] register', { id, role, name, time: new Date().toLocaleTimeString() });
   send(ws, { type: 'registered', id, role, name });
@@ -4192,8 +4195,9 @@ function handleCallOffer(ws, msg) {
   const cto = canonicalRoutingId(to);
   const callMode = msg.mode || 'audio';
   const callerName = (ws.meta && ws.meta.name) || 'Quelqu\'un';
-  const callerCountry = String(msg.country || '').trim();
-  const callerCountryCode = String(msg.countryCode || '').trim();
+  const callerGeo = effectiveCallerCountry(ws, msg);
+  const callerCountry = callerGeo.country;
+  const callerCountryCode = callerGeo.countryCode;
   const callerLabel = callerCountry ? (callerName + ' (' + callerCountry + ')') : callerName;
 
   // Sonnerie de groupe (support) : tous les agents connectés sonnent en même
@@ -4207,6 +4211,7 @@ function handleCallOffer(ws, msg) {
         url: pushLandingUrl({ routingId: to, kind: 'call', from: ws.meta.id, fromName: ws.meta.name, callId: callId, mode: callMode, country: callerCountry, countryCode: callerCountryCode }),
         tag: 'call-' + callId,
         ttl: 60,
+        requireInteraction: true,
         data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode, country: callerCountry, countryCode: callerCountryCode }
       });
       recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName);
@@ -4243,6 +4248,7 @@ function handleCallOffer(ws, msg) {
       url: pushLandingUrl({ routingId: to, kind: 'call', from: ws.meta.id, fromName: ws.meta.name, callId: callId, mode: callMode, country: callerCountry, countryCode: callerCountryCode }),
       tag: 'call-' + callId,
       ttl: 60,
+      requireInteraction: true,
       data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode, country: callerCountry, countryCode: callerCountryCode }
     });
     recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName);
@@ -8662,10 +8668,139 @@ setInterval(function () {
   });
 }, HEARTBEAT_INTERVAL_MS);
 
+/* ------------------------------------------------------------------ *
+ *  Géolocalisation du pays par adresse IP (côté serveur)
+ *  ------------------------------------------------------------------ *
+ *  Le fuseau / la locale côté client ne suffisent pas (téléphone en
+ *  itinérance, locale neutre, etc.). On résout le pays à partir de l'IP
+ *  réelle de la connexion, de façon robuste derrière un proxy (Render)
+ *  grâce à x-forwarded-for / x-real-ip, avec cache en mémoire + timeout
+ *  court pour ne jamais bloquer ni l'appel ni le push.
+ * ------------------------------------------------------------------ */
+const IP_COUNTRY_CACHE = new Map();
+const IP_COUNTRY_TTL = 1000 * 60 * 60 * 6; // 6 heures
+const IP_COUNTRY_PENDING = new Map();
+
+function remoteIp(req) {
+  if (!req) return '';
+  try {
+    const fwd = String((req.headers && req.headers['x-forwarded-for']) || '');
+    if (fwd) {
+      const first = fwd.split(',')[0].trim();
+      if (first) return first;
+    }
+    const real = String((req.headers && req.headers['x-real-ip']) || '');
+    if (real && real.trim()) return real.trim();
+    return String((req.socket && req.socket.remoteAddress) || '').replace(/^::ffff:/, '');
+  } catch (e) { return ''; }
+}
+
+function normalizeIp(ip) {
+  return String(ip || '').replace(/^::ffff:/, '').trim();
+}
+
+function isPrivateIp(ip) {
+  const s = String(ip || '');
+  if (!s) return true;
+  if (s === '127.0.0.1' || s === 'localhost' || s === '::1') return true;
+  if (/^10\./.test(s)) return true;
+  if (/^192\.168\./.test(s)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(s)) return true;
+  if (/^169\.254\./.test(s)) return true;
+  if (/^0\./.test(s)) return true;
+  return false;
+}
+
+function countryFromIp(ip) {
+  const key = normalizeIp(ip);
+  if (!key) return null;
+  const hit = IP_COUNTRY_CACHE.get(key);
+  if (hit && hit.expires > Date.now()) return { country: hit.country, countryCode: hit.countryCode };
+  return null;
+}
+
+function cacheIpCountry(ip, country, countryCode) {
+  const key = normalizeIp(ip);
+  if (!key) return;
+  IP_COUNTRY_CACHE.set(key, { country: country || '', countryCode: countryCode || '', expires: Date.now() + IP_COUNTRY_TTL });
+}
+
+// Résolution asynchrone (service public ipwho.is, sans clé API). Ne bloque
+// jamais : timeout court, erreurs silencieuses, IP privée ignorée, déduplication
+// des requêtes en vol.
+function resolveIpCountry(ip) {
+  const key = normalizeIp(ip);
+  if (!key) return Promise.resolve(null);
+  const cached = countryFromIp(key);
+  if (cached) return Promise.resolve(cached);
+  if (isPrivateIp(key)) return Promise.resolve(null);
+  if (IP_COUNTRY_PENDING.has(key)) return IP_COUNTRY_PENDING.get(key);
+  const p = new Promise(function (resolve) {
+    let settled = false;
+    function done(result) {
+      if (settled) return;
+      settled = true;
+      IP_COUNTRY_PENDING.delete(key);
+      resolve(result);
+    }
+    const req = https.get('https://ipwho.is/' + encodeURIComponent(key), { timeout: 1500 }, function (res) {
+      let body = '';
+      res.setEncoding('utf8');
+      res.on('data', function (chunk) { body += chunk; });
+      res.on('end', function () {
+        try {
+          const data = JSON.parse(body);
+          if (data && data.success !== false && data.country) {
+            const country = String(data.country || '').trim();
+            const countryCode = String(data.country_code || '').trim().toUpperCase();
+            cacheIpCountry(key, country, countryCode);
+            return done({ country: country, countryCode: countryCode });
+          }
+        } catch (e) { /* ignore */ }
+        done(null);
+      });
+    });
+    req.on('timeout', function () { req.destroy(); done(null); });
+    req.on('error', function () { done(null); });
+  });
+  IP_COUNTRY_PENDING.set(key, p);
+  return p;
+}
+
+// Enrichit (fire-and-forget) la méta d'une socket avec le pays résolu par IP,
+// sans écraser un pays déjà fourni par le client.
+function enrichWsCountry(ws, ip) {
+  if (!ws || !ws.meta) return;
+  if (ws.meta.country && ws.meta.countryCode) return;
+  resolveIpCountry(ip).then(function (res) {
+    if (!res || !res.country || !ws.meta) return;
+    if (!ws.meta.country) ws.meta.country = res.country;
+    if (!ws.meta.countryCode) ws.meta.countryCode = res.countryCode;
+  });
+}
+
+// Pays effectif d'un appelant : donnée client > méta (IP déjà résolue) > cache IP.
+function effectiveCallerCountry(ws, msg) {
+  let country = String((msg && msg.country) || '').trim();
+  let countryCode = String((msg && msg.countryCode) || '').trim();
+  if (!country && ws && ws.meta) {
+    country = String(ws.meta.country || '').trim();
+    countryCode = String(ws.meta.countryCode || '').trim();
+  }
+  if (!country && ws && ws.meta && ws.meta.ip) {
+    const cached = countryFromIp(ws.meta.ip);
+    if (cached) { country = cached.country; countryCode = cached.countryCode; }
+  }
+  return { country: country, countryCode: countryCode };
+}
+
 function handleRealtimeConnection(ws, req, label) {
-  ws.meta = { id: null, role: null, name: null };
+  const ip = remoteIp(req);
+  ws.meta = { id: null, role: null, name: null, ip: ip, country: '', countryCode: '' };
   attachHeartbeat(ws);
-  console.log('[WS] connexion (' + label + ')', { ip: (req && req.socket && req.socket.remoteAddress) || '?', time: new Date().toLocaleTimeString() });
+  enrichWsCountry(ws, ip);
+  console.log('[WS] connexion (' + label + ')', { ip: ip || '?', time: new Date().toLocaleTimeString() });
+
   ws.on('message', (data, isBinary) => {
     if (isBinary) { handleFileChunk(ws, data); return; }
     let msg;
