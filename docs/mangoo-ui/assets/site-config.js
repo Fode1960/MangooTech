@@ -6,7 +6,7 @@
 window.MANGOO_CONFIG = {
   contact: {
     address: "3 rue de Cambrai, 75019 Paris (France)",
-    email: "mangootech75@gmail.com",
+    email: "contact@mangoo.tech",
     phoneDisplay: "+33 9 62 01 40 80",
     phoneHref: "+33962014080",
     hours: "Lun-Ven 8h-18h"
