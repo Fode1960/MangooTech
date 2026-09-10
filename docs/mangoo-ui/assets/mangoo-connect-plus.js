@@ -208,6 +208,41 @@
     simTimers: []
   };
 
+  // Rétablissement automatique du flux média (ICE restart) : si le relais
+  // TURN ou la connexion peer-to-peer se coupe (ex. après 1 à 2 min sur un
+  // réseau mobile / derrière un NAT), on renégocie une nouvelle paire de
+  // candidats au lieu de laisser l'appel mourir silencieusement.
+  var restarting = false;
+  var iceWatchdog = null;
+  function clearIceWatchdog() {
+    if (iceWatchdog) { clearTimeout(iceWatchdog); iceWatchdog = null; }
+  }
+  function scheduleIceRestart() {
+    if (iceWatchdog || !callState.open || !callState.connected) return;
+    iceWatchdog = setTimeout(function () {
+      iceWatchdog = null;
+      var pc = callState.pc;
+      if (!pc || !callState.open || !callState.connected || !callState.callId) return;
+      var st = pc.iceConnectionState;
+      if (st === 'connected' || st === 'completed') return; // s'est rétabli tout seul
+      tryIceRestart();
+    }, 3000);
+  }
+  function tryIceRestart() {
+    if (restarting) return;
+    var pc = callState.pc;
+    if (!pc || !callState.open || !callState.connected || !callState.callId) return;
+    restarting = true;
+    setCallState('Rétablissement…');
+    pc.createOffer({ iceRestart: true })
+      .then(function (offer) { return pc.setLocalDescription(offer); })
+      .then(function () {
+        sendWS({ type: 'call-renegotiate', callId: callState.callId, sdp: pc.localDescription });
+        setTimeout(function () { restarting = false; }, 3000);
+      })
+      .catch(function () { restarting = false; });
+  }
+
   function clearSimTimers() {
     callState.simTimers.forEach(function (t) { try { clearTimeout(t); } catch (e) {} });
     callState.simTimers = [];
@@ -272,6 +307,8 @@
     callState.incomingSdp = null;
     callState.iceQueue = [];
     callState.hasVideo = false;
+    clearIceWatchdog();
+    restarting = false;
   }
 
   function endCall(notify) {
@@ -478,6 +515,8 @@
       case 'call-ended': onCallEndedFromPeer(msg); break;
       case 'call-error': onCallError(msg); break;
       case 'ice-candidate': onIce(msg); break;
+      case 'call-renegotiate': onCallRenegotiate(msg); break;
+      case 'call-renegotiate-answer': onCallRenegotiateAnswer(msg); break;
       case 'chat-new': onChatNew(msg); break;
       case 'chat-edited': emit(messageEditedCbs, msg); break;
       case 'chat-deleted': emit(messageDeletedCbs, msg); break;
@@ -626,6 +665,12 @@
       if ((pc.connectionState === 'failed' || pc.connectionState === 'disconnected') && callState.open && callState.connected) {
         setCallState('Connexion perdue');
       }
+    };
+    pc.oniceconnectionstatechange = function () {
+      var st = pc.iceConnectionState;
+      if (st === 'connected' || st === 'completed') { clearIceWatchdog(); return; }
+      if (st === 'failed') { clearIceWatchdog(); tryIceRestart(); return; }
+      if (st === 'disconnected') { scheduleIceRestart(); }
     };
     return pc;
   }
@@ -777,6 +822,24 @@
     } else {
       callState.iceQueue.push(msg.candidate);
     }
+  }
+
+  function onCallRenegotiate(msg) {
+    var pc = callState.pc;
+    if (!pc || callState.callId !== msg.callId || !msg.sdp) return;
+    var RTCSessionDesc = global.RTCSessionDescription || global.webkitRTCSessionDescription;
+    pc.setRemoteDescription(new RTCSessionDesc(msg.sdp))
+      .then(function () { return pc.createAnswer(); })
+      .then(function (answer) { return pc.setLocalDescription(answer); })
+      .then(function () { sendWS({ type: 'call-renegotiate-answer', callId: msg.callId, sdp: pc.localDescription }); })
+      .catch(function () {});
+  }
+
+  function onCallRenegotiateAnswer(msg) {
+    var pc = callState.pc;
+    if (!pc || callState.callId !== msg.callId || !msg.sdp) return;
+    var RTCSessionDesc = global.RTCSessionDescription || global.webkitRTCSessionDescription;
+    pc.setRemoteDescription(new RTCSessionDesc(msg.sdp)).catch(function () {});
   }
 
   /* ------------------------------------------------------------------ *

@@ -4075,6 +4075,8 @@ function handleMessage(ws, msg) {
     case 'call-reject': handleCallReject(ws, msg); break;
     case 'call-end': handleCallEnd(ws, msg); break;
     case 'ice-candidate': handleIce(ws, msg); break;
+    case 'call-renegotiate': handleCallRenegotiate(ws, msg); break;
+    case 'call-renegotiate-answer': handleCallRenegotiateAnswer(ws, msg); break;
     case 'chat-message': handleChatMessage(ws, msg); break;
     case 'chat-audio': handleChatAudio(ws, msg); break;
     case 'chat-video': handleChatVideo(ws, msg); break;
@@ -4341,6 +4343,27 @@ function handleIce(ws, msg) {
   }
   const other = (c.callerWs === ws) ? c.calleeWs : c.callerWs;
   send(other, { type: 'ice-candidate', callId: msg.callId, candidate: msg.candidate });
+}
+
+// Renégociation du flux média (ICE restart) : l'un des pairs émet une nouvelle
+// offre `iceRestart`, l'autre répond. Routage symétrique entre l'appelant et le
+// répondant (sonnerie de groupe comprise).
+function callOpposite(c, ws) {
+  if (!c) return null;
+  if (c.group) return (c.callerWs === ws) ? c.answeredWs : c.callerWs;
+  return (c.callerWs === ws) ? c.calleeWs : c.callerWs;
+}
+function handleCallRenegotiate(ws, msg) {
+  const c = calls.get(msg.callId);
+  if (!c) return;
+  const other = callOpposite(c, ws);
+  if (other && other.readyState === 1) send(other, { type: 'call-renegotiate', callId: msg.callId, sdp: msg.sdp });
+}
+function handleCallRenegotiateAnswer(ws, msg) {
+  const c = calls.get(msg.callId);
+  if (!c) return;
+  const other = callOpposite(c, ws);
+  if (other && other.readyState === 1) send(other, { type: 'call-renegotiate-answer', callId: msg.callId, sdp: msg.sdp });
 }
 
 /* --- Chat --- */
