@@ -4209,7 +4209,8 @@ function handleCallOffer(ws, msg) {
       group: true,
       candidates: candidates,
       answeredWs: null,
-      mode: callMode
+      mode: callMode,
+      iceBuffer: []
     });
     recordCall(callId, ws.meta.id, cto, callMode, 'ringing', callerName);
     candidates.forEach(function (cand) {
@@ -4257,6 +4258,13 @@ function handleCallAnswer(ws, msg) {
     if (c.answeredWs) return; // un autre agent a déjà décroché
     c.answeredWs = ws;
     updateCall(msg.callId, { status: 'answered' });
+    // Relayer au répondant les candidats ICE de l'appelant reçus pendant la
+    // sonnerie (sinon perdus : aucun agent n'était encore désigné à ce moment).
+    (c.iceBuffer || []).forEach(function (m) {
+      if (m.from === 'caller') send(ws, { type: 'ice-candidate', callId: msg.callId, candidate: m.candidate });
+      else if (m.from === 'answerer') send(c.callerWs, { type: 'ice-candidate', callId: msg.callId, candidate: m.candidate });
+    });
+    c.iceBuffer = [];
     send(c.callerWs, { type: 'call-accepted', callId: msg.callId, sdp: msg.sdp, name: ws.meta.name });
     // Les autres agents cessent de sonner immédiatement.
     c.candidates.forEach(function (cand) {
@@ -4312,9 +4320,22 @@ function handleIce(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
   if (c.group) {
-    // ICE ne circule qu'entre l'appelant et l'agent qui a décroché.
-    const other = (c.callerWs === ws) ? c.answeredWs : (c.answeredWs === ws ? c.callerWs : null);
-    if (other) send(other, { type: 'ice-candidate', callId: msg.callId, candidate: msg.candidate });
+    // ICE ne circule qu'entre l'appelant et l'agent qui a décroché. Les
+    // candidats émis avant le décrochage sont mis en tampon (et non jetés) :
+    // l'appelant peut envoyer ses candidats pendant la sonnerie, l'agent
+    // répondant les siens avant que `answeredWs` soit enregistré.
+    if (c.callerWs === ws) {
+      if (c.answeredWs) {
+        send(c.answeredWs, { type: 'ice-candidate', callId: msg.callId, candidate: msg.candidate });
+      } else {
+        (c.iceBuffer = c.iceBuffer || []).push({ from: 'caller', candidate: msg.candidate });
+      }
+    } else if (c.answeredWs === ws) {
+      send(c.callerWs, { type: 'ice-candidate', callId: msg.callId, candidate: msg.candidate });
+    } else {
+      // Agent encore en train de sonner (non encore désigné) : candidat tamponné.
+      (c.iceBuffer = c.iceBuffer || []).push({ from: 'answerer', candidate: msg.candidate });
+    }
     return;
   }
   const other = (c.callerWs === ws) ? c.calleeWs : c.callerWs;
