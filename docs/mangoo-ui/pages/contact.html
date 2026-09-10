@@ -368,8 +368,13 @@ html.dark {
                 </div>
               </div>
               <div class="mt-8 space-y-3" style="border-top: 1px solid rgb(var(--mgt-border)); padding-top: 24px;">
+                <h3 class="h3" style="color: rgb(var(--mgt-foreground));">Contacter le support</h3>
+                <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Deux façons simples de nous joindre : appelez pour une réponse immédiate, ou écrivez-nous en temps réel.</p>
                 <button type="button" id="btn-call-support" class="inline-flex items-center justify-center gap-2 w-full px-6 py-3 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); border: none; cursor: pointer;">
-                  <i data-lucide="headphones" class="h-4 w-4"></i> Contacter le support (appel in-app)
+                  <i data-lucide="headphones" class="h-4 w-4"></i> Appeler le support
+                </button>
+                <button type="button" id="btn-message-support" class="inline-flex items-center justify-center gap-2 w-full px-6 py-3 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); border: none; cursor: pointer;">
+                  <i data-lucide="message-square" class="h-4 w-4"></i> Envoyer un message
                 </button>
                 <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Appel audio sécurisé via Mangoo Connect+, gratuit depuis l'étranger (passe par Internet, pas par le réseau téléphonique).</p>
               </div>
@@ -426,13 +431,26 @@ html.dark {
     <script>lucide.createIcons();</script>
     <script>
     (function () {
-      var btn = document.getElementById('btn-call-support');
-      if (!btn) return;
-      btn.addEventListener('click', function () {
-        if (window.MangooConnect && typeof window.MangooConnect.callSupport === 'function') {
-          window.MangooConnect.callSupport();
-        }
-      });
+      var callBtn = document.getElementById('btn-call-support');
+      if (callBtn) {
+        callBtn.addEventListener('click', function () {
+          if (window.MangooConnect && typeof window.MangooConnect.callSupport === 'function') {
+            window.MangooConnect.callSupport();
+          }
+        });
+      }
+      var msgBtn = document.getElementById('btn-message-support');
+      if (msgBtn) {
+        msgBtn.addEventListener('click', function () {
+          var mc = window.MangooConnect;
+          if (mc && typeof mc.chat === 'function') {
+            mc.chat({ vendorId: 'support-mangoo', id: 'support-mangoo', name: 'Support MangooTech' });
+          } else {
+            var form = document.getElementById('contact-form');
+            if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      }
     })();
     </script>
     <script>
