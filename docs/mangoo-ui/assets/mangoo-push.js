@@ -860,13 +860,16 @@
         clearLastLandingCache();
         return;
       }
-      // Cohérence du rôle : un client va vers chat.html, un pro vers sa messagerie.
+      // Cohérence du rôle : un client va vers chat.html, un pro vers sa messagerie,
+      // le compte Support vers sa console dédiée.
       var u = readUser();
       var role = u ? String(u.role || '').toLowerCase() : '';
       var isPro = (role === 'vendeur' || role === 'prestataire' || role === 'livreur');
       var isClient = (role === 'client' || role === 'cliente');
+      var isSupport = !!(u && (u.vendorId === 'support-mangoo' || u.id === 'pro-support-mangoo' || u.id === 'support-mangoo'));
       if (/chat\.html/.test(tp) && !isClient) { clearLastLandingCache(); return; }
       if (/dashboard-messages\.html/.test(tp) && !isPro) { clearLastLandingCache(); return; }
+      if (/dashboard-support-console\.html/.test(tp) && !isSupport) { clearLastLandingCache(); return; }
 
       global.__mgtLandingRedirected = true;
       clearLastLandingCache();

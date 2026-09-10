@@ -57,9 +57,10 @@ self.addEventListener('message', function (event) {
     self.skipWaiting();
   } else if (data.type === 'CLEAR_NOTIFICATIONS') {
     // Demande émise par mangoo-push.js (ex. après une redirection landing) :
-    // on ferme TOUTES les notifications système encore affichées afin qu'une
-    // seconde notification ne reste pas à l'écran une fois la première consultée.
-    event.waitUntil(closeAllNotifications());
+    // on ferme TOUTES les notifications système encore affichées et on efface le
+    // badge du logo afin qu'une seconde notification ne reste ni à l'écran ni sur
+    // l'icône une fois la première consultée.
+    event.waitUntil(clearAppBadge().then(function () { return closeAllNotifications(); }));
   }
 });
 
@@ -131,6 +132,26 @@ function clearLastLanding() {
   } catch (e) { return Promise.resolve(); }
 }
 
+// Badge sur l'icône de la PWA (App Badging API) : le logo affiche un point de
+// notification tant qu'un événement (appel/message) n'a pas été consulté. C'est
+// ce qui rend la notification visible « sur le logo », même quand la notification
+// système a été fermée ou que le Dashboard est fermé.
+function setAppBadge() {
+  try {
+    if (self.navigator && typeof self.navigator.setAppBadge === 'function') {
+      self.navigator.setAppBadge(1).catch(function () { /* ignore */ });
+    }
+  } catch (e) { /* ignore */ }
+}
+function clearAppBadge() {
+  try {
+    if (self.navigator && typeof self.navigator.clearAppBadge === 'function') {
+      return self.navigator.clearAppBadge().catch(function () { /* ignore */ });
+    }
+  } catch (e) { /* ignore */ }
+  return Promise.resolve();
+}
+
 self.addEventListener('push', function (event) {
   var payload = {};
   try {
@@ -162,6 +183,7 @@ self.addEventListener('push', function (event) {
 
   event.waitUntil(
     self.registration.showNotification(title, options).then(function () {
+      setAppBadge();
       return persistLastLanding(targetUrl);
     })
   );
@@ -182,7 +204,7 @@ self.addEventListener('notificationclick', function (event) {
   // seconde notification ne reste pas à l'écran et ne soit plus perçue comme
   // nouvelle après consultation de la première.
   event.waitUntil(
-    closeAllNotifications().then(function () {
+    clearAppBadge().then(function () { return closeAllNotifications(); }).then(function () {
       return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     }).then(function (clientList) {
       for (var i = 0; i < clientList.length; i++) {

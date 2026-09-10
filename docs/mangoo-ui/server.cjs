@@ -902,6 +902,8 @@ function pushLandingUrl(opts) {
   if (isClient) add('vendorId', opts.from);
   const qs = q.length ? ('?' + q.join('&')) : '';
   if (isClient) return '/pages/chat.html' + qs;
+  // Le compte Support (rôle « prestataire » dédié) atterrit sur sa console dédiée.
+  if (isSupportAccount(u)) return '/pages/dashboard-support-console.html' + qs;
   if (role === 'vendeur' || role === 'prestataire' || role === 'livreur') return '/pages/dashboard-messages.html' + qs;
   return '/pages/accueil.html' + qs;
 }
