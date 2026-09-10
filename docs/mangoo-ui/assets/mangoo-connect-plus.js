@@ -53,6 +53,57 @@
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
+  function detectCountry() {
+    var tzMap = {
+      'Africa/Dakar': 'Sénégal', 'Africa/Abidjan': "Côte d'Ivoire", 'Africa/Douala': 'Cameroun',
+      'Africa/Libreville': 'Gabon', 'Africa/Brazzaville': 'Congo', 'Africa/Kinshasa': 'RD Congo',
+      'Africa/Bamako': 'Mali', 'Africa/Ouagadougou': 'Burkina Faso', 'Africa/Niamey': 'Niger',
+      'Africa/Nouakchott': 'Mauritanie', 'Africa/Conakry': 'Guinée', 'Africa/Lome': 'Togo',
+      'Africa/Porto-Novo': 'Bénin', 'Africa/Bangui': 'Centrafrique', 'Africa/Ndjamena': 'Tchad',
+      'Africa/Algiers': 'Algérie', 'Africa/Cairo': 'Égypte', 'Africa/Tripoli': 'Libye',
+      'Africa/Casablanca': 'Maroc', 'Africa/Tunis': 'Tunisie',
+      'Europe/Paris': 'France', 'Europe/Brussels': 'Belgique', 'Europe/Luxembourg': 'Luxembourg',
+      'Europe/Monaco': 'Monaco', 'Europe/Madrid': 'Espagne', 'Atlantic/Canary': 'Espagne',
+      'America/Montreal': 'Canada', 'America/Guadeloupe': 'Guadeloupe', 'America/Martinique': 'Martinique',
+      'America/Cayenne': 'Guyane', 'Indian/Reunion': 'La Réunion', 'Indian/Mauritius': 'Maurice',
+      'Indian/Comoro': 'Comores', 'Indian/Antananarivo': 'Madagascar'
+    };
+    var regionMap = {
+      'SN': 'Sénégal', 'CI': "Côte d'Ivoire", 'CM': 'Cameroun', 'GA': 'Gabon', 'CG': 'Congo',
+      'CD': 'RD Congo', 'ML': 'Mali', 'BF': 'Burkina Faso', 'NE': 'Niger', 'MR': 'Mauritanie',
+      'GN': 'Guinée', 'TG': 'Togo', 'BJ': 'Bénin', 'CF': 'Centrafrique', 'TD': 'Tchad',
+      'DZ': 'Algérie', 'EG': 'Égypte', 'LY': 'Libye', 'MA': 'Maroc', 'TN': 'Tunisie',
+      'FR': 'France', 'BE': 'Belgique', 'LU': 'Luxembourg', 'MC': 'Monaco', 'ES': 'Espagne',
+      'CA': 'Canada', 'GP': 'Guadeloupe', 'MQ': 'Martinique', 'GF': 'Guyane', 'RE': 'La Réunion',
+      'MU': 'Maurice', 'KM': 'Comores', 'MG': 'Madagascar', 'US': 'États-Unis', 'GB': 'Royaume-Uni',
+      'PT': 'Portugal', 'CH': 'Suisse', 'IT': 'Italie', 'DE': 'Allemagne'
+    };
+    var codeMap = {
+      'Sénégal': 'SN', "Côte d'Ivoire": 'CI', 'Cameroun': 'CM', 'Gabon': 'GA', 'Congo': 'CG',
+      'RD Congo': 'CD', 'Mali': 'ML', 'Burkina Faso': 'BF', 'Niger': 'NE', 'Mauritanie': 'MR',
+      'Guinée': 'GN', 'Togo': 'TG', 'Bénin': 'BJ', 'Centrafrique': 'CF', 'Tchad': 'TD',
+      'Algérie': 'DZ', 'Égypte': 'EG', 'Libye': 'LY', 'Maroc': 'MA', 'Tunisie': 'TN',
+      'France': 'FR', 'Belgique': 'BE', 'Luxembourg': 'LU', 'Monaco': 'MC', 'Espagne': 'ES',
+      'Canada': 'CA', 'Guadeloupe': 'GP', 'Martinique': 'MQ', 'Guyane': 'GF', 'La Réunion': 'RE',
+      'Maurice': 'MU', 'Comores': 'KM', 'Madagascar': 'MG'
+    };
+    var country = '';
+    try {
+      var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz && tzMap[tz]) country = tzMap[tz];
+    } catch (e) { /* ignore */ }
+    if (!country) {
+      try {
+        var tags = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language];
+        for (var i = 0; i < tags.length; i++) {
+          var m = /(?:^|-)([A-Za-z]{2})(?:-|$)/.exec(String(tags[i] || ''));
+          var region = (m && m[1]) ? m[1].toUpperCase() : '';
+          if (regionMap[region]) { country = regionMap[region]; break; }
+        }
+      } catch (e) { /* ignore */ }
+    }
+    return { country: country, countryCode: codeMap[country] || '' };
+  }
 
   /* ------------------------------------------------------------------ *
    *  Style (Jour / Nuit)
@@ -706,7 +757,8 @@
         .then(function () {
           setCallState('Sonnerie…');
           startRingback();
-          sendWS({ type: 'call-offer', callId: callState.callId, to: targetId(target), mode: mode, sdp: pc.localDescription });
+          var geo = detectCountry();
+          sendWS({ type: 'call-offer', callId: callState.callId, to: targetId(target), mode: mode, sdp: pc.localDescription, country: geo.country, countryCode: geo.countryCode });
         })
         .catch(function () { simulateConnect(); });
     }).catch(function () {
@@ -738,6 +790,7 @@
     callState.incomingMode = msg.mode || 'audio';
     emit(incomingCallCbs, {
       callId: msg.callId, from: msg.from, fromName: msg.fromName, mode: msg.mode || 'audio',
+      country: msg.country, countryCode: msg.countryCode,
       accept: function () { acceptIncoming(); },
       reject: function () { rejectIncoming(); }
     });

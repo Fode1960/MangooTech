@@ -895,6 +895,8 @@ function pushLandingUrl(opts) {
   if (kind === 'call') {
     add('callId', opts.callId);
     add('mode', opts.mode || 'audio');
+    add('country', opts.country);
+    add('countryCode', opts.countryCode);
   } else {
     add('convId', opts.convId);
   }
@@ -4190,6 +4192,9 @@ function handleCallOffer(ws, msg) {
   const cto = canonicalRoutingId(to);
   const callMode = msg.mode || 'audio';
   const callerName = (ws.meta && ws.meta.name) || 'Quelqu\'un';
+  const callerCountry = String(msg.country || '').trim();
+  const callerCountryCode = String(msg.countryCode || '').trim();
+  const callerLabel = callerCountry ? (callerName + ' (' + callerCountry + ')') : callerName;
 
   // Sonnerie de groupe (support) : tous les agents connectés sonnent en même
   // temps. Le premier qui décroche prend l'appel.
@@ -4198,11 +4203,11 @@ function handleCallOffer(ws, msg) {
     if (candidates.length === 0) {
       const pushed = sendPush(to, {
         title: 'Appel entrant',
-        body: callerName + ' souhaite vous joindre',
-        url: pushLandingUrl({ routingId: to, kind: 'call', from: ws.meta.id, fromName: ws.meta.name, callId: callId, mode: callMode }),
+        body: callerLabel + ' souhaite vous joindre',
+        url: pushLandingUrl({ routingId: to, kind: 'call', from: ws.meta.id, fromName: ws.meta.name, callId: callId, mode: callMode, country: callerCountry, countryCode: callerCountryCode }),
         tag: 'call-' + callId,
         ttl: 60,
-        data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode }
+        data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode, country: callerCountry, countryCode: callerCountryCode }
       });
       recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName);
       send(ws, { type: 'call-error', callId, reason: 'offline', pushed: pushed });
@@ -4222,6 +4227,7 @@ function handleCallOffer(ws, msg) {
       send(cand.ws, {
         type: 'call-ring', callId,
         from: ws.meta.id, fromName: ws.meta.name,
+        country: callerCountry, countryCode: callerCountryCode,
         sdp: msg.sdp, mode: callMode
       });
     });
@@ -4233,11 +4239,11 @@ function handleCallOffer(ws, msg) {
   if (!target || !target.online) {
     const pushed = sendPush(to, {
       title: 'Appel entrant',
-      body: callerName + ' souhaite vous joindre',
-      url: pushLandingUrl({ routingId: to, kind: 'call', from: ws.meta.id, fromName: ws.meta.name, callId: callId, mode: callMode }),
+      body: callerLabel + ' souhaite vous joindre',
+      url: pushLandingUrl({ routingId: to, kind: 'call', from: ws.meta.id, fromName: ws.meta.name, callId: callId, mode: callMode, country: callerCountry, countryCode: callerCountryCode }),
       tag: 'call-' + callId,
       ttl: 60,
-      data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode }
+      data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode, country: callerCountry, countryCode: callerCountryCode }
     });
     recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName);
     send(ws, { type: 'call-error', callId, reason: 'offline', pushed: pushed });
@@ -4252,6 +4258,7 @@ function handleCallOffer(ws, msg) {
   send(target.ws, {
     type: 'call-ring', callId,
     from: ws.meta.id, fromName: ws.meta.name,
+    country: callerCountry, countryCode: callerCountryCode,
     sdp: msg.sdp, mode: callMode
   });
 }
