@@ -10,6 +10,10 @@ window.MANGOO_CONFIG = {
     phoneDisplay: "+33 9 62 01 40 80",
     phoneHref: "+33962014080",
     hours: "Lun-Ven 8h-18h"
+  },
+  support: {
+    vendorId: "support-mangoo",
+    name: "Support MangooTech"
   }
 };
 

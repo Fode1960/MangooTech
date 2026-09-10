@@ -1301,7 +1301,18 @@
     endCall: function () { endCall(true); },
     hangup: function () { endCall(true); },
     isOpen: function () { return callState.open; },
-    isMuted: function () { return callState.muted; }
+    isMuted: function () { return callState.muted; },
+    // Appel audio vers le support officiel MangooTech (compte pro dédié,
+    // « toujours joignable »). L'identité est lue dans MANGOO_CONFIG.support ;
+    // l'appel sonne dans l'app du support si elle est ouverte et visible,
+    // sinon une notification push native réveille l'équipe.
+    callSupport: function () {
+      var s = (global.MANGOO_CONFIG && global.MANGOO_CONFIG.support) || {};
+      var id = s.vendorId || 'support-mangoo';
+      var name = s.name || 'Support MangooTech';
+      api.call({ vendorId: id, id: id, name: name }, { mode: 'audio' });
+      return true;
+    }
   };
 
   global.MangooConnect = api;

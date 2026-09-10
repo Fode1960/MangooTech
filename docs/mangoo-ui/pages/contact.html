@@ -371,6 +371,15 @@ html.dark {
                   <p class="body mt-1" data-contact="hours" style="color: rgb(var(--mgt-muted-foreground));">Lun-Ven 8h-18h</p>
                 </div>
               </div>
+              <div class="mt-8 space-y-3" style="border-top: 1px solid rgb(var(--mgt-border)); padding-top: 24px;">
+                <a href="tel:+33962014080" class="inline-flex items-center justify-center gap-2 w-full px-6 py-3 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); text-decoration: none;">
+                  <i data-lucide="phone-call" class="h-4 w-4"></i> Appeler maintenant
+                </a>
+                <button type="button" id="btn-call-support" class="inline-flex items-center justify-center gap-2 w-full px-6 py-3 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); border: none; cursor: pointer;">
+                  <i data-lucide="headphones" class="h-4 w-4"></i> Contacter le support (appel in-app)
+                </button>
+                <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Appel audio sécurisé via Mangoo Connect+.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -420,7 +429,21 @@ html.dark {
   </div>
 </footer>
     <script src="../assets/site-config.js"></script>
+    <script src="../assets/mangoo-connect-plus.js"></script>
     <script>lucide.createIcons();</script>
+    <script>
+    (function () {
+      var btn = document.getElementById('btn-call-support');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        if (window.MangooConnect && typeof window.MangooConnect.callSupport === 'function') {
+          window.MangooConnect.callSupport();
+        } else {
+          window.location.href = 'tel:+33962014080';
+        }
+      });
+    })();
+    </script>
     <script>
 (function () {
   var form = document.getElementById('contact-form');
