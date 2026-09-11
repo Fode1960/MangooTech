@@ -671,6 +671,7 @@
     if (name === 'chat.html' || name === 'messages.html') return 'chat';
     if (name === 'dashboard-messages.html') return 'dashboard';
     if (name === 'dashboard-support-messages.html') return 'dashboard';
+    if (name === 'dashboard-support-console.html') return 'support';
     return 'browse';
   }
 

@@ -252,7 +252,7 @@ function isOnline(id) {
 // temps réel ». Une socket ouverte ailleurs (accueil, carte, live, fiche...)
 // via autoRegisterClient ne doit PAS supprimer la notification push.
 function isMessagingPage(page) {
-  return page === 'chat' || page === 'dashboard';
+  return page === 'chat' || page === 'dashboard' || page === 'support';
 }
 
 function onlineMessagingSockets(id) {
