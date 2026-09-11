@@ -208,7 +208,7 @@ const SpaceChooser = ({ isDark, open, user, onChoose, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" style={{ background: 'rgba(0,0,0,0.72)' }} onClick={onClose}>
-      <div className={`w-full max-w-md rounded-2xl shadow-2xl ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`} onClick={(e) => e.stopPropagation()}>
+      <div className={`w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl shadow-2xl ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`} onClick={(e) => e.stopPropagation()}>
         <div className="p-5">
           <div className="flex items-center justify-between gap-3">
             <div>

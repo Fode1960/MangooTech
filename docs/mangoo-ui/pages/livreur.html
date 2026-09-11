@@ -202,9 +202,9 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     </section>
 
     <!-- Onglets -->
-    <div class="flex gap-2 mb-4 p-1 rounded-xl" style="background-color: rgb(var(--mgt-muted));">
-      <button data-tab="available" class="tab-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all">Courses disponibles</button>
-      <button data-tab="history" class="tab-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all">Mes courses</button>
+    <div class="flex gap-2 mb-4 p-1 rounded-xl" style="background-color: rgb(var(--mgt-muted));" role="tablist" aria-label="Vues des courses">
+      <button type="button" data-tab="available" role="tab" aria-selected="true" class="tab-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); cursor: pointer; border: none; box-shadow: var(--mgt-shadow-sm);">Courses disponibles</button>
+      <button type="button" data-tab="history" role="tab" aria-selected="false" class="tab-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all" style="background-color: transparent; color: rgb(var(--mgt-muted-foreground)); cursor: pointer; border: none;">Mes courses</button>
     </div>
 
     <section id="tab-available" class="space-y-3"></section>
@@ -1047,6 +1047,8 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
       var on = b.dataset.tab === which;
       b.style.backgroundColor = on ? 'rgb(var(--mgt-primary))' : 'transparent';
       b.style.color = on ? 'rgb(var(--mgt-primary-foreground))' : 'rgb(var(--mgt-muted-foreground))';
+      b.style.boxShadow = on ? 'var(--mgt-shadow-sm)' : 'none';
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
     });
   }
 
@@ -1069,6 +1071,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     }
   });
   document.querySelectorAll('.tab-btn').forEach(function (b) { b.addEventListener('click', function () { switchTab(b.dataset.tab); }); });
+  switchTab('available'); // état actif initial (onglet « Courses disponibles »)
 
   $('btn-profile').addEventListener('click', openProfileModal);
   $('btn-edit-profile').addEventListener('click', openProfileModal);
