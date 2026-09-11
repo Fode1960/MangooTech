@@ -54,39 +54,88 @@
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
   function detectCountry() {
+    // Table exhaustive des fuseaux IANA africains + océan Indien (la détection par
+    // fuseau est le signal client le plus fiable). Elle couvre désormais TOUS les
+    // pays : Lagos/Accra/Nairobi/Johannesburg/etc. manquaient auparavant.
     var tzMap = {
-      'Africa/Dakar': 'Sénégal', 'Africa/Abidjan': "Côte d'Ivoire", 'Africa/Douala': 'Cameroun',
-      'Africa/Libreville': 'Gabon', 'Africa/Brazzaville': 'Congo', 'Africa/Kinshasa': 'RD Congo',
-      'Africa/Bamako': 'Mali', 'Africa/Ouagadougou': 'Burkina Faso', 'Africa/Niamey': 'Niger',
-      'Africa/Nouakchott': 'Mauritanie', 'Africa/Conakry': 'Guinée', 'Africa/Lome': 'Togo',
-      'Africa/Porto-Novo': 'Bénin', 'Africa/Bangui': 'Centrafrique', 'Africa/Ndjamena': 'Tchad',
-      'Africa/Algiers': 'Algérie', 'Africa/Cairo': 'Égypte', 'Africa/Tripoli': 'Libye',
-      'Africa/Casablanca': 'Maroc', 'Africa/Tunis': 'Tunisie',
+      'Africa/Abidjan': "Côte d'Ivoire", 'Africa/Accra': 'Ghana', 'Africa/Addis_Ababa': 'Éthiopie',
+      'Africa/Algiers': 'Algérie', 'Africa/Asmara': 'Érythrée', 'Africa/Bamako': 'Mali',
+      'Africa/Bangui': 'Centrafrique', 'Africa/Banjul': 'Gambie', 'Africa/Bissau': 'Guinée-Bissau',
+      'Africa/Blantyre': 'Malawi', 'Africa/Brazzaville': 'Congo', 'Africa/Bujumbura': 'Burundi',
+      'Africa/Cairo': 'Égypte', 'Africa/Casablanca': 'Maroc', 'Africa/Ceuta': 'Espagne',
+      'Africa/Conakry': 'Guinée', 'Africa/Dakar': 'Sénégal', 'Africa/Dar_es_Salaam': 'Tanzanie',
+      'Africa/Djibouti': 'Djibouti', 'Africa/Douala': 'Cameroun', 'Africa/El_Aaiun': 'Sahara occidental',
+      'Africa/Freetown': 'Sierra Leone', 'Africa/Gaborone': 'Botswana', 'Africa/Harare': 'Zimbabwe',
+      'Africa/Johannesburg': 'Afrique du Sud', 'Africa/Juba': 'Soudan du Sud', 'Africa/Kampala': 'Ouganda',
+      'Africa/Khartoum': 'Soudan', 'Africa/Kigali': 'Rwanda', 'Africa/Kinshasa': 'RD Congo',
+      'Africa/Lagos': 'Nigeria', 'Africa/Libreville': 'Gabon', 'Africa/Lome': 'Togo',
+      'Africa/Luanda': 'Angola', 'Africa/Lubumbashi': 'RD Congo', 'Africa/Lusaka': 'Zambie',
+      'Africa/Malabo': 'Guinée équatoriale', 'Africa/Maputo': 'Mozambique', 'Africa/Maseru': 'Lesotho',
+      'Africa/Mbabane': 'Eswatini', 'Africa/Mogadishu': 'Somalie', 'Africa/Monrovia': 'Liberia',
+      'Africa/Nairobi': 'Kenya', 'Africa/Ndjamena': 'Tchad', 'Africa/Niamey': 'Niger',
+      'Africa/Nouakchott': 'Mauritanie', 'Africa/Ouagadougou': 'Burkina Faso', 'Africa/Porto-Novo': 'Bénin',
+      'Africa/Sao_Tome': 'São Tomé-et-Principe', 'Africa/Tripoli': 'Libye', 'Africa/Tunis': 'Tunisie',
+      'Africa/Windhoek': 'Namibie',
+      'Indian/Antananarivo': 'Madagascar', 'Indian/Comoro': 'Comores', 'Indian/Mahe': 'Seychelles',
+      'Indian/Mauritius': 'Maurice', 'Indian/Mayotte': 'Mayotte', 'Indian/Reunion': 'La Réunion',
       'Europe/Paris': 'France', 'Europe/Brussels': 'Belgique', 'Europe/Luxembourg': 'Luxembourg',
       'Europe/Monaco': 'Monaco', 'Europe/Madrid': 'Espagne', 'Atlantic/Canary': 'Espagne',
-      'America/Montreal': 'Canada', 'America/Guadeloupe': 'Guadeloupe', 'America/Martinique': 'Martinique',
-      'America/Cayenne': 'Guyane', 'Indian/Reunion': 'La Réunion', 'Indian/Mauritius': 'Maurice',
-      'Indian/Comoro': 'Comores', 'Indian/Antananarivo': 'Madagascar'
+      'Europe/London': 'Royaume-Uni', 'Europe/Lisbon': 'Portugal', 'Europe/Zurich': 'Suisse',
+      'Europe/Rome': 'Italie', 'Europe/Berlin': 'Allemagne',
+      'America/Montreal': 'Canada', 'America/Toronto': 'Canada', 'America/Guadeloupe': 'Guadeloupe',
+      'America/Martinique': 'Martinique', 'America/Cayenne': 'Guyane', 'America/New_York': 'États-Unis',
+      'America/Los_Angeles': 'États-Unis'
     };
     var regionMap = {
-      'SN': 'Sénégal', 'CI': "Côte d'Ivoire", 'CM': 'Cameroun', 'GA': 'Gabon', 'CG': 'Congo',
-      'CD': 'RD Congo', 'ML': 'Mali', 'BF': 'Burkina Faso', 'NE': 'Niger', 'MR': 'Mauritanie',
-      'GN': 'Guinée', 'TG': 'Togo', 'BJ': 'Bénin', 'CF': 'Centrafrique', 'TD': 'Tchad',
-      'DZ': 'Algérie', 'EG': 'Égypte', 'LY': 'Libye', 'MA': 'Maroc', 'TN': 'Tunisie',
+      'AO': 'Angola', 'BF': 'Burkina Faso', 'BI': 'Burundi', 'BJ': 'Bénin', 'BW': 'Botswana',
+      'CD': 'RD Congo', 'CF': 'Centrafrique', 'CG': 'Congo', 'CI': "Côte d'Ivoire", 'CM': 'Cameroun',
+      'CV': 'Cap-Vert', 'DJ': 'Djibouti', 'DZ': 'Algérie', 'EG': 'Égypte', 'EH': 'Sahara occidental',
+      'ER': 'Érythrée', 'ET': 'Éthiopie', 'GA': 'Gabon', 'GH': 'Ghana', 'GM': 'Gambie',
+      'GN': 'Guinée', 'GQ': 'Guinée équatoriale', 'GW': 'Guinée-Bissau', 'KE': 'Kenya', 'KM': 'Comores',
+      'LR': 'Liberia', 'LS': 'Lesotho', 'LY': 'Libye', 'MA': 'Maroc', 'MG': 'Madagascar',
+      'ML': 'Mali', 'MR': 'Mauritanie', 'MU': 'Maurice', 'MW': 'Malawi', 'MZ': 'Mozambique',
+      'NA': 'Namibie', 'NE': 'Niger', 'NG': 'Nigeria', 'RW': 'Rwanda', 'SC': 'Seychelles',
+      'SD': 'Soudan', 'SL': 'Sierra Leone', 'SN': 'Sénégal', 'SO': 'Somalie', 'SS': 'Soudan du Sud',
+      'ST': 'São Tomé-et-Principe', 'SZ': 'Eswatini', 'TD': 'Tchad', 'TG': 'Togo', 'TN': 'Tunisie',
+      'TZ': 'Tanzanie', 'UG': 'Ouganda', 'ZA': 'Afrique du Sud', 'ZM': 'Zambie', 'ZW': 'Zimbabwe',
       'FR': 'France', 'BE': 'Belgique', 'LU': 'Luxembourg', 'MC': 'Monaco', 'ES': 'Espagne',
       'CA': 'Canada', 'GP': 'Guadeloupe', 'MQ': 'Martinique', 'GF': 'Guyane', 'RE': 'La Réunion',
-      'MU': 'Maurice', 'KM': 'Comores', 'MG': 'Madagascar', 'US': 'États-Unis', 'GB': 'Royaume-Uni',
-      'PT': 'Portugal', 'CH': 'Suisse', 'IT': 'Italie', 'DE': 'Allemagne'
+      'YT': 'Mayotte', 'US': 'États-Unis', 'GB': 'Royaume-Uni', 'PT': 'Portugal', 'CH': 'Suisse',
+      'IT': 'Italie', 'DE': 'Allemagne'
     };
     var codeMap = {
-      'Sénégal': 'SN', "Côte d'Ivoire": 'CI', 'Cameroun': 'CM', 'Gabon': 'GA', 'Congo': 'CG',
-      'RD Congo': 'CD', 'Mali': 'ML', 'Burkina Faso': 'BF', 'Niger': 'NE', 'Mauritanie': 'MR',
-      'Guinée': 'GN', 'Togo': 'TG', 'Bénin': 'BJ', 'Centrafrique': 'CF', 'Tchad': 'TD',
-      'Algérie': 'DZ', 'Égypte': 'EG', 'Libye': 'LY', 'Maroc': 'MA', 'Tunisie': 'TN',
+      'Angola': 'AO', 'Burkina Faso': 'BF', 'Burundi': 'BI', 'Bénin': 'BJ', 'Botswana': 'BW',
+      'RD Congo': 'CD', 'Centrafrique': 'CF', 'Congo': 'CG', "Côte d'Ivoire": 'CI', 'Cameroun': 'CM',
+      'Cap-Vert': 'CV', 'Djibouti': 'DJ', 'Algérie': 'DZ', 'Égypte': 'EG', 'Sahara occidental': 'EH',
+      'Érythrée': 'ER', 'Éthiopie': 'ET', 'Gabon': 'GA', 'Ghana': 'GH', 'Gambie': 'GM',
+      'Guinée': 'GN', 'Guinée équatoriale': 'GQ', 'Guinée-Bissau': 'GW', 'Kenya': 'KE', 'Comores': 'KM',
+      'Liberia': 'LR', 'Lesotho': 'LS', 'Libye': 'LY', 'Maroc': 'MA', 'Madagascar': 'MG',
+      'Mali': 'ML', 'Mauritanie': 'MR', 'Maurice': 'MU', 'Malawi': 'MW', 'Mozambique': 'MZ',
+      'Namibie': 'NA', 'Niger': 'NE', 'Nigeria': 'NG', 'Rwanda': 'RW', 'Seychelles': 'SC',
+      'Soudan': 'SD', 'Sierra Leone': 'SL', 'Sénégal': 'SN', 'Somalie': 'SO', 'Soudan du Sud': 'SS',
+      'São Tomé-et-Principe': 'ST', 'Eswatini': 'SZ', 'Tchad': 'TD', 'Togo': 'TG', 'Tunisie': 'TN',
+      'Tanzanie': 'TZ', 'Ouganda': 'UG', 'Afrique du Sud': 'ZA', 'Zambie': 'ZM', 'Zimbabwe': 'ZW',
       'France': 'FR', 'Belgique': 'BE', 'Luxembourg': 'LU', 'Monaco': 'MC', 'Espagne': 'ES',
       'Canada': 'CA', 'Guadeloupe': 'GP', 'Martinique': 'MQ', 'Guyane': 'GF', 'La Réunion': 'RE',
-      'Maurice': 'MU', 'Comores': 'KM', 'Madagascar': 'MG'
+      'Mayotte': 'YT', 'États-Unis': 'US', 'Royaume-Uni': 'GB', 'Portugal': 'PT', 'Suisse': 'CH',
+      'Italie': 'IT', 'Allemagne': 'DE'
     };
+    // Extrait le code RÉGION (pays) d'un tag BCP-47 (ex. "fr-SN" → "SN"), jamais
+    // le code langue ("fr" seul n'a pas de région). Corrige l'ancien bug qui lisait
+    // "fr" au lieu de "SN" et classait donc les francophones africains en France.
+    function regionOf(tag) {
+      if (!tag) return '';
+      try {
+        var loc = new Intl.Locale(tag);
+        if (loc && loc.region) return String(loc.region).toUpperCase();
+      } catch (e) { /* ignore */ }
+      var parts = String(tag).split(/[-_]/);
+      if (parts.length >= 2) {
+        var last = parts[parts.length - 1];
+        if (/^[A-Za-z]{2}$/.test(last)) return last.toUpperCase();
+      }
+      return '';
+    }
     var country = '';
     try {
       var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -96,9 +145,8 @@
       try {
         var tags = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language];
         for (var i = 0; i < tags.length; i++) {
-          var m = /(?:^|-)([A-Za-z]{2})(?:-|$)/.exec(String(tags[i] || ''));
-          var region = (m && m[1]) ? m[1].toUpperCase() : '';
-          if (regionMap[region]) { country = regionMap[region]; break; }
+          var region = regionOf(tags[i]);
+          if (region && regionMap[region]) { country = regionMap[region]; break; }
         }
       } catch (e) { /* ignore */ }
     }
