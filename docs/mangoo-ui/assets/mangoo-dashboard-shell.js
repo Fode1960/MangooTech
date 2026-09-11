@@ -149,11 +149,13 @@
   }
   // ---- Modules propres à chaque rôle (liste partagée nav + garde) ----
   // Modules réellement propres à chaque rôle.
-  // Prestataire : rendez-vous, équipe, prestations, découverte.
+  // Prestataire : équipe, prestations, découverte.
+  // NB : « Rendez-vous » (dashboard-agenda.html) est TRANSVERSE et reste visible
+  // pour le vendeur ET le prestataire (les deux peuvent prendre des rendez-vous).
   // Vendeur : catalogue, inventaire, livraisons, promotions, fidélité.
   // Tout le reste (Live, Hors-ligne, Classement, Parrainage, Performance,
   // Galerie, Finances, Avis, etc.) est TRANSVERSE et reste visible pour les deux.
-  var PRESTA_ONLY = ['dashboard-agenda.html', 'dashboard-team.html', 'dashboard-services.html', 'dashboard-recommandation.html'];
+  var PRESTA_ONLY = ['dashboard-team.html', 'dashboard-services.html', 'dashboard-recommandation.html'];
   var VENDEUR_ONLY = ['dashboard-catalogue.html', 'dashboard-inventaire.html', 'dashboard-delivery.html', 'dashboard-promotions.html', 'dashboard-fidelite.html'];
 
   function currentPageName() {
@@ -616,17 +618,61 @@
     }
 
     if (!btn || !sidebar) return;
+    // Si le bouton existait déjà (page gérant son propre menu hamburger),
+    // on n'attache pas de second gestionnaire : un double toggle ferait
+    // apparaître puis disparaître immédiatement la barre latérale.
+    if (!injected) return;
 
     var overlay = document.createElement('div');
     overlay.className = 'mgt-menu-overlay';
     document.body.appendChild(overlay);
-    function close() { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+    function persistOpen() {
+      try { sessionStorage.setItem('mgt_sidebar_open', '1'); sessionStorage.setItem('mgt_sidebar_open_ts', String(Date.now())); } catch (e) {}
+    }
+    function clearOpen() {
+      try { sessionStorage.removeItem('mgt_sidebar_open'); sessionStorage.removeItem('mgt_sidebar_open_ts'); } catch (e) {}
+    }
+    function open() {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+      persistOpen();
+    }
+    function close() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      clearOpen();
+    }
+    // Ouverture/fermeture explicites (jamais un toggle aveugle) : on mémorise
+    // l'intention d'ouverture en sessionStorage à chaque clic manuel, pas
+    // seulement à l'arrivée avec #menu. Ainsi, si mangoo-push.js recharge la
+    // page (service worker qui prend le contrôle après un déploiement), le menu
+    // reste ouvert au lieu d'« apparaître puis disparaître aussitôt ».
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
-      sidebar.classList.toggle('open');
-      overlay.classList.toggle('show');
+      if (sidebar.classList.contains('open')) close(); else open();
     });
     overlay.addEventListener('click', close);
+    // Ouvre la sidebar automatiquement à l'arrivée sur mobile quand le lien
+    // porte le marqueur #menu (ex. « Accueil » de la barre basse fixe), afin
+    // que l'utilisateur puisse choisir son module au lieu d'arriver
+    // directement sur « Vue d'ensemble ».
+    //
+    // Durable face à un rechargement : mangoo-push.js recharge la page quand le
+    // service worker prend le contrôle (mise à jour post-déploiement). Ce
+    // rechargement survient après le replaceState() qui retire #menu, si bien
+    // qu'au second chargement le hash a disparu et la sidebar restait fermée
+    // (« elle apparaît puis disparaît aussitôt »). On mémorise donc l'intention
+    // d'ouverture en sessionStorage (survit au reload, expirée après 20 s pour
+    // ne pas rouvrir le menu lors d'une visite ultérieure sans #menu).
+    var mgtOpen = false;
+    try {
+      mgtOpen = sessionStorage.getItem('mgt_sidebar_open') === '1'
+        && (Date.now() - parseInt(sessionStorage.getItem('mgt_sidebar_open_ts') || '0', 10)) < 20000;
+    } catch (e) {}
+    if ((location.hash === '#menu' || mgtOpen) && window.innerWidth <= 768) {
+      open();
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+    }
     var navLinks = sidebar.querySelectorAll('a');
     for (var i = 0; i < navLinks.length; i++) {
       (function (a) {
