@@ -128,10 +128,13 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
   <header class="sticky top-0 z-40" style="background-color: rgb(var(--mgt-primary));">
     <div class="mx-auto max-w-[820px] flex items-center justify-between gap-3 px-5 py-3.5">
       <div class="flex items-center gap-3 min-w-0">
-        <img src="../assets/favicon.png" alt="MangooTech" class="w-9 h-9 rounded-lg object-cover flex-shrink-0" style="border-radius: var(--mgt-radius-md);">
+        <button id="btn-profile" type="button" class="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 relative" style="border-radius: var(--mgt-radius-md);" title="Mon profil">
+          <img id="app-avatar" src="" alt="" class="w-full h-full object-cover hidden">
+          <span id="app-avatar-fallback" class="w-full h-full flex items-center justify-center text-white font-bold text-sm" style="background-color: rgb(var(--mgt-accent));">?</span>
+        </button>
         <div class="min-w-0 leading-tight">
           <div class="text-white font-semibold truncate" id="app-name">Livreur</div>
-          <div class="text-[11px] flex items-center gap-1.5" style="color: rgb(var(--mgt-primary-200));"><span id="app-meta-vehicle">Moto</span> · <span id="app-meta-zone">Dakar</span></div>
+          <div class="text-[11px] flex items-center gap-1.5 min-w-0 whitespace-nowrap overflow-hidden" style="color: rgb(var(--mgt-primary-200));"><span id="app-meta-vehicle" class="flex-shrink-0">Moto</span><span class="flex-shrink-0" aria-hidden="true"> · </span><span id="app-meta-zone" class="truncate min-w-0">Dakar</span></div>
         </div>
       </div>
       <div class="flex items-center gap-2 flex-shrink-0">
@@ -149,7 +152,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     <div id="conn-banner" class="rounded-lg px-4 py-2.5 mb-4 text-sm font-medium" style="background-color: rgb(var(--mgt-warning)/.15); color: rgb(var(--mgt-warning));">Connexion au flux temps réel…</div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-3 gap-3 mb-5">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
       <div class="rounded-xl p-4" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border));">
         <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Disponibles</p>
         <p class="text-2xl font-bold tabular-nums" id="stat-available" style="color: rgb(var(--mgt-primary));">0</p>
@@ -158,6 +161,11 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
         <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Livrées</p>
         <p class="text-2xl font-bold tabular-nums" id="stat-completed" style="color: rgb(var(--mgt-accent));">0</p>
       </div>
+      <button id="btn-finances" type="button" class="rounded-xl p-4 text-left transition-all hover:brightness-[1.03]" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border));">
+        <p class="caption flex items-center gap-1" style="color: rgb(var(--mgt-muted-foreground));">Solde <i data-lucide="wallet" class="w-3.5 h-3.5"></i></p>
+        <p class="text-2xl font-bold tabular-nums leading-tight" id="stat-balance" style="color: rgb(var(--mgt-success));">0 F</p>
+        <p class="caption mt-0.5" style="color: rgb(var(--mgt-primary));">Finances ›</p>
+      </button>
       <div class="rounded-xl p-4" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border));">
         <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Statut</p>
         <p class="text-sm font-bold mt-1 truncate" id="stat-status" style="color: rgb(var(--mgt-foreground));">—</p>
@@ -167,11 +175,14 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     <!-- Récapitulatif profil & gains -->
     <section class="mb-6 rounded-xl p-5" style="background-color: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border)); box-shadow: var(--mgt-shadow-sm);">
       <div class="flex items-center gap-4 mb-4">
-        <div id="profile-avatar" class="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">—</div>
+        <div id="profile-avatar" class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center text-xl font-bold flex-shrink-0" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">
+          <img id="profile-avatar-img" src="" alt="" class="w-full h-full object-cover hidden">
+          <span id="profile-avatar-fb">—</span>
+        </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap">
             <h2 class="text-lg font-bold" id="profile-name" style="color: rgb(var(--mgt-foreground));">Livreur</h2>
-            <span id="profile-rating" class="hidden text-xs px-2 py-0.5 rounded-full font-semibold" style="background-color: rgb(var(--mgt-warning)/.15); color: rgb(var(--mgt-warning));"></span>
+            <span id="profile-rating" class="hidden text-xs px-2 py-0.5 rounded-full font-semibold" style="background-color: rgb(var(--mgt-warning)/.15); color: rgb(var(--mgt-warning));"></span> <button id="btn-edit-profile" class="h-8 px-3 rounded-lg text-xs font-semibold inline-flex items-center gap-1 transition-colors" style="background-color: rgb(var(--mgt-primary)/.1); color: rgb(var(--mgt-primary));"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Modifier</button>
           </div>
           <div class="caption mt-0.5" style="color: rgb(var(--mgt-muted-foreground));" id="profile-meta"></div>
         </div>
@@ -191,9 +202,9 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     </section>
 
     <!-- Onglets -->
-    <div class="flex gap-2 mb-4 p-1 rounded-xl" style="background-color: rgb(var(--mgt-muted));">
-      <button data-tab="available" class="tab-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all">Courses disponibles</button>
-      <button data-tab="history" class="tab-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all">Mes courses</button>
+    <div class="flex gap-2 mb-4 p-1 rounded-xl" style="background-color: rgb(var(--mgt-muted));" role="tablist" aria-label="Vues des courses">
+      <button type="button" data-tab="available" role="tab" aria-selected="true" class="tab-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); cursor: pointer; border: none; box-shadow: var(--mgt-shadow-sm);">Courses disponibles</button>
+      <button type="button" data-tab="history" role="tab" aria-selected="false" class="tab-btn flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all" style="background-color: transparent; color: rgb(var(--mgt-muted-foreground)); cursor: pointer; border: none;">Mes courses</button>
     </div>
 
     <section id="tab-available" class="space-y-3"></section>
@@ -236,6 +247,124 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
   </div>
 </div>
 
+<!-- Modal édition du profil livreur -->
+<div id="profile-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background: rgba(15 23 42 / .55);">
+  <div class="rounded-2xl w-full max-w-md p-5 slide-in" style="background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-lg);">
+    <div class="flex items-start justify-between mb-4">
+      <h3 class="h3" style="color: rgb(var(--mgt-foreground));">Mon profil livreur</h3>
+      <button id="profile-close" class="text-sm" style="color: rgb(var(--mgt-muted-foreground));">Fermer</button>
+    </div>
+
+    <div class="flex items-center gap-4 mb-5">
+      <div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0" style="border: 2px solid rgb(var(--mgt-border));">
+        <img id="profile-photo" src="" alt="" class="w-full h-full object-cover hidden">
+        <span id="profile-photo-fallback" class="w-full h-full flex items-center justify-center text-white font-bold text-xl" style="background-color: rgb(var(--mgt-accent));">?</span>
+      </div>
+      <div>
+        <label for="profile-photo-input" class="inline-flex h-9 px-3 rounded-lg text-sm font-semibold cursor-pointer items-center transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">Changer la photo</label>
+        <input id="profile-photo-input" type="file" accept="image/*" class="hidden">
+        <button id="profile-photo-remove" type="button" class="caption mt-1 block" style="color: rgb(var(--mgt-muted-foreground));">Retirer la photo</button>
+      </div>
+    </div>
+
+    <div class="space-y-3.5">
+      <div>
+        <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Nom complet</label>
+        <input id="pf-name" type="text" class="w-full h-11 px-4 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+      </div>
+      <div>
+        <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Téléphone</label>
+        <input id="pf-phone" type="tel" class="w-full h-11 px-4 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+      </div>
+      <div>
+        <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Email <span class="font-normal" style="color: rgb(var(--mgt-muted-foreground));">(optionnel)</span></label>
+        <input id="pf-email" type="email" class="w-full h-11 px-4 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Ville</label>
+          <select id="pf-city" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+            <option value="Dakar">Dakar</option>
+            <option value="Pikine">Pikine</option>
+            <option value="Guédiawaye">Guédiawaye</option>
+            <option value="Rufisque">Rufisque</option>
+            <option value="Thiès">Thiès</option>
+            <option value="Saint-Louis">Saint-Louis</option>
+            <option value="Abidjan">Abidjan</option>
+          </select>
+        </div>
+        <div>
+          <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Véhicule</label>
+          <select id="pf-vehicle" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+            <option value="moto">Moto</option>
+            <option value="velo">Vélo</option>
+            <option value="voiture">Voiture</option>
+            <option value="camion">Camion</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block caption font-medium mb-1.5" style="color: rgb(var(--mgt-foreground));">Zone de travail <span class="font-normal" style="color: rgb(var(--mgt-muted-foreground));">(optionnel)</span></label>
+        <input id="pf-zone" type="text" placeholder="Ex. Plateau, Médina, Almadies" class="w-full h-11 px-4 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+      </div>
+    </div>
+    <p id="pf-msg" class="caption mt-3 hidden"></p>
+    <div class="flex gap-2.5 mt-4">
+      <button id="pf-cancel" class="flex-1 h-12 rounded-lg text-sm font-semibold" style="background-color: rgb(var(--mgt-muted)); color: rgb(var(--mgt-foreground));">Annuler</button>
+      <button id="pf-save" class="flex-1 h-12 rounded-lg text-sm font-semibold" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Finances livreur (solde / gains / retrait) -->
+<div id="finances-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background: rgba(15 23 42 / .55);">
+  <div class="rounded-2xl w-full max-w-md p-5 slide-in max-h-[92vh] overflow-y-auto" style="background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-lg);">
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <h3 class="h3" style="color: rgb(var(--mgt-foreground));">Mes finances</h3>
+        <p class="caption mt-0.5" style="color: rgb(var(--mgt-muted-foreground));">Gains et retraits de vos courses.</p>
+      </div>
+      <button id="finances-close" type="button" class="text-sm" style="color: rgb(var(--mgt-muted-foreground));">Fermer</button>
+    </div>
+
+    <div class="rounded-xl p-4 mb-4" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground));">
+      <p class="caption opacity-80">Solde disponible</p>
+      <p class="text-3xl font-bold tabular-nums" id="fin-balance">0 FCFA</p>
+      <div class="flex gap-4 mt-3 text-sm">
+        <div><p class="caption opacity-80">Gains totaux</p><p class="font-semibold tabular-nums" id="fin-earnings">0 FCFA</p></div>
+        <div><p class="caption opacity-80">Déjà retiré</p><p class="font-semibold tabular-nums" id="fin-withdrawn">0 FCFA</p></div>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <p class="caption font-semibold mb-2" style="color: rgb(var(--mgt-foreground));">Récupérer mes gains</p>
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label class="block caption mb-1.5" style="color: rgb(var(--mgt-muted-foreground));">Montant (FCFA)</label>
+          <input id="withdraw-amount" type="number" min="1" step="1" placeholder="Ex. 5000" class="w-full h-11 px-4 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+        </div>
+        <div>
+          <label class="block caption mb-1.5" style="color: rgb(var(--mgt-muted-foreground));">Opérateur</label>
+          <select id="withdraw-operator" class="w-full h-11 px-3 rounded-lg body outline-none" style="border:1px solid rgb(var(--mgt-input)); background-color:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground));">
+            <option value="wave">Wave</option>
+            <option value="orange">Orange Money</option>
+            <option value="mtn">MTN Mobile Money</option>
+            <option value="moov">Moov Money</option>
+            <option value="free">Free Mobile</option>
+          </select>
+        </div>
+      </div>
+      <button id="withdraw-btn" type="button" class="w-full h-12 rounded-lg text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground));">Retirer sur mobile money</button>
+      <p id="withdraw-msg" class="caption mt-2 hidden"></p>
+    </div>
+
+    <div>
+      <p class="caption font-semibold mb-2" style="color: rgb(var(--mgt-foreground));">Historique récent</p>
+      <div id="fin-history" class="space-y-2"></div>
+    </div>
+  </div>
+</div>
+
 <script>lucide.createIcons();</script>
 <script>
 (function () {
@@ -250,6 +379,8 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
   var wsAttempt = 0;      // backoff progressif de reconnexion
   var myDeliveries = {};  // id -> delivery (available + assigned)
   var statusNow = 'offline';
+  var pendingLogo = null; // photo en attente (null = inchangée, '' = retirée)
+  var myFinances = null;  // { balance, earnings, withdrawn, transactions }
 
   var VEHICLE_LABELS = { moto: 'Moto', velo: 'Vélo', voiture: 'Voiture', van: 'Fourgon', camion: 'Camion', semi: 'Semi-remorque' };
   var STATUS_LABELS = {
@@ -311,7 +442,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
   // L'inscription/connexion des livreurs est désormais unifiée dans auth.html.
   // Cette page est réservée à l'application : toute session invalide renvoie
   // vers la page d'authentification unique.
-  function goToAuth() { window.location.href = './auth.html'; }
+  function goToAuth() { window.location.replace('./auth.html'); }
   function showAuth() { goToAuth(); }
   function switchAuthTab(which) {
     var isLogin = which === 'login';
@@ -379,6 +510,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     $('auth-view').classList.add('hidden');
     $('app-view').classList.remove('hidden');
     loadProfile().then(function () { connectWS(); loadOrders(); });
+    loadFinances();
   }
 
   function loadProfile() {
@@ -403,11 +535,12 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     $('app-meta-zone').textContent = me.zone || me.city || '—';
     $('stat-completed').textContent = num(me.completedDeliveries || 0);
     renderRecap();
+    updatePhotos();
   }
 
   function renderRecap() {
     if (!me) return;
-    $('profile-avatar').textContent = initials(me.name);
+    $('profile-avatar-fb').textContent = initials(me.name);
     $('profile-name').textContent = me.name || 'Livreur';
     var rating = me.rating != null ? Number(me.rating) : NaN;
     if (!isNaN(rating)) {
@@ -428,6 +561,143 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     var totalEarned = delivered.reduce(function (s, d) { return s + (Number(d.amount) || 0); }, 0);
     $('profile-completed').textContent = num(me.completedDeliveries || 0);
     $('profile-earnings').textContent = money(totalEarned);
+  }
+
+  // ===== Photo / logo du profil =====
+  function updatePhotos() {
+    var logo = pendingLogo !== null ? pendingLogo : (me && me.logo) || '';
+    var ini = initials(me ? me.name : '');
+    var img = $('app-avatar'), fb = $('app-avatar-fallback');
+    if (logo) { img.src = logo; img.classList.remove('hidden'); fb.classList.add('hidden'); }
+    else { img.classList.add('hidden'); fb.classList.remove('hidden'); fb.textContent = ini; }
+    var pimg = $('profile-photo'), pfb = $('profile-photo-fallback');
+    if (logo) { pimg.src = logo; pimg.classList.remove('hidden'); pfb.classList.add('hidden'); }
+    else { pimg.classList.add('hidden'); pfb.classList.remove('hidden'); pfb.textContent = ini; }
+    var aimg = $('profile-avatar-img'), afb = $('profile-avatar-fb');
+    if (logo) { aimg.src = logo; aimg.classList.remove('hidden'); afb.classList.add('hidden'); }
+    else { aimg.classList.add('hidden'); afb.classList.remove('hidden'); afb.textContent = ini; }
+  }
+
+  // ===== Finances livreur (solde / gains / retrait) =====
+  function moneyShort(n) {
+    n = Number(n) || 0;
+    if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + ' M FCFA';
+    if (n >= 1000) return Math.round(n / 1000).toString() + ' k FCFA';
+    return n + ' FCFA';
+  }
+  function loadFinances() {
+    return apiGet('/api/delivery/courier/finances').then(function (res) {
+      if (res.ok && res.data.ok) { myFinances = res.data; renderFinances(); }
+    }).catch(function () {});
+  }
+  function renderFinances() {
+    var f = myFinances || { balance: 0, earnings: 0, withdrawn: 0, transactions: [] };
+    $('stat-balance').textContent = moneyShort(f.balance);
+    $('fin-balance').textContent = money(f.balance);
+    $('fin-earnings').textContent = money(f.earnings);
+    $('fin-withdrawn').textContent = money(f.withdrawn);
+    var box = $('fin-history');
+    var list = f.transactions || [];
+    if (!list.length) {
+      box.innerHTML = '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Aucune opération pour le moment.</p>';
+      return;
+    }
+    box.innerHTML = list.map(function (t) {
+      var earning = t.kind === 'delivery-earning';
+      var sign = earning ? '+' : '-';
+      var color = earning ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-error))';
+      return '<div class="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5" style="border:1px solid rgb(var(--mgt-border));">' +
+        '<div class="min-w-0"><p class="body truncate" style="color: rgb(var(--mgt-foreground));">' + esc(t.description || '') + '</p>' +
+        '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">' + esc(t.operator || '') + ' · ' + dateFR(t.paidAt || t.createdAt) + '</p></div>' +
+        '<p class="font-bold tabular-nums whitespace-nowrap" style="color: ' + color + ';">' + sign + ' ' + num(t.amount) + ' F</p>' +
+        '</div>';
+    }).join('');
+  }
+  function openFinances() {
+    $('withdraw-msg').classList.add('hidden');
+    $('withdraw-amount').value = '';
+    renderFinances();
+    $('finances-modal').classList.remove('hidden');
+    $('finances-modal').classList.add('flex');
+  }
+  function closeFinances() {
+    $('finances-modal').classList.add('hidden');
+    $('finances-modal').classList.remove('flex');
+  }
+  function withdrawMsg(m, err) {
+    var el = $('withdraw-msg');
+    el.textContent = m;
+    el.style.color = err ? 'rgb(var(--mgt-error))' : 'rgb(var(--mgt-success))';
+    el.classList.remove('hidden');
+  }
+  function doWithdraw() {
+    var amount = Math.round(Number($('withdraw-amount').value) || 0);
+    var operator = $('withdraw-operator').value;
+    $('withdraw-msg').classList.add('hidden');
+    if (amount <= 0) { withdrawMsg('Renseignez un montant valide.', true); return; }
+    setBusy($('withdraw-btn'), true, 'Traitement…');
+    apiPost('/api/delivery/courier/withdraw', { amount: amount, operator: operator }).then(function (res) {
+      setBusy($('withdraw-btn'), false, 'Retirer sur mobile money');
+      if (res.ok && res.data.ok) {
+        myFinances.balance = res.data.balance;
+        withdrawMsg('Retrait de ' + money(amount) + ' envoyé sur ' + $('withdraw-operator').selectedOptions[0].textContent + '.', false);
+        $('withdraw-amount').value = '';
+        loadFinances();
+      } else {
+        withdrawMsg((res.data && res.data.error) || 'Retrait impossible.', true);
+      }
+    }).catch(function () {
+      setBusy($('withdraw-btn'), false, 'Retirer sur mobile money');
+      withdrawMsg('Impossible de joindre le serveur.', true);
+    });
+  }
+  function openProfileModal() {
+    if (!me) return;
+    pendingLogo = null;
+    $('pf-name').value = me.name || '';
+    $('pf-phone').value = me.phone || '';
+    $('pf-email').value = me.email || '';
+    $('pf-city').value = me.city || '';
+    $('pf-vehicle').value = me.vehicle || 'moto';
+    $('pf-zone').value = me.zone || '';
+    $('pf-msg').classList.add('hidden');
+    updatePhotos();
+    $('profile-modal').classList.remove('hidden');
+    $('profile-modal').classList.add('flex');
+  }
+  function closeProfileModal() {
+    $('profile-modal').classList.add('hidden');
+    $('profile-modal').classList.remove('flex');
+  }
+  function pfError(m) { var el = $('pf-msg'); el.textContent = m; el.style.color = 'rgb(var(--mgt-error))'; el.classList.remove('hidden'); }
+  function saveProfile() {
+    var name = $('pf-name').value.trim();
+    var phone = $('pf-phone').value.trim();
+    if (!name) { pfError('Renseignez votre nom complet.'); return; }
+    if (!phone) { pfError('Renseignez votre numéro de téléphone.'); return; }
+    var btn = $('pf-save');
+    btn.disabled = true; btn.style.opacity = '.6'; btn.textContent = 'Enregistrement…';
+    var payload = {
+      name: name, phone: phone, email: $('pf-email').value.trim(),
+      city: $('pf-city').value, vehicle: $('pf-vehicle').value, zone: $('pf-zone').value.trim()
+    };
+    if (pendingLogo !== null) payload.logo = pendingLogo;
+    apiPost('/api/delivery/courier/profile', payload).then(function (res) {
+      btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Enregistrer';
+      if (res.ok && res.data.ok) {
+        me = res.data.courier;
+        if (res.data.user) { myUser = res.data.user; localStorage.setItem(USER_KEY, JSON.stringify(res.data.user)); }
+        pendingLogo = null;
+        closeProfileModal();
+        renderProfile();
+        showToast('Profil mis à jour.', 'ok');
+      } else {
+        pfError((res.data && res.data.error) || 'Impossible d\'enregistrer le profil.');
+      }
+    }).catch(function () {
+      btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Enregistrer';
+      pfError('Impossible de joindre le serveur.');
+    });
   }
 
   function renderStatusToggle() {
@@ -777,6 +1047,8 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
       var on = b.dataset.tab === which;
       b.style.backgroundColor = on ? 'rgb(var(--mgt-primary))' : 'transparent';
       b.style.color = on ? 'rgb(var(--mgt-primary-foreground))' : 'rgb(var(--mgt-muted-foreground))';
+      b.style.boxShadow = on ? 'var(--mgt-shadow-sm)' : 'none';
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
     });
   }
 
@@ -787,8 +1059,42 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
   $('btn-register').addEventListener('click', doRegister);
   $('login-identifier').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
   $('btn-toggle').addEventListener('click', toggleOnline);
-  $('btn-logout').addEventListener('click', function () { clearSession(); showAuth(); showToast('Déconnecté.', 'info'); });
+  $('btn-logout').addEventListener('click', function () {
+    var t = token;
+    clearSession();
+    showAuth();
+    showToast('Déconnecté.', 'info');
+    if (t) {
+      try {
+        fetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t } }).catch(function () {});
+      } catch (err) {}
+    }
+  });
   document.querySelectorAll('.tab-btn').forEach(function (b) { b.addEventListener('click', function () { switchTab(b.dataset.tab); }); });
+  switchTab('available'); // état actif initial (onglet « Courses disponibles »)
+
+  $('btn-profile').addEventListener('click', openProfileModal);
+  $('btn-edit-profile').addEventListener('click', openProfileModal);
+  $('profile-close').addEventListener('click', closeProfileModal);
+  $('pf-cancel').addEventListener('click', closeProfileModal);
+  $('pf-save').addEventListener('click', saveProfile);
+  $('profile-modal').addEventListener('click', function (e) { if (e.target === this) closeProfileModal(); });
+  $('profile-photo-input').addEventListener('change', function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (file.size > 500000) { showToast('Image trop lourde (max 500 Ko).', 'err'); e.target.value = ''; return; }
+    var reader = new FileReader();
+    reader.onload = function () { pendingLogo = String(reader.result || ''); updatePhotos(); };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+  $('profile-photo-remove').addEventListener('click', function () { pendingLogo = ''; updatePhotos(); });
+
+  // Finances livreur (solde / gains / retrait)
+  $('btn-finances').addEventListener('click', openFinances);
+  $('finances-close').addEventListener('click', closeFinances);
+  $('finances-modal').addEventListener('click', function (e) { if (e.target === this) closeFinances(); });
+  $('withdraw-btn').addEventListener('click', doWithdraw);
 
   // Preuve de remise
   $('proof-close').addEventListener('click', closeProofModal);
@@ -814,14 +1120,39 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
   }
 
   // ===== Démarrage =====
+  // Resynchronise la session depuis le cookie httpOnly mgt_session (source de
+  // vérité serveur) AVANT de décider de renvoyer vers la connexion. Un livreur
+  // qui rouvre l'app via le logo PWA ou un nouvel onglet peut arriver avec un
+  // localStorage vide (hôte mangoo.tech vs www.mangoo.tech) alors que le cookie
+  // serveur reste valide ; sans cette étape, il était renvoyé à tort vers auth.html.
   var saved = localStorage.getItem(USER_KEY);
-  if (token && saved) {
-    try { var su = JSON.parse(saved); if (su && su.role === 'livreur') { myUser = su; enterApp(); } else { goToAuth(); } }
-    catch (e) { goToAuth(); }
+  var myRoleUser = null;
+  try { var su = JSON.parse(saved); if (su && su.role === 'livreur') myRoleUser = su; } catch (e) {}
+  if (!(token && myRoleUser)) {
+    try {
+      var sx = new XMLHttpRequest();
+      sx.open('GET', '/api/auth/session', false);
+      sx.setRequestHeader('Accept', 'application/json');
+      sx.send(null);
+      if (sx.status >= 200 && sx.status < 300) {
+        var sd = JSON.parse(sx.responseText);
+        if (sd && sd.ok && sd.token && sd.user && sd.user.role === 'livreur') {
+          token = sd.token;
+          localStorage.setItem(TOKEN_KEY, sd.token);
+          localStorage.setItem(USER_KEY, JSON.stringify(sd.user));
+          myRoleUser = sd.user;
+        }
+      }
+    } catch (e) { /* non bloquant */ }
+  }
+  if (token && myRoleUser) {
+    myUser = myRoleUser;
+    enterApp();
   } else {
     goToAuth();
   }
 })();
 </script>
+<script src="../assets/mangoo-support-widget.js"></script>
 </body>
 </html>

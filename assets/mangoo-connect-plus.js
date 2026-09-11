@@ -53,6 +53,57 @@
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
+  function detectCountry() {
+    var tzMap = {
+      'Africa/Dakar': 'Sénégal', 'Africa/Abidjan': "Côte d'Ivoire", 'Africa/Douala': 'Cameroun',
+      'Africa/Libreville': 'Gabon', 'Africa/Brazzaville': 'Congo', 'Africa/Kinshasa': 'RD Congo',
+      'Africa/Bamako': 'Mali', 'Africa/Ouagadougou': 'Burkina Faso', 'Africa/Niamey': 'Niger',
+      'Africa/Nouakchott': 'Mauritanie', 'Africa/Conakry': 'Guinée', 'Africa/Lome': 'Togo',
+      'Africa/Porto-Novo': 'Bénin', 'Africa/Bangui': 'Centrafrique', 'Africa/Ndjamena': 'Tchad',
+      'Africa/Algiers': 'Algérie', 'Africa/Cairo': 'Égypte', 'Africa/Tripoli': 'Libye',
+      'Africa/Casablanca': 'Maroc', 'Africa/Tunis': 'Tunisie',
+      'Europe/Paris': 'France', 'Europe/Brussels': 'Belgique', 'Europe/Luxembourg': 'Luxembourg',
+      'Europe/Monaco': 'Monaco', 'Europe/Madrid': 'Espagne', 'Atlantic/Canary': 'Espagne',
+      'America/Montreal': 'Canada', 'America/Guadeloupe': 'Guadeloupe', 'America/Martinique': 'Martinique',
+      'America/Cayenne': 'Guyane', 'Indian/Reunion': 'La Réunion', 'Indian/Mauritius': 'Maurice',
+      'Indian/Comoro': 'Comores', 'Indian/Antananarivo': 'Madagascar'
+    };
+    var regionMap = {
+      'SN': 'Sénégal', 'CI': "Côte d'Ivoire", 'CM': 'Cameroun', 'GA': 'Gabon', 'CG': 'Congo',
+      'CD': 'RD Congo', 'ML': 'Mali', 'BF': 'Burkina Faso', 'NE': 'Niger', 'MR': 'Mauritanie',
+      'GN': 'Guinée', 'TG': 'Togo', 'BJ': 'Bénin', 'CF': 'Centrafrique', 'TD': 'Tchad',
+      'DZ': 'Algérie', 'EG': 'Égypte', 'LY': 'Libye', 'MA': 'Maroc', 'TN': 'Tunisie',
+      'FR': 'France', 'BE': 'Belgique', 'LU': 'Luxembourg', 'MC': 'Monaco', 'ES': 'Espagne',
+      'CA': 'Canada', 'GP': 'Guadeloupe', 'MQ': 'Martinique', 'GF': 'Guyane', 'RE': 'La Réunion',
+      'MU': 'Maurice', 'KM': 'Comores', 'MG': 'Madagascar', 'US': 'États-Unis', 'GB': 'Royaume-Uni',
+      'PT': 'Portugal', 'CH': 'Suisse', 'IT': 'Italie', 'DE': 'Allemagne'
+    };
+    var codeMap = {
+      'Sénégal': 'SN', "Côte d'Ivoire": 'CI', 'Cameroun': 'CM', 'Gabon': 'GA', 'Congo': 'CG',
+      'RD Congo': 'CD', 'Mali': 'ML', 'Burkina Faso': 'BF', 'Niger': 'NE', 'Mauritanie': 'MR',
+      'Guinée': 'GN', 'Togo': 'TG', 'Bénin': 'BJ', 'Centrafrique': 'CF', 'Tchad': 'TD',
+      'Algérie': 'DZ', 'Égypte': 'EG', 'Libye': 'LY', 'Maroc': 'MA', 'Tunisie': 'TN',
+      'France': 'FR', 'Belgique': 'BE', 'Luxembourg': 'LU', 'Monaco': 'MC', 'Espagne': 'ES',
+      'Canada': 'CA', 'Guadeloupe': 'GP', 'Martinique': 'MQ', 'Guyane': 'GF', 'La Réunion': 'RE',
+      'Maurice': 'MU', 'Comores': 'KM', 'Madagascar': 'MG'
+    };
+    var country = '';
+    try {
+      var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz && tzMap[tz]) country = tzMap[tz];
+    } catch (e) { /* ignore */ }
+    if (!country) {
+      try {
+        var tags = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language];
+        for (var i = 0; i < tags.length; i++) {
+          var m = /(?:^|-)([A-Za-z]{2})(?:-|$)/.exec(String(tags[i] || ''));
+          var region = (m && m[1]) ? m[1].toUpperCase() : '';
+          if (regionMap[region]) { country = regionMap[region]; break; }
+        }
+      } catch (e) { /* ignore */ }
+    }
+    return { country: country, countryCode: codeMap[country] || '' };
+  }
 
   /* ------------------------------------------------------------------ *
    *  Style (Jour / Nuit)
@@ -66,7 +117,7 @@
     '.mcp-call-overlay .mcp-remote.show{display:block;}',
     '.mcp-call-overlay .mcp-local{position:absolute;top:16px;right:16px;width:112px;height:150px;object-fit:cover;border-radius:14px;background:#000;border:1px solid rgba(255,255,255,.25);display:none;z-index:3;box-shadow:0 8px 30px rgba(0,0,0,.4);}',
     '.mcp-call-overlay .mcp-local.show{display:block;}',
-    '.mcp-call-overlay .mcp-center{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:420px;}',
+    '.mcp-call-overlay .mcp-center{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:420px;margin-top:96px;}',
     '.mcp-call-overlay .mcp-avatar{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgb(232,97,12);color:#fff;font-size:32px;font-weight:700;text-transform:uppercase;border:3px solid rgba(255,255,255,.25);margin-bottom:16px;}',
     '.mcp-call-overlay .mcp-name{color:#fff;font-size:20px;font-weight:600;margin-bottom:4px;text-align:center;}',
     '.mcp-call-overlay .mcp-state{color:rgba(255,255,255,.92);font-size:14px;margin-bottom:8px;text-align:center;}',
@@ -79,6 +130,7 @@
     '.mcp-call-overlay .mcp-btn.accept{background:#22c55e;color:#fff;}',
     '.mcp-call-overlay .mcp-btn.mute{background:rgba(255,255,255,.18);color:#fff;}',
     '.mcp-call-overlay .mcp-btn.mute.off{background:rgba(255,255,255,.1);color:rgba(255,255,255,.85);}',
+    '.mcp-call-overlay .mcp-btn.chat{background:rgba(255,255,255,.18);color:#fff;}',
     '.mcp-call-overlay .mcp-hint{position:absolute;bottom:24px;left:0;right:0;text-align:center;color:rgba(255,255,255,.55);font-size:11px;z-index:2;}',
     '.mcp-call-overlay.has-video .mcp-center{position:absolute;bottom:26px;left:0;right:0;margin:0 auto;justify-content:flex-end;max-width:100%;padding:0 18px;z-index:3;pointer-events:none;}',
     '.mcp-call-overlay.has-video .mcp-avatar{display:none;}',
@@ -86,7 +138,7 @@
     '.mcp-call-overlay.has-video .mcp-state{font-size:12px;margin-bottom:6px;text-shadow:0 1px 8px rgba(0,0,0,.8);}',
     '.mcp-call-overlay.has-video .mcp-timer{margin-bottom:16px;font-size:14px;text-shadow:0 1px 8px rgba(0,0,0,.8);}',
     '.mcp-call-overlay.has-video .mcp-actions{pointer-events:auto;}',
-    '.mcp-call-overlay.has-video .mcp-hint{display:none;}',
+    '.mcp-call-overlay.has-video .mcp-hint{display:block;bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,.7);}',
     '',
     '.mcp-chat{position:fixed;right:16px;bottom:16px;z-index:9500;width:360px;max-width:calc(100vw - 32px);max-height:min(520px,calc(100vh - 32px));display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:rgb(var(--mgt-card,255,255,255));border:1px solid rgb(var(--mgt-border,226,232,240));box-shadow:0 24px 60px -20px rgba(15,23,42,.35);opacity:0;transform:translateY(12px);visibility:hidden;transition:opacity .22s,transform .22s,visibility .22s;}',
     '.mcp-chat.open{opacity:1;transform:translateY(0);visibility:visible;}',
@@ -98,11 +150,16 @@
     '.mcp-chat .mcp-close{background:none;border:none;color:inherit;cursor:pointer;padding:4px;display:flex;opacity:.9;}',
     '.mcp-chat .mcp-close:hover{opacity:1;}',
     '.mcp-chat .mcp-close svg{width:18px;height:18px;}',
+    '.mcp-chat .mcp-call{background:none;border:none;color:inherit;cursor:pointer;padding:4px;display:flex;opacity:.9;}',
+    '.mcp-chat .mcp-call:hover{opacity:1;}',
+    '.mcp-chat .mcp-call svg{width:18px;height:18px;}',
     '.mcp-chat .mcp-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:rgb(var(--mgt-muted,248,250,252));}',
     '.mcp-chat .mcp-msg{max-width:82%;padding:9px 12px;border-radius:14px;font-size:13px;line-height:1.45;}',
     '.mcp-chat .mcp-msg.in{background:rgb(var(--mgt-card,255,255,255));color:rgb(var(--mgt-foreground,15,23,42));border:1px solid rgb(var(--mgt-border,226,232,240));align-self:flex-start;border-bottom-left-radius:4px;}',
     '.mcp-chat .mcp-msg.out{background:rgb(var(--mgt-primary,26,92,42));color:rgb(var(--mgt-primary-foreground,255,255,255));align-self:flex-end;border-bottom-right-radius:4px;}',
     '.mcp-chat .mcp-msg.sys{align-self:center;background:transparent;color:rgb(var(--mgt-muted-foreground,100,116,139));font-size:11.5px;text-align:center;padding:2px 8px;}',
+    '.mcp-chat .mcp-msg.mcp-msg-video{padding:6px 6px 8px;overflow:hidden;}',
+    '.mcp-chat .mcp-msg.mcp-msg-video video{display:block;max-width:100%;}',
     '.mcp-chat .mcp-typing{display:flex;align-items:center;gap:8px;padding:6px 14px 0;background:rgb(var(--mgt-muted,248,250,252));color:rgb(var(--mgt-muted-foreground,100,116,139));font-size:12px;}',
     '.mcp-chat .mcp-typing .mcp-typing-dots{display:inline-flex;gap:3px;}',
     '.mcp-chat .mcp-typing .mcp-typing-dots i{width:5px;height:5px;border-radius:50%;background:rgb(var(--mgt-muted-foreground,100,116,139));display:inline-block;animation:mcpBlink 1.2s infinite ease-in-out;}',
@@ -144,6 +201,9 @@
         '<button class="mcp-btn mute" data-mcp="mute" aria-label="Couper le micro" title="Couper le micro">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>' +
         '</button>' +
+        '<button class="mcp-btn chat" data-mcp="chat" aria-label="Basculer vers le chat" title="Basculer vers le chat" style="display:none;">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+        '</button>' +
         '<button class="mcp-btn accept" data-mcp="accept" aria-label="Répondre" title="Répondre" style="display:none;">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
         '</button>' +
@@ -166,6 +226,9 @@
     '<div class="mcp-chat-head">' +
       '<div class="mcp-avatar" data-mcp="avatar">MT</div>' +
       '<div class="mcp-who"><b data-mcp="name">—</b><span>Mangoo Connect+ · en ligne</span></div>' +
+      '<button class="mcp-call" data-mcp="chat-call" aria-label="Appeler" title="Appeler">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
+      '</button>' +
       '<button class="mcp-close" data-mcp="close" aria-label="Fermer">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
       '</button>' +
@@ -206,6 +269,55 @@
     simTimers: []
   };
 
+  // Rétablissement automatique du flux média (ICE restart) : si le relais
+  // TURN ou la connexion peer-to-peer se coupe (ex. après 1 à 2 min sur un
+  // réseau mobile / derrière un NAT), on renégocie une nouvelle paire de
+  // candidats au lieu de laisser l'appel mourir silencieusement.
+  var restarting = false;
+  var iceWatchdog = null;
+  var iceRestartAttempts = 0;
+  var ICE_RESTART_MAX = 3; // nombre de renégociations avant abandon
+  function clearIceWatchdog() {
+    if (iceWatchdog) { clearTimeout(iceWatchdog); iceWatchdog = null; }
+  }
+  function scheduleIceRestart() {
+    if (iceWatchdog || !callState.open || !callState.connected) return;
+    iceWatchdog = setTimeout(function () {
+      iceWatchdog = null;
+      var pc = callState.pc;
+      if (!pc || !callState.open || !callState.connected || !callState.callId) return;
+      var st = pc.iceConnectionState;
+      if (st === 'connected' || st === 'completed') return; // s'est rétabli tout seul
+      tryIceRestart();
+    }, 3000);
+  }
+  function tryIceRestart() {
+    if (restarting) return;
+    var pc = callState.pc;
+    if (!pc || !callState.open || !callState.connected || !callState.callId) return;
+    if (iceRestartAttempts >= ICE_RESTART_MAX) return; // abandon après N tentatives
+    restarting = true;
+    iceRestartAttempts++;
+    setCallState('Rétablissement…');
+    pc.createOffer({ iceRestart: true })
+      .then(function (offer) { return pc.setLocalDescription(offer); })
+      .then(function () {
+        sendWS({ type: 'call-renegotiate', callId: callState.callId, sdp: pc.localDescription });
+        // Après un délai, on vérifie si la connexion s'est rétablie ; sinon on
+        // relance une nouvelle tentative (réseaux mobiles instables : la première
+        // renégociation peut échouer silencieusement).
+        setTimeout(function () {
+          restarting = false;
+          var cur = callState.pc && callState.pc.iceConnectionState;
+          if (cur !== 'connected' && cur !== 'completed') scheduleIceRestart();
+        }, 4000);
+      })
+      .catch(function () {
+        restarting = false;
+        scheduleIceRestart();
+      });
+  }
+
   function clearSimTimers() {
     callState.simTimers.forEach(function (t) { try { clearTimeout(t); } catch (e) {} });
     callState.simTimers = [];
@@ -245,6 +357,7 @@
     stopRingback();
     callState.seconds = 0;
     callState.connected = true;
+    q('[data-mcp="chat"]', callOverlay).style.display = '';
     q('[data-mcp="timer"]', callOverlay).textContent = formatTimer(0);
     setCallState('Connecté');
     callState.timer = setInterval(function () {
@@ -270,6 +383,8 @@
     callState.incomingSdp = null;
     callState.iceQueue = [];
     callState.hasVideo = false;
+    clearIceWatchdog();
+    restarting = false;
   }
 
   function endCall(notify) {
@@ -281,6 +396,7 @@
     callState.incoming = false;
     callOverlay.classList.remove('open');
     q('[data-mcp="accept"]', callOverlay).style.display = 'none';
+    q('[data-mcp="chat"]', callOverlay).style.display = 'none';
     q('[data-mcp="mute"]', callOverlay).style.display = '';
     if (notify && callState.callId) {
       sendWS({ type: 'call-end', callId: callState.callId });
@@ -470,11 +586,14 @@
       case 'registered': registered = true; setConnState(connState); flushOutbox(); break;
       case 'presence': emit(presenceCbs, msg.peers || []); break;
       case 'call-ring': onCallRing(msg); break;
+      case 'call-cancelled': onCallCancelled(msg); break;
       case 'call-accepted': onCallAccepted(msg); break;
       case 'call-rejected': onCallRejected(msg); break;
       case 'call-ended': onCallEndedFromPeer(msg); break;
       case 'call-error': onCallError(msg); break;
       case 'ice-candidate': onIce(msg); break;
+      case 'call-renegotiate': onCallRenegotiate(msg); break;
+      case 'call-renegotiate-answer': onCallRenegotiateAnswer(msg); break;
       case 'chat-new': onChatNew(msg); break;
       case 'chat-edited': emit(messageEditedCbs, msg); break;
       case 'chat-deleted': emit(messageDeletedCbs, msg); break;
@@ -565,6 +684,11 @@
     var name = m ? m[1] : p;
     if (name === 'chat.html' || name === 'messages.html') return 'chat';
     if (name === 'dashboard-messages.html') return 'dashboard';
+    if (name === 'dashboard-support-messages.html') return 'dashboard';
+    // Console Support : l'équipe y reste « en ligne » et les messages entrants
+    // s'affichent via le mini-chat auto-ouvert. On la traite comme une page de
+    // messagerie pour ne pas déclencher de notification push redondante.
+    if (name === 'dashboard-support-console.html') return 'support';
     return 'browse';
   }
 
@@ -591,9 +715,13 @@
    *  WebRTC
    * ------------------------------------------------------------------ */
   function getMedia(mode) {
+    // Contraintes audio explicites : annulation d'écho, réduction de bruit et
+    // gain automatique. Sur mobiles d'entrée de gamme / réseaux bruyants, cela
+    // évite les artefacts et les variations de niveau en cours d'appel.
+    var audioOpts = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
     var constraints = (mode === 'video')
-      ? { audio: true, video: { facingMode: 'user' } }
-      : { audio: true, video: false };
+      ? { audio: audioOpts, video: { facingMode: 'user' } }
+      : { audio: audioOpts, video: false };
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       return navigator.mediaDevices.getUserMedia(constraints);
     }
@@ -624,7 +752,44 @@
         setCallState('Connexion perdue');
       }
     };
+    pc.oniceconnectionstatechange = function () {
+      var st = pc.iceConnectionState;
+      if (st === 'connected' || st === 'completed') { clearIceWatchdog(); return; }
+      if (st === 'failed') { clearIceWatchdog(); tryIceRestart(); return; }
+      if (st === 'disconnected') { scheduleIceRestart(); }
+    };
     return pc;
+  }
+
+  // Préférence du codec audio Opus. Opus est conçu pour résister aux pertes de
+  // paquets et ajuster son débit en continu : sur les réseaux mobiles instables
+  // (notamment en Afrique), cela réduit nettement les coupures audio par rapport
+  // au codec PCMU par défaut de certains navigateurs.
+  function rankAudioCodec(c) {
+    var name = (c.mimeType || '').toLowerCase();
+    if (name.indexOf('opus') >= 0) return 0;
+    if (name.indexOf('pcmu') >= 0 || name.indexOf('pcma') >= 0) return 1;
+    return 2;
+  }
+  function preferAudioCodecs(pc) {
+    try {
+      var RTCRtpSenderCtor = global.RTCRtpSender || global.webkitRTCRtpSender;
+      if (!RTCRtpSenderCtor || !RTCRtpSenderCtor.getCapabilities) return;
+      var caps = RTCRtpSenderCtor.getCapabilities('audio');
+      if (!caps || !caps.codecs || !caps.codecs.length) return;
+      var codecs = caps.codecs.slice().sort(function (a, b) {
+        var ra = rankAudioCodec(a), rb = rankAudioCodec(b);
+        if (ra !== rb) return ra - rb;
+        return 0;
+      });
+      pc.getTransceivers().forEach(function (t) {
+        var kind = (t.sender && t.sender.track && t.sender.track.kind) ||
+                   (t.receiver && t.receiver.track && t.receiver.track.kind);
+        if (kind === 'audio' && typeof t.setCodecPreferences === 'function') {
+          try { t.setCodecPreferences(codecs); } catch (e) {}
+        }
+      });
+    } catch (e) {}
   }
 
   function showLocalPreview(stream) {
@@ -641,12 +806,14 @@
       var pc = createPC();
       callState.pc = pc;
       stream.getTracks().forEach(function (track) { pc.addTrack(track, stream); });
+      preferAudioCodecs(pc);
       pc.createOffer()
         .then(function (offer) { return pc.setLocalDescription(offer); })
         .then(function () {
           setCallState('Sonnerie…');
           startRingback();
-          sendWS({ type: 'call-offer', callId: callState.callId, to: targetId(target), mode: mode, sdp: pc.localDescription });
+          var geo = detectCountry();
+          sendWS({ type: 'call-offer', callId: callState.callId, to: targetId(target), mode: mode, sdp: pc.localDescription, country: geo.country, countryCode: geo.countryCode });
         })
         .catch(function () { simulateConnect(); });
     }).catch(function () {
@@ -678,6 +845,7 @@
     callState.incomingMode = msg.mode || 'audio';
     emit(incomingCallCbs, {
       callId: msg.callId, from: msg.from, fromName: msg.fromName, mode: msg.mode || 'audio',
+      country: msg.country, countryCode: msg.countryCode,
       accept: function () { acceptIncoming(); },
       reject: function () { rejectIncoming(); }
     });
@@ -695,6 +863,7 @@
       var pc = createPC();
       callState.pc = pc;
       stream.getTracks().forEach(function (track) { pc.addTrack(track, stream); });
+      preferAudioCodecs(pc);
       var RTCSessionDesc = global.RTCSessionDescription || global.webkitRTCSessionDescription;
       pc.setRemoteDescription(new RTCSessionDesc(callState.incomingSdp))
         .then(function () { flushIceQueue(); return pc.createAnswer(); })
@@ -741,6 +910,14 @@
     setTimeout(function () { endCall(false); }, 800);
   }
 
+  function onCallCancelled(msg) {
+    // Un autre agent a déjà pris l'appel (sonnerie de groupe) : on arrête la
+    // sonnerie locale sans rien renvoyer à l'appelant.
+    if (callState.callId !== msg.callId) return;
+    stopIncomingRing();
+    endCall(false);
+  }
+
   function onCallError(msg) {
     stopRingback();
     if (msg.reason === 'offline') setCallState('Utilisateur indisponible');
@@ -766,6 +943,24 @@
     } else {
       callState.iceQueue.push(msg.candidate);
     }
+  }
+
+  function onCallRenegotiate(msg) {
+    var pc = callState.pc;
+    if (!pc || callState.callId !== msg.callId || !msg.sdp) return;
+    var RTCSessionDesc = global.RTCSessionDescription || global.webkitRTCSessionDescription;
+    pc.setRemoteDescription(new RTCSessionDesc(msg.sdp))
+      .then(function () { return pc.createAnswer(); })
+      .then(function (answer) { return pc.setLocalDescription(answer); })
+      .then(function () { sendWS({ type: 'call-renegotiate-answer', callId: msg.callId, sdp: pc.localDescription }); })
+      .catch(function () {});
+  }
+
+  function onCallRenegotiateAnswer(msg) {
+    var pc = callState.pc;
+    if (!pc || callState.callId !== msg.callId || !msg.sdp) return;
+    var RTCSessionDesc = global.RTCSessionDescription || global.webkitRTCSessionDescription;
+    pc.setRemoteDescription(new RTCSessionDesc(msg.sdp)).catch(function () {});
   }
 
   /* ------------------------------------------------------------------ *
@@ -811,6 +1006,43 @@
   // avec son propre fil). Elles désactivent l'ouverture automatique de l'overlay
   // pour éviter le double affichage (page de chat + mini-chat Connect+).
   var suppressAutoOpen = false;
+
+  // Convertit une data URL base64 (video/*;base64,…) en URL Blob lisible par
+  // <video>, avec cache. Repris de chat.html / dashboard-messages.html afin que
+  // les messages vidéo entrants s'affichent réellement dans le mini-chat (et
+  // non plus sous forme d'un simple texte « Message vidéo »).
+  var mcpVideoUrlCache = {};
+  function mcpVideoUrl(src) {
+    src = String(src == null ? '' : src);
+    if (src.indexOf('data:') !== 0) return src;
+    if (mcpVideoUrlCache[src]) return mcpVideoUrlCache[src];
+    try {
+      var marker = ';base64,';
+      var mi = src.indexOf(marker);
+      if (mi < 0) return src;
+      var mime = src.slice(5, mi) || 'video/webm';
+      var b64 = src.slice(mi + marker.length);
+      var bin = atob(b64);
+      var len = bin.length;
+      var bytes = new Uint8Array(len);
+      for (var i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+      var url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+      mcpVideoUrlCache[src] = url;
+      return url;
+    } catch (e) { return src; }
+  }
+
+  function appendVideoMsg(kind, video, duration) {
+    var body = q('[data-mcp="body"]', chatEl);
+    if (!body) return;
+    var el = document.createElement('div');
+    el.className = 'mcp-msg ' + kind + ' mcp-msg-video';
+    el.innerHTML =
+      '<video controls playsinline preload="metadata" style="width:220px;max-width:100%;height:auto;max-height:260px;border-radius:10px;background:#000;display:block;" src="' + mcpVideoUrl(video) + '"></video>' +
+      '<div style="font-size:11px;margin-top:5px;opacity:.85;">🎥 ' + Math.max(1, Math.round(duration || 0)) + ' s</div>';
+    body.appendChild(el);
+    body.scrollTop = body.scrollHeight;
+  }
 
   function appendMsg(kind, text) {
     var body = q('[data-mcp="body"]', chatEl);
@@ -872,12 +1104,17 @@
       kind: msg.kind || 'text', audio: msg.audio, duration: msg.duration, mime: msg.mime, video: msg.video
     });
     if (!text && msg.kind !== 'audio' && msg.kind !== 'video') return;
+    var isVideo = msg.kind === 'video' && msg.video;
     var display = msg.kind === 'audio'
       ? ('🎤 Message vocal (' + Math.max(1, Math.round(msg.duration || 0)) + ' s)')
-      : (msg.kind === 'video' ? ('🎥 Message vidéo (' + Math.max(1, Math.round(msg.duration || 0)) + ' s)') : text);
+      : (isVideo ? '' : text);
+    function showIncoming() {
+      if (isVideo) { appendVideoMsg('in', msg.video, msg.duration); return; }
+      appendMsg('in', display);
+    }
     var isCurrent = chatTarget && targetId(chatTarget) === String(msg.from || '');
     if (chatEl.classList.contains('open') && isCurrent) {
-      appendMsg('in', display);
+      showIncoming();
       return;
     }
     // Les pages qui affichent déjà leur propre fil (ex. chat.html) désactivent
@@ -887,7 +1124,7 @@
     // discussion n'est pas ouverte (ou pas sur ce pair), on l'ouvre pour
     // afficher le texte immédiatement au lieu de le laisser « invisible ».
     openChat({ vendorId: msg.from, id: msg.from, name: msg.fromName || msg.from });
-    appendMsg('in', display);
+    showIncoming();
   }
 
   /* Indicateur « en train d'écrire » côté discussion (overlay). */
@@ -1025,9 +1262,20 @@
     if (isReal() && callState.callId) { acceptIncoming(); }
     else { simulateIncomingAccept(); }
   });
+  q('[data-mcp="chat"]', callOverlay).addEventListener('click', function () {
+    var peer = callState.target;
+    if (callState.callId && isReal()) sendWS({ type: 'call-end', callId: callState.callId });
+    endCall(false);
+    if (peer && (peer.id || peer.vendorId || peer.name)) openChat(peer);
+  });
   q('[data-mcp="close"]', chatEl).addEventListener('click', function () {
     chatEl.classList.remove('open');
     hideChatTyping();
+  });
+  q('[data-mcp="chat-call"]', chatEl).addEventListener('click', function () {
+    var peer = chatTarget;
+    if (!peer || !(peer.id || peer.vendorId || peer.name)) return;
+    api.call(peer, { mode: 'audio' });
   });
   q('[data-mcp="send"]', chatEl).addEventListener('click', sendChat);
   q('[data-mcp="input"]', chatEl).addEventListener('keydown', function (e) {
@@ -1257,7 +1505,18 @@
     endCall: function () { endCall(true); },
     hangup: function () { endCall(true); },
     isOpen: function () { return callState.open; },
-    isMuted: function () { return callState.muted; }
+    isMuted: function () { return callState.muted; },
+    // Appel audio vers le support officiel MangooTech (compte pro dédié,
+    // « toujours joignable »). L'identité est lue dans MANGOO_CONFIG.support ;
+    // l'appel sonne dans l'app du support si elle est ouverte et visible,
+    // sinon une notification push native réveille l'équipe.
+    callSupport: function () {
+      var s = (global.MANGOO_CONFIG && global.MANGOO_CONFIG.support) || {};
+      var id = s.vendorId || 'support-mangoo';
+      var name = s.name || 'Support MangooTech';
+      api.call({ vendorId: id, id: id, name: name }, { mode: 'audio' });
+      return true;
+    }
   };
 
   global.MangooConnect = api;
@@ -1494,4 +1753,69 @@
   } else {
     injectLiveBanner();
   }
+})(window);
+
+/* ==========================================================================
+ * Mangoo Logout - intercepts logout links pointing to auth.html across the
+ * client pages (dashboard / orders / favorites / chat / carte) and fully
+ * revokes the session before redirecting: clears localStorage (mgt_token,
+ * mgt_user, mgt_vendor_identity_v1) and revokes the httpOnly mgt_session
+ * cookie via POST /api/auth/logout.
+ * ========================================================================== */
+(function (global) {
+  'use strict';
+  if (global.__MangooLogoutInterceptor) return;
+  global.__MangooLogoutInterceptor = true;
+
+  var KEYS = ['mgt_token', 'mgt_user', 'mgt_vendor_identity_v1'];
+
+  function isAuthHref(href) {
+    if (!href) return false;
+    var s = String(href).split('#')[0].split('?')[0].toLowerCase();
+    return s.indexOf('auth.html') !== -1;
+  }
+
+  function normalizeText(s) {
+    return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function isLogoutLink(el) {
+    if (!el || el.tagName !== 'A') return false;
+    if (!isAuthHref(el.getAttribute('href'))) return false;
+    if (normalizeText(el.textContent || '').indexOf('deconnexion') !== -1) return true;
+    return !!(el.querySelector('[data-lucide="log-out"], .lucide-log-out'));
+  }
+
+  function clearLocal() {
+    try { for (var i = 0; i < KEYS.length; i++) localStorage.removeItem(KEYS[i]); } catch (e) {}
+  }
+
+  function performLogout() {
+    var token = null;
+    try { token = localStorage.getItem('mgt_token'); } catch (e) {}
+    var go = function () { clearLocal(); window.location.href = './auth.html'; };
+    if (token) {
+      try {
+        fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+        }).catch(function () {}).then(go);
+      } catch (e) { go(); }
+    } else {
+      go();
+    }
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.defaultPrevented) return;
+    var el = e.target;
+    while (el && el.nodeType === 1) {
+      if (el.tagName === 'A' && isLogoutLink(el)) {
+        e.preventDefault();
+        performLogout();
+        return;
+      }
+      el = el.parentNode;
+    }
+  });
 })(window);

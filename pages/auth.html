@@ -291,6 +291,74 @@ html.dark {
     </style>
 </head>
 <body class="min-h-screen font-sans antialiased">
+    <script>
+    /* Garde « session déjà active » : si un utilisateur connecté retombe sur
+       auth.html (ex. bouton Retour du téléphone après une connexion), on ne
+       réaffiche PAS le formulaire de connexion — on le renvoie immédiatement
+       vers son espace (via replace, pour ne pas laisser auth.html dans
+       l'historique de navigation). */
+    (function () {
+      function isSupportUser(u) {
+        return !!(u && (u.vendorId === 'support-mangoo' || u.id === 'pro-support-mangoo' || u.id === 'support-mangoo'));
+      }
+      function home(u) {
+        var r = String((u && u.role) || '').toLowerCase();
+        // Le compte Support est un prestataire « spécial » : il ne doit jamais
+        // être envoyé vers le dashboard prestataire (sidebar + modules), mais
+        // vers sa console de réception dédiée.
+        if (isSupportUser(u)) return 'dashboard-support-console.html';
+        if (r === 'admin') return 'admin.html';
+        if (r === 'client' || r === 'cliente') return 'client-dashboard.html#menu';
+        if (r === 'livreur') return 'livreur.html';
+        if (r === 'prestataire' || r === 'vendeur') return 'dashboard-overview.html#menu';
+        return '';
+      }
+      function go(u) {
+        // Rejoue l'atterrissage d'une notification push mémorisé avant la
+        // redirection (appel -> console, message -> messagerie Support), sinon
+        // renvoie le compte Support vers sa console.
+        var landing = null;
+        try { landing = localStorage.getItem('mgt_push_landing_v1'); } catch (e) { landing = null; }
+        if (landing) {
+          try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
+          if (isSupportUser(u) && /^\/pages\/(dashboard-support-console|dashboard-support-messages)\.html(\?.*)?$/.test(landing) && landing.indexOf('//') < 0) {
+            window.location.replace(landing);
+            return;
+          }
+        }
+        var t = home(u);
+        if (!t) return;
+        var base = window.location.pathname.replace(/[^/]*$/, '');
+        window.location.replace(base + t);
+      }
+      try {
+        // Un CTA d'inscription (« Devenir prestataire / vendeur », « Créer un
+        // compte client » via ?intent=register, ou un choix de pack via ?plan=)
+        // doit TOUJOURS afficher le formulaire : on ne renvoie pas un utilisateur
+        // déjà connecté (ex. un livreur) vers son espace, sinon il ne peut plus
+        // créer son compte et un token périmé peut faire boucler
+        // auth.html <-> livreur.html (page qui « tremble »).
+        var _qp = null;
+        try { _qp = new URLSearchParams(window.location.search); } catch (e) { _qp = null; }
+        var _wantRegister = !!(_qp && (_qp.get('intent') === 'register' || _qp.get('plan')));
+        var u = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+        var tok = localStorage.getItem('mgt_token');
+        if (u && tok && !_wantRegister) { go(u); return; }
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/auth/session', false);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.send(null);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          var d = JSON.parse(xhr.responseText);
+          if (d && d.ok && d.user) {
+            try { localStorage.setItem('mgt_user', JSON.stringify(d.user)); } catch (e) {}
+            if (d.token) { try { localStorage.setItem('mgt_token', d.token); } catch (e) {} }
+            if (!_wantRegister) go(d.user);
+          }
+        }
+      } catch (e) {}
+    })();
+    </script>
     <style id="critical-layout">
       /* ===== AUTH PAGE CRITICAL LAYOUT ===== */
       .auth-split { display: flex; min-height: 100vh; }
@@ -902,7 +970,7 @@ html.dark {
         var next = null;
         try { next = new URLSearchParams(window.location.search).get('next'); } catch (e) { next = null; }
         if (next && /^\/pages\/[A-Za-z0-9._-]+\.html$/.test(next) && next.indexOf('//') < 0) {
-          window.location.href = next;
+          window.location.replace(next);
           return;
         }
         // Rejoue l'atterrissage d'une notification push mémorisé avant la
@@ -915,16 +983,23 @@ html.dark {
           try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
           var isPro = role === 'prestataire' || role === 'vendeur' || role === 'livreur';
           if (isPro && /^\/pages\/[A-Za-z0-9._-]+\.html(\?.*)?$/.test(pushLanding) && pushLanding.indexOf('//') < 0) {
-            window.location.href = pushLanding;
+            window.location.replace(pushLanding);
             return;
           }
         }
         var target;
-        if (role === 'admin') target = 'admin.html';
-        else if (role === 'client') target = 'client-dashboard.html';
+        if (user && (user.vendorId === 'support-mangoo' || user.id === 'pro-support-mangoo' || user.id === 'support-mangoo')) target = 'dashboard-support-console.html';
+        else if (role === 'admin') target = 'admin.html';
+        else if (role === 'client' || role === 'cliente') target = 'client-dashboard.html';
         else if (role === 'livreur') target = 'livreur.html';
         else target = 'dashboard-overview.html';
-        window.location.href = base + target;
+        // Sur mobile, ouvre automatiquement la colonne de modules du dashboard
+        // prestataire/vendeur (marqueur #menu relu par mangoo-dashboard-shell.js)
+        // afin d'arriver sur le tableau de bord AVEC sa sidebar verticale, et non
+        // sur la seule « Vue d'ensemble » sans menu.
+        if ((role === 'prestataire' || role === 'vendeur') && !(user && (user.vendorId === 'support-mangoo' || user.id === 'pro-support-mangoo' || user.id === 'support-mangoo'))) target += '#menu';
+        if (role === 'client' || role === 'cliente') target += '#menu';
+        window.location.replace(base + target);
       }
 
       // ===== Connexion « l'un ou l'autre » (téléphone OU PIN) =====
@@ -1035,6 +1110,21 @@ html.dark {
       document.getElementById('reg-role-vendeur').addEventListener('click', function(){ setRegisterRole('vendeur'); });
       document.getElementById('reg-role-client').addEventListener('click', function(){ setRegisterRole('client'); });
       document.getElementById('reg-role-livreur').addEventListener('click', function(){ setRegisterRole('livreur'); });
+
+      // ===== Accès direct à l'inscription (?intent=register ou ?plan=) =====
+      // Ouvre directement l'onglet « Inscription » (et pré-sélectionne le rôle
+      // si ?role= est fourni) lorsqu'on arrive depuis un CTA d'inscription.
+      try {
+        var _q2 = new URLSearchParams(window.location.search);
+        var _reg = _q2.get('intent') === 'register' || _q2.get('plan');
+        if (_reg) {
+          switchAuthTab('inscription');
+          var _r2 = _q2.get('role');
+          if (_r2 && ['prestataire', 'vendeur', 'client', 'livreur'].indexOf(_r2) >= 0) {
+            setRegisterRole(_r2);
+          }
+        }
+      } catch (e) {}
 
       // ===== Sélection du pack à l'inscription =====
       var PACKS = [

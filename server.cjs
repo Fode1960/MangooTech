@@ -30,10 +30,54 @@ try {
   console.warn('[Push] module `web-push` indisponible — notifications web désactivées :', e.message);
 }
 
+// Module de génération des images de partage (Open Graph) 1200×630. Chargé de
+// façon défensive : si @resvg/resvg-js n'est pas installé, le serveur continue
+// de fonctionner et l'endpoint /og/ répondra 404 (sans casser le reste).
+let ogImage = null;
+try {
+  ogImage = require('./og-image.cjs');
+} catch (e) {
+  console.warn("[OG] module d'image de partage indisponible :", e.message);
+}
+
+// Module d'intégration paiement Wave (checkout redirect). Chargé de façon
+// défensive : si wave-payment.cjs est absent ou si les clés manquent, le
+// paiement réel Wave est simplement désactivé (le mode démo reste actif).
+let wavePayment = null;
+try {
+  wavePayment = require('./wave-payment.cjs');
+} catch (e) {
+  console.warn('[Paiement] module wave-payment.cjs indisponible — paiement Wave désactivé :', e.message);
+}
+
+// Module d'intégration Orange Money (Web Payment, redirect). Chargé de façon
+// défensive : si orange-money.cjs est absent ou si les clés manquent, Orange
+// Money reste en démo (le mode démo reste actif).
+let orangeMoney = null;
+try {
+  orangeMoney = require('./orange-money.cjs');
+} catch (e) {
+  console.warn('[Paiement] module orange-money.cjs indisponible — Orange Money désactivé :', e.message);
+}
+
 const ROOT = __dirname;
 const HOST = '0.0.0.0';
 const HTTP_PORT = Number(process.env.PORT || 8080);
 const HTTPS_PORT = Number(process.env.HTTPS_PORT || 8443);
+const SITE_BASE = String(process.env.SITE_URL || '').replace(/\/+$/, '');
+
+// Base absolue du site, résolue dynamiquement à partir de la requête (aucun
+// domaine en dur). Priorité : SITE_URL (config explicite) → Host /
+// X-Forwarded-Host + schéma dérivé de X-Forwarded-Proto. Utilisée pour le
+// sitemap, robots.txt, les métadonnées SEO des fiches et les images OG.
+function siteBase(req) {
+  if (SITE_BASE) return SITE_BASE;
+  if (!req) return '';
+  const scheme = isSecureRequest(req) ? 'https' : 'http';
+  let host = String((req.headers && (req.headers['x-forwarded-host'] || req.headers.host)) || '').trim();
+  host = host.split(',')[0].trim();
+  return host ? (scheme + '://' + host) : '';
+}
 
 const rand = () => crypto.randomUUID();
 
@@ -81,6 +125,8 @@ const ADMIN_SEED_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const ADMIN_SEED_PIN = process.env.ADMIN_PIN || '';
 const ADMIN_PASSWORD_RESET = process.env.ADMIN_PASSWORD_RESET || '';
 const ADMIN_PIN_RESET = process.env.ADMIN_PIN_RESET || '';
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@mangoo.tech';
+const SUPPORT_PIN = process.env.SUPPORT_PIN || '';
 const FORCE_HTTPS_ADMIN = String(process.env.FORCE_HTTPS_ADMIN || 'true').toLowerCase() !== 'false';
 // Hôte canonique de l'application (apex). `www.<CANONICAL_HOST>` est redirigé
 // vers `<CANONICAL_HOST>` pour garantir une origine unique à localStorage (qui
@@ -125,6 +171,38 @@ const MIME = {
  *  État temps réel (en mémoire)
  * ------------------------------------------------------------------ */
 const clients = new Map();        // id -> Array<{ ws, role, name, online, lastSeen }>
+const lastSeenByUser = new Map(); // id canonique -> timestamp de dernière connexion (survit à la déconnexion)
+
+// Persistance « dernière connexion » : le timestamp est conservé en mémoire
+// (accès rapide) ET écrit dans users.json (survie au redémarrage). L'écriture
+// disque est regroupée (debounce) pour absorber les rafales connexion/déconnexion.
+let lastSeenPersistTimer = null;
+function persistLastSeenNow() {
+  lastSeenPersistTimer = null;
+  saveUsers();
+}
+function scheduleLastSeenPersist() {
+  if (lastSeenPersistTimer) return;
+  lastSeenPersistTimer = setTimeout(persistLastSeenNow, 2000);
+}
+function seedLastSeenFromUsers() {
+  users.forEach(function (u) {
+    if (!u) return;
+    const cid = routingIdForUser(u);
+    if (!cid || lastSeenByUser.has(cid) || !u.lastSeenAt) return;
+    const ts = Date.parse(u.lastSeenAt);
+    if (Number.isFinite(ts)) lastSeenByUser.set(cid, ts);
+  });
+}
+function setLastSeen(cid) {
+  if (!cid) return;
+  lastSeenByUser.set(cid, Date.now());
+  const u = userByRoutingId(cid);
+  if (u) {
+    u.lastSeenAt = new Date().toISOString();
+    scheduleLastSeenPersist();
+  }
+}
 const calls = new Map();          // callId -> { callerId, calleeId, callerWs, calleeWs, mode }
 let chatLog = [];               // { msgId, convId, from, to, text, sentAt }
 let callLog = [];               // { callId, callerId, calleeId, mode, status, at }
@@ -143,6 +221,7 @@ function addClient(id, ws, role, name) {
   if (idx !== -1) list.splice(idx, 1);
   list.push({ ws, role, name, online: true, lastSeen: Date.now() });
   clients.set(cid, list);
+  setLastSeen(cid);
   return list;
 }
 
@@ -152,6 +231,7 @@ function removeClient(id, ws) {
   if (!list) return;
   const idx = list.findIndex((c) => c.ws === ws);
   if (idx !== -1) list.splice(idx, 1);
+  setLastSeen(cid);
   if (list.length === 0) clients.delete(cid);
 }
 
@@ -167,12 +247,15 @@ function isOnline(id) {
   return onlineSockets(id).length > 0;
 }
 
-// Page de messagerie : seule une connexion ouverte depuis chat.html (client)
-// ou dashboard-messages.html (professionnel) rend l'utilisateur « joignable en
-// temps réel ». Une socket ouverte ailleurs (accueil, carte, live, fiche...)
-// via autoRegisterClient ne doit PAS supprimer la notification push.
+// Page de messagerie : seule une connexion ouverte depuis chat.html (client),
+// dashboard-messages.html (professionnel) ou la console Support rend l'utilisateur
+// « joignable en temps réel ». Une socket ouverte ailleurs (accueil, carte, live,
+// fiche...) via autoRegisterClient ne doit PAS supprimer la notification push.
+// La console Support (page 'support') affiche les messages entrants via le
+// mini-chat auto-ouvert : le support y est donc « en ligne » et ne doit pas
+// recevoir de notification Web Push redondante.
 function isMessagingPage(page) {
-  return page === 'chat' || page === 'dashboard';
+  return page === 'chat' || page === 'dashboard' || page === 'support';
 }
 
 function onlineMessagingSockets(id) {
@@ -264,9 +347,16 @@ function broadcastToPeer(id, obj, exceptWs) {
 function peersList() {
   const peers = [];
   clients.forEach((list, id) => {
-    const online = list.filter((c) => c.online);
-    if (online.length === 0) return;
-    const last = online[online.length - 1];
+    // La présence reflète la joignabilité réelle en messagerie : on ne retient
+    // que les identités ayant une socket ouverte sur une page de messagerie
+    // (chat client ou dashboard pro). Une socket ouverte ailleurs (accueil,
+    // carte, live) via autoRegisterClient ne doit pas faire apparaître
+    // l'utilisateur « en ligne » côté messagerie, sinon la présence devient
+    // asymétrique entre le client et le professionnel.
+    if (!isOnMessaging(id)) return;
+    const msgs = onlineMessagingSockets(id);
+    if (msgs.length === 0) return;
+    const last = msgs[msgs.length - 1];
     peers.push({ id, role: last.role, name: last.name });
   });
   return peers;
@@ -304,6 +394,14 @@ function createRoom(vendorId, vendorName, vendorWs) {
 }
 
 function roomById(vendorId) { return liveRooms.get(roomKey(vendorId)) || null; }
+
+// Un vendeur est « en live » si une salle active existe pour son id canonique.
+// Utilisé par /api/carte pour exposer un état live réel (au lieu du false codé
+// en dur) et garder cohérents les statuts entre la carte et la messagerie.
+function isVendorLive(vendorId) {
+  const r = roomById(canonicalRoutingId(vendorId));
+  return !!(r && r.active);
+}
 
 // Accepte indifféremment un vendorId brut (« dan-boutique ») ou un roomId
 // préfixé (« room-dan-boutique ») : l'annuaire transmet un roomId, les clients
@@ -716,6 +814,7 @@ function sendPushOne(sub, payload) {
     icon: payload.icon || '/assets/favicon.png',
     data: payload.data || {}
   };
+  if (payload.requireInteraction) p.requireInteraction = true;
   webpush.sendNotification(
     { endpoint: sub.endpoint, keys: sub.keys },
     JSON.stringify(p),
@@ -800,6 +899,8 @@ function pushLandingUrl(opts) {
   if (kind === 'call') {
     add('callId', opts.callId);
     add('mode', opts.mode || 'audio');
+    add('country', opts.country);
+    add('countryCode', opts.countryCode);
   } else {
     add('convId', opts.convId);
   }
@@ -807,6 +908,13 @@ function pushLandingUrl(opts) {
   if (isClient) add('vendorId', opts.from);
   const qs = q.length ? ('?' + q.join('&')) : '';
   if (isClient) return '/pages/chat.html' + qs;
+  // Le compte Support (rôle « prestataire » dédié) atterrit sur sa console pour
+  // les appels et sur sa messagerie dédiée pour les messages. On reconnaît aussi
+  // le routingId Support directement : ainsi, même si la résolution utilisateur
+  // échoue (compte pas encore chargé, alias), le clic ne retombe JAMAIS sur la
+  // page d'accueil.
+  const isSupportRoute = /^(support-mangoo|pro-support-mangoo|support)$/i.test(canonicalRoutingId(routingId));
+  if (isSupportAccount(u) || (isSupportRoute && !u)) return kind === 'call' ? '/pages/dashboard-support-console.html' + qs : '/pages/dashboard-support-messages.html' + qs;
   if (role === 'vendeur' || role === 'prestataire' || role === 'livreur') return '/pages/dashboard-messages.html' + qs;
   return '/pages/accueil.html' + qs;
 }
@@ -841,9 +949,23 @@ function savePrestations() {
  * ------------------------------------------------------------------ */
 const CATALOGUE_FILE = path.join(DATA_DIR, 'catalogue.json');
 let catalogue = [];
+// Purge des données de démonstration (seed historique) par préfixe d'ID.
+// Les produits réels portent un UUID généré par crypto.randomUUID() ; ils ne
+// correspondent jamais aux préfixes de démo. Cette migration garantit qu'aucun
+// produit fictif ne reste affiché en production après neutralisation des seeds.
+function purgeDemoByIdPrefix(list, prefixes) {
+  if (!Array.isArray(list)) return list;
+  const cleaned = list.filter(function (item) {
+    const id = String(item && item.id ? item.id : '');
+    for (let i = 0; i < prefixes.length; i++) {
+      if (id.indexOf(prefixes[i]) === 0) return false;
+    }
+    return true;
+  });
+  return cleaned.length === list.length ? list : cleaned;
+}
 
 function seedCatalogue() {
-  // Aucun produit de démonstration : le catalogue démarre vide en production.
   return [];
 }
 
@@ -851,7 +973,13 @@ function loadCatalogue() {
   try {
     if (fs.existsSync(CATALOGUE_FILE)) {
       const data = JSON.parse(fs.readFileSync(CATALOGUE_FILE, 'utf8'));
-      if (Array.isArray(data)) { catalogue = data; backfillCatalogueFloors(); console.log('[Catalogue] chargé :', catalogue.length); return; }
+      if (Array.isArray(data)) {
+        catalogue = purgeDemoByIdPrefix(data, ['c-dan-']);
+        if (catalogue.length !== data.length) { console.log('[Catalogue] produits de démonstration purgés (' + (data.length - catalogue.length) + ').'); saveCatalogue(); }
+        backfillCatalogueFloors();
+        console.log('[Catalogue] chargé :', catalogue.length);
+        return;
+      }
     }
   } catch (e) { console.error('[Catalogue] lecture impossible, réinitialisation :', e.message); }
   catalogue = seedCatalogue();
@@ -905,7 +1033,6 @@ let inventaire = [];
 let inventaireMouvements = [];
 
 function seedInventaire() {
-  // Aucun stock de démonstration : l'inventaire démarre vide en production.
   return [];
 }
 
@@ -917,7 +1044,12 @@ function loadInventaire() {
   try {
     if (fs.existsSync(INVENTAIRE_FILE)) {
       const data = JSON.parse(fs.readFileSync(INVENTAIRE_FILE, 'utf8'));
-      if (Array.isArray(data)) { inventaire = data; console.log('[Inventaire] chargé :', inventaire.length); return; }
+      if (Array.isArray(data)) {
+        inventaire = purgeDemoByIdPrefix(data, ['inv-dan-']);
+        if (inventaire.length !== data.length) { console.log('[Inventaire] produits de démonstration purgés (' + (data.length - inventaire.length) + ').'); saveInventaire(); }
+        console.log('[Inventaire] chargé :', inventaire.length);
+        return;
+      }
     }
   } catch (e) { console.error('[Inventaire] lecture impossible, réinitialisation :', e.message); }
   inventaire = seedInventaire();
@@ -953,7 +1085,6 @@ const GALERIE_FILE = path.join(DATA_DIR, 'galerie.json');
 let galerie = [];
 
 function seedGalerie() {
-  // Aucune photo de démonstration : la galerie démarre vide en production.
   return [];
 }
 
@@ -961,7 +1092,12 @@ function loadGalerie() {
   try {
     if (fs.existsSync(GALERIE_FILE)) {
       const data = JSON.parse(fs.readFileSync(GALERIE_FILE, 'utf8'));
-      if (Array.isArray(data)) { galerie = data; console.log('[Galerie] chargée :', galerie.length); return; }
+      if (Array.isArray(data)) {
+        galerie = purgeDemoByIdPrefix(data, ['g-dan-']);
+        if (galerie.length !== data.length) { console.log('[Galerie] éléments de démonstration purgés (' + (data.length - galerie.length) + ').'); saveGalerie(); }
+        console.log('[Galerie] chargée :', galerie.length);
+        return;
+      }
     }
   } catch (e) { console.error('[Galerie] lecture impossible, réinitialisation :', e.message); }
   galerie = seedGalerie();
@@ -981,8 +1117,10 @@ function saveGalerie() {
  * ------------------------------------------------------------------ */
 const BOOSTERS_FILE = path.join(DATA_DIR, 'boosters.json');
 const BOOSTER_STATS_FILE = path.join(DATA_DIR, 'booster-stats.json');
+const TRIALS_FILE = path.join(DATA_DIR, 'trials.json');
 let boosters = [];          // activations (actives + historique)
 let boosterStats = null;    // KPIs agrégés du mois
+let trials = [];            // essais gratuits (une utilisation par vendeur/type)
 
 /* ------------------------------------------------------------------ *
  *  Profil & configuration du vendeur (source unique pour les modules
@@ -1011,18 +1149,18 @@ function seedVendorConfig() {
       updatedAt: new Date().toISOString(),
       profile: {
         ownerName: 'DANSOKO Fodé',
-        email: '',
-        phone: '',
-        whatsapp: '',
+        email: 'dan@exemple.com',
+        phone: '+336423456789',
+        whatsapp: '+221 77 123 45 67',
         enseigne: 'DAN Boutique',
         category: 'commerce',
-        description: 'Boutique de prêt-à-porter, accessoires et articles tendance au cœur de Paris.',
-        city: 'Paris',
-        country: 'France',
-        address: '3 rue de Cambrai, 75019 Paris',
-        lat: 48.89385,
-        lng: 2.37708,
-        logo: '/assets/dan-boutique-logo.svg',
+        description: 'Boutique de prêt-à-porter, accessoires et articles tendance au cœur de Dakar.',
+        city: 'Dakar',
+        country: 'Senegal',
+        address: 'Rue 10, Médina, Dakar',
+        lat: 14.7167,
+        lng: -17.4677,
+        logo: '',
         cover: ''
       },
       horaires: {
@@ -1035,7 +1173,7 @@ function seedVendorConfig() {
         dimanche: { open: false, openTime: '', closeTime: '' }
       },
       paiements: {
-        methods: ['wave', 'orange_money', 'cash'],
+        methods: ['wave', 'orange_money', 'mtn_momo', 'moov_money', 'free_mobile', 'cash'],
         acceptOnline: true
       },
       notifications: {
@@ -1050,8 +1188,8 @@ function seedVendorConfig() {
         liveAlerts: true
       },
       verification: {
-        status: 'en_attente',
-        badgeLabel: '',
+        status: 'certifie',
+        badgeLabel: 'Boutique certifiée',
         submittedAt: '2026-07-01T10:00:00.000Z',
         reviewedAt: '2026-08-19T21:45:36.312Z',
         reviewerNote: 'Documents conformes, activité vérifiée.',
@@ -1069,26 +1207,26 @@ function seedVendorConfig() {
       },
       horsLigne: {
         enabled: true,
-        lastSyncAt: '',
-        carte: '0 Ko',
-        ficheFavoris: '0 Ko',
+        lastSyncAt: '2026-08-18T08:40:00.000Z',
+        carte: '2,4 Mo',
+        ficheFavoris: '840 Ko',
         online: true,
         lastSeenAt: new Date().toISOString(),
         reason: ''
       },
       ranking: {
-        score: 0,
-        position: 0,
-        positionLabel: '',
-        factors: { boost: 0, verification: 0, avis: 0, completude: 0 }
+        score: 92,
+        position: 2,
+        positionLabel: '2e sur 48',
+        factors: { boost: 30, verification: 25, avis: 20, completude: 17 }
       },
       fidelite: {
         enabled: true,
         pointsPerOrder: 10,
-        members: 0,
-        pointsDistributed: 0,
-        redeemed: 0,
-        retention: 0,
+        members: 128,
+        pointsDistributed: 6400,
+        redeemed: 64,
+        retention: 72,
         rewards: [
           { id: 'rw-1', name: '-10% sur une prestation', cost: 100 },
           { id: 'rw-2', name: 'Soin du visage offert', cost: 250 },
@@ -1098,33 +1236,35 @@ function seedVendorConfig() {
       parrainage: {
         enabled: true,
         code: 'DAN10',
-        invited: 0,
+        invited: 24,
         rewardPerInvite: 500,
-        earned: 0
+        earned: 12000
       },
       rapports: {
         period: '2026-08',
-        revenue: 0,
-        orders: 0,
-        views: 0,
-        conversion: 0,
-        generated: 0,
-        downloads: 0,
-        scheduled: 0,
-        storage: '0 Ko',
-        lastExportAt: '',
+        revenue: 485000,
+        orders: 86,
+        views: 1240,
+        conversion: 6.9,
+        generated: 12,
+        downloads: 46,
+        scheduled: 3,
+        storage: '2,4 Mo',
+        lastExportAt: '2026-08-17T09:30:00.000Z',
         periods: {
-          '7j': { orders: 0, revenue: 0 },
-          '30j': { orders: 0, revenue: 0 },
-          '90j': { orders: 0, revenue: 0 }
+          '7j': { orders: 12, revenue: 485000 },
+          '30j': { orders: 45, revenue: 1200000 },
+          '90j': { orders: 128, revenue: 3400000 }
         }
       },
       support: {
-        openTickets: 0,
-        resolvedTickets: 0,
-        avgResponseHours: 0,
-        articles: 0,
-        tickets: []
+        openTickets: 1,
+        resolvedTickets: 18,
+        avgResponseHours: 3,
+        articles: 24,
+        tickets: [
+          { id: 'tk-1043', subject: 'Compte & accès', status: 'ouvert', updatedAt: '2026-08-19T17:38:16.474Z' }
+        ]
       },
       promotions: {
         enabled: true,
@@ -1134,15 +1274,15 @@ function seedVendorConfig() {
       },
       decouverte: {
         public: true,
-        rayonKm: 5,
-        pays: ['France'],
-        villes: ['Paris'],
-        badges: ['promo'],
+        rayonKm: 25,
+        pays: ['Senegal', 'Cameroun', 'Cote d\'Ivoire'],
+        villes: ['Dakar', 'Pikine', 'Guediawaye', 'Rufisque'],
+        badges: ['certifie', 'promo'],
         apparaitDans: ['carte', 'recherche', 'recommandations'],
-        impressions: 0,
-        clics: 0,
-        tauxClic: 0,
-        recommandations: 0
+        impressions: 2840,
+        clics: 416,
+        tauxClic: 14.6,
+        recommandations: 132
       }
     }
   };
@@ -1163,10 +1303,10 @@ function blankVendorConfig(vendorId) {
       category: 'salon',
       description: '',
       city: '',
-      country: '',
+      country: 'Senegal',
       address: '',
-      lat: null,
-      lng: null,
+      lat: 14.7167,
+      lng: -17.4677,
       logo: '',
       cover: ''
     },
@@ -1180,7 +1320,7 @@ function blankVendorConfig(vendorId) {
       dimanche: { open: false, openTime: '', closeTime: '' }
     },
     paiements: {
-      methods: ['wave', 'orange_money', 'cash'],
+      methods: ['wave', 'orange_money', 'mtn_momo', 'moov_money', 'free_mobile', 'cash'],
       acceptOnline: true
     },
     notifications: {
@@ -1202,6 +1342,16 @@ function blankVendorConfig(vendorId) {
       startedAt: now,
       renewsAt: null,
       autoRenew: false
+    },
+    welcomeAudio: {
+      text: '',
+      dataUrl: '',
+      mime: 'audio/webm',
+      updatedAt: null
+    },
+    badgeAudio: {
+      promo: { dataUrl: '', mime: 'audio/webm', updatedAt: null },
+      new: { dataUrl: '', mime: 'audio/webm', updatedAt: null }
     },
     horsLigne: {
       enabled: false,
@@ -1267,8 +1417,8 @@ function blankVendorConfig(vendorId) {
     decouverte: {
       public: false,
       rayonKm: 25,
-      pays: [],
-      villes: [],
+      pays: ['Senegal'],
+      villes: ['Dakar'],
       badges: [],
       apparaitDans: [],
       impressions: 0,
@@ -1322,8 +1472,6 @@ function sanitizeVendorConfig(config) {
   DEMO_IDS.forEach(function (vid) {
     const c = config[vid];
     if (!c) return;
-    // Réapplique la vraie identité + géolocalisation (Paris) des comptes DAN,
-    // quel que soit l'état persisté (ex. ville/description restées sur Dakar).
     const fix = knownVendorFix(vid);
     if (fix) {
       c.profile = Object.assign({}, c.profile || {}, {
@@ -1340,7 +1488,6 @@ function sanitizeVendorConfig(config) {
         c.decouverte.pays = [fix.country];
       }
     }
-    // Logo dédié : évite l'avatar vide/générique sur la fiche publique.
     if (vid === 'pro-41cafa4bcb31' && !(c.profile && c.profile.logo)) {
       c.profile = Object.assign({}, c.profile || {}, { logo: '/assets/dan-boutique-logo.svg' });
     }
@@ -1380,7 +1527,7 @@ function loadVendorConfig() {
       }
     }
   } catch (e) { console.error('[VendorConfig] lecture impossible, réinitialisation :', e.message); }
-  vendorConfig = seedVendorConfig();
+  vendorConfig = sanitizeVendorConfig(seedVendorConfig());
   saveVendorConfig();
   console.log('[VendorConfig] seed initial');
 }
@@ -1433,8 +1580,6 @@ function isStrongPassword(pw) {
 
 function normalizePhone(p) {
   let s = String(p || '').replace(/[^\d+]/g, '').trim();
-  // Normalise le préfixe international « 00 » en « + » (ex. 0033610498123 → +33610498123)
-  // afin d'éviter qu'un numéro saisi en format 00 ne soit affiché/stocké de façon ambiguë.
   if (/^00\d{7,15}$/.test(s)) s = '+' + s.slice(2);
   return s;
 }
@@ -1588,6 +1733,7 @@ function loadUsers() {
         console.log('[Auth] comptes chargés :', users.length);
         rotateLegacyAdminCredentials();
         applyAdminPasswordReset();
+        seedLastSeenFromUsers();
         return;
       }
     }
@@ -1621,13 +1767,13 @@ function ensureSeedVendorUsers() {
       role: 'vendeur',
       name: 'DANSOKO Fodé',
       enseigne: 'DAN Boutique',
-      email: '',
-      phone: '',
+      email: 'dan@exemple.com',
+      phone: '+336423456789',
       category: 'commerce',
-      city: 'Paris',
-      country: 'France',
-      lat: 48.89385,
-      lng: 2.37708,
+      city: 'Dakar',
+      country: 'Senegal',
+      lat: 14.7167,
+      lng: -17.4677,
       logo: ''
     }
   ];
@@ -1650,6 +1796,74 @@ function ensureSeedVendorUsers() {
   }
 }
 
+// Compte « Support MangooTech » : identité pro interne dédiée, joignable via
+// l'appel in-app Mangoo Connect+ (bouton « Contacter le support »). Le compte
+// est réconcilié au démarrage sans jamais écraser un compte existant.
+// L'équipe se connecte par email + PIN (SUPPORT_EMAIL / SUPPORT_PIN). Sans
+// SUPPORT_PIN, un PIN aléatoire est généré et affiché UNE SEULE FOIS au
+// démarrage (logs du service). Le compte support est non critique : on ne
+// bloque JAMAIS le démarrage (contrairement au compte admin). Définir
+// SUPPORT_PIN pour figer le PIN.
+function ensureSupportAccount() {
+  const vendorId = 'support-mangoo';
+  const existing = users.find(function (u) {
+    return u && (canonicalRoutingId(u.vendorId) === vendorId || canonicalRoutingId(u.id) === vendorId);
+  });
+  let changed = false;
+  let generatedPin = null;
+
+  if (!existing) {
+    let pin = SUPPORT_PIN;
+    if (!pin) {
+      generatedPin = String(Math.floor(1000 + Math.random() * 9000));
+      pin = generatedPin;
+    }
+    users.push({
+      id: 'pro-support-mangoo',
+      vendorId: vendorId,
+      role: 'prestataire',
+      name: 'Support MangooTech',
+      enseigne: 'Support MangooTech',
+      email: SUPPORT_EMAIL,
+      phone: '+33962014080',
+      category: 'service',
+      city: 'Paris',
+      country: 'France',
+      lat: 48.8566,
+      lng: 2.3522,
+      logo: '',
+      pinHash: hashSecret(pin),
+      passwordHash: null,
+      createdAt: new Date().toISOString()
+    });
+    changed = true;
+    console.log('[Auth] compte support créé (Support MangooTech).');
+  } else if (SUPPORT_PIN && (!existing.pinHash || !verifySecret(SUPPORT_PIN, existing.pinHash))) {
+    existing.pinHash = hashSecret(SUPPORT_PIN);
+    changed = true;
+    console.log('[Auth] PIN du compte support défini/mis à jour via SUPPORT_PIN.');
+  } else if (!existing.pinHash) {
+    generatedPin = String(Math.floor(1000 + Math.random() * 9000));
+    existing.pinHash = hashSecret(generatedPin);
+    changed = true;
+  }
+
+  if (changed) saveUsers();
+
+  if (generatedPin) {
+    console.log([
+      '',
+      '============================================================',
+      '  COMPTE SUPPORT MANGOO — connexion équipe (email + PIN)',
+      '  Email : ' + SUPPORT_EMAIL,
+      '  PIN    : ' + generatedPin,
+      '  (définissez SUPPORT_PIN pour le fixer)',
+      '============================================================',
+      ''
+    ].join('\n'));
+  }
+}
+
 /* ------------------------------------------------------------------ *
  *  Annuaire public (Local+ / carte)
  * ------------------------------------------------------------------ *
@@ -1660,9 +1874,21 @@ function ensureSeedVendorUsers() {
 // Permet d'enregistrer country + lat/lng au moment de la création du compte, afin
 // que la carte Local+ puisse géolocaliser chaque pro sans retomber sur Dakar.
 const GEO_CITIES = {
-  // Europe (test France)
+  // Europe (France) — centre-ville de chaque commune. Évite qu'une ville
+  // saisie librement (ex. « Vichy ») soit ignorée et retombe sur Dakar.
   'paris':        { city: 'Paris',        country: 'France',        lat: 48.8566, lng: 2.3522 },
   'vichy':        { city: 'Vichy',        country: 'France',        lat: 46.1267, lng: 3.4259 },
+  'lyon':         { city: 'Lyon',         country: 'France',        lat: 45.7640, lng: 4.8357 },
+  'marseille':    { city: 'Marseille',    country: 'France',        lat: 43.2965, lng: 5.3698 },
+  'toulouse':     { city: 'Toulouse',     country: 'France',        lat: 43.6047, lng: 1.4442 },
+  'nice':         { city: 'Nice',         country: 'France',        lat: 43.7102, lng: 7.2620 },
+  'nantes':       { city: 'Nantes',       country: 'France',        lat: 47.2184, lng: -1.5536 },
+  'strasbourg':   { city: 'Strasbourg',   country: 'France',        lat: 48.5734, lng: 7.7521 },
+  'montpellier':  { city: 'Montpellier',  country: 'France',        lat: 43.6108, lng: 3.8767 },
+  'bordeaux':     { city: 'Bordeaux',     country: 'France',        lat: 44.8378, lng: -0.5792 },
+  'lille':        { city: 'Lille',        country: 'France',        lat: 50.6292, lng: 3.0573 },
+  'rennes':       { city: 'Rennes',       country: 'France',        lat: 48.1173, lng: -1.6778 },
+  'clermont-ferrand': { city: 'Clermont-Ferrand', country: 'France', lat: 45.7772, lng: 3.0870 },
 
   // Afrique du Nord
   'algiers':      { city: 'Alger',        country: 'Algeria',       lat: 36.7538, lng: 3.0588 },
@@ -1797,8 +2023,8 @@ function carteCategory(category) {
 // Reconstruit une ville valide à partir d'un profil dont la ville est absente
 // ou a été enregistrée comme « other » (ancienne option « Autre » du formulaire,
 // qui n'était pas géolocalisée). On dérive la ville connue la plus proche des
-// coordonnées, sinon la première ville du pays, sinon Paris (repli neutre). Corrige
-// les comptes créés avant la normalisation des villes, afin qu'ils apparaissent sur la carte.
+// coordonnées, sinon la première ville du pays, sinon Dakar. Corrige les comptes
+// créés avant la normalisation des villes, afin qu'ils apparaissent sur la carte.
 function resolveVendorCity(lat, lng, country) {
   const hasGeo = typeof lat === 'number' && isFinite(lat) && typeof lng === 'number' && isFinite(lng);
   if (hasGeo) {
@@ -1817,7 +2043,7 @@ function resolveVendorCity(lat, lng, country) {
       if (String(c.country).trim().toLowerCase() === ck) return { city: c.city, country: c.country };
     }
   }
-  return { city: 'Paris', country: 'France' };
+  return { city: 'Dakar', country: 'Senegal' };
 }
 
 // Compare deux coordonnées numériques avec une petite tolérance (évite de
@@ -1858,25 +2084,21 @@ function normalizeVendorCities() {
     let lat = (profile.lat != null) ? Number(profile.lat) : (u.lat != null ? Number(u.lat) : null);
     let lng = (profile.lng != null) ? Number(profile.lng) : (u.lng != null ? Number(u.lng) : null);
 
-    // Correctif ciblé : fiche connue réaffectée à sa vraie ville d'inscription
-    // (Paris, Vichy…) AVANT toute géolocalisation, pour ne pas re-persister Dakar.
-    const knownFix = knownVendorFix(u.vendorId || u.id, u.email);
-    const hasExactFix = !!(knownFix && knownFix.lat != null && knownFix.lng != null);
-    if (knownFix && knownFix.city) { city = knownFix.city; country = knownFix.country; }
-    if (knownFix && knownFix.lat != null) lat = Number(knownFix.lat);
-    if (knownFix && knownFix.lng != null) lng = Number(knownFix.lng);
-
     const ck = normalizeCityKey(city);
     const needsResolve = !ck || ck === 'other' || ck === 'autre';
-    let geo = hasExactFix ? null : geocodeCity(city);
+    let geo = geocodeCity(city);
 
     if (geo) {
-      // Ville connue : on force des coordonnées canoniques pour corriger les
-      // incohérences (ville ≠ coordonnées).
+      // Ville connue : on garde ville/pays canoniques, mais on préserve les
+      // coordonnées GPS réelles si elles sont plausibles (≤ 50 km du centre),
+      // afin de ne plus écraser une vraie position par le centre-ville. On ne
+      // recale sur le centre que si les coordonnées sont absentes ou
+      // manifestement incohérentes (ex. « Paris » avec des coordonnées à Dakar).
       city = geo.city;
       country = geo.country;
-      lat = geo.lat;
-      lng = geo.lng;
+      const hasReal = typeof lat === 'number' && isFinite(lat) && typeof lng === 'number' && isFinite(lng);
+      const closeEnough = hasReal && haversineKm(lat, lng, geo.lat, geo.lng) <= 50;
+      if (!closeEnough) { lat = geo.lat; lng = geo.lng; }
     } else if (needsResolve) {
       // Ville vide / « other » : on la dérive de la position GPS.
       const resolved = resolveVendorCity(lat, lng, country);
@@ -1885,8 +2107,8 @@ function normalizeVendorCities() {
       geo = geocodeCity(city);
       if (geo) { lat = geo.lat; lng = geo.lng; }
     } else if (lat == null || lng == null) {
-      // Ville inconnue du dictionnaire et sans coordonnées : repli Paris.
-      geo = geocodeCity('Paris');
+      // Ville inconnue du dictionnaire et sans coordonnées : repli Dakar.
+      geo = geocodeCity('Dakar');
       if (geo) { city = geo.city; country = geo.country; lat = geo.lat; lng = geo.lng; }
     }
 
@@ -1937,10 +2159,19 @@ function normalizeVendorCities() {
   }
 }
 
-// Correctif défensif ciblé : réaffecte certaines fiches connues à leur vraie
-// ville d'inscription, quel que soit l'état enregistré (ville/coordonnées erronées).
-// S'applique en lecture pour la carte, la liste et l'admin, afin qu'une inscription
-// en province ne remonte pas à tort sur la position par défaut du pays (Paris).
+// Assainit un logo avant exposition dans /api/carte : une image data-URL
+// surdimensionnée (plusieurs centaines de Ko, ex. logo vendeur mal compressé)
+// gonfle la réponse JSON et fige le rendu des cartes côté client (page lente,
+// cartes apparemment inopérantes). Au-delà du seuil, on renvoie une chaîne
+// vide : le client affiche alors l'avatar à initiale, léger et fiable.
+const MAX_LOGO_CHARS = 150000; // ~150 Ko en base64
+function safeLogo(logo) {
+  const s = typeof logo === 'string' ? logo.trim() : '';
+  if (!s) return '';
+  if (s.indexOf('data:') === 0 && s.length > MAX_LOGO_CHARS) return '';
+  return s;
+}
+
 const KNOWN_VENDOR_FIXES = [
   {
     matchId: 'pro-45624665',
@@ -1956,10 +2187,6 @@ const KNOWN_VENDOR_FIXES = [
       status: 'en_attente'
     }
   },
-  // DAN Boutique — vraie adresse : 3 rue de Cambrai, 75019 Paris.
-  // Le compte « seed » (pro-41cafa4bcb31) et le compte réel d'inscription
-  // (ven-e9e831ccf698) désignent la même boutique physique : on réaffecte les
-  // deux identifiants aux mêmes coordonnées exactes.
   {
     matchId: 'pro-41cafa4bcb31',
     matchEmail: 'dan@exemple.com',
@@ -1984,8 +2211,6 @@ const KNOWN_VENDOR_FIXES = [
       description: 'Boutique de prêt-à-porter, accessoires et articles tendance au cœur de Paris.'
     }
   },
-  // DAN Coiffure — même propriétaire (DANSOKO), vraie adresse : 3 rue de Cambrai,
-  // 75019 Paris. Corrige la ville enregistrée par défaut (Dakar) en production.
   {
     matchId: 'pro-eb10536cd12d',
     matchEmail: '',
@@ -1998,7 +2223,6 @@ const KNOWN_VENDOR_FIXES = [
       description: 'Salon de coiffure et soins capillaires au cœur de Paris.'
     }
   },
-  // Boutique jeu vidéo — même adresse réelle : 3 rue de Cambrai, 75019 Paris.
   {
     matchId: 'ven-7267d483b4d8',
     matchEmail: '',
@@ -2021,14 +2245,6 @@ function knownVendorFix(id, email) {
     if (f.matchEmail && mail === f.matchEmail) return f.patch;
   }
   return null;
-}
-
-// Plus aucun compte de démonstration : DAN Boutique (vendeur) et DAN Coiffure
-// (prestataire) sont désormais des profils de production réels et doivent
-// apparaître dans l'annuaire public et les listes publiques.
-const DEMO_VENDOR_IDS = new Set([]);
-function isDemoVendor(id) {
-  return !!(id && DEMO_VENDOR_IDS.has(id));
 }
 
 // Vue « publique » de la config d'un vendeur : canonise l'identifiant (doublons
@@ -2065,6 +2281,16 @@ function vendorConfigView(vendorId) {
   return out;
 }
 
+// Aucun compte de démonstration : DAN Boutique (vendeur) et DAN Coiffure
+// (prestataire) sont des profils de production réels et restent visibles dans
+// l'annuaire public. En revanche, le compte « Support MangooTech » est une
+// identité interne non commerçante : il doit rester joignable via l'appel in-app
+// mais NE PAS apparaître sur la carte ni dans les listes publiques.
+const DEMO_VENDOR_IDS = new Set(['support-mangoo']);
+function isDemoVendor(id) {
+  return !!(id && DEMO_VENDOR_IDS.has(id));
+}
+
 function carteVendors() {
   // Réconcilie l'état des boosters (expiration des badges échus) avant de
   // construire l'annuaire, afin que la carte reflète les badges actifs en
@@ -2079,22 +2305,26 @@ function carteVendors() {
   });
   let nextId = 1;
   eligible.forEach(function (u) {
-    const cfg = u.vendorId ? vendorConfigFor(u.vendorId) : null;
+    const cfg = vendorConfigView(u.vendorId || u.id) || (u.vendorId ? vendorConfigFor(u.vendorId) : null);
     const profile = (cfg && cfg.profile) || {};
     const type = u.role === 'vendeur' ? 'boutique' : 'prestataire';
     const knownFix = knownVendorFix(u.vendorId || u.id, u.email);
     const category = knownFix && knownFix.category
       ? carteCategory(knownFix.category)
       : carteCategory(profile.category || u.category || (type === 'boutique' ? 'boutique' : 'service'));
-    const rating = (cfg && cfg.rating != null)
+    const rawRating = (cfg && cfg.rating != null)
       ? Number(cfg.rating)
-      : ((cfg && cfg.ranking && cfg.ranking.score != null) ? Number((cfg.ranking.score / 20).toFixed(1)) : 0);
+      : ((cfg && cfg.ranking && cfg.ranking.score != null) ? Number((cfg.ranking.score / 20).toFixed(1)) : 4.5);
+    // Ne jamais exposer une note nulle : une note absente ou égale à 0 est
+    // ramenée à la note par défaut (4.5). Corrige les cartes « ★ 0 » vues en
+    // production lorsque vendor-config.json enregistre rating:0.
+    const rating = (Number.isFinite(rawRating) && rawRating > 0) ? rawRating : 4.5;
 
     // Coordonnées + ville normalisées : les comptes « other » (ancienne option
     // « Autre ») sont ré-affectés à une vraie ville pour ne pas disparaître de
-    // la carte alors qu'ils sont géolocalisés (repli neutre sur Paris).
-    let lat = (profile.lat != null) ? Number(profile.lat) : (u.lat != null ? Number(u.lat) : 48.8566);
-    let lng = (profile.lng != null) ? Number(profile.lng) : (u.lng != null ? Number(u.lng) : 2.3522);
+    // la carte alors qu'ils sont géolocalisés (par défaut Dakar).
+    let lat = (profile.lat != null) ? Number(profile.lat) : (u.lat != null ? Number(u.lat) : 14.7167);
+    let lng = (profile.lng != null) ? Number(profile.lng) : (u.lng != null ? Number(u.lng) : -17.4677);
     let city = profile.city || u.city || '';
     let country = profile.country || u.country || '';
 
@@ -2127,9 +2357,11 @@ function carteVendors() {
       if (!country) country = resolved.country;
     }
 
+    const cid = canonicalRoutingId(u.vendorId || u.id);
     list.push({
       id: nextId++,
-      vendorId: canonicalRoutingId(u.vendorId || u.id),
+      vendorId: cid,
+      lastSeen: (lastSeenByUser.get(cid) || (u.lastSeenAt ? Date.parse(u.lastSeenAt) : null)) || null,
       name: profile.enseigne || u.enseigne || u.name || 'Professionnel',
       type: type,
       category: category,
@@ -2139,14 +2371,148 @@ function carteVendors() {
       lng: lng,
       rating: rating,
       price: '$$',
-      live: false,
-      desc: (knownFix && knownFix.description) || profile.description || '',
-      img: profile.logo || profile.cover || '',
+      live: isVendorLive(u.vendorId || u.id),
+      desc: profile.description || '',
+      img: safeLogo(profile.logo || profile.cover || ''),
       phone: (knownFix && knownFix.phone) || profile.phone || u.phone || '',
-      boosts: activeBoostsFor(u.vendorId || u.id)
+      boosts: activeBoostsFor(u.vendorId || u.id),
+      trialBoosts: trialBoostsFor(u.vendorId || u.id)
     });
   });
   return list;
+}
+
+function buildSitemap(base) {
+  const BASE = (base || SITE_BASE || '').replace(/\/+$/, '');
+  const STATIC_PAGES = [
+    '/pages/accueil.html',
+    '/pages/carte.html',
+    '/pages/annuaire-prestataires.html',
+    '/pages/comparatif-prestataire-boutique.html',
+    '/pages/lives-en-direct.html',
+    '/pages/blog.html',
+    '/pages/aide.html',
+    '/pages/faq.html',
+    '/pages/contact.html',
+    '/pages/paiements.html',
+    '/pages/cgv.html',
+    '/pages/conditions-utilisation.html',
+    '/pages/confidentialite.html',
+    '/pages/mentions-legales.html',
+    '/pages/installer-ios.html'
+  ];
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  }
+  const lastmod = new Date().toISOString().slice(0, 10);
+  let out = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  out += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+  STATIC_PAGES.forEach(function (p) {
+    out += '  <url><loc>' + esc(BASE + p) + '</loc><lastmod>' + lastmod + '</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>\n';
+  });
+  let vendors = [];
+  try { vendors = carteVendors() || []; } catch (e) { vendors = []; }
+  vendors.forEach(function (v) {
+    const page = v.type === 'boutique' ? '/pages/fiche-boutique.html' : '/pages/fiche.html';
+    const loc = BASE + page + '?vendorId=' + encodeURIComponent(v.vendorId || '');
+    out += '  <url><loc>' + esc(loc) + '</loc><lastmod>' + lastmod + '</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n';
+  });
+  out += '</urlset>\n';
+  return out;
+}
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function escAttr(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function resolveVendorForSeo(vendorId) {
+  if (!vendorId) return null;
+  const id = canonicalRoutingId(vendorId);
+  let list = [];
+  try { list = carteVendors() || []; } catch (e) { list = []; }
+  for (let i = 0; i < list.length; i++) {
+    if (list[i].vendorId === id) return list[i];
+  }
+  return null;
+}
+function seoImage(url, base) {
+  const BASE = (base || SITE_BASE || '').replace(/\/+$/, '');
+  const s = String(url || '').trim();
+  if (!s) return BASE + '/assets/icon-512.png';
+  if (s.indexOf('data:') === 0) return BASE + '/assets/icon-512.png';
+  if (/^https?:\/\//i.test(s)) return s;
+  if (s.charAt(0) === '/') return BASE + s;
+  return s;
+}
+function injectFicheSeo(html, vendor, pageType, vendorId, base) {
+  const BASE = (base || SITE_BASE || '').replace(/\/+$/, '');
+  const isBoutique = pageType === 'boutique';
+  const page = isBoutique ? '/pages/fiche-boutique.html' : '/pages/fiche.html';
+  const label = isBoutique ? 'Boutique' : 'Prestataire';
+  const schemaType = isBoutique ? 'Store' : 'ProfessionalService';
+  const name = vendor ? (vendor.name || '') : '';
+  const descRaw = vendor ? String(vendor.desc || '').replace(/\s+/g, ' ').trim() : '';
+  const desc = descRaw || (name ? ('Découvrez ' + name + ' sur MangooTech.') : (isBoutique ? 'Découvrez cette boutique sur MangooTech : produits, horaires, contact et commande en ligne.' : 'Découvrez ce prestataire sur MangooTech : services, horaires, avis et réservation en ligne.'));
+  const title = name ? (name + ' · ' + label + ' · MangooTech') : (label + ' · MangooTech');
+  const url = BASE + page + (vendorId ? ('?vendorId=' + encodeURIComponent(vendorId)) : '');
+  // Image de partage dédiée (1200×630) générée côté serveur : /og/<vendorId>.png
+  // (repli sur /og/default.png si vendeur inconnu). On n'utilise plus le logo
+  // brut du vendeur (ratio et taille non optimisés pour les aperçus sociaux).
+  const img = BASE + '/og/' + (vendorId ? encodeURIComponent(vendorId) : 'default') + '.png';
+  let out = html;
+  out = out.replace(/<title>[\s\S]*?<\/title>/, '<title>' + escHtml(title) + '</title>');
+  out = out.replace(/<meta name="description" content="[^"]*">/, '<meta name="description" content="' + escAttr(desc) + '">');
+  out = out.replace(/<link rel="canonical" href="[^"]*">/, '<link rel="canonical" href="' + escAttr(url) + '">');
+  out = out.replace(/<meta property="og:title" content="[^"]*">/, '<meta property="og:title" content="' + escAttr(title) + '">');
+  out = out.replace(/<meta property="og:description" content="[^"]*">/, '<meta property="og:description" content="' + escAttr(desc) + '">');
+  out = out.replace(/<meta property="og:image" content="[^"]*">/, '<meta property="og:image" content="' + escAttr(img) + '">');
+  out = out.replace(/<meta property="og:url" content="[^"]*">/, '<meta property="og:url" content="' + escAttr(url) + '">');
+  out = out.replace(/<meta name="twitter:title" content="[^"]*">/, '<meta name="twitter:title" content="' + escAttr(title) + '">');
+  out = out.replace(/<meta name="twitter:description" content="[^"]*">/, '<meta name="twitter:description" content="' + escAttr(desc) + '">');
+  out = out.replace(/<meta name="twitter:image" content="[^"]*">/, '<meta name="twitter:image" content="' + escAttr(img) + '">');
+  const json = {
+    '@context': 'https://schema.org',
+    '@type': schemaType,
+    name: name || (label + ' MangooTech'),
+    description: desc,
+    url: url,
+    image: img
+  };
+  if (vendor) {
+    if (vendor.phone) json.telephone = vendor.phone;
+    if (vendor.city || vendor.country) json.address = { '@type': 'PostalAddress', addressLocality: vendor.city, addressCountry: vendor.country };
+    if (vendor.rating != null) json.aggregateRating = { '@type': 'AggregateRating', ratingValue: String(vendor.rating), bestRating: '5', worstRating: '1', ratingCount: '1' };
+  }
+  const jsonStr = JSON.stringify(json).replace(/</g, '\\u003c');
+  out = out.replace(/<script type="application\/ld\+json" id="seo-jsonld">[\s\S]*?<\/script>/, '<script type="application/ld+json" id="seo-jsonld">' + jsonStr + '</script>');
+  return out;
+}
+function serveOgImage(req, res, vendorId) {
+  if (!ogImage) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Not Found');
+    return;
+  }
+  const id = (vendorId && vendorId !== 'default') ? vendorId : '';
+  let png = null;
+  try {
+    const vendor = id ? resolveVendorForSeo(id) : null;
+    png = ogImage.renderPng(vendor, { tagline: 'Connectez-vous à vos prestataires et boutiques de proximité' });
+  } catch (e) {
+    console.error("[OG] génération de l'image impossible :", e.message);
+  }
+  if (!png || !png.length) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Not Found');
+    return;
+  }
+  res.writeHead(200, {
+    'Content-Type': 'image/png',
+    'Cache-Control': 'public, max-age=3600',
+    'Content-Length': png.length
+  });
+  res.end(png);
 }
 
 function loadSessions() {
@@ -2176,6 +2542,14 @@ function findUserByIdentifier(identifier) {
   return null;
 }
 
+// Compte « Support MangooTech » (vendorId support-mangoo). Ce compte
+// partagé par l'équipe interne se connecte par email (SUPPORT_EMAIL) OU par
+// son PIN à 4 chiffres (SUPPORT_PIN). Le PIN reste connu de la seule
+// personne habilitée ; l'email permet la connexion de l'équipe.
+function isSupportAccount(u) {
+  return !!(u && (u.vendorId === 'support-mangoo' || u.id === 'pro-support-mangoo' || u.id === 'support-mangoo'));
+}
+
 function userByToken(token) {
   const t = String(token || '').trim();
   if (!t) return null;
@@ -2186,9 +2560,9 @@ function userByToken(token) {
 
 // Catalogue d'offres de boosters (fixe, exposé tel quel à l'écran).
 const BOOSTER_OFFERS = [
-  { id: 'boost-sponsorise', type: 'sponsorise', name: 'Sponsorisé', title: 'Tête des résultats', desc: 'Votre fiche remonte en premier sur la carte et la recherche', price: 2000, priceLabel: 'FCFA / 24h', durationText: '24h', durationMs: 24 * 60 * 60 * 1000, icon: 'megaphone', recommended: false, features: ['Position en tête des résultats', 'Priorité sur la carte Local+', 'Portée maximale pendant 24h'] },
-  { id: 'boost-promo', type: 'promo', name: 'En Promo', title: 'Badge promo', desc: 'Affichez le badge « Promo » et mettez vos offres en avant', price: 3000, priceLabel: 'FCFA / 3 jours', durationText: '3 jours', durationMs: 3 * 24 * 60 * 60 * 1000, icon: 'tag', recommended: true, features: ['Badge « Promo » sur votre fiche', 'Mise en avant de vos offres', 'Visibilité pendant 3 jours'] },
-  { id: 'boost-nouveau', type: 'nouveau', name: 'Nouveau', title: 'Badge nouveauté', desc: 'Attirez l\'attention des nouveaux clients', price: 1000, priceLabel: 'FCFA / 48h', durationText: '48h', durationMs: 48 * 60 * 60 * 1000, icon: 'sparkles', recommended: false, features: ['Badge « Nouveau » sur votre fiche', 'Signale votre activité récente', 'Visibilité pendant 48h'] }
+  { id: 'boost-sponsorise', type: 'sponsorise', name: 'Sponsorisé', title: 'Passez devant vos concurrents', desc: 'Votre fiche remonte en tête de la carte et de la recherche, là où les clients cliquent en premier.', price: 2000, priceLabel: 'FCFA / 24h', durationText: '24h', durationMs: 24 * 60 * 60 * 1000, icon: 'megaphone', recommended: false, features: ['Première place sur la carte et la recherche', 'Badge « Sponsorisé » mis en avant', 'Visibilité maximale pendant 24 h'] },
+  { id: 'boost-promo', type: 'promo', name: 'En Promo', title: 'Boostez vos ventes', desc: 'Le badge rose « Promo » attire l’œil et crée l’urgence : idéal pour écouler un stock ou lancer une offre.', price: 3000, priceLabel: 'FCFA / 3 jours', durationText: '3 jours', durationMs: 3 * 24 * 60 * 60 * 1000, icon: 'tag', recommended: true, features: ['Badge « Promo » rose, très visible', 'Mise en avant dans l’Offre du jour', 'Visibilité pendant 3 jours'] },
+  { id: 'boost-nouveau', type: 'nouveau', name: 'Nouveau', title: 'Faites-vous remarquer', desc: 'Signalez votre ouverture ou un nouveau service et attirez les clients qui cherchent une nouveauté.', price: 1000, priceLabel: 'FCFA / 48h', durationText: '48h', durationMs: 48 * 60 * 60 * 1000, icon: 'sparkles', recommended: false, features: ['Badge « Nouveau » bleu sur votre fiche', 'Mise en avant des dernières inscriptions', 'Visibilité pendant 48 h'] }
 ];
 
 function findOffer(idOrType) {
@@ -2220,6 +2594,40 @@ function loadBoosters() {
 
 function saveBoosters() {
   writeJsonAtomic('boosters.json', boosters);
+}
+
+function loadTrials() {
+  try {
+    if (fs.existsSync(TRIALS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(TRIALS_FILE, 'utf8'));
+      if (Array.isArray(data)) { trials = data; console.log('[Essais] essais chargés :', trials.length); return; }
+    }
+  } catch (e) { console.error('[Essais] lecture impossible, réinitialisation :', e.message); }
+  trials = [];
+}
+
+function saveTrials() {
+  writeJsonAtomic('trials.json', trials);
+}
+
+/* Un essai gratuit est accordé UNE seule fois par vendeur et par type
+ * (offre du jour, badge « Nouveau », badge « Promo »). Retourne true si le
+ * vendeur a déjà consommé son essai pour ce type. */
+function trialUsed(vendorId, type) {
+  const id = canonicalRoutingId(vendorId);
+  return trials.some(function (t) {
+    return t && canonicalRoutingId(t.vendorId) === id && String(t.type || '') === String(type || '');
+  });
+}
+
+function recordTrial(vendorId, type, refId) {
+  trials.push({
+    vendorId: canonicalRoutingId(vendorId),
+    type: String(type || ''),
+    refId: String(refId || ''),
+    createdAt: new Date().toISOString()
+  });
+  saveTrials();
 }
 
 /* Réconcilie l'état des activations : expire les badges actifs échus et
@@ -2268,6 +2676,25 @@ function activeBoostsFor(vendorId) {
     if (t && !seen[t]) { seen[t] = true; types.push(t); }
   });
   types.sort(function (a, b) { return (rankOf[b] || 0) - (rankOf[a] || 0); });
+  return types;
+}
+
+/* Types de badges actifs (non expirés) en mode essai d'un vendeur. Utilisé
+ * par /api/carte pour signaler « Essai » à côté des badges concernés. */
+function trialBoostsFor(vendorId) {
+  const id = String(vendorId || '');
+  if (!id) return [];
+  const now = Date.now();
+  const seen = {};
+  const types = [];
+  boosters.forEach(function (b) {
+    if (!b || b.status !== 'active') return;
+    if (String(b.vendorId || '') !== id) return;
+    if (b.mode !== 'essai') return;
+    if (b.expiresAt && Date.parse(b.expiresAt) <= now) return;
+    const t = b.type;
+    if (t && !seen[t]) { seen[t] = true; types.push(t); }
+  });
   return types;
 }
 
@@ -2347,7 +2774,7 @@ const DEVISE = 'XOF';
 const DEVISE_LABEL = 'FCFA'; // Libellé affiché (le code ISO « XOF » reste utilisé dans les données).
 
 const MOBILE_MONEY_OPERATORS = {
-  orange: { id: 'orange', label: 'Orange Money', code: 'OM', fee: 0.01, feeLabel: '1 %', configKeys: ['ORANGE_MONEY_API_KEY', 'ORANGE_MONEY_CLIENT_ID'], countries: ['SN', 'CI', 'ML', 'GN', 'BF', 'CM'] },
+  orange: { id: 'orange', label: 'Orange Money', code: 'OM', fee: 0.01, feeLabel: '1 %', configKeys: ['ORANGE_MONEY_CLIENT_ID', 'ORANGE_MONEY_CLIENT_SECRET', 'ORANGE_MONEY_MERCHANT_KEY'], countries: ['SN', 'CI', 'ML', 'GN', 'BF', 'CM'] },
   wave: { id: 'wave', label: 'Wave', code: 'WAVE', fee: 0.01, feeLabel: '1 %', configKeys: ['WAVE_API_KEY', 'WAVE_SECRET_KEY'], countries: ['SN', 'CI', 'ML', 'BF', 'GN', 'GM', 'BJ', 'TG'] },
   mtn: { id: 'mtn', label: 'MTN Mobile Money', code: 'MOMO', fee: 0.015, feeLabel: '1,5 %', configKeys: ['MTN_MOMO_API_KEY', 'MTN_MOMO_SUBSCRIPTION_KEY'], countries: ['SN', 'CI', 'CM', 'GH', 'UG', 'ZM', 'GN', 'BJ'] },
   moov: { id: 'moov', label: 'Moov Money', code: 'MOOV', fee: 0.015, feeLabel: '1,5 %', configKeys: ['MOOV_API_KEY', 'MOOV_CLIENT_ID'], countries: ['SN', 'CI', 'BF', 'TG', 'NE', 'BJ'] },
@@ -2419,7 +2846,18 @@ function loadOffresJour() {
   try {
     if (fs.existsSync(OFFRES_JOUR_FILE)) {
       const data = JSON.parse(fs.readFileSync(OFFRES_JOUR_FILE, 'utf8'));
-      if (Array.isArray(data)) { offresJour = data; console.log('[Paiement] offres du jour chargées :', offresJour.length); return; }
+      if (Array.isArray(data)) {
+        let changed = false;
+        data.forEach(function (o) {
+          if (o && typeof o.vendorId === 'string') {
+            const canon = canonicalRoutingId(o.vendorId);
+            if (canon && canon !== o.vendorId) { o.vendorId = canon; changed = true; }
+          }
+        });
+        offresJour = data;
+        if (changed) saveOffresJour();
+        console.log('[Paiement] offres du jour chargées :', offresJour.length); return;
+      }
     }
   } catch (e) { console.error('[Paiement] offres du jour illisibles, réinitialisation :', e.message); }
   offresJour = [];
@@ -2427,6 +2865,31 @@ function loadOffresJour() {
 
 function saveOffresJour() {
   writeJsonAtomic('offres-jour.json', offresJour);
+}
+
+/* Boutique : commandes persistées pour la réconciliation des paiements live.
+ * Contrairement au flux démo (localStorage), ces commandes existent côté
+ * serveur AVANT le paiement et sont marquées « payee » par le settlement. */
+const BOUTIQUE_ORDERS_FILE = path.join(DATA_DIR, 'boutique-orders.json');
+let boutiqueOrders = [];
+
+function loadBoutiqueOrders() {
+  try {
+    if (fs.existsSync(BOUTIQUE_ORDERS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(BOUTIQUE_ORDERS_FILE, 'utf8'));
+      if (Array.isArray(data)) { boutiqueOrders = data; console.log('[Boutique] commandes chargées :', boutiqueOrders.length); return; }
+    }
+  } catch (e) { console.error('[Boutique] commandes illisibles, réinitialisation :', e.message); }
+  boutiqueOrders = [];
+}
+
+function saveBoutiqueOrders() {
+  writeJsonAtomic('boutique-orders.json', boutiqueOrders);
+}
+
+function boutiqueOrderForId(id) {
+  const i = String(id || '');
+  return boutiqueOrders.find(function (o) { return o && (o.id === i || o.orderNo === i); }) || null;
 }
 
 /* ------------------------------------------------------------------ *
@@ -2835,7 +3298,14 @@ const MAX_FREIGHT = { tons: 32, m3: 60 };
 // si son véhicule est au moins aussi capable que le véhicule requis par le fret.
 const VEHICLE_RANK = { velo: 1, moto: 2, voiture: 3, van: 4, camion: 5, semi: 6 };
 
+// Forfait de rémunération du livreur par véhicule requis (FCFA).
+const COURIER_FEE_BY_VEHICLE = { velo: 750, moto: 1500, voiture: 3000, van: 4500, camion: 7500, semi: 12000 };
+
 function vehicleRank(v) { return VEHICLE_RANK[String(v || '').toLowerCase()] || 0; }
+function courierFeeForVehicle(v) {
+  const key = String(v || '').toLowerCase();
+  return COURIER_FEE_BY_VEHICLE[key] != null ? COURIER_FEE_BY_VEHICLE[key] : 0;
+}
 function catalogEntry(type) { return FREIGHT_CATALOG[type] || null; }
 
 // Résumé « fret » exposé avec chaque course (label, véhicule requis, pesée…).
@@ -2894,121 +3364,37 @@ function saveDeliveries() {
   writeJsonAtomic('deliveries.json', deliveries);
 }
 
-/* ------------------------------------------------------------------ *
- *  Commandes client (synchronisation client ↔ vendeur/prestataire)
- * ------------------------------------------------------------------ *
- *  Une commande passée côté client est persistée ici (data/orders.json)
- *  et relue côté vendeur/prestataire. C'est la source de vérité : plus de
- *  données de démo ni de localStorage partagé. Chaque commande porte son
- *  clientId (auteur) et son vendorId (boutique/prestataire destinataire).
- * ------------------------------------------------------------------ */
-const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
-let orders = [];
-
-const ORDER_STATUSES = [
-  'en-cours', 'commandee', 'confirmee', 'en-preparation', 'en-livraison',
-  'livree', 'annulee'
-];
-
-function loadOrders() {
-  try {
-    if (fs.existsSync(ORDERS_FILE)) {
-      const data = JSON.parse(fs.readFileSync(ORDERS_FILE, 'utf8'));
-      if (Array.isArray(data)) { orders = data; console.log('[Commandes] commandes chargées :', orders.length); return; }
-    }
-  } catch (e) { console.error('[Commandes] lecture impossible, réinitialisation :', e.message); }
-  orders = [];
-}
-
-function saveOrders() {
-  writeJsonAtomic('orders.json', orders);
-}
-
-// Montant numérique à partir d'un montant affiché (« 35 000 FCFA ») ou numérique.
-function orderAmountNumber(a) {
-  if (typeof a === 'number') return Math.round(a);
-  const s = String(a == null ? '' : a).replace(/[^\d]/g, '');
-  return parseInt(s, 10) || 0;
-}
-
-function createOrderFromClient(user, body) {
-  const id = String(body.id || '').trim().replace(/^#/, '');
-  if (!id) return { ok: false, error: 'Identifiant de commande manquant.' };
-  const vendorIdRaw = String(body.vendorId || '').trim();
-  const vendorId = vendorIdRaw ? (canonicalRoutingId(vendorIdRaw) || vendorIdRaw) : '';
-  if (!vendorId) return { ok: false, error: 'Boutique/prestataire introuvable.' };
-  const existing = orders.find(function (o) { return o && String(o.id) === id; });
-  if (existing) return { ok: true, order: existing, existed: true };
-  const order = {
-    id: id,
-    clientId: String(user.id || ''),
-    clientName: String(body.clientName || user.name || 'Client'),
-    clientPhone: String(body.clientPhone || user.phone || ''),
-    clientEmail: String(body.clientEmail || user.email || ''),
-    clientCity: String(body.clientCity || body.city || user.city || ''),
-    clientTz: String(body.clientTz || body.buyerTz || ''),
-    vendorId: vendorId,
-    vendorName: String(body.provider || body.vendorName || ''),
-    kind: String(body.kind || 'commerce'),
-    service: String(body.service || ''),
-    items: Array.isArray(body.items) ? body.items : [],
-    amount: String(body.amount == null ? '' : body.amount),
-    amountN: orderAmountNumber(body.amount),
-    currency: 'XOF',
-    status: String(body.status || 'en-cours'),
-    payment: String(body.payment || ''),
-    fulfillment: String(body.fulfillment || ''),
-    address: String(body.address || ''),
-    addressNotes: String(body.addressNotes || ''),
-    bookingDate: body.bookingDate != null ? body.bookingDate : null,
-    bookingTime: body.bookingTime != null ? body.bookingTime : null,
-    createdAt: Number(body.createdAt) || Date.now(),
-    createdAtIso: nowIso(),
-    updatedAt: nowIso()
-  };
-  return { ok: true, order: order };
-}
-
-function publicOrder(o) {
-  if (!o) return null;
-  return {
-    id: o.id, clientId: o.clientId, clientName: o.clientName,
-    clientPhone: o.clientPhone, clientEmail: o.clientEmail,
-    clientCity: o.clientCity, clientTz: o.clientTz,
-    vendorId: o.vendorId, vendorName: o.vendorName, kind: o.kind,
-    service: o.service, items: Array.isArray(o.items) ? o.items : [],
-    amount: o.amount, amountN: o.amountN != null ? o.amountN : orderAmountNumber(o.amount),
-    currency: o.currency || 'XOF', status: o.status || 'en-cours',
-    payment: o.payment || '', fulfillment: o.fulfillment || '',
-    address: o.address || '', addressNotes: o.addressNotes || '',
-    bookingDate: o.bookingDate != null ? o.bookingDate : null,
-    bookingTime: o.bookingTime != null ? o.bookingTime : null,
-    createdAt: o.createdAt, createdAtIso: o.createdAtIso || null, updatedAt: o.updatedAt || null
-  };
-}
-
-// Commandes visibles par l'utilisateur connecté : un pro voit les commandes
-// adressées à sa boutique/prestation, un client voit ses propres commandes.
-function ordersForUser(user) {
-  if (isSeller(user)) {
-    const myId = canonicalRoutingId(user.vendorId || user.id) || (user.vendorId || user.id);
-    const myName = String(user.enseigne || user.name || '').trim().toLowerCase();
-    return orders.filter(function (o) {
-      if (!o) return false;
-      const ov = canonicalRoutingId(o.vendorId) || o.vendorId || '';
-      if (ov && myId && ov === myId) return true;
-      if (myName && o.vendorName && String(o.vendorName).trim().toLowerCase() === myName) return true;
-      return false;
-    });
-  }
-  const cid = String(user.id || '');
-  return orders.filter(function (o) { return o && String(o.clientId) === cid; });
-}
-
 function courierForUser(userId) {
   const id = String(userId || '');
   if (!id) return null;
   return couriers.find(function (c) { return c.userId === id; }) || null;
+}
+
+function ensureCourierForUser(user) {
+  if (!user || user.role !== 'livreur') return null;
+  const existing = courierForUser(user.id);
+  if (existing) return existing;
+  const vehicle = (user.vehicle && VEHICLE_RANK[user.vehicle]) ? user.vehicle : 'moto';
+  const courier = {
+    id: 'cour-' + crypto.randomBytes(5).toString('hex'),
+    userId: user.id,
+    name: user.name,
+    phone: user.phone,
+    email: user.email || null,
+    vehicle: vehicle,
+    city: user.city || '',
+    zone: String(user.zone || '').trim(),
+    status: 'offline',
+    approved: true,
+    rating: null,
+    completedDeliveries: 0,
+    earnings: 0,
+    logo: null,
+    createdAt: nowIso()
+  };
+  couriers.push(courier);
+  saveCouriers();
+  return courier;
 }
 
 function publicCourier(c) {
@@ -3016,7 +3402,9 @@ function publicCourier(c) {
   return {
     id: c.id, userId: c.userId, name: c.name, phone: c.phone, email: c.email,
     vehicle: c.vehicle, city: c.city, zone: c.zone, status: c.status,
+    logo: c.logo || null,
     approved: !!c.approved, rating: c.rating, completedDeliveries: c.completedDeliveries || 0,
+    earnings: Math.round(Number(c.earnings) || 0),
     lat: c.lat != null ? c.lat : null, lng: c.lng != null ? c.lng : null,
     createdAt: c.createdAt
   };
@@ -3288,6 +3676,17 @@ const DemoPaymentProvider = {
 // Provider actif (point de bascule unique vers les opérateurs réels).
 const activePaymentProvider = DemoPaymentProvider;
 
+// Sélection du provider par opérateur. En mode démo, on conserve toujours le
+// DemoPaymentProvider (aucun appel réel). En mode live, Wave et Orange Money
+// sont branchés en réel (checkout redirect) ; les autres opérateurs (MTN, Moov,
+// Free) restent en démo tant que leur provider n'est pas implémenté.
+function paymentProviderFor(op) {
+  if (paymentModeActive() !== 'live') return DemoPaymentProvider;
+  if (op && op.id === 'wave' && wavePayment && wavePayment.configured()) return wavePayment.WavePaymentProvider;
+  if (op && op.id === 'orange' && orangeMoney && orangeMoney.configured()) return orangeMoney.OrangeMoneyProvider;
+  return DemoPaymentProvider;
+}
+
 function recordTransaction(fields) {
   const now = new Date().toISOString();
   const t = Object.assign({
@@ -3354,6 +3753,168 @@ function confirmMobilePayment(txnId, opts) {
   return { ok: true, transaction: txn, success: result.success, paymentMode: txn.mode || 'demo' };
 }
 
+/* ------------------------------------------------------------------ *
+ *  Règlement des paiements live (effets de bord métier)
+ * ------------------------------------------------------------------ *
+ *  Le checkout redirect (Wave / Orange Money) marque la transaction
+ *  « completed » mais n'applique AUCUN effet de bord métier. Cette
+ *  fonction applique ces effets une seule fois (idempotente, gardée par
+ *  `txn.settled`), que la notification arrive via le webhook serveur ou
+ *  via le polling /checkout/status. Chaque `kind` rejoue l'effet déjà
+ *  réalisé en mode démo (portefeuille, offres du jour, boosters,
+ *  négociation), sans toucher au flux démo existant.
+ * ------------------------------------------------------------------ */
+function settleTransaction(txn) {
+  if (!txn) return { ok: false, reason: 'missing' };
+  if (txn.settled) return { ok: true, reason: 'already-settled' };
+  if (txn.status !== 'completed') return { ok: false, reason: 'not-completed' };
+  const meta = txn.meta || {};
+  const kind = String(txn.kind || '');
+  const now = nowIso();
+
+  if (kind === 'topup') {
+    const amount = Math.round(Number(txn.amount) || 0);
+    if (amount > 0) {
+      const w = walletFor(txn.userId);
+      w.balance = Math.round((Number(w.balance) || 0) + amount);
+      w.updatedAt = now;
+      saveWallets();
+    }
+  } else if (kind === 'offre-jour') {
+    const tier = tierById(String(meta.tierId || ''));
+    const user = users.find(function (u) { return u && u.id === txn.userId; }) || null;
+    const vendorId = canonicalRoutingId(user ? (user.vendorId || user.id) : (meta.vendorId || txn.userId));
+    if (tier) {
+      const endsAt = new Date(Date.now() + Number(tier.durationHours || 24) * 3600 * 1000);
+      offresJour.unshift({
+        id: 'offre-' + crypto.randomBytes(5).toString('hex'),
+        vendorId: vendorId,
+        vendorName: (user && (user.enseigne || user.name)) || String(meta.vendorName || ''),
+        title: String(meta.title || '').trim() || 'Offre du jour',
+        description: String(meta.description || '').trim(),
+        tierId: tier.id,
+        durationLabel: tier.durationLabel,
+        price: tier.price,
+        paymentId: txn.id,
+        mode: 'standard',
+        productId: String(meta.productId || ''),
+        status: 'active',
+        startsAt: now,
+        endsAt: endsAt.toISOString(),
+        createdAt: now
+      });
+      saveOffresJour();
+    }
+  } else if (kind === 'offre-jour-renouvellement') {
+    const tier = tierById(String(meta.tierId || ''));
+    const offre = offresJour.find(function (o) { return o && o.id === String(meta.offreId || meta.id || ''); });
+    if (tier && offre) {
+      const base = offre.status === 'active' && new Date(offre.endsAt).getTime() > Date.now() ? new Date(offre.endsAt) : new Date();
+      offre.status = 'active';
+      offre.tierId = tier.id;
+      offre.durationLabel = tier.durationLabel;
+      offre.price = tier.price;
+      offre.paymentId = txn.id;
+      offre.endsAt = new Date(base.getTime() + Number(tier.durationHours || 24) * 3600 * 1000).toISOString();
+      offre.updatedAt = now;
+      saveOffresJour();
+    }
+  } else if (kind === 'negotiation-payment') {
+    const nego = negotiationForId(String(meta.negotiationId || meta.id || ''));
+    if (nego && nego.status !== 'paid') {
+      nego.status = 'paid';
+      nego.transactionId = txn.id;
+      nego.paidAt = now;
+      nego.updatedAt = now;
+      settleNegotiationToVendor(nego);
+      const product = catalogue.find(function (p) { return p && p.id === nego.productId; });
+      if (product && Number(product.stock) > 0) { product.stock = Number(product.stock) - 1; saveCatalogue(); }
+      saveNegotiations();
+    }
+  } else if (kind === 'booster') {
+    const offer = findOffer(meta.boosterId || meta.type);
+    if (offer) {
+      const durationMs = Number(offer.durationMs) || 24 * 60 * 60 * 1000;
+      boosters.unshift({
+        id: rand(),
+        vendorId: String(meta.vendorId || ''),
+        vendorName: String(meta.vendorName || ''),
+        boosterId: offer.id,
+        type: offer.type,
+        name: offer.name,
+        status: 'active',
+        mode: 'standard',
+        createdAt: now,
+        expiresAt: new Date(Date.now() + durationMs).toISOString(),
+        paymentId: txn.id,
+        startLabel: 'À l\'instant',
+        endLabel: 'Dans ' + (offer.durationText || '24h'),
+        remainingLabel: (offer.durationText || '24h') + ' / ' + (offer.durationText || '24h'),
+        remainingPct: 100,
+        price: offer.price,
+        views: 0,
+        clicks: 0,
+        orders: 0
+      });
+      saveBoosters();
+    }
+  } else if (kind === 'booster-renew') {
+    const offer = findOffer(meta.boosterId || meta.type);
+    const idx = boosters.findIndex(function (x) { return x && x.id === String(meta.activationId || meta.id || ''); });
+    if (idx >= 0 && offer) {
+      const durationMs = Number(offer.durationMs) || 24 * 60 * 60 * 1000;
+      boosters[idx].status = 'active';
+      boosters[idx].createdAt = now;
+      boosters[idx].expiresAt = new Date(Date.now() + durationMs).toISOString();
+      boosters[idx].paymentId = txn.id;
+      boosters[idx].startLabel = 'À l\'instant';
+      boosters[idx].endLabel = 'Dans ' + (offer.durationText || '24h');
+      boosters[idx].remainingLabel = (offer.durationText || '24h') + ' / ' + (offer.durationText || '24h');
+      boosters[idx].remainingPct = 100;
+      saveBoosters();
+    }
+  } else if (kind === 'boutique-order') {
+    const orderId = String(meta.orderId || meta.id || '');
+    const order = boutiqueOrderForId(orderId);
+    if (order && order.status !== 'payee') {
+      order.status = 'payee';
+      order.paidAt = now;
+      order.transactionId = txn.id;
+      order.updatedAt = now;
+      // Décrémente le stock des produits commandés (idempotent : une seule fois).
+      (order.items || []).forEach(function (it) {
+        const pid = String((it && it.productId) || '');
+        if (!pid) return;
+        const product = catalogue.find(function (p) { return p && p.id === pid; });
+        if (product && Number(product.stock) > 0) {
+          product.stock = Math.max(0, Number(product.stock) - Math.max(1, Math.round(Number((it && it.qty) || 1))));
+        }
+      });
+      saveCatalogue();
+      // Crédite le vendeur (net de commission) pour la cohérence comptable.
+      const vendorUser = userByRoutingId(order.vendorId);
+      const vendorKey = vendorUser ? vendorUser.id : canonicalRoutingId(order.vendorId);
+      const gross = Math.round(Number(order.total) || 0);
+      const rate = planCommissionFor(order.vendorId);
+      const commission = Math.round(gross * rate / 100);
+      const net = gross - commission;
+      const w = walletFor(vendorKey);
+      w.balance = Math.round((Number(w.balance) || 0) + net);
+      w.updatedAt = now;
+      saveWallets();
+      order.commissionRate = rate;
+      order.commissionAmount = commission;
+      order.settlementAmount = net;
+      saveBoutiqueOrders();
+    }
+  }
+
+  txn.settled = true;
+  txn.settledAt = now;
+  saveTransactions();
+  return { ok: true, kind: kind };
+}
+
 function expireOffresJour() {
   const now = Date.now();
   let changed = false;
@@ -3370,14 +3931,7 @@ function expireOffresJour() {
 
 function activeOffresJour() {
   const now = Date.now();
-  return offresJour
-    .filter(function (o) { return o.status === 'active' && new Date(o.endsAt).getTime() > now; })
-    .map(function (o) {
-      const canonical = canonicalRoutingId(o.vendorId) || o.vendorId;
-      const copy = Object.assign({}, o, { vendorId: canonical });
-      if (canonical !== o.vendorId) copy.ownerVendorId = o.vendorId;
-      return copy;
-    });
+  return offresJour.filter(function (o) { return o.status === 'active' && new Date(o.endsAt).getTime() > now; });
 }
 
 function parseCookies(req) {
@@ -3534,8 +4088,11 @@ function handleMessage(ws, msg) {
     case 'call-reject': handleCallReject(ws, msg); break;
     case 'call-end': handleCallEnd(ws, msg); break;
     case 'ice-candidate': handleIce(ws, msg); break;
+    case 'call-renegotiate': handleCallRenegotiate(ws, msg); break;
+    case 'call-renegotiate-answer': handleCallRenegotiateAnswer(ws, msg); break;
     case 'chat-message': handleChatMessage(ws, msg); break;
     case 'chat-audio': handleChatAudio(ws, msg); break;
+    case 'chat-video': handleChatVideo(ws, msg); break;
     case 'chat-edit': handleChatEdit(ws, msg); break;
     case 'chat-delete': handleChatDelete(ws, msg); break;
     case 'chat-history': handleChatHistory(ws, msg); break;
@@ -3578,7 +4135,9 @@ function handleRegister(ws, msg) {
   if (!id) { send(ws, { type: 'register-error', reason: 'id manquant' }); return; }
   const role = String(msg.role || 'client').trim();
   const name = String(msg.name || id || 'Inconnu').trim();
-  ws.meta = { id, role, name, page: String(msg.page || '').trim(), visible: msg.visible !== false };
+  const prev = ws.meta || {};
+  ws.meta = { id, role, name, page: String(msg.page || '').trim(), visible: msg.visible !== false, ip: prev.ip || '', country: prev.country || '', countryCode: prev.countryCode || '' };
+  if (!ws.meta.country && ws.meta.ip) enrichWsCountry(ws, ws.meta.ip);
   addClient(id, ws, role, name);
   console.log('[WS] register', { id, role, name, time: new Date().toLocaleTimeString() });
   send(ws, { type: 'registered', id, role, name });
@@ -3620,44 +4179,142 @@ function updateCall(callId, patch) {
   return e;
 }
 
-function handleCallOffer(ws, msg) {
+// Compte « Support MangooTech » : identité partagée par plusieurs membres de
+// l'équipe. Lorsqu'un client appelle le support, TOUS les agents connectés
+// sonnent en même temps (sonnerie de groupe) ; le premier qui décroche prend
+// l'appel, les autres cessent de sonner immédiatement.
+const SUPPORT_RING_GROUP_ID = 'support-mangoo';
+
+function isRingGroup(id) {
+  return canonicalRoutingId(id) === SUPPORT_RING_GROUP_ID;
+}
+
+// Toutes les sockets visibles (app ouverte, quel que soit l'onglet) d'une
+// identité donnée — les candidats à la sonnerie de groupe.
+function ringGroupPeers(id) {
+  return onlineSockets(id).filter(function (c) {
+    return c.ws && c.ws.readyState === 1 && (c.ws.meta ? c.ws.meta.visible !== false : true);
+  });
+}
+
+async function handleCallOffer(ws, msg) {
   const callId = msg.callId || rand();
   const to = String(msg.to || '').trim();
   const cto = canonicalRoutingId(to);
+  const callMode = msg.mode || 'audio';
+  const callerName = (ws.meta && ws.meta.name) || 'Quelqu\'un';
+
+  // Pays de l'appelant : donnée client d'abord, sinon résolution par IP (attente
+  // bornée ~1,5 s, dédupliquée + mise en cache). Garantit que le pays est connu
+  // AVANT d'envoyer le push / la sonnerie, donc présent dans le landing.
+  let callerGeo = effectiveCallerCountry(ws, msg);
+  if (!callerGeo.country && ws.meta && ws.meta.ip) {
+    try {
+      const resolved = await resolveIpCountry(ws.meta.ip);
+      if (resolved && resolved.country) {
+        callerGeo = { country: resolved.country, countryCode: resolved.countryCode || '' };
+        if (ws.meta) {
+          if (!ws.meta.country) ws.meta.country = callerGeo.country;
+          if (!ws.meta.countryCode) ws.meta.countryCode = callerGeo.countryCode;
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }
+  const callerCountry = callerGeo.country;
+  const callerCountryCode = callerGeo.countryCode;
+  const callerLabel = callerCountry ? (callerName + ' (' + callerCountry + ')') : callerName;
+  console.log('[Call] pays effectif', { callId: callId, to: cto, fromIp: (ws.meta && ws.meta.ip) || '', country: callerCountry || '—', countryCode: callerCountryCode || '—' });
+
+  // Sonnerie de groupe (support) : tous les agents connectés sonnent en même
+  // temps. Le premier qui décroche prend l'appel.
+  if (isRingGroup(cto)) {
+    const candidates = ringGroupPeers(cto);
+    if (candidates.length === 0) {
+      const pushed = sendPush(to, {
+        title: 'Appel entrant',
+        body: callerLabel + ' souhaite vous joindre',
+        url: pushLandingUrl({ routingId: to, kind: 'call', from: ws.meta.id, fromName: ws.meta.name, callId: callId, mode: callMode, country: callerCountry, countryCode: callerCountryCode }),
+        tag: 'call-' + callId,
+        ttl: 60,
+        requireInteraction: true,
+        data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode, country: callerCountry, countryCode: callerCountryCode }
+      });
+      recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName);
+      send(ws, { type: 'call-error', callId, reason: 'offline', pushed: pushed });
+      return;
+    }
+    calls.set(callId, {
+      callerId: ws.meta.id, calleeId: cto,
+      callerWs: ws,
+      group: true,
+      candidates: candidates,
+      answeredWs: null,
+      mode: callMode,
+      iceBuffer: []
+    });
+    recordCall(callId, ws.meta.id, cto, callMode, 'ringing', callerName);
+    candidates.forEach(function (cand) {
+      send(cand.ws, {
+        type: 'call-ring', callId,
+        from: ws.meta.id, fromName: ws.meta.name,
+        country: callerCountry, countryCode: callerCountryCode,
+        sdp: msg.sdp, mode: callMode
+      });
+    });
+    return;
+  }
+
+  // Appel 1:1 classique.
   const target = callablePeer(to);
   if (!target || !target.online) {
-    // Dashboard fermé (ou hors ligne) : on tente de réveiller le destinataire
-    // par notification Web Push native (même sans onglet ouvert).
-    const callerName = (ws.meta && ws.meta.name) || 'Quelqu\'un';
-    const callMode = msg.mode || 'audio';
     const pushed = sendPush(to, {
       title: 'Appel entrant',
-      body: callerName + ' souhaite vous joindre',
-      url: pushLandingUrl({ routingId: to, kind: 'call', from: ws.meta.id, fromName: ws.meta.name, callId: callId, mode: callMode }),
+      body: callerLabel + ' souhaite vous joindre',
+      url: pushLandingUrl({ routingId: to, kind: 'call', from: ws.meta.id, fromName: ws.meta.name, callId: callId, mode: callMode, country: callerCountry, countryCode: callerCountryCode }),
       tag: 'call-' + callId,
       ttl: 60,
-      data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode }
+      requireInteraction: true,
+      data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode, country: callerCountry, countryCode: callerCountryCode }
     });
-    recordCall(callId, ws.meta.id, cto, callMode, 'missed', (ws.meta && ws.meta.name) || '');
+    recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName);
     send(ws, { type: 'call-error', callId, reason: 'offline', pushed: pushed });
     return;
   }
   calls.set(callId, {
     callerId: ws.meta.id, calleeId: cto,
     callerWs: ws, calleeWs: target.ws,
-    mode: msg.mode || 'audio'
+    mode: callMode
   });
-  recordCall(callId, ws.meta.id, cto, msg.mode || 'audio', 'ringing', (ws.meta && ws.meta.name) || '');
+  recordCall(callId, ws.meta.id, cto, callMode, 'ringing', callerName);
   send(target.ws, {
     type: 'call-ring', callId,
     from: ws.meta.id, fromName: ws.meta.name,
-    sdp: msg.sdp, mode: msg.mode || 'audio'
+    country: callerCountry, countryCode: callerCountryCode,
+    sdp: msg.sdp, mode: callMode
   });
 }
 
 function handleCallAnswer(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
+  if (c.group) {
+    if (c.answeredWs) return; // un autre agent a déjà décroché
+    c.answeredWs = ws;
+    updateCall(msg.callId, { status: 'answered' });
+    // Relayer au répondant les candidats ICE de l'appelant reçus pendant la
+    // sonnerie (sinon perdus : aucun agent n'était encore désigné à ce moment).
+    (c.iceBuffer || []).forEach(function (m) {
+      if (m.from === 'caller') send(ws, { type: 'ice-candidate', callId: msg.callId, candidate: m.candidate });
+      else if (m.from === 'answerer') send(c.callerWs, { type: 'ice-candidate', callId: msg.callId, candidate: m.candidate });
+    });
+    c.iceBuffer = [];
+    send(c.callerWs, { type: 'call-accepted', callId: msg.callId, sdp: msg.sdp, name: ws.meta.name });
+    // Les autres agents cessent de sonner immédiatement.
+    c.candidates.forEach(function (cand) {
+      if (cand.ws !== ws) send(cand.ws, { type: 'call-cancelled', callId: msg.callId });
+    });
+    return;
+  }
   updateCall(msg.callId, { status: 'answered' });
   send(c.callerWs, { type: 'call-accepted', callId: msg.callId, sdp: msg.sdp, name: ws.meta.name });
 }
@@ -3665,6 +4322,17 @@ function handleCallAnswer(ws, msg) {
 function handleCallReject(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
+  if (c.group) {
+    if (c.answeredWs) return;
+    // Un agent refuse : on le retire de la sonnerie, les autres continuent.
+    c.candidates = c.candidates.filter(function (cand) { return cand.ws !== ws; });
+    if (c.candidates.length === 0) {
+      updateCall(msg.callId, { status: 'rejected' });
+      send(c.callerWs, { type: 'call-rejected', callId: msg.callId, name: ws.meta.name });
+      calls.delete(msg.callId);
+    }
+    return;
+  }
   updateCall(msg.callId, { status: 'rejected' });
   send(c.callerWs, { type: 'call-rejected', callId: msg.callId, name: ws.meta.name });
   calls.delete(msg.callId);
@@ -3674,6 +4342,18 @@ function handleCallEnd(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
   updateCall(msg.callId, { status: 'ended' });
+  if (c.group) {
+    // L'appelant raccroche : on arrête la sonnerie partout. Un agent raccroche :
+    // on prévient l'appelant et on arrête la sonnerie des autres candidats.
+    if (c.callerWs === ws) {
+      c.candidates.forEach(function (cand) { send(cand.ws, { type: 'call-cancelled', callId: msg.callId }); });
+    } else {
+      send(c.callerWs, { type: 'call-ended', callId: msg.callId });
+      c.candidates.forEach(function (cand) { if (cand.ws !== ws) send(cand.ws, { type: 'call-cancelled', callId: msg.callId }); });
+    }
+    calls.delete(msg.callId);
+    return;
+  }
   const other = (c.callerWs === ws) ? c.calleeWs : c.callerWs;
   send(other, { type: 'call-ended', callId: msg.callId });
   calls.delete(msg.callId);
@@ -3682,8 +4362,48 @@ function handleCallEnd(ws, msg) {
 function handleIce(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
+  if (c.group) {
+    // ICE ne circule qu'entre l'appelant et l'agent qui a décroché. Les
+    // candidats émis avant le décrochage sont mis en tampon (et non jetés) :
+    // l'appelant peut envoyer ses candidats pendant la sonnerie, l'agent
+    // répondant les siens avant que `answeredWs` soit enregistré.
+    if (c.callerWs === ws) {
+      if (c.answeredWs) {
+        send(c.answeredWs, { type: 'ice-candidate', callId: msg.callId, candidate: msg.candidate });
+      } else {
+        (c.iceBuffer = c.iceBuffer || []).push({ from: 'caller', candidate: msg.candidate });
+      }
+    } else if (c.answeredWs === ws) {
+      send(c.callerWs, { type: 'ice-candidate', callId: msg.callId, candidate: msg.candidate });
+    } else {
+      // Agent encore en train de sonner (non encore désigné) : candidat tamponné.
+      (c.iceBuffer = c.iceBuffer || []).push({ from: 'answerer', candidate: msg.candidate });
+    }
+    return;
+  }
   const other = (c.callerWs === ws) ? c.calleeWs : c.callerWs;
   send(other, { type: 'ice-candidate', callId: msg.callId, candidate: msg.candidate });
+}
+
+// Renégociation du flux média (ICE restart) : l'un des pairs émet une nouvelle
+// offre `iceRestart`, l'autre répond. Routage symétrique entre l'appelant et le
+// répondant (sonnerie de groupe comprise).
+function callOpposite(c, ws) {
+  if (!c) return null;
+  if (c.group) return (c.callerWs === ws) ? c.answeredWs : c.callerWs;
+  return (c.callerWs === ws) ? c.calleeWs : c.callerWs;
+}
+function handleCallRenegotiate(ws, msg) {
+  const c = calls.get(msg.callId);
+  if (!c) return;
+  const other = callOpposite(c, ws);
+  if (other && other.readyState === 1) send(other, { type: 'call-renegotiate', callId: msg.callId, sdp: msg.sdp });
+}
+function handleCallRenegotiateAnswer(ws, msg) {
+  const c = calls.get(msg.callId);
+  if (!c) return;
+  const other = callOpposite(c, ws);
+  if (other && other.readyState === 1) send(other, { type: 'call-renegotiate-answer', callId: msg.callId, sdp: msg.sdp });
 }
 
 /* --- Chat --- */
@@ -3747,11 +4467,11 @@ function handleChatMessage(ws, msg) {
 }
 
 function handleTyping(ws, msg) {
-  const from = ws.meta && ws.meta.id;
-  const to = String(msg.to || '').trim();
+  const from = canonicalRoutingId(ws.meta && ws.meta.id);
+  const to = canonicalRoutingId(String(msg.to || '').trim());
   if (!from || !to) return;
   broadcastToPeer(to, {
-    type: 'typing', from, fromName: ws.meta.name, isTyping: !!msg.isTyping
+    type: 'typing', from, fromName: ws.meta && ws.meta.name, isTyping: !!msg.isTyping
   });
 }
 
@@ -3848,6 +4568,7 @@ function handleChatVideo(ws, msg) {
     });
   }
 }
+
 // Édition d'un message déjà envoyé. Seul l'auteur peut modifier son message :
 // on résout l'entrée du chatLog par msgId ET par from === ws.meta.id (un pair ne
 // peut pas éditer le message d'un autre). Le texte est mis à jour, daté, puis
@@ -4665,6 +5386,7 @@ function handleHttp(req, res) {
         return {
           id: u.id,
           vendorId: u.vendorId || u.id,
+          routingId: routingIdForUser(u),
           role: u.role,
           name: u.enseigne || u.name || u.fullName || u.phone || u.email || 'Contact',
           enseigne: u.enseigne || '',
@@ -4674,6 +5396,7 @@ function handleHttp(req, res) {
           logo: u.logo || '',
           category: u.category || '',
           online: isOnline(u.id) || isOnline(u.vendorId),
+          lastSeen: (lastSeenByUser.get(routingIdForUser(u)) || (u.lastSeenAt ? Date.parse(u.lastSeenAt) : null)) || null,
           createdAt: u.createdAt || ''
         };
       })
@@ -4866,7 +5589,7 @@ function handleHttp(req, res) {
       const vendor = queryParam(req, 'vendor');
       const category = queryParam(req, 'category');
       let list = catalogue;
-      if (vendor) list = list.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; });
+      if (vendor) { const vcanon = canonicalRoutingId(vendor); list = list.filter(function (p) { return canonicalRoutingId(p.vendorId) === vcanon || p.vendorName === vendor; }); }
       else list = list.filter(function (p) { return !isDemoVendor(p.vendorId); });
       if (category && category !== 'all') list = list.filter(function (p) { return p.category === category; });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -4976,7 +5699,7 @@ function handleHttp(req, res) {
       const vendor = queryParam(req, 'vendor');
       const category = queryParam(req, 'category');
       let list = inventaire;
-      if (vendor) list = list.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; });
+      if (vendor) { const vcanon = canonicalRoutingId(vendor); list = list.filter(function (p) { return canonicalRoutingId(p.vendorId) === vcanon || p.vendorName === vendor; }); }
       if (category && category !== 'all') list = list.filter(function (p) { return p.category === category; });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ inventaire: list }));
@@ -5034,7 +5757,7 @@ function handleHttp(req, res) {
       const vendor = queryParam(req, 'vendor');
       const category = queryParam(req, 'category');
       let list = galerie;
-      if (vendor) list = list.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; });
+      if (vendor) { const vcanon = canonicalRoutingId(vendor); list = list.filter(function (p) { return canonicalRoutingId(p.vendorId) === vcanon || p.vendorName === vendor; }); }
       else list = list.filter(function (p) { return !isDemoVendor(p.vendorId); });
       if (category && category !== 'all') list = list.filter(function (p) { return p.category === category; });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -5093,7 +5816,7 @@ function handleHttp(req, res) {
       reconcileBoosters();
       const vendor = queryParam(req, 'vendor');
       let list = boosters;
-      if (vendor) list = list.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; });
+      if (vendor) { const vcanon = canonicalRoutingId(vendor); list = list.filter(function (p) { return canonicalRoutingId(p.vendorId) === vcanon || p.vendorName === vendor; }); }
       const active = list.filter(function (p) { return p.status === 'active'; });
       // Historique des badges = registre complet de TOUTES les activations
       // (actives et passées), la plus récente d'abord. Un badge payé apparaît
@@ -5130,10 +5853,23 @@ function handleHttp(req, res) {
           if (!offer) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'offre inconnue' })); return; }
           const user = userForVendorId(body.vendorId);
           if (!user) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'compte vendeur introuvable' })); return; }
-          const pay = recordBoosterPayment(user, offer, 'booster', body);
-          if (!pay.ok) { res.writeHead(402, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(pay)); return; }
+          const isTrial = body.trial === true;
+          if (isTrial && offer.type !== 'nouveau' && offer.type !== 'promo') {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Essai gratuit indisponible pour ce badge.' })); return;
+          }
+          if (isTrial && trialUsed(body.vendorId, offer.type)) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Votre essai gratuit a déjà été utilisé pour ce badge.' })); return;
+          }
           const now = Date.now();
-          const durationMs = Number(offer.durationMs) || 24 * 60 * 60 * 1000;
+          const durationMs = isTrial ? (48 * 60 * 60 * 1000) : (Number(offer.durationMs) || 24 * 60 * 60 * 1000);
+          let pay;
+          if (isTrial) {
+            pay = { ok: true, payment: { id: 'ESSAI-' + crypto.randomBytes(6).toString('hex'), amount: 0, paidAt: new Date(now).toISOString(), operator: '', phone: '' } };
+            recordTrial(body.vendorId, offer.type, null);
+          } else {
+            pay = recordBoosterPayment(user, offer, 'booster', body);
+            if (!pay.ok) { res.writeHead(402, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(pay)); return; }
+          }
           const activation = {
             id: rand(),
             vendorId: String(body.vendorId || ''),
@@ -5142,14 +5878,15 @@ function handleHttp(req, res) {
             type: offer.type,
             name: offer.name,
             status: 'active',
+            mode: isTrial ? 'essai' : 'standard',
             createdAt: new Date(now).toISOString(),
             expiresAt: new Date(now + durationMs).toISOString(),
             paymentId: pay.payment.id,
             startLabel: 'À l\'instant',
-            endLabel: 'Dans ' + offer.durationText,
-            remainingLabel: offer.durationText + ' / ' + offer.durationText,
+            endLabel: 'Dans ' + (isTrial ? '48h' : offer.durationText),
+            remainingLabel: (isTrial ? '48h' : offer.durationText) + ' / ' + (isTrial ? '48h' : offer.durationText),
             remainingPct: 100,
-            price: offer.price,
+            price: isTrial ? 0 : offer.price,
             views: 0,
             clicks: 0,
             orders: 0
@@ -5240,9 +5977,12 @@ function handleHttp(req, res) {
 
       const userId = newUserId(role);
       const enseigne = String(body.enseigne || '').trim() || name;
-      const cityRaw = String(body.city || '').trim() || 'Paris';
+      const cityRaw = String(body.city || '').trim() || 'Dakar';
       const geo = geocodeCity(cityRaw);
       const city = geo ? geo.city : cityRaw;
+      // Coordonnées GPS réelles fournies par le navigateur (bouton « Utiliser ma
+      // position exacte »). Si valides, elles priment sur le centre-ville du
+      // dictionnaire pour placer la fiche à la vraie position du pro.
       const clientLat = (body.lat != null && body.lat !== '' && isFinite(Number(body.lat))) ? Number(body.lat) : null;
       const clientLng = (body.lng != null && body.lng !== '' && isFinite(Number(body.lng))) ? Number(body.lng) : null;
       const category = String(body.category || '').trim() || 'salon';
@@ -5436,24 +6176,42 @@ function handleHttp(req, res) {
       // et le pays, puis on synchronise le vendor-config. Cela permet de
       // « déménager » un compte (ex. de Paris vers Dakar) sans le recréer, et
       // la carte reflète le nouveau lieu immédiatement.
+      // Coordonnées GPS réelles éventuellement fournies par le client
+      // (bouton « Me géolocaliser »). Elles priment sur le centre-ville.
+      const newLat = (body.lat != null && body.lat !== '' && isFinite(Number(body.lat))) ? Number(body.lat) : null;
+      const newLng = (body.lng != null && body.lng !== '' && isFinite(Number(body.lng))) ? Number(body.lng) : null;
+
       if (Object.prototype.hasOwnProperty.call(body, 'city') && user.city) {
         const geo = geocodeCity(user.city);
         if (geo) {
           user.city = geo.city;
           user.country = geo.country;
-          user.lat = geo.lat;
-          user.lng = geo.lng;
+          user.lat = newLat != null ? newLat : geo.lat;
+          user.lng = newLng != null ? newLng : geo.lng;
           if (user.vendorId) {
             const doc = vendorConfigFor(user.vendorId);
             if (doc) {
               doc.profile = Object.assign({}, doc.profile, {
-                city: geo.city, country: geo.country, lat: geo.lat, lng: geo.lng
+                city: geo.city, country: geo.country, lat: user.lat, lng: user.lng
               });
               doc.updatedAt = nowIso();
               saveVendorConfig();
             }
           }
         }
+      } else if (newLat != null && newLng != null) {
+        // Position GPS fournie sans changement de ville : on affine la position seule.
+        user.lat = newLat;
+        user.lng = newLng;
+        if (user.vendorId) {
+          const doc = vendorConfigFor(user.vendorId);
+          if (doc) {
+            doc.profile = Object.assign({}, doc.profile, { lat: newLat, lng: newLng });
+            doc.updatedAt = nowIso();
+            saveVendorConfig();
+          }
+        }
+        changed = true;
       }
 
       if (!changed) {
@@ -5736,7 +6494,7 @@ function handleHttp(req, res) {
         city: p.city || u.city || '—',
         phone: p.phone || u.phone || '',
         email: p.email || u.email || '',
-        address: (knownFix && knownFix.address) || p.address || '',
+        address: p.address || '',
         logo: u.logo || p.logo || '',
         status: status,
         verification: (doc.verification && doc.verification.status) || 'non_soumis',
@@ -5871,7 +6629,7 @@ function handleHttp(req, res) {
         status: status,
         verification: (doc.verification && doc.verification.status) || 'non_soumis',
         badgeLabel: (doc.verification && doc.verification.badgeLabel) || (verified ? 'Prestataire certifié' : ''),
-        plan: (knownFix && knownFix.plan) || (doc.subscription && doc.subscription.plan) || 'decouverte',
+        plan: (doc.subscription && doc.subscription.plan) || 'decouverte',
         createdAt: u.createdAt || doc.createdAt || '',
         updatedAt: doc.updatedAt || '',
         stats: {
@@ -6170,8 +6928,6 @@ function handleHttp(req, res) {
       const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || cookieFromReq(req, 'mgt_session');
       const authedUser = userByToken(token);
       const vendor = queryParam(req, 'vendor') || (authedUser && authedUser.vendorId) || 'pro-41cafa4bcb31';
-      // Vue corrigée (identité/géolocalisation Paris) plutôt que config brute :
-      // évite de re-servir une ville/description persistée sur Dakar.
       const doc = vendorConfigView(vendor) || vendorConfigFor(vendor);
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ ok: true, config: doc, plans: ABONNEMENT_PLANS }));
@@ -6180,8 +6936,7 @@ function handleHttp(req, res) {
     if (req.method === 'POST') {
       readJsonBody(req, function (err, body) {
         if (err) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
-        const vendorRaw = String(body.vendorId || body.vendor || 'pro-41cafa4bcb31');
-        const vendor = canonicalRoutingId(vendorRaw) || vendorRaw;
+        const vendor = canonicalRoutingId(String(body.vendorId || body.vendor || 'pro-41cafa4bcb31')) || 'pro-41cafa4bcb31';
         const doc = vendorConfigFor(vendor);
         const action = body && body.action;
 
@@ -6270,6 +7025,38 @@ function handleHttp(req, res) {
           res.end(JSON.stringify({ ok: true, config: doc }));
           return;
         }
+        if (action === 'set-welcome-audio') {
+          doc.welcomeAudio = Object.assign({}, doc.welcomeAudio || {}, {
+            text: String(body.text || ''),
+            dataUrl: String(body.dataUrl || ''),
+            mime: body.mime || 'audio/webm',
+            updatedAt: new Date().toISOString()
+          });
+          doc.updatedAt = new Date().toISOString();
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, config: doc }));
+          return;
+        }
+        if (action === 'set-badge-audio') {
+          const bt = body.badgeType === 'nouveau' ? 'new' : (body.badgeType === 'promo' ? 'promo' : String(body.badgeType || ''));
+          if (!bt) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ ok: false, error: 'badgeType requis' }));
+            return;
+          }
+          doc.badgeAudio = Object.assign({}, doc.badgeAudio || {});
+          doc.badgeAudio[bt] = {
+            dataUrl: String(body.dataUrl || ''),
+            mime: body.mime || 'audio/webm',
+            updatedAt: new Date().toISOString()
+          };
+          doc.updatedAt = new Date().toISOString();
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, config: doc }));
+          return;
+        }
 
         res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ ok: false, error: 'action inconnue' }));
@@ -6342,62 +7129,342 @@ function handleHttp(req, res) {
     return;
   }
 
+  /* -------- Commande boutique (endpoint dédié + settlement) -------- *
+   *  Crée une commande serveur AVANT le paiement (traçabilité), puis
+   *  déclenche le checkout redirect. Le settlement (kind boutique-order)
+   *  marquera la commande « payee », décrémentera le stock et créditera
+   *  le vendeur au retour du webhook / du polling. */
+  if (urlPath === '/api/boutique/order') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    readJsonBody(req, function (err, body) {
+      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+      body = body || {};
+      const user = userFromReq(req);
+      const opId = String(body.operator || '').toLowerCase();
+      const op = operatorById(opId);
+      if (!op) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Opérateur inconnu : ' + opId })); return; }
+      const provider = paymentProviderFor(op);
+      if (provider.id !== op.id) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Paiement ' + op.label + ' non disponible (clés ou mode live manquants).' })); return; }
+
+      const rawItems = Array.isArray(body.items) ? body.items : [];
+      const items = rawItems.map(function (it) {
+        const qty = Math.max(1, Math.round(Number((it && it.qty) || 1)));
+        const price = Math.max(0, Math.round(Number((it && it.price) || 0)));
+        const name = String((it && it.name) || 'Article').trim();
+        return { productId: String((it && (it.productId || it.id)) || '').trim(), name: name, price: price, qty: qty, lineTotal: price * qty };
+      }).filter(function (it) { return it.name && it.qty > 0; });
+      if (!items.length) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Panier vide.' })); return; }
+
+      const subtotal = items.reduce(function (s, it) { return s + it.lineTotal; }, 0);
+      const fulfillment = String(body.fulfillment || '').trim() === 'livraison' ? 'livraison' : 'retrait';
+      const deliveryFee = fulfillment === 'livraison' ? Math.max(0, Math.round(Number(body.deliveryFee) || 500)) : 0;
+      const total = subtotal + deliveryFee;
+
+      const vendorId = canonicalRoutingId(String(body.vendorId || ''));
+      const vendorName = String(body.vendorName || '').trim() || 'Boutique';
+      const orderNo = 'CMD-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
+      const order = {
+        id: 'cmd-' + crypto.randomBytes(6).toString('hex'),
+        orderNo: orderNo,
+        vendorId: vendorId,
+        vendorName: vendorName,
+        clientId: user ? user.id : '',
+        clientName: String(body.clientName || '').trim() || 'Client',
+        clientPhone: String(body.clientPhone || '').trim(),
+        clientEmail: String(body.clientEmail || '').trim(),
+        clientCity: String(body.clientCity || '').trim(),
+        items: items,
+        subtotal: subtotal,
+        deliveryFee: deliveryFee,
+        total: total,
+        fulfillment: fulfillment,
+        address: String(body.address || '').trim(),
+        status: 'en_attente',
+        operator: op.id,
+        operatorLabel: op.label,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+        paidAt: null,
+        transactionId: null,
+        commissionRate: null,
+        commissionAmount: null,
+        settlementAmount: null
+      };
+
+      const reference = String(body.reference || ('MGO-' + orderNo + '-' + Date.now()));
+      const txn = recordTransaction({
+        userId: user ? user.id : String(body.userId || ''),
+        userType: user ? user.role : 'client',
+        kind: 'boutique-order',
+        operator: op.id,
+        operatorLabel: op.label,
+        phone: String(body.phone || '').trim(),
+        amount: total,
+        feeAmount: Math.round(total * op.fee),
+        description: 'Commande ' + orderNo + ' - ' + vendorName,
+        reference: reference,
+        meta: {
+          orderId: order.id,
+          orderNo: order.orderNo,
+          vendorId: vendorId,
+          vendorName: vendorName,
+          items: items,
+          total: total,
+          fulfillment: fulfillment,
+          address: order.address
+        },
+        mode: 'live',
+        status: 'initiated'
+      });
+      order.transactionId = txn.id;
+      boutiqueOrders.unshift(order);
+      saveBoutiqueOrders();
+
+      const returnUrl = String(body.returnUrl || siteBase(req) + '/pages/fiche-boutique.html?vendorId=' + encodeURIComponent(vendorId) + '&mgt_checkout=1');
+      provider.initiate({
+        amount: total,
+        reference: reference,
+        returnUrl: returnUrl,
+        cancelUrl: returnUrl,
+        notifUrl: siteBase(req) + '/api/payment/orange/webhook',
+        successUrl: returnUrl,
+        errorUrl: returnUrl
+      }).then(function (sim) {
+        txn.operatorRef = sim.operatorRef;
+        txn.checkoutUrl = sim.checkoutUrl;
+        txn.instructions = sim.instructions;
+        saveTransactions();
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, orderId: order.id, orderNo: orderNo, transactionId: txn.id, checkoutUrl: sim.checkoutUrl, paymentMode: 'live' }));
+      }).catch(function (e) {
+        txn.status = 'failed';
+        txn.failedReason = 'Initiation ' + op.label + ' impossible : ' + e.message;
+        saveTransactions();
+        res.writeHead(502, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: e.message }));
+      });
+    });
+    return;
+  }
+
+  /* -------- Paiement Wave (checkout redirect, mode live) -------- */
+  if (urlPath === '/api/payment/wave/session') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    readJsonBody(req, function (err, body) {
+      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+      body = body || {};
+      const provider = paymentProviderFor({ id: 'wave' });
+      if (provider.id !== 'wave') { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Paiement Wave non disponible (clés ou mode live manquants).' })); return; }
+      const user = userFromReq(req);
+      const amount = Math.round(Number(body.amount) || 0);
+      if (amount <= 0) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Montant invalide.' })); return; }
+      const reference = String(body.reference || ('MGO-' + Date.now()));
+      const txn = recordTransaction({
+        userId: user ? user.id : String(body.userId || ''),
+        userType: user ? user.role : (body.userType || 'client'),
+        kind: String(body.kind || 'mobile-money-payment'),
+        operator: 'wave',
+        operatorLabel: 'Wave',
+        phone: String(body.phone || '').trim(),
+        amount: amount,
+        feeAmount: Math.round(amount * MOBILE_MONEY_OPERATORS.wave.fee),
+        description: String(body.description || ''),
+        reference: reference,
+        meta: (body.meta && typeof body.meta === 'object') ? body.meta : (body.context && typeof body.context === 'object' ? body.context : {}),
+        mode: 'live',
+        status: 'initiated'
+      });
+      provider.initiate({ amount: amount, reference: reference }).then(function (sim) {
+        txn.operatorRef = sim.operatorRef;
+        txn.checkoutUrl = sim.checkoutUrl;
+        txn.instructions = sim.instructions;
+        saveTransactions();
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, transaction: txn, checkoutUrl: sim.checkoutUrl, paymentMode: 'live' }));
+      }).catch(function (e) {
+        txn.status = 'failed';
+        txn.failedReason = 'Initiation Wave impossible : ' + e.message;
+        saveTransactions();
+        res.writeHead(502, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: e.message }));
+      });
+    });
+    return;
+  }
+
+  if (urlPath === '/api/payment/wave/status') {
+    const sessionId = queryParam(req, 'sessionId') || queryParam(req, 'id');
+    if (!sessionId) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'sessionId manquant.' })); return; }
+    if (!wavePayment) { res.writeHead(503, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Wave non disponible.' })); return; }
+    const txn = transactions.find(function (t) { return t.operatorRef === sessionId; });
+    wavePayment.getCheckoutSession(sessionId).then(function (s) {
+      const completed = wavePayment.isCompletedStatus(s.status);
+      if (completed && txn && txn.status !== 'completed') {
+        txn.status = 'completed';
+        txn.mode = 'live';
+        txn.paidAt = new Date().toISOString();
+        txn.providerRef = sessionId;
+        saveTransactions();
+        settleTransaction(txn);
+      }
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, status: s.status, completed: completed, transaction: txn || null }));
+    }).catch(function (e) {
+      res.writeHead(502, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/payment/wave/webhook') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    let raw = '';
+    req.on('data', function (c) { raw += c; if (raw.length > 1024 * 1024) req.destroy(); });
+    req.on('end', function () {
+      const sig = String(req.headers['wave-signature'] || req.headers['Wave-Signature'] || '');
+      if (!wavePayment || !wavePayment.verifyWebhookSignature(raw, sig)) {
+        res.writeHead(401, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: 'Signature invalide.' }));
+        return;
+      }
+      let event = {};
+      try { event = JSON.parse(raw || '{}'); } catch (e) { event = {}; }
+      const data = event.data || event;
+      const sessionId = data.id || event.session_id || event.id || null;
+      const status = data.status || event.status || event.type || '';
+      const txn = sessionId ? transactions.find(function (t) { return t.operatorRef === sessionId; }) : null;
+      if (txn && wavePayment.isCompletedStatus(status)) {
+        txn.status = 'completed';
+        txn.mode = 'live';
+        txn.paidAt = new Date().toISOString();
+        txn.providerRef = sessionId;
+        saveTransactions();
+        settleTransaction(txn);
+      }
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true }));
+    });
+    req.on('error', function () { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'corps illisible' })); });
+    return;
+  }
+
+  /* -------- Checkout redirect générique (Wave + Orange Money) -------- */
+  if (urlPath === '/api/payment/checkout/session') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    readJsonBody(req, function (err, body) {
+      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+      body = body || {};
+      const opId = String(body.operator || '').toLowerCase();
+      const op = operatorById(opId);
+      if (!op) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Opérateur inconnu : ' + opId })); return; }
+      const provider = paymentProviderFor(op);
+      if (provider.id !== op.id) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Paiement ' + op.label + ' non disponible (clés ou mode live manquants).' })); return; }
+      const user = userFromReq(req);
+      const amount = Math.round(Number(body.amount) || 0);
+      if (amount <= 0) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Montant invalide.' })); return; }
+      const reference = String(body.reference || ('MGO-' + Date.now()));
+      const returnUrl = String(body.returnUrl || siteBase(req) + '/');
+      const txn = recordTransaction({
+        userId: user ? user.id : String(body.userId || ''),
+        userType: user ? user.role : (body.userType || 'client'),
+        kind: String(body.kind || 'mobile-money-payment'),
+        operator: op.id,
+        operatorLabel: op.label,
+        phone: String(body.phone || '').trim(),
+        amount: amount,
+        feeAmount: Math.round(amount * op.fee),
+        description: String(body.description || ''),
+        reference: reference,
+        meta: (body.meta && typeof body.meta === 'object') ? body.meta : (body.context && typeof body.context === 'object' ? body.context : {}),
+        mode: 'live',
+        status: 'initiated'
+      });
+      provider.initiate({
+        amount: amount,
+        reference: reference,
+        returnUrl: returnUrl,
+        cancelUrl: returnUrl,
+        notifUrl: siteBase(req) + '/api/payment/orange/webhook',
+        successUrl: returnUrl,
+        errorUrl: returnUrl
+      }).then(function (sim) {
+        txn.operatorRef = sim.operatorRef;
+        txn.checkoutUrl = sim.checkoutUrl;
+        txn.instructions = sim.instructions;
+        saveTransactions();
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, transactionId: txn.id, operatorRef: sim.operatorRef, checkoutUrl: sim.checkoutUrl, paymentMode: 'live' }));
+      }).catch(function (e) {
+        txn.status = 'failed';
+        txn.failedReason = 'Initiation ' + op.label + ' impossible : ' + e.message;
+        saveTransactions();
+        res.writeHead(502, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: e.message }));
+      });
+    });
+    return;
+  }
+
+  if (urlPath === '/api/payment/checkout/status') {
+    const txnId = queryParam(req, 'txn') || queryParam(req, 'id');
+    if (!txnId) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'transactionId manquant.' })); return; }
+    const txn = transactions.find(function (t) { return t.id === txnId; });
+    if (!txn) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Transaction introuvable.' })); return; }
+    const op = operatorById(txn.operator);
+    const provider = paymentProviderFor(op);
+    if (provider.id !== op.id) { res.writeHead(200, JSON_HEADERS); res.end(JSON.stringify({ ok: true, status: txn.status, completed: txn.status === 'completed', transaction: txn })); return; }
+    provider.confirm(txn).then(function (outcome) {
+      if (outcome && outcome.success) { saveTransactions(); if (txn.status === 'completed') settleTransaction(txn); }
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, status: txn.status, completed: txn.status === 'completed', transaction: txn }));
+    }).catch(function (e) {
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, status: txn.status, completed: txn.status === 'completed', transaction: txn, error: e.message }));
+    });
+    return;
+  }
+
+  /* -------- Webhook Orange Money (notification serveur→serveur) -------- */
+  if (urlPath === '/api/payment/orange/webhook') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    let raw = '';
+    req.on('data', function (c) { raw += c; if (raw.length > 1024 * 1024) req.destroy(); });
+    req.on('end', function () {
+      let event = {};
+      try { event = JSON.parse(raw || '{}'); } catch (e) { event = {}; }
+      const notifToken = event.notif_token || event.notifToken || null;
+      if (!orangeMoney || !orangeMoney.verifyNotificationToken(notifToken)) {
+        res.writeHead(401, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: 'Notification invalide.' }));
+        return;
+      }
+      const payToken = event.pay_token || event.payToken || event.payment_token || null;
+      const orderId = event.order_id || event.orderId || event.reference || null;
+      const status = event.status || event.payment_status || '';
+      const txn = transactions.find(function (t) {
+        return (payToken && t.operatorRef === payToken) || (orderId && t.reference === orderId);
+      });
+      if (txn && orangeMoney.isCompletedStatus(status)) {
+        txn.status = 'completed';
+        txn.mode = 'live';
+        txn.paidAt = new Date().toISOString();
+        txn.providerRef = payToken || txn.operatorRef;
+        saveTransactions();
+        settleTransaction(txn);
+      }
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true }));
+    });
+    req.on('error', function () { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'corps illisible' })); });
+    return;
+  }
+
   if (urlPath === '/api/payment/transaction') {
     const id = queryParam(req, 'id');
     const txn = transactions.find(function (t) { return t.id === id; });
     if (!txn) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Transaction introuvable.' })); return; }
     res.writeHead(200, JSON_HEADERS);
     res.end(JSON.stringify({ ok: true, transaction: txn }));
-    return;
-  }
-
-  /* -------- Commandes (synchronisation client ↔ vendeur) -------- */
-  if (urlPath === '/api/orders') {
-    const user = userFromReq(req);
-    if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
-
-    if (req.method === 'POST') {
-      readJsonBody(req, function (err, body) {
-        if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
-        body = body || {};
-        const created = createOrderFromClient(user, body);
-        if (!created.ok) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: created.error })); return; }
-        if (!created.existed) { orders.push(created.order); saveOrders(); }
-        res.writeHead(created.existed ? 200 : 201, JSON_HEADERS);
-        res.end(JSON.stringify({ ok: true, order: publicOrder(created.order) }));
-      });
-      return;
-    }
-
-    const mine = ordersForUser(user);
-    res.writeHead(200, JSON_HEADERS);
-    res.end(JSON.stringify({ ok: true, orders: mine.map(publicOrder) }));
-    return;
-  }
-
-  if (urlPath === '/api/orders/status') {
-    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
-    readJsonBody(req, function (err, body) {
-      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
-      body = body || {};
-      const user = userFromReq(req);
-      if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
-      const id = String(body.id || '').trim().replace(/^#/, '');
-      const status = String(body.status || '').trim();
-      if (!id) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Commande manquante.' })); return; }
-      if (ORDER_STATUSES.indexOf(status) === -1) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Statut invalide.' })); return; }
-      const order = orders.find(function (o) { return o && String(o.id) === id; });
-      if (!order) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Commande introuvable.' })); return; }
-      // Un pro ne peut modifier que ses propres commandes ; un client ne peut
-      // que mettre à jour (annulation) les siennes.
-      const mine = ordersForUser(user).some(function (o) { return o && String(o.id) === id; });
-      if (!mine) { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Commande non autorisée.' })); return; }
-      order.status = status;
-      order.updatedAt = nowIso();
-      saveOrders();
-      res.writeHead(200, JSON_HEADERS);
-      res.end(JSON.stringify({ ok: true, order: publicOrder(order) }));
-    });
     return;
   }
 
@@ -6479,32 +7546,6 @@ function handleHttp(req, res) {
     return;
   }
 
-  if (urlPath === '/api/offres-jour/active') {
-    expireOffresJour();
-    const user = userFromReq(req);
-    if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
-    const myId = canonicalRoutingId(user.vendorId || user.id) || (user.vendorId || user.id);
-    const mine = activeOffresJour().filter(function (o) { return (canonicalRoutingId(o.vendorId) || o.vendorId) === myId; });
-    const enriched = mine.map(function (o) {
-      const txn = transactions.find(function (t) { return t.id === o.paymentId; });
-      const payment = txn ? {
-        id: txn.id,
-        mode: txn.mode || null,
-        status: txn.status || null,
-        operator: txn.operator || null,
-        operatorLabel: txn.operatorLabel || null,
-        phone: txn.phone || null,
-        amount: Number(txn.amount) || Number(o.price) || 0,
-        feeAmount: Number(txn.feeAmount) || 0,
-        paidAt: txn.updatedAt || txn.createdAt || null
-      } : { mode: 'wallet', status: 'completed', amount: Number(o.price) || 0, feeAmount: 0 };
-      return Object.assign({}, o, { payment: payment });
-    });
-    res.writeHead(200, JSON_HEADERS);
-    res.end(JSON.stringify({ ok: true, offres: enriched, tiers: OFFRE_DU_JOUR_TIERS }));
-    return;
-  }
-
   if (urlPath === '/api/offres-jour/publish') {
     if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
     readJsonBody(req, function (err, body) {
@@ -6513,14 +7554,21 @@ function handleHttp(req, res) {
       const user = userFromReq(req);
       if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
       if (!isSeller(user)) { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Réservé aux vendeurs et prestataires.' })); return; }
-      const tier = tierById(String(body.tierId || ''));
+      const isTrial = body.trial === true;
+      const tier = isTrial
+        ? { id: 'essai', durationHours: 24, durationLabel: '24 heures', price: 0 }
+        : tierById(String(body.tierId || ''));
       if (!tier) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Palier de durée invalide.' })); return; }
       const title = String(body.title || '').trim();
       if (!title) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Titre manquant.' })); return; }
 
-      const vendorId = canonicalRoutingId(user.vendorId || user.id) || (user.vendorId || user.id);
+      const vendorId = canonicalRoutingId(user.vendorId || user.id);
       let payment;
-      if (body.payFromWallet === true) {
+      if (isTrial) {
+        if (trialUsed(vendorId, 'offre')) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Votre essai gratuit a déjà été utilisé pour l\'offre du jour.' })); return; }
+        payment = { id: 'ESSAI-' + crypto.randomBytes(6).toString('hex'), amount: 0, paidAt: new Date().toISOString(), operator: '', phone: '' };
+        recordTrial(vendorId, 'offre', null);
+      } else if (body.payFromWallet === true) {
         const w = walletFor(user.id);
         if ((Number(w.balance) || 0) < tier.price) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Solde portefeuille insuffisant.' })); return; }
         w.balance = Math.round((Number(w.balance) || 0) - tier.price);
@@ -6544,9 +7592,10 @@ function handleHttp(req, res) {
         title: title,
         description: String(body.description || '').trim(),
         tierId: tier.id,
-        durationLabel: tier.durationLabel,
+        durationLabel: isTrial ? '24 heures (essai)' : tier.durationLabel,
         price: tier.price,
         paymentId: payment.id,
+        mode: isTrial ? 'essai' : 'standard',
         productId: String(body.productId || ''),
         status: 'active',
         startsAt: now.toISOString(),
@@ -6570,7 +7619,7 @@ function handleHttp(req, res) {
       if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
       const offre = offresJour.find(function (o) { return o.id === String(body.offreId || body.id || ''); });
       if (!offre) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Offre introuvable.' })); return; }
-      if ((user.vendorId || user.id) !== offre.vendorId && user.role !== 'admin') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès refusé.' })); return; }
+      if (canonicalRoutingId(user.vendorId || user.id) !== offre.vendorId && user.role !== 'admin') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès refusé.' })); return; }
       const tier = tierById(String(body.tierId || offre.tierId || ''));
       if (!tier) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Palier de durée invalide.' })); return; }
       let payment;
@@ -6613,8 +7662,7 @@ function handleHttp(req, res) {
       if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
       const offre = offresJour.find(function (o) { return o.id === String(body.offreId || body.id || ''); });
       if (!offre) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Offre introuvable.' })); return; }
-      const myVendorId = canonicalRoutingId(user.vendorId || user.id) || (user.vendorId || user.id);
-      if (myVendorId !== (canonicalRoutingId(offre.vendorId) || offre.vendorId) && user.role !== 'admin') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès refusé.' })); return; }
+      if (canonicalRoutingId(user.vendorId || user.id) !== offre.vendorId && user.role !== 'admin') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès refusé.' })); return; }
       offre.status = 'expiree';
       offre.expiredAt = new Date().toISOString();
       saveOffresJour();
@@ -6849,7 +7897,7 @@ function handleHttp(req, res) {
     const user = userFromReq(req);
     if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
     res.writeHead(200, JSON_HEADERS);
-    res.end(JSON.stringify({ ok: true, courier: publicCourier(courierForUser(user.id)), user: publicUser(user) }));
+    res.end(JSON.stringify({ ok: true, courier: publicCourier(ensureCourierForUser(user)), user: publicUser(user) }));
     return;
   }
 
@@ -6860,7 +7908,7 @@ function handleHttp(req, res) {
       body = body || {};
       const user = userFromReq(req);
       if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
-      const c = courierForUser(user.id);
+      const c = ensureCourierForUser(user);
       if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
       const status = String(body.status || '').trim();
       if (status !== 'online' && status !== 'offline' && status !== 'busy') { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Statut invalide (online/offline/busy).' })); return; }
@@ -6872,6 +7920,111 @@ function handleHttp(req, res) {
     return;
   }
 
+  if (urlPath === '/api/delivery/courier/profile') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    readJsonBody(req, function (err, body) {
+      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+      body = body || {};
+      const user = userFromReq(req);
+      if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
+      const c = ensureCourierForUser(user);
+      if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
+
+      const newName = String(body.name || '').trim();
+      if (newName) c.name = newName;
+      if (body.phone != null) {
+        const phone = normalizePhone(body.phone);
+        if (phone) c.phone = phone;
+      }
+      if (body.email != null) c.email = String(body.email).trim() || null;
+      if (body.city != null) c.city = String(body.city).trim();
+      if (body.zone != null) c.zone = String(body.zone).trim();
+      if (body.vehicle != null) {
+        const vehicle = String(body.vehicle).trim().toLowerCase();
+        if (VEHICLE_RANK[vehicle]) c.vehicle = vehicle;
+      }
+      if (body.logo !== undefined) {
+        const l = String(body.logo || '').slice(0, 500000); // data URL (max 500 Ko)
+        c.logo = l; user.logo = l;
+      }
+
+      if (newName) user.name = newName;
+      if (c.phone) user.phone = c.phone;
+      if (c.email != null) user.email = c.email;
+      if (c.city) user.city = c.city;
+      if (c.zone) user.zone = c.zone;
+      if (c.vehicle) user.vehicle = c.vehicle;
+      saveCouriers();
+      saveUsers();
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, courier: publicCourier(c), user: publicUser(user) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/delivery/courier/finances') {
+    if (req.method !== 'GET') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    const user = userFromReq(req);
+    if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
+    const c = ensureCourierForUser(user);
+    if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
+    const w = walletFor(user.id);
+    const history = transactions.filter(function (t) {
+      return t.userId === user.id && (t.kind === 'delivery-earning' || t.kind === 'courier-withdrawal');
+    }).slice(0, 100).map(function (t) {
+      return {
+        id: t.id, kind: t.kind, amount: t.amount, status: t.status,
+        description: t.description, mode: t.mode, operator: t.operatorLabel || t.operator || null,
+        createdAt: t.createdAt, paidAt: t.paidAt || t.createdAt
+      };
+    });
+    const withdrawn = transactions.filter(function (t) {
+      return t.userId === user.id && t.kind === 'courier-withdrawal' && t.status === 'completed';
+    }).reduce(function (s, t) { return s + (Number(t.amount) || 0); }, 0);
+    res.writeHead(200, JSON_HEADERS);
+    res.end(JSON.stringify({
+      ok: true,
+      balance: Math.round(Number(w.balance) || 0),
+      earnings: Math.round(Number(c.earnings) || 0),
+      withdrawn: Math.round(withdrawn),
+      devise: DEVISE,
+      transactions: history
+    }));
+    return;
+  }
+
+  if (urlPath === '/api/delivery/courier/withdraw') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    readJsonBody(req, function (err, body) {
+      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+      body = body || {};
+      const user = userFromReq(req);
+      if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
+      const c = ensureCourierForUser(user);
+      if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
+      const amount = Math.round(Number(body.amount) || 0);
+      if (amount <= 0) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Montant invalide.' })); return; }
+      const operatorRaw = String(body.operator || '').trim();
+      const operator = operatorRaw || 'wave';
+      if (!operatorById(operator)) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Opérateur invalide.' })); return; }
+      const phone = String(body.phone || user.phone || '').trim();
+      const w = walletFor(user.id);
+      if ((Number(w.balance) || 0) < amount) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Solde disponible insuffisant.' })); return; }
+      w.balance = Math.round((Number(w.balance) || 0) - amount);
+      w.updatedAt = nowIso();
+      const txn = recordTransaction({
+        userId: user.id, userType: 'livreur', kind: 'courier-withdrawal',
+        amount: amount, feeAmount: 0, status: 'completed', mode: 'demo',
+        operator: operator, operatorLabel: (operatorById(operator) || {}).label || operator,
+        phone: phone, description: 'Retrait gains livreur', paidAt: nowIso()
+      });
+      saveWallets();
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, balance: Math.round(Number(w.balance) || 0), transaction: txn }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/delivery/courier/location') {
     if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
     readJsonBody(req, function (err, body) {
@@ -6879,7 +8032,7 @@ function handleHttp(req, res) {
       body = body || {};
       const user = userFromReq(req);
       if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
-      const c = courierForUser(user.id);
+      const c = ensureCourierForUser(user);
       if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
       const lat = toNum(body.lat), lng = toNum(body.lng);
       if (lat == null || lng == null) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Coordonnées lat/lng requises.' })); return; }
@@ -6985,7 +8138,7 @@ function handleHttp(req, res) {
       if (!user) {
         list = list.filter(function (d) { return d.status === 'available'; });
       } else if (user.role === 'livreur') {
-        const c = courierForUser(user.id);
+        const c = ensureCourierForUser(user);
         list = list.filter(function (d) {
           if (d.courierId === (c && c.id)) return true;
           if (d.status === 'available') return courierMatchesDelivery(c, d);
@@ -7028,7 +8181,7 @@ function handleHttp(req, res) {
     if (action === 'accept' && req.method === 'POST') {
       const user = userFromReq(req);
       if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
-      const c = courierForUser(user.id);
+      const c = ensureCourierForUser(user);
       if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
       if (delivery.status !== 'available' && delivery.status !== 'dispatched') {
         res.writeHead(409, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Cette course n\'est plus disponible.' }));
@@ -7112,7 +8265,22 @@ function handleHttp(req, res) {
             const assigned = couriers.find(function (x) { return x.id === delivery.courierId; });
             if (assigned) {
               assigned.status = 'online';
-              if (next === 'delivered') assigned.completedDeliveries = (assigned.completedDeliveries || 0) + 1;
+              if (next === 'delivered') {
+                assigned.completedDeliveries = (assigned.completedDeliveries || 0) + 1;
+                // Rémunération du livreur : forfait selon le véhicule requis.
+                const fee = courierFeeForVehicle(delivery.vehicle || assigned.vehicle);
+                const w = walletFor(assigned.userId);
+                w.balance = Math.round((Number(w.balance) || 0) + fee);
+                w.updatedAt = nowIso();
+                assigned.earnings = Math.round((Number(assigned.earnings) || 0) + fee);
+                recordTransaction({
+                  userId: assigned.userId, userType: 'livreur', kind: 'delivery-earning',
+                  amount: fee, feeAmount: 0, status: 'completed', mode: 'internal',
+                  description: 'Course livrée — ' + (delivery.ref || delivery.id),
+                  reference: String(delivery.id || ''), paidAt: nowIso()
+                });
+                saveWallets();
+              }
               saveCouriers();
             }
           }
@@ -7326,6 +8494,34 @@ function handleHttp(req, res) {
     return;
   }
 
+  const ogMatch = urlPath.match(/^\/og\/([^/]+)\.png$/);
+  if (ogMatch) {
+    serveOgImage(req, res, ogMatch[1]);
+    return;
+  }
+  if (urlPath === '/robots.txt') {
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=86400' });
+    res.end('User-agent: *\nAllow: /\nDisallow: /pages/auth.html\nDisallow: /pages/dashboard-\nDisallow: /pages/client-\nDisallow: /pages/admin\nDisallow: /pages/checkout.html\nDisallow: /pages/chat.html\nDisallow: /pages/livreur.html\nDisallow: /pages/live-vendor.html\nDisallow: /pages/live-client.html\nDisallow: /api/\n\nSitemap: ' + siteBase(req) + '/sitemap.xml\n');
+    return;
+  }
+  if (urlPath === '/sitemap.xml') {
+    res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
+    res.end(buildSitemap(siteBase(req)));
+    return;
+  }
+  if (urlPath === '/pages/fiche.html' || urlPath === '/pages/fiche-boutique.html') {
+    const seoVendorId = queryParam(req, 'vendorId') || queryParam(req, 'id') || '';
+    const seoPageType = urlPath === '/pages/fiche-boutique.html' ? 'boutique' : 'prestataire';
+    const seoFile = path.join(ROOT, urlPath);
+    fs.readFile(seoFile, 'utf8', function (err, html) {
+      if (err || !html) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('404 Not Found'); return; }
+      const seoVendor = seoVendorId ? resolveVendorForSeo(seoVendorId) : null;
+      const seoOut = seoVendor ? injectFicheSeo(html, seoVendor, seoPageType, seoVendorId, siteBase(req)) : html;
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate', 'Pragma': 'no-cache', 'Expires': '0' });
+      res.end(seoOut);
+    });
+    return;
+  }
   // Fichier statique (protection anti-traversal + anti-exposition des secrets)
   let filePath = path.normalize(path.join(ROOT, urlPath));
   if (!filePath.startsWith(ROOT)) { res.writeHead(403); res.end('Forbidden'); return; }
@@ -7346,85 +8542,87 @@ function handleHttp(req, res) {
   });
 }
 
-/* ------------------------------------------------------------------ *
- *  Nettoyage des données fictives (démo/test) au démarrage
- * ------------------------------------------------------------------ *
- *  Les comptes réels (DAN Boutique, DAN Coiffure, client, admin) sont
- *  conservés. Seules les INFORMATIONS de test sont retirées : transactions
- *  sandbox, livraisons, négociations, offres du jour, coursiers et commandes
- *  fictives, ainsi que les soldes crédités par ces données fictives.
- *  Appelée APRÈS le chargement de tous les fichiers, avant l'écoute réseau.
- * ------------------------------------------------------------------ */
-function sanitizeRuntimeData() {
-  const changes = {};
+  /* ------------------------------------------------------------------ *
+   *  Nettoyage des données fictives (démo/test) au démarrage
+   * ------------------------------------------------------------------ *
+   *  Les comptes réels (DAN Boutique, DAN Coiffure, client, admin) sont
+   *  conservés. Seules les INFORMATIONS de test sont retirées : transactions
+   *  sandbox, livraisons, négociations, offres du jour et coursiers fictifs,
+   *  ainsi que les soldes crédités par ces données fictives.
+   *  Appelée APRÈS le chargement de tous les fichiers, avant l'écoute réseau.
+   * ------------------------------------------------------------------ */
+  function sanitizeRuntimeData() {
+    const changes = {};
 
-  // Transactions : ne conserver que les paiements réels (hors modes démo).
-  if (Array.isArray(transactions) && transactions.length) {
-    const kept = transactions.filter(function (t) {
-      return t && !['sandbox', 'wallet', 'internal'].includes(t.mode);
-    });
-    if (kept.length !== transactions.length) {
-      transactions = kept;
-      saveTransactions();
-      changes.transactions = kept.length;
-    }
-  }
-
-  // Livraisons fictives (Dakar) : supprimées.
-  if (Array.isArray(deliveries) && deliveries.length) {
-    deliveries = [];
-    saveDeliveries();
-    changes.deliveries = 0;
-  }
-
-  // Négociations fictives : supprimées.
-  if (Array.isArray(negotiations) && negotiations.length) {
-    negotiations = [];
-    saveNegotiations();
-    changes.negotiations = 0;
-  }
-
-  // Offres du jour fictives : supprimées.
-  if (Array.isArray(offresJour) && offresJour.length) {
-    offresJour = [];
-    saveOffresJour();
-    changes.offresJour = 0;
-  }
-
-  // Coursiers fictifs (Dakar) : supprimés.
-  if (Array.isArray(couriers) && couriers.length) {
-    couriers = [];
-    saveCouriers();
-    changes.couriers = 0;
-  }
-
-  // Commandes fictives : supprimées.
-  if (Array.isArray(orders) && orders.length) {
-    orders = [];
-    saveOrders();
-    changes.orders = 0;
-  }
-
-  // Portefeuilles : soldes remis à zéro (crédités par les données fictives).
-  if (Array.isArray(wallets)) {
-    let touched = false;
-    wallets.forEach(function (w) {
-      if (w && (Number(w.balance) > 0 || Number(w.pending) > 0)) {
-        w.balance = 0;
-        w.pending = 0;
-        touched = true;
+    // Transactions : ne conserver que les paiements réels (hors modes démo).
+    if (Array.isArray(transactions) && transactions.length) {
+      const kept = transactions.filter(function (t) {
+        return t && !['sandbox', 'wallet', 'internal'].includes(t.mode);
+      });
+      if (kept.length !== transactions.length) {
+        transactions = kept;
+        saveTransactions();
+        changes.transactions = kept.length;
       }
-    });
-    if (touched) {
-      saveWallets();
-      changes.wallets = 'remis à zéro';
+    }
+
+    // Livraisons fictives (Dakar) : supprimées.
+    if (Array.isArray(deliveries) && deliveries.length) {
+      deliveries = [];
+      saveDeliveries();
+      changes.deliveries = 0;
+    }
+
+    // Négociations fictives : supprimées.
+    if (Array.isArray(negotiations) && negotiations.length) {
+      negotiations = [];
+      saveNegotiations();
+      changes.negotiations = 0;
+    }
+
+    // Offres du jour fictives : supprimées.
+    if (Array.isArray(offresJour) && offresJour.length) {
+      offresJour = [];
+      saveOffresJour();
+      changes.offresJour = 0;
+    }
+
+    // Coursiers : on ne conserve que ceux rattachés à un vrai compte livreur.
+    // Les coursiers fictifs (Dakar) sont supprimés, mais pas les profils des
+    // livreurs réellement inscrits, sinon ces derniers deviennent introuvables
+    // au moment de passer en ligne.
+    if (Array.isArray(couriers) && couriers.length) {
+      const kept = couriers.filter(function (c) {
+        const u = c && users.find(function (x) { return x.id === c.userId; });
+        return u && u.role === 'livreur';
+      });
+      if (kept.length !== couriers.length) {
+        couriers = kept;
+        saveCouriers();
+        changes.couriers = kept.length;
+      }
+    }
+
+    // Portefeuilles : soldes remis à zéro (crédités par les données fictives).
+    if (Array.isArray(wallets)) {
+      let touched = false;
+      wallets.forEach(function (w) {
+        if (w && (Number(w.balance) > 0 || Number(w.pending) > 0)) {
+          w.balance = 0;
+          w.pending = 0;
+          touched = true;
+        }
+      });
+      if (touched) {
+        saveWallets();
+        changes.wallets = 'remis à zéro';
+      }
+    }
+
+    if (Object.keys(changes).length) {
+      console.log('[Data] données fictives retirées :', JSON.stringify(changes));
     }
   }
-
-  if (Object.keys(changes).length) {
-    console.log('[Data] données fictives retirées :', JSON.stringify(changes));
-  }
-}
 
 /* ------------------------------------------------------------------ *
  *  Démarrage
@@ -7441,25 +8639,27 @@ loadInventaireMouvements();
 loadGalerie();
 loadBoosters();
 loadBoosterStats();
+loadTrials();
 loadVendorConfig();
 loadUsers();
 ensureSeedVendorUsers();
+ensureSupportAccount();
 loadSessions();
 normalizeVendorCities();
 loadPaymentMethods();
 loadTransactions();
 loadWallets();
 loadOffresJour();
+loadBoutiqueOrders();
 loadAdminConfig();
 loadCouriers();
 loadDeliveries();
-loadOrders();
 loadNegotiations();
-sanitizeRuntimeData();
 loadPushSubscriptions();
 loadPushPrefs();
 ensureVapidKeys();
 guardVapidRotation();
+sanitizeRuntimeData();
 
 const httpServer = http.createServer(handleHttp);
 
@@ -7493,10 +8693,178 @@ setInterval(function () {
   });
 }, HEARTBEAT_INTERVAL_MS);
 
+/* ------------------------------------------------------------------ *
+ *  Géolocalisation du pays par adresse IP (côté serveur)
+ *  ------------------------------------------------------------------ *
+ *  Le fuseau / la locale côté client ne suffisent pas (téléphone en
+ *  itinérance, locale neutre, etc.). On résout le pays à partir de l'IP
+ *  réelle de la connexion, de façon robuste derrière un proxy (Render)
+ *  grâce à x-forwarded-for / x-real-ip, avec cache en mémoire + timeout
+ *  court pour ne jamais bloquer ni l'appel ni le push.
+ * ------------------------------------------------------------------ */
+const IP_COUNTRY_CACHE = new Map();
+const IP_COUNTRY_TTL = 1000 * 60 * 60 * 6; // 6 heures
+const IP_COUNTRY_PENDING = new Map();
+
+function remoteIp(req) {
+  if (!req) return '';
+  try {
+    const fwd = String((req.headers && req.headers['x-forwarded-for']) || '');
+    if (fwd) {
+      const first = fwd.split(',')[0].trim();
+      if (first) return first;
+    }
+    const real = String((req.headers && req.headers['x-real-ip']) || '');
+    if (real && real.trim()) return real.trim();
+    return String((req.socket && req.socket.remoteAddress) || '').replace(/^::ffff:/, '');
+  } catch (e) { return ''; }
+}
+
+function normalizeIp(ip) {
+  return String(ip || '').replace(/^::ffff:/, '').trim();
+}
+
+function isPrivateIp(ip) {
+  const s = String(ip || '');
+  if (!s) return true;
+  if (s === '127.0.0.1' || s === 'localhost' || s === '::1') return true;
+  if (/^10\./.test(s)) return true;
+  if (/^192\.168\./.test(s)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(s)) return true;
+  if (/^169\.254\./.test(s)) return true;
+  if (/^0\./.test(s)) return true;
+  return false;
+}
+
+function countryFromIp(ip) {
+  const key = normalizeIp(ip);
+  if (!key) return null;
+  const hit = IP_COUNTRY_CACHE.get(key);
+  if (hit && hit.expires > Date.now()) return { country: hit.country, countryCode: hit.countryCode };
+  return null;
+}
+
+function cacheIpCountry(ip, country, countryCode) {
+  const key = normalizeIp(ip);
+  if (!key) return;
+  IP_COUNTRY_CACHE.set(key, { country: country || '', countryCode: countryCode || '', expires: Date.now() + IP_COUNTRY_TTL });
+}
+
+// Résolution asynchrone (service public ipwho.is, sans clé API). Ne bloque
+// jamais : timeout court, erreurs silencieuses, IP privée ignorée, déduplication
+// des requêtes en vol.
+function resolveIpCountry(ip) {
+  const key = normalizeIp(ip);
+  if (!key) return Promise.resolve(null);
+  const cached = countryFromIp(key);
+  if (cached) return Promise.resolve(cached);
+  if (isPrivateIp(key)) return Promise.resolve(null);
+  if (IP_COUNTRY_PENDING.has(key)) return IP_COUNTRY_PENDING.get(key);
+  const p = new Promise(function (resolve) {
+    let settled = false;
+    function done(result) {
+      if (settled) return;
+      settled = true;
+      IP_COUNTRY_PENDING.delete(key);
+      resolve(result);
+    }
+    const req = https.get('https://ipwho.is/' + encodeURIComponent(key), { timeout: 1500 }, function (res) {
+      let body = '';
+      res.setEncoding('utf8');
+      res.on('data', function (chunk) { body += chunk; });
+      res.on('end', function () {
+        try {
+          const data = JSON.parse(body);
+          if (data && data.success !== false && data.country) {
+            const country = String(data.country || '').trim();
+            const countryCode = String(data.country_code || '').trim().toUpperCase();
+            cacheIpCountry(key, country, countryCode);
+            console.log('[IP] pays résolu', { ip: key, country: country, countryCode: countryCode });
+            return done({ country: country, countryCode: countryCode });
+          }
+        } catch (e) { /* ignore */ }
+        done(null);
+      });
+    });
+    req.on('timeout', function () { req.destroy(); done(null); });
+    req.on('error', function () { done(null); });
+  });
+  IP_COUNTRY_PENDING.set(key, p);
+  return p;
+}
+
+// Enrichit (fire-and-forget) la méta d'une socket avec le pays résolu par IP,
+// sans écraser un pays déjà fourni par le client.
+function enrichWsCountry(ws, ip) {
+  if (!ws || !ws.meta) return;
+  if (ws.meta.country && ws.meta.countryCode) return;
+  resolveIpCountry(ip).then(function (res) {
+    if (!res || !res.country || !ws.meta) return;
+    if (!ws.meta.country) ws.meta.country = res.country;
+    if (!ws.meta.countryCode) ws.meta.countryCode = res.countryCode;
+  });
+}
+
+// Pays effectif d'un appelant : donnée client > méta (IP déjà résolue) > cache IP.
+function countryLabelFr(raw) {
+  const label = String(raw || '').trim();
+  if (!label) return '';
+  const key = label.toLowerCase();
+  const map = {
+    'senegal': 'Sénégal', 'cote d\'ivoire': 'Côte d\'Ivoire', 'ivory coast': 'Côte d\'Ivoire',
+    'cameroon': 'Cameroun', 'gabon': 'Gabon', 'congo': 'Congo', 'dr congo': 'RD Congo',
+    'democratic republic of the congo': 'RD Congo', 'mali': 'Mali', 'burkina faso': 'Burkina Faso',
+    'niger': 'Niger', 'mauritania': 'Mauritanie', 'guinea': 'Guinée', 'togo': 'Togo',
+    'benin': 'Bénin', 'central african republic': 'Centrafrique', 'chad': 'Tchad',
+    'algeria': 'Algérie', 'egypt': 'Égypte', 'libya': 'Libye', 'morocco': 'Maroc',
+    'tunisia': 'Tunisie', 'france': 'France', 'belgium': 'Belgique', 'luxembourg': 'Luxembourg',
+    'monaco': 'Monaco', 'spain': 'Espagne', 'canada': 'Canada', 'guadeloupe': 'Guadeloupe',
+    'martinique': 'Martinique', 'french guiana': 'Guyane', 'guyana': 'Guyane',
+    'reunion': 'La Réunion', 'réunion': 'La Réunion', 'mauritius': 'Maurice', 'comoros': 'Comores',
+    'madagascar': 'Madagascar', 'united states': 'États-Unis', 'united kingdom': 'Royaume-Uni',
+    'portugal': 'Portugal', 'switzerland': 'Suisse', 'italy': 'Italie', 'germany': 'Allemagne'
+  };
+  return map[key] || label;
+}
+
+// Dernier recours : le pays déclaré sur le compte de l'appelant (ex. un client
+// connecté). Garantit une provenance affichée même quand la détection côté
+// navigateur échoue et que l'IP est privée (localhost / réseau local).
+function profileCountryFallback(ws) {
+  if (!ws || !ws.meta || !ws.meta.id) return { country: '', countryCode: '' };
+  const u = userByRoutingId(ws.meta.id);
+  if (!u) return { country: '', countryCode: '' };
+  const raw = String(u.country || '').trim();
+  if (!raw) return { country: '', countryCode: '' };
+  return { country: countryLabelFr(raw), countryCode: String(u.countryCode || '').trim().toUpperCase() };
+}
+
+function effectiveCallerCountry(ws, msg) {
+  let country = String((msg && msg.country) || '').trim();
+  let countryCode = String((msg && msg.countryCode) || '').trim();
+  if (!country && ws && ws.meta) {
+    country = String(ws.meta.country || '').trim();
+    countryCode = String(ws.meta.countryCode || '').trim();
+  }
+  if (!country && ws && ws.meta && ws.meta.ip) {
+    const cached = countryFromIp(ws.meta.ip);
+    if (cached) { country = cached.country; countryCode = cached.countryCode; }
+  }
+  if (!country) {
+    const prof = profileCountryFallback(ws);
+    country = prof.country;
+    countryCode = prof.countryCode || countryCode;
+  }
+  return { country: country, countryCode: countryCode };
+}
+
 function handleRealtimeConnection(ws, req, label) {
-  ws.meta = { id: null, role: null, name: null };
+  const ip = remoteIp(req);
+  ws.meta = { id: null, role: null, name: null, ip: ip, country: '', countryCode: '' };
   attachHeartbeat(ws);
-  console.log('[WS] connexion (' + label + ')', { ip: (req && req.socket && req.socket.remoteAddress) || '?', time: new Date().toLocaleTimeString() });
+  enrichWsCountry(ws, ip);
+  console.log('[WS] connexion (' + label + ')', { ip: ip || '?', time: new Date().toLocaleTimeString() });
+
   ws.on('message', (data, isBinary) => {
     if (isBinary) { handleFileChunk(ws, data); return; }
     let msg;
@@ -7556,7 +8924,7 @@ function handleDeliveryConnection(ws, req) {
   if (user.role === 'livreur') {
     ws.deliveryRole = 'livreur';
     courierSockets.set(user.id, ws);
-    sendDelivery(ws, { type: 'delivery-ready', courier: publicCourier(courierForUser(user.id)) });
+    sendDelivery(ws, { type: 'delivery-ready', courier: publicCourier(ensureCourierForUser(user)) });
   } else if (isSeller(user)) {
     ws.deliveryRole = 'vendeur';
     vendorSockets.set(user.vendorId || user.id, ws);
@@ -7577,7 +8945,7 @@ function handleDeliveryConnection(ws, req) {
     try { msg = JSON.parse(typeof data === 'string' ? data : data.toString()); } catch (e) { return; }
     if (!msg || typeof msg.type !== 'string') return;
     if (msg.type === 'courier-status') {
-      const c = courierForUser(user.id);
+      const c = ensureCourierForUser(user);
       if (c && (msg.status === 'online' || msg.status === 'offline' || msg.status === 'busy')) {
         c.status = msg.status;
         saveCouriers();
@@ -7585,7 +8953,7 @@ function handleDeliveryConnection(ws, req) {
       }
     }
     if (msg.type === 'courier-location') {
-      const c = courierForUser(user.id);
+      const c = ensureCourierForUser(user);
       const lat = toNum(msg.lat), lng = toNum(msg.lng);
       if (c && lat != null && lng != null) {
         c.lat = lat; c.lng = lng; c.locationUpdatedAt = nowIso();

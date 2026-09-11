@@ -4,6 +4,110 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accueil MangooTech</title>
+    <script>
+    /* Garde-fou PWA (start_url = accueil.html) : un utilisateur deja connecte
+       qui rouvre l'app via son icone est renvoye vers son propre espace :
+       livreur -> livreur.html, vendeur/prestataire -> dashboard-overview.html,
+       client -> client-dashboard.html, admin -> admin.html. Sans session
+       valide, l'accueil public reste affiche (bouton Connexion). */
+    (function () {
+      try {
+        // Ne déclencher la redirection automatique vers l'espace perso que si
+        // l'app est ouverte en mode PWA (icône / "standalone"). En navigation
+        // directe dans Chrome (URL tapée), l'accueil public reste affiché,
+        // même si une session (livreur, vendeur, client…) est encore active.
+        var _standalone = !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+        var _u = null;
+        try { _u = JSON.parse(localStorage.getItem('mgt_user') || 'null'); } catch (e) { _u = null; }
+        var _tok = null;
+        try { _tok = localStorage.getItem('mgt_token'); } catch (e) { _tok = null; }
+        /* localStorage est hote-specifique (perdu entre www.mangoo.tech et le
+           point final). Si l'identite OU le token manque, on resynchronise
+           depuis le cookie httpOnly mgt_session (source de verite serveur) pour
+           que la page cible (ex. livreur.html) puisse demarrer sans rebond. */
+        if (!_u || !_tok) {
+          try {
+            var _x = new XMLHttpRequest();
+            _x.open('GET', '/api/auth/session', false);
+            _x.setRequestHeader('Accept', 'application/json');
+            _x.send(null);
+            if (_x.status >= 200 && _x.status < 300) {
+              var _d = JSON.parse(_x.responseText);
+              if (_d && _d.ok && _d.user) {
+                _u = _d.user;
+                try { localStorage.setItem('mgt_user', JSON.stringify(_d.user)); } catch (e) {}
+                if (_d.token) { try { localStorage.setItem('mgt_token', _d.token); } catch (e) {} }
+              }
+            }
+          } catch (e) {}
+        }
+        if (_u) {
+          var _r = String(_u.role || '').toLowerCase();
+          var _target = '';
+          if (_r === 'livreur') _target = '/pages/livreur.html';
+          else if (_u.vendorId === 'support-mangoo' || _u.id === 'pro-support-mangoo' || _u.id === 'support-mangoo') _target = '/pages/dashboard-support-console.html';
+          else if (_r === 'vendeur' || _r === 'prestataire') _target = '/pages/dashboard-overview.html#menu';
+          else if (_r === 'client' || _r === 'cliente') _target = '/pages/client-dashboard.html';
+          else if (_r === 'admin') _target = '/pages/admin.html';
+          if (_target && _standalone) {
+            var _isSupport = !!(_u && (_u.vendorId === 'support-mangoo' || _u.id === 'pro-support-mangoo' || _u.id === 'support-mangoo'));
+            function _destFromLanding(landing) {
+              if (!landing || !landing.url) return '';
+              if (landing.ts && (Date.now() - Number(landing.ts)) > 240000) return '';
+              var _tp = '';
+              try { _tp = new URL(landing.url, location.origin).pathname.toLowerCase(); } catch (e) { return ''; }
+              if (_tp === '/' || /(^|\/)(index|accueil)\.html$/.test(_tp)) return '';
+              var _ok = false;
+              if (/dashboard-support-console\.html/.test(_tp)) _ok = _isSupport;
+              else if (/dashboard-support-messages\.html/.test(_tp)) _ok = _isSupport;
+              else if (/chat\.html/.test(_tp)) _ok = (_r === 'client' || _r === 'cliente');
+              else if (/dashboard-messages\.html/.test(_tp)) _ok = (_r === 'vendeur' || _r === 'prestataire' || _r === 'livreur');
+              else if (/dashboard-overview\.html/.test(_tp)) _ok = (_r === 'vendeur' || _r === 'prestataire');
+              else if (/client-dashboard\.html/.test(_tp)) _ok = (_r === 'client' || _r === 'cliente');
+              else if (/livreur\.html/.test(_tp)) _ok = (_r === 'livreur');
+              else if (/admin\.html/.test(_tp)) _ok = (_r === 'admin');
+              if (!_ok) return '';
+              try { return new URL(landing.url, location.origin).href; } catch (e) { return ''; }
+            }
+            function _clearPwa() {
+              try { if (window.navigator && typeof window.navigator.clearAppBadge === 'function') window.navigator.clearAppBadge(); } catch (e) {}
+              try {
+                if ('serviceWorker' in navigator) {
+                  var _sw = navigator.serviceWorker.controller;
+                  if (_sw) { _sw.postMessage({ type: 'CLEAR_NOTIFICATIONS' }); }
+                  else if (navigator.serviceWorker.ready) {
+                    navigator.serviceWorker.ready.then(function (reg) { if (reg && reg.active) reg.active.postMessage({ type: 'CLEAR_NOTIFICATIONS' }); }).catch(function () {});
+                  }
+                }
+              } catch (e) {}
+            }
+            function _go(dest) {
+              _clearPwa();
+              var _url = dest || _target;
+              try { window.location.replace(_url); } catch (e) { try { window.location.href = _url; } catch (e2) {} }
+            }
+            try {
+              if (window.caches && window.caches.open) {
+                window.caches.open('mgt-push-state').then(function (cache) {
+                  return cache.match('/__mgt_last_landing__').then(function (resp) {
+                    if (!resp) return null;
+                    return resp.json().catch(function () { return null; });
+                  }).then(function (landing) {
+                    try { cache.delete('/__mgt_last_landing__'); } catch (e) {}
+                    return landing;
+                  });
+                }).then(function (landing) {
+                  _go(_destFromLanding(landing));
+                }).catch(function () { _go(''); });
+              } else {
+                _go('');
+              }
+            } catch (e) { _go(''); }
+          }
+        }
+      } catch (e) {}
+    })();
+    </script>
     <style id="theme-vars">
 /* ===== MangooTech Brand Design Tokens ===== */
 /* Palette: dark green (primary) + orange (CTA accent) + light green (success) */
@@ -337,7 +441,7 @@ html.dark {
       <a href="carte.html" data-dom-id="nav-carte" id="nav-carte" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Boutique &amp; Prestataires<span class="mgt-live-dot-nav" style="display:none;"></span></a>
       <a href="./lives-en-direct.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Lives en direct<span class="mgt-live-dot-nav" style="display:none;"></span></a>
       <a href="./comparatif-prestataire-boutique.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Comparatif</a>
-      <a href="./accueil.html#a-propos" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">A propos</a>
+      <a href="./accueil.html#a-propos" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">À propos</a>
       <a href="./auth.html" data-nav-auth data-dom-id="nav-connexion" id="nav-connexion" class="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Connexion</a>
     </nav>
     <!-- Mobile menu toggle -->
@@ -357,9 +461,9 @@ html.dark {
       <div class="flex flex-col items-start gap-6 md:w-1/2">
         <span class="inline-block rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase" style="background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-600)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Lancement 2026</span>
         <h1 class="h-display" style="color: rgb(var(--mgt-primary-foreground));">MangooTech</h1>
-        <p class="body-l max-w-lg" style="color: rgb(var(--mgt-primary-100));">Le commerce local reinvente. Connectez-vous aux meilleurs prestataires et boutiques africains grace a une carte interactive, du live shopping et un chat en temps reel.</p>
+        <p class="body-l max-w-lg" style="color: rgb(var(--mgt-primary-100));">Le commerce local réinventé. Connectez-vous aux meilleurs prestataires et boutiques africains grâce à une carte interactive, du live shopping et un chat en temps réel.</p>
         <div class="flex flex-wrap gap-4 pt-2">
-          <a href="./auth.html" data-dom-id="cta-prestataire" id="cta-prestataire" class="inline-flex items-center gap-2 rounded-md px-6 py-3.5 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">
+          <a href="./auth.html?intent=register" data-dom-id="cta-prestataire" id="cta-prestataire" class="inline-flex items-center gap-2 rounded-md px-6 py-3.5 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">
             Devenir prestataire ou vendeur
             <i data-lucide="arrow-right" class="h-4 w-4"></i>
           </a>
@@ -467,9 +571,9 @@ html.dark {
     <div class="mx-auto max-w-[1200px] px-6">
       <!-- Section Header -->
       <div class="mb-14 text-center">
-        <span class="inline-block rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase mb-4" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Fonctionnalites</span>
-        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Tout ce dont vous avez besoin pour reussir</h2>
-        <p class="body-l max-w-2xl mx-auto mt-3" style="color: rgb(var(--mgt-muted-foreground));">Une plateforme complete qui transforme le commerce local africain grace a la technologie.</p>
+        <span class="inline-block rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase mb-4" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Fonctionnalités</span>
+        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Tout ce dont vous avez besoin pour réussir</h2>
+        <p class="body-l max-w-2xl mx-auto mt-3" style="color: rgb(var(--mgt-muted-foreground));">Une plateforme complète qui transforme le commerce local africain grâce à la technologie.</p>
       </div>
       <!-- Feature Cards Grid 2x2 -->
       <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -479,7 +583,7 @@ html.dark {
             <i data-lucide="map" class="h-6 w-6" style="color: rgb(var(--mgt-primary-600));"></i>
           </div>
           <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Local+ Map</h3>
-          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Explorez une carte interactive et trouvez les meilleurs prestataires pres de chez vous. Filtrez par categorie, note et disponibilite en temps reel.</p>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Explorez une carte interactive et trouvez les meilleurs prestataires près de chez vous. Filtrez par catégorie, note et disponibilité en temps réel.</p>
           <a href="carte.html" class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">Explorer la carte <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i></a>
         </div>
         <!-- Card 2: Live Shopping -->
@@ -488,8 +592,8 @@ html.dark {
             <i data-lucide="video" class="h-6 w-6" style="color: rgb(var(--mgt-accent));"></i>
           </div>
           <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Live Shopping</h3>
-          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Assistez a des demonstrations en direct, posez vos questions et achetez en temps reel. Une experience immersive qui rapproche marchands et clients.</p>
-          <a href="live-shopping.html" class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">Decouvrir le live <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i></a>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Assistez à des démonstrations en direct, posez vos questions et achetez en temps réel. Une expérience immersive qui rapproche marchands et clients.</p>
+          <a href="live-shopping.html" class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">Découvrir le live <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i></a>
         </div>
         <!-- Card 3: Connect+ Chat -->
         <div class="group rounded-lg border p-8 transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
@@ -497,7 +601,7 @@ html.dark {
             <i data-lucide="message-circle" class="h-6 w-6" style="color: rgb(var(--mgt-primary-600));"></i>
           </div>
           <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Connect+ Chat</h3>
-          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Discutez directement avec les prestataires via notre messagerie integree. Negociez, posez vos questions et finalisez vos commandes sans quitter la plateforme.</p>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Discutez directement avec les prestataires via notre messagerie intégrée. Négociez, posez vos questions et finalisez vos commandes sans quitter la plateforme.</p>
           <a href="chat.html" class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">Ouvrir la messagerie <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i></a>
         </div>
         <!-- Card 4: Paiements multi-methodes -->
@@ -505,8 +609,8 @@ html.dark {
           <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-md" style="background-color: rgb(var(--mgt-accent-50)); border-radius: var(--mgt-radius-md);">
             <i data-lucide="credit-card" class="h-6 w-6" style="color: rgb(var(--mgt-accent));"></i>
           </div>
-          <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Paiements multi-methodes</h3>
-          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Payez comme vous voulez : Mobile Money (MoMo, Orange Money, Free Money), carte bancaire ou virement. Des transactions securisees et adaptees au marche africain.</p>
+          <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Paiements multi-méthodes</h3>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Payez comme vous voulez : Mobile Money (MoMo, Orange Money, Free Money), carte bancaire ou virement. Des transactions sécurisées et adaptées au marché africain.</p>
           <a href="paiements.html" class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">Voir les paiements <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i></a>
         </div>
       </div>
@@ -518,9 +622,9 @@ html.dark {
     <div class="mx-auto max-w-[1200px] px-6">
       <!-- Section Header -->
       <div class="mb-14 text-center">
-        <span class="inline-block rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase mb-4" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Comment ca marche</span>
-        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Trois etapes simples</h2>
-        <p class="body-l max-w-2xl mx-auto mt-3" style="color: rgb(var(--mgt-muted-foreground));">Decouvrez comment MangooTech simplifie votre experience de commerce local.</p>
+        <span class="inline-block rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase mb-4" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Comment ça marche</span>
+        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Trois étapes simples</h2>
+        <p class="body-l max-w-2xl mx-auto mt-3" style="color: rgb(var(--mgt-muted-foreground));">Découvrez comment MangooTech simplifie votre expérience de commerce local.</p>
       </div>
       <!-- Steps -->
       <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -533,7 +637,7 @@ html.dark {
             <i data-lucide="search" class="h-8 w-8"></i>
           </div>
           <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Naviguer</h3>
-          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Parcourez la carte interactive et les catalogues pour decouvrir les prestataires et produits disponibles autour de vous.</p>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Parcourez la carte interactive et les catalogues pour découvrir les prestataires et produits disponibles autour de vous.</p>
         </div>
         <!-- Step 2: Echanger -->
         <div class="relative flex flex-col items-center text-center">
@@ -541,8 +645,8 @@ html.dark {
           <div class="relative z-10 mb-6 flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); box-shadow: 0 8px 24px rgba(232,97,12,.25);">
             <i data-lucide="messages-square" class="h-8 w-8"></i>
           </div>
-          <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Echanger</h3>
-          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Discutez en temps reel avec les prestataires, participez a des lives shopping et affinez votre choix avant de commander.</p>
+          <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Échanger</h3>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Discutez en temps réel avec les prestataires, participez à des lives shopping et affinez votre choix avant de commander.</p>
         </div>
         <!-- Step 3: Payer -->
         <div class="relative flex flex-col items-center text-center">
@@ -550,7 +654,7 @@ html.dark {
             <i data-lucide="wallet" class="h-8 w-8"></i>
           </div>
           <h3 class="h3 mb-3" style="color: rgb(var(--mgt-foreground));">Payer</h3>
-          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Reglez en toute securite avec le moyen de paiement de votre choix : Mobile Money, carte bancaire ou virement.</p>
+          <p class="body" style="color: rgb(var(--mgt-muted-foreground));">Réglez en toute sécurité avec le moyen de paiement de votre choix : Mobile Money, carte bancaire ou virement.</p>
         </div>
       </div>
     </div>
@@ -561,8 +665,8 @@ html.dark {
     <div class="mx-auto max-w-[1200px] px-6">
       <div class="mb-14 text-center">
         <span class="inline-block rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase mb-4" style="background-color: rgb(var(--mgt-accent-50)); color: rgb(var(--mgt-accent-600)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Tarifs</span>
-        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Des packs pour chaque etape de votre croissance</h2>
-        <p class="body-l max-w-2xl mx-auto mt-3" style="color: rgb(var(--mgt-muted-foreground));">Commencez gratuitement, puis evoluez vers le pack qui correspond a votre activite. Sans engagement.</p>
+        <h2 class="h2" style="color: rgb(var(--mgt-foreground));">Des packs pour chaque étape de votre croissance</h2>
+        <p class="body-l max-w-2xl mx-auto mt-3" style="color: rgb(var(--mgt-muted-foreground));">Commencez gratuitement, puis évoluez vers le pack qui correspond à votre activité. Sans engagement.</p>
       </div>
       <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         <!-- Pack Decouverte -->
@@ -600,12 +704,12 @@ html.dark {
             <li class="flex items-start gap-2.5 text-sm" style="color: rgb(var(--mgt-foreground));"><i data-lucide="check" class="mt-0.5 h-4 w-4 shrink-0" style="color: rgb(var(--mgt-success));"></i>Statistiques simples</li>
             <li class="mt-1 flex items-center justify-between gap-2 rounded-md px-3 py-2" style="background-color: rgb(var(--mgt-accent-50));"><span class="flex items-center gap-2 text-sm font-semibold" style="color: rgb(var(--mgt-accent-700));"><i data-lucide="video" class="h-4 w-4 shrink-0" style="color: rgb(var(--mgt-accent));"></i>Live Shopping</span><span class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide" style="background-color: rgb(var(--mgt-success)); color: #ffffff;">Gratuit</span></li>
           </ul>
-          <a href="./auth.html?plan=visibilite" class="w-full rounded-md py-2.5 text-center text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Choisir Visibilite</a>
+          <a href="./auth.html?plan=visibilite" class="w-full rounded-md py-2.5 text-center text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Choisir Visibilité</a>
         </div>
         <!-- Pack Professionnel -->
         <div class="relative flex flex-col rounded-lg border p-7 transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
           <h3 class="h3 mb-1" style="color: rgb(var(--mgt-foreground));">Pack Professionnel</h3>
-          <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">Artisans organises, PME</p>
+          <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">Artisans organisés, PME</p>
           <div class="flex items-baseline gap-1 mb-2">
             <span class="tabular-nums text-4xl font-bold" style="color: rgb(var(--mgt-primary));">10 000</span>
             <span class="caption font-medium" style="color: rgb(var(--mgt-muted-foreground));">FCFA / mois</span>
@@ -624,7 +728,7 @@ html.dark {
         <!-- Pack Premium -->
         <div class="relative flex flex-col rounded-lg border p-7 transition-shadow hover:shadow-md" style="border-color: rgb(var(--mgt-border)); background-color: rgb(var(--mgt-card)); box-shadow: var(--mgt-shadow-sm);">
           <h3 class="h3 mb-1" style="color: rgb(var(--mgt-foreground));">Pack Premium</h3>
-          <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">PME structurees</p>
+          <p class="caption mb-5" style="color: rgb(var(--mgt-muted-foreground));">PME structurées</p>
           <div class="flex items-baseline gap-1 mb-2">
             <span class="tabular-nums text-4xl font-bold" style="color: rgb(var(--mgt-primary));">15 000</span>
             <span class="caption font-medium" style="color: rgb(var(--mgt-muted-foreground));">FCFA / mois</span>
@@ -734,13 +838,13 @@ html.dark {
       <h2 class="h2 mb-4" style="color: rgb(var(--mgt-primary-foreground));">Rejoignez MangooTech</h2>
       <p class="body-l mb-10 max-w-2xl mx-auto" style="color: rgb(var(--mgt-primary-100));">Que vous soyez un prestataire de services, un vendeur-boutique ou un client, MangooTech est fait pour vous.</p>
       <div class="flex flex-wrap items-center justify-center gap-5">
-        <a href="./auth.html" class="inline-flex items-center gap-2 rounded-md px-8 py-4 text-base font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 18px rgba(232,97,12,.35);">
+        <a href="./auth.html?intent=register" class="inline-flex items-center gap-2 rounded-md px-8 py-4 text-base font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 18px rgba(232,97,12,.35);">
           <i data-lucide="store" class="h-5 w-5"></i>
           Devenir prestataire ou vendeur
         </a>
-        <a href="./auth.html" class="inline-flex items-center gap-2 rounded-md border-2 px-8 py-4 text-base font-semibold transition-all hover:bg-white/10" style="border-color: rgb(var(--mgt-primary-foreground)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+        <a href="./auth.html?intent=register&role=client" class="inline-flex items-center gap-2 rounded-md border-2 px-8 py-4 text-base font-semibold transition-all hover:bg-white/10" style="border-color: rgb(var(--mgt-primary-foreground)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
           <i data-lucide="user-plus" class="h-5 w-5"></i>
-          Creer un compte client
+          Créer un compte client
         </a>
       </div>
     </div>
@@ -781,7 +885,7 @@ html.dark {
           <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-8 w-8 rounded-md" style="border-radius: var(--mgt-radius-sm);">
           <span class="text-lg font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">MangooTech</span>
         </div>
-        <p class="caption mb-4" style="color: rgb(var(--mgt-muted-foreground));">Plateforme e-commerce africaine connectant marchands locaux et clients via carte interactive, live shopping et chat temps reel.</p>
+        <p class="caption mb-4" style="color: rgb(var(--mgt-muted-foreground));">Plateforme e-commerce africaine connectant marchands locaux et clients via carte interactive, live shopping et chat temps réel.</p>
         <div class="flex gap-3">
           <a href="#" class="flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));" aria-label="Facebook">
             <i data-lucide="facebook" class="h-4 w-4"></i>
@@ -833,7 +937,7 @@ html.dark {
         <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Coordonnées</h4>
         <ul class="space-y-2.5">
           <li><span class="caption" style="color: rgb(var(--mgt-muted-foreground));" data-contact="address">3 rue de Cambrai, 75019 Paris (France)</span></li>
-          <li><a href="mailto:mangootech75@gmail.com" data-contact="email" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">mangootech75@gmail.com</a></li>
+          <li><a href="mailto:contact@mangoo.tech" data-contact="email" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">contact@mangoo.tech</a></li>
           <li><a href="tel:+33962014080" data-contact="phone" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">+33 9 62 01 40 80</a></li>
           <li><span class="caption" data-contact="hours" style="color: rgb(var(--mgt-muted-foreground));">Lun-Ven 8h-18h</span></li>
         </ul>
@@ -841,7 +945,7 @@ html.dark {
     </div>
     <!-- Copyright bar -->
     <div class="mt-12 border-t pt-6 text-center" style="border-color: rgb(var(--mgt-border));">
-      <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">&copy; 2026 MangooTech. Tous droits reserves. Fait avec passion pour l'Afrique.</p>
+      <p class="caption" style="color: rgb(var(--mgt-muted-foreground));">&copy; 2026 MangooTech. Tous droits réservés. Fait avec passion pour l'Afrique.</p>
     </div>
   </div>
 </footer>

@@ -300,6 +300,21 @@ html.dark {
         0%, 60%, 100% { opacity: .25; transform: translateY(0); }
         30% { opacity: 1; transform: translateY(-3px); }
       }
+      /* Actions d'un message : masquées par défaut, révélées au clic sur la
+         bulle, empilées verticalement en pastilles uniformes (icône + libellé)
+         avec un espacement régulier et des largeurs alignées, pour rester
+         lisibles sur mobile. */
+      .mgt-msg-actions { display: none; flex-direction: column; gap: 6px; align-items: stretch; min-width: 148px; margin-bottom: 2px; }
+      .msg-bubble.mgt-actions-open .mgt-msg-actions { display: flex; }
+      .mgt-msg-actions .mgt-msg-action {
+        display: inline-flex; align-items: center; justify-content: flex-start; gap: 8px;
+        width: 100%; box-sizing: border-box; font-size: 12px; font-weight: 600; line-height: 1;
+        padding: 8px 10px; border-radius: 8px; cursor: pointer; white-space: nowrap; text-align: left;
+        background: transparent; border: 1px solid transparent; font-family: var(--mgt-font-sans);
+        transition: background .15s ease, color .15s ease;
+      }
+      .mgt-msg-actions .mgt-msg-action svg { flex-shrink: 0; width: 15px; height: 15px; }
+      .mgt-msg-actions .mgt-msg-action:hover { background: rgb(var(--mgt-muted)); }
     </style>
 </head>
 <body class="h-screen overflow-hidden antialiased flex bg-[rgb(var(--mgt-muted))]">
@@ -603,7 +618,7 @@ html.dark {
                 <button id="btn-emoji" type="button" title="Insérer un émoji" class="absolute right-2 bottom-2 p-1.5 rounded-md hover:bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))] transition-colors"><i data-lucide="smile" class="w-4.5 h-4.5"></i></button>
               </div>
               <button id="msg-mic" type="button" title="Maintenir pour enregistrer un message vocal" class="inline-flex items-center justify-center p-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors flex-shrink-0" style="touch-action:none;user-select:none;-webkit-user-select:none;"><i data-lucide="mic" class="w-5 h-5"></i></button>
-              <button id="msg-cam" type="button" title="Maintenir pour filmer une vidéo" class="inline-flex items-center justify-center p-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors flex-shrink-0" style="touch-action:none;user-select:none;-webkit-user-select:none;"><i data-lucide="video" class="w-5 h-5"></i></button>
+              <button id="msg-cam" type="button" title="Prendre une photo ou enregistrer un message vidéo" class="inline-flex items-center justify-center p-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors flex-shrink-0" style="touch-action:none;user-select:none;-webkit-user-select:none;"><i data-lucide="camera" class="w-5 h-5"></i></button>
               <button id="msg-send" type="button" title="Envoyer" class="inline-flex items-center gap-1.5 p-2.5 rounded-lg bg-[rgb(var(--mgt-primary))] text-white hover:bg-[rgb(var(--mgt-primary-700))] transition-colors flex-shrink-0"><i data-lucide="send" class="w-5 h-5"></i><span class="hidden sm:inline text-sm font-semibold">Envoyer</span></button>
             </div>
           </div>
@@ -673,6 +688,16 @@ html.dark {
       function openSidebar() { if (sidebar) sidebar.classList.add('open'); overlay.classList.add('show'); }
       if (menuBtn) menuBtn.addEventListener('click', openSidebar);
       overlay.addEventListener('click', closeSidebar);
+      // Bouton « Dashboard » (icône 4 carrés) : sur mobile, il ouvre directement
+      // la sidebar des modules au lieu de quitter la page (lève toute ambiguïté
+      // avec le hamburger). Sur PC, il conserve sa navigation normale.
+      var dashBtn = document.getElementById('btn-back-dashboard');
+      if (dashBtn) dashBtn.addEventListener('click', function (e) {
+        if (window.innerWidth <= 768) {
+          e.preventDefault();
+          openSidebar();
+        }
+      });
       if (sidebar) {
         sidebar.querySelectorAll('a').forEach(function (a) {
           a.addEventListener('click', function () { if (window.innerWidth <= 768) closeSidebar(); });
@@ -995,15 +1020,12 @@ html.dark {
         }
         if (empty) empty.style.display = 'none';
         contacts.forEach(buildContactRow);
-        // Ouvre la première conversation (l'annuaire fournit déjà l'id réel via
-        // data-peer-id ; ne plus privilégier un id codé en dur) — SAUF si un
-        // atterrissage push est en attente : dans ce cas, applyPushLanding() se
-        // chargera de sélectionner la conversation exacte de l'émetteur de la
-        // notification (résolution stricte par data-peer-id). Sélectionner la
-        // première ici écraserait ce ciblage et ouvrirait une conversation « au
-        // hasard ».
-        var first = list.querySelector('.msg-conv');
-        if (first && !pendingPushLanding) setActive(first);
+        // Ne pas ouvrir automatiquement de conversation à l'arrivée : le pro doit
+        // voir la colonne de ses contacts et choisir lui-même la conversation à
+        // ouvrir (sinon cliquer « Message » dans la barre basse menait directement
+        // au premier contact, ex. « B1 »). L'atterrissage push ciblé (kind / from /
+        // fromName / convId) reste géré par applyPushLanding(), qui sélectionne la
+        // conversation exacte de l'émetteur de la notification.
         updateUnreadBadge();
         if (window.lucide) window.lucide.createIcons();
       }
@@ -1236,7 +1258,7 @@ html.dark {
         function cancel() {
           box.remove();
           showOriginal();
-          if (actions) actions.style.display = 'flex';
+          if (actions) actions.style.display = '';
         }
         function save() {
           var newText = ta.value.trim();
@@ -1244,7 +1266,7 @@ html.dark {
           if (newText === current) { cancel(); return; }
           box.remove();
           showOriginal();
-          if (actions) actions.style.display = 'flex';
+          if (actions) actions.style.display = '';
           var peer = activePeer();
           if (peer && window.MangooConnect && typeof window.MangooConnect.editMessage === 'function') {
             window.MangooConnect.editMessage(msgId, peer.id, newText);
@@ -1352,6 +1374,26 @@ html.dark {
         overlay.appendChild(panel);
         document.body.appendChild(overlay);
       }
+      // ---- Icônes + pastilles d'action unifiées (icône + libellé) ----
+      function msgActionIcon(name) {
+        var I = {
+          copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+          forward: '<polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/>',
+          edit: '<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>',
+          trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+          reply: '<polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>',
+          star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'
+        };
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (I[name] || '') + '</svg>';
+      }
+      function msgActionBtn(label, icon, color) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'mgt-msg-action';
+        b.style.color = color;
+        b.innerHTML = msgActionIcon(icon) + '<span>' + label + '</span>';
+        return b;
+      }
       // ---- « Enregistrer un message et le Consulter » ----
       function saveBtnLabel(on) { return on ? 'Favori ✓' : 'Favori'; }
       function toggleSaved(msgId) {
@@ -1363,19 +1405,24 @@ html.dark {
           MC.toggleSavedMessage(msgId, peerId);
         }
         document.querySelectorAll('[data-save-msg="' + msgId + '"]').forEach(function (b) {
-          b.textContent = saveBtnLabel(!!SAVED[msgId]);
-          b.style.color = SAVED[msgId] ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
+          var on = !!SAVED[msgId];
+          var span = b.querySelector('span');
+          if (span) span.textContent = saveBtnLabel(on);
+          var svg = b.querySelector('svg');
+          if (svg) svg.setAttribute('fill', on ? 'currentColor' : 'none');
+          b.style.color = on ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
         });
         toast(SAVED[msgId] ? 'Ajouté aux favoris.' : 'Retiré des favoris.');
       }
       function addSaveButton(container, msgId, forOutgoing) {
         if (!container || !msgId) return;
+        var on = !!SAVED[msgId];
         var b = document.createElement('button');
         b.type = 'button';
+        b.className = 'mgt-msg-action';
         b.setAttribute('data-save-msg', msgId);
-        b.textContent = saveBtnLabel(!!SAVED[msgId]);
-        var border = forOutgoing ? 'rgba(255,255,255,.25)' : 'rgb(var(--mgt-border))';
-        b.style.cssText = 'font-size:11px;font-weight:600;color:' + (SAVED[msgId] ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))') + ';background:transparent;border:1px solid ' + border + ';cursor:pointer;padding:2px 6px;border-radius:6px;';
+        b.style.color = on ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-muted-foreground))';
+        b.innerHTML = '<svg viewBox="0 0 24 24" fill="' + (on ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>' + saveBtnLabel(on) + '</span>';
         b.addEventListener('click', function (e) { e.stopPropagation(); toggleSaved(msgId); });
         container.appendChild(b);
       }
@@ -1493,67 +1540,43 @@ html.dark {
         if (!wrap || !msgId) return;
         var actions = document.createElement('div');
         actions.className = 'mgt-msg-actions';
-        // Toujours visibles : sur Android (tactile), il n'y a pas de survol
-        // (mouseenter/mouseleave), les boutons Modifier/Supprimer restaient donc
-        // invisibles et inutilisables. On les affiche en permanence.
-        actions.style.cssText = 'display:flex;gap:4px;align-items:center;margin-top:2px;';
-        function makeBtn(label, color) {
-          var b = document.createElement('button');
-          b.type = 'button';
-          b.textContent = label;
-          b.style.cssText = 'font-size:11px;font-weight:600;color:' + color + ';background:transparent;border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:2px 6px;border-radius:6px;';
-          return b;
-        }
-        var copyBtn = makeBtn('Copier', 'rgb(var(--mgt-muted-foreground))');
+        // Masquées par défaut, révélées au clic sur la bulle (toggleBubbleActions).
+        actions.style.cssText = '';
+        var copyBtn = msgActionBtn('Copier', 'copy', 'rgb(var(--mgt-muted-foreground))');
         copyBtn.addEventListener('click', function (e) { e.stopPropagation(); copyTextToClipboard(messageTextOf(wrap)); });
-        var editBtn = makeBtn('Modifier', 'rgb(var(--mgt-muted-foreground))');
-        editBtn.addEventListener('click', function (e) { e.stopPropagation(); beginEditMessage(msgId); });
-        var delBtn = makeBtn('Supprimer', 'rgb(var(--mgt-error))');
-        delBtn.addEventListener('click', function (e) { e.stopPropagation(); confirmDeleteMessage(msgId); });
-        var fwdBtn = document.createElement('button');
-        fwdBtn.type = 'button';
-        fwdBtn.title = 'Transférer';
-        fwdBtn.style.cssText = 'font-size:11px;font-weight:600;color:rgba(255,255,255,.85);background:transparent;border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:2px 6px;border-radius:6px;display:inline-flex;align-items:center;gap:3px;';
-        fwdBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>Transférer';
+        var fwdBtn = msgActionBtn('Transférer', 'forward', 'rgb(var(--mgt-muted-foreground))');
         fwdBtn.addEventListener('click', function (e) { e.stopPropagation(); openForwardModal(messageTextOf(wrap)); });
+        var editBtn = msgActionBtn('Modifier', 'edit', 'rgb(var(--mgt-muted-foreground))');
+        editBtn.addEventListener('click', function (e) { e.stopPropagation(); beginEditMessage(msgId); });
+        var delBtn = msgActionBtn('Supprimer', 'trash', 'rgb(var(--mgt-error))');
+        delBtn.addEventListener('click', function (e) { e.stopPropagation(); confirmDeleteMessage(msgId); });
         actions.appendChild(copyBtn);
         actions.appendChild(fwdBtn);
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
         addSaveButton(actions, msgId, true);
-        wrap.appendChild(actions);
+        wrap.insertBefore(actions, wrap.firstChild);
       }
       // Actions Copier/Répondre/Transférer pour une bulle entrante.
-      function addIncomingActions(greyBubble, msgId) {
-        if (!greyBubble || !msgId) return;
+      function addIncomingActions(container, greyBubble, msgId) {
+        if (!container || !greyBubble || !msgId) return;
         var actions = document.createElement('div');
         actions.className = 'mgt-msg-actions';
-        actions.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:2px;';
-        function makeBtn(label, color) {
-          var b = document.createElement('button');
-          b.type = 'button';
-          b.textContent = label;
-          b.style.cssText = 'font-size:11px;font-weight:600;color:' + color + ';background:transparent;border:1px solid rgb(var(--mgt-border));cursor:pointer;padding:2px 6px;border-radius:6px;';
-          return b;
-        }
-        var copyBtn = makeBtn('Copier', 'rgb(var(--mgt-muted-foreground))');
+        actions.style.cssText = '';
+        var copyBtn = msgActionBtn('Copier', 'copy', 'rgb(var(--mgt-muted-foreground))');
         copyBtn.addEventListener('click', function (e) { e.stopPropagation(); copyTextToClipboard(messageTextOf(greyBubble)); });
-        var replyBtn = makeBtn('Répondre', 'rgb(var(--mgt-primary))');
+        var fwdBtn = msgActionBtn('Transférer', 'forward', 'rgb(var(--mgt-muted-foreground))');
+        fwdBtn.addEventListener('click', function (e) { e.stopPropagation(); openForwardModal(messageTextOf(greyBubble)); });
+        var replyBtn = msgActionBtn('Répondre', 'reply', 'rgb(var(--mgt-primary))');
         replyBtn.addEventListener('click', function (e) {
           e.stopPropagation();
           setReplyTo(msgId, (currentConv ? currentConv.getAttribute('data-peer-id') : ''), messageTextOf(greyBubble));
         });
-        var fwdBtn = document.createElement('button');
-        fwdBtn.type = 'button';
-        fwdBtn.title = 'Transférer';
-        fwdBtn.style.cssText = 'font-size:11px;font-weight:600;color:rgb(var(--mgt-muted-foreground));background:transparent;border:1px solid rgb(var(--mgt-border));cursor:pointer;padding:2px 6px;border-radius:6px;display:inline-flex;align-items:center;gap:3px;';
-        fwdBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>Transférer';
-        fwdBtn.addEventListener('click', function (e) { e.stopPropagation(); openForwardModal(messageTextOf(greyBubble)); });
         actions.appendChild(copyBtn);
         actions.appendChild(fwdBtn);
         actions.appendChild(replyBtn);
         addSaveButton(actions, msgId, false);
-        greyBubble.appendChild(actions);
+        container.insertBefore(actions, container.firstChild);
       }
       function appendVendorBubble(html, attachList, msgId, replyPreview) {
         if (!thread) return null;
@@ -1863,14 +1886,14 @@ html.dark {
           // via le bouton lecture et se supprime via cette action.
           var actions = document.createElement('div');
           actions.className = 'mgt-msg-actions';
-          actions.style.cssText = 'display:flex;gap:4px;align-items:center;margin-top:2px;';
+          actions.style.cssText = '';
           var delBtn = document.createElement('button');
           delBtn.type = 'button';
           delBtn.textContent = 'Supprimer';
           delBtn.style.cssText = 'font-size:11px;font-weight:600;color:rgb(var(--mgt-error));background:transparent;border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:2px 6px;border-radius:6px;';
           delBtn.addEventListener('click', function (e) { e.stopPropagation(); confirmDeleteMessage(msgId); });
           actions.appendChild(delBtn);
-          wrap.appendChild(actions);
+          wrap.insertBefore(actions, wrap.firstChild);
         }
         thread.appendChild(wrap);
         thread.scrollTop = thread.scrollHeight;
@@ -2199,12 +2222,21 @@ html.dark {
           '<p style="margin:2px 0 0;font-size:12px;line-height:1.35;color:' + textColor + ';overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;word-break:break-word;">' + esc(replyPreview.text) + '</p>' +
         '</div>';
       }
-      // Clic sur une bulle : on l'utilise comme cible de réponse (hors boutons).
+      // Ouvre/ferme la liste d'actions d'une bulle (une seule ouverte à la fois).
+      function toggleBubbleActions(wrap) {
+        if (!wrap) return;
+        var open = wrap.classList.contains('mgt-actions-open');
+        var others = thread ? thread.querySelectorAll('.msg-bubble.mgt-actions-open') : [];
+        Array.prototype.forEach.call(others, function (n) { if (n !== wrap) n.classList.remove('mgt-actions-open'); });
+        if (open) wrap.classList.remove('mgt-actions-open');
+        else wrap.classList.add('mgt-actions-open');
+      }
+      // Clic sur une bulle : bascule l'affichage des actions (Copier/Répondre/…).
       if (thread) {
         thread.addEventListener('click', function (e) {
           if (e.target && e.target.closest && e.target.closest('.mgt-msg-actions, textarea, input, button, a')) return;
           // L'utilisateur est en train de sélectionner du texte pour le copier :
-          // on ne déclenche pas la réponse (sinon le focus volé annulerait la
+          // on ne déclenche pas la bascule (sinon le focus volé annulerait la
           // sélection et la copie deviendrait impossible).
           var sel = (window.getSelection && window.getSelection()) || null;
           if (sel && String(sel.toString() || '').trim()) return;
@@ -2215,12 +2247,8 @@ html.dark {
             el = el.parentNode;
           }
           if (!wrap) return;
-          var msgId = wrap.getAttribute('data-msg-id');
-          if (!msgId) return;
-          var p = wrap.querySelector('p.text-sm');
-          var text = p ? (p.textContent || '') : '';
-          var fromId = wrap.querySelector('.mgt-msg-text') ? myCanonicalId() : (currentConv ? currentConv.getAttribute('data-peer-id') : '');
-          setReplyTo(msgId, fromId, text);
+          if (!wrap.getAttribute('data-msg-id')) return;
+          toggleBubbleActions(wrap);
         });
       }
 
@@ -2592,26 +2620,30 @@ html.dark {
         if (emptyEl && emptyEl.parentNode) emptyEl.parentNode.removeChild(emptyEl);
         var name = currentConv ? currentConv.getAttribute('data-name') : '';
         var quote = quoteHtml(replyPreview, false);
-        var bubble = document.createElement('div');
-        bubble.className = 'flex items-end gap-2 max-w-[70%]';
-        bubble.style.cssText = 'display:flex;align-items:flex-end;gap:8px;max-width:75%;box-sizing:border-box;min-width:0;';
-        if (msgId) { bubble.setAttribute('data-msg-id', msgId); bubble.classList.add('msg-bubble'); }
-        bubble.innerHTML =
+        var container = document.createElement('div');
+        container.className = 'flex flex-col items-start gap-1.5 max-w-[70%]';
+        container.style.cssText = 'display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:75%;box-sizing:border-box;min-width:0;';
+        var row = document.createElement('div');
+        row.className = 'flex items-end gap-2 max-w-[100%]';
+        row.style.cssText = 'display:flex;align-items:flex-end;gap:8px;max-width:100%;box-sizing:border-box;min-width:0;';
+        if (msgId) { container.setAttribute('data-msg-id', msgId); container.classList.add('msg-bubble'); }
+        row.innerHTML =
           '<div class="w-7 h-7 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] flex items-center justify-center font-semibold text-[10px] flex-shrink-0">' + esc(initials(name)) + '</div>' +
           '<div class="bg-[rgb(var(--mgt-muted))] rounded-2xl rounded-bl-md px-4 py-2.5" style="min-width:0;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;">' +
             quote +
             '<p class="text-sm text-[rgb(var(--mgt-foreground))]">' + esc(text) + '</p>' +
             '<span class="text-[10px] text-[rgb(var(--mgt-muted-foreground))] mt-1 block">' + nowTime() + '</span>' +
           '</div>';
+        container.appendChild(row);
         if (msgId) {
-          var grey = bubble.lastElementChild;
-          if (grey) addIncomingActions(grey, msgId);
+          var grey = row.lastElementChild;
+          if (grey) addIncomingActions(container, grey, msgId);
         }
-        thread.appendChild(bubble);
+        thread.appendChild(container);
         thread.scrollTop = thread.scrollHeight;
         // Fiabilise le défilement (les polices/images peuvent modifier la hauteur après coup).
         requestAnimationFrame(function () { thread.scrollTop = thread.scrollHeight; });
-        return bubble;
+        return container;
       }
       function appendIncomingFile(name, size, blob) {
         if (!thread) return;
