@@ -324,6 +324,29 @@ html.dark {
           </div>
         </div>
 
+        <!-- ===== SAISIR UN CODE DE PARRAINAGE ===== -->
+        <div class="bg-[rgb(var(--mgt-primary-50))] border border-[rgb(var(--mgt-primary))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-start gap-3">
+            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent))] shrink-0">
+              <i data-lucide="key-round" class="w-5 h-5"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="h3">J'ai reçu un code de parrainage</h3>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Vous avez été invité par un autre vendeur ou prestataire ? Saisissez ici le code qu'on vous a communiqué pour activer votre avantage de bienvenue.</p>
+            </div>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-3 mt-4">
+            <div class="flex-1">
+              <label for="ref-code-input" class="block caption mb-1.5 font-semibold text-[rgb(var(--mgt-foreground))]">Code de parrainage</label>
+              <input id="ref-code-input" type="text" autocomplete="off" spellcheck="false" placeholder="Ex : DAN10" class="w-full px-4 py-3 rounded-lg bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-input))] text-[rgb(var(--mgt-foreground))] placeholder-[rgb(var(--mgt-muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring))] uppercase tracking-widest font-semibold">
+            </div>
+            <button id="btn-submit-ref-code" type="button" class="w-full sm:w-auto px-5 py-3 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors whitespace-nowrap">
+              Valider mon code
+            </button>
+          </div>
+          <p id="ref-code-feedback" class="caption mt-3 hidden"></p>
+        </div>
+
         <!-- ===== KPIs ===== -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
@@ -555,6 +578,9 @@ html.dark {
     var refCode = document.getElementById('ref-code');
     if (refCode) refCode.textContent = code || '—';
 
+    var refInput = document.getElementById('ref-code-input');
+    if (refInput && document.activeElement !== refInput) refInput.value = (p.appliedCode && String(p.appliedCode)) || '';
+
     var invited = document.getElementById('ref-invited');
     if (invited) invited.textContent = fmtNum(p.invited);
 
@@ -576,6 +602,34 @@ html.dark {
 
   if (window.MangooVendorConfig) {
     MangooVendorConfig.get().then(function(res){ if (res && res.ok) hydrate(res); }).catch(function(){});
+  }
+
+  // ===== Saisie d'un code de parrainage reçu =====
+  var submitBtn = document.getElementById('btn-submit-ref-code');
+  var codeInput = document.getElementById('ref-code-input');
+  var feedback = document.getElementById('ref-code-feedback');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', function () {
+      var raw = (codeInput && codeInput.value) || '';
+      var code = String(raw).trim().toUpperCase();
+      if (!code) {
+        if (feedback) { feedback.className = 'caption mt-3 text-[rgb(var(--mgt-error))]'; feedback.textContent = 'Veuillez saisir un code de parrainage.'; }
+        if (codeInput) codeInput.focus();
+        return;
+      }
+      if (!window.MangooVendorConfig) {
+        if (feedback) { feedback.className = 'caption mt-3 text-[rgb(var(--mgt-error))]'; feedback.textContent = 'Service indisponible, réessayez dans un instant.'; }
+        return;
+      }
+      MangooVendorConfig.patch('parrainage', { appliedCode: code }).then(function () {
+        currentConfig = currentConfig || {};
+        currentConfig.parrainage = currentConfig.parrainage || {};
+        currentConfig.parrainage.appliedCode = code;
+        if (feedback) { feedback.className = 'caption mt-3 text-[rgb(var(--mgt-success))] font-semibold'; feedback.textContent = 'Code « ' + code + ' » enregistré. Votre avantage de bienvenue est activé.'; }
+      }).catch(function () {
+        if (feedback) { feedback.className = 'caption mt-3 text-[rgb(var(--mgt-error))]'; feedback.textContent = 'Erreur de connexion, réessayez.'; }
+      });
+    });
   }
 })();
 </script>
