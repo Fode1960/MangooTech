@@ -1003,6 +1003,14 @@ window.__mgtInitBoutique = function () {
     renderDiscount();
   }
 
+  // Le code de parrainage n'est valable que pour la première commande chez ce vendeur.
+  function hasOrderedBefore() {
+    if (!window.MangooClient || typeof window.MangooClient.getMyOrders !== 'function') return false;
+    var vid = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
+    var orders = window.MangooClient.getMyOrders();
+    return orders.some(function (o) { return o && o.vendorId === vid; });
+  }
+
   function applyCode(raw) {
     var code = String(raw || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     var fb = document.getElementById('cart-promo-feedback');
@@ -1019,6 +1027,12 @@ window.__mgtInitBoutique = function () {
         if (codes.promo[i].code === code) { match = { type: 'promo', code: code, percent: codes.promo[i].discount, label: 'Remise promo (' + code + ')' }; break; }
       }
       if (!match && codes.referral === code) {
+        if (hasOrderedBefore()) {
+          appliedDiscount = null;
+          renderCart();
+          feedback('Ce code de parrainage est réservé à votre 1ère commande ici.', false);
+          return;
+        }
         match = { type: 'parrainage', code: code, percent: 10, label: 'Parrainage (' + code + ')' };
       }
       if (!match) { appliedDiscount = null; renderCart(); feedback('Code invalide ou expiré.', false); return; }
