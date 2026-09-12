@@ -744,7 +744,7 @@ html.dark {
 
 <!-- ===== TIROIR PANIER ===== -->
 <aside id="cart-drawer" data-dom-id="cart-drawer" class="fixed top-0 right-0 z-[90] flex h-full w-full max-w-[400px] translate-x-full flex-col shadow-2xl transition-transform duration-300" style="background-color: rgb(var(--mgt-background)); box-shadow: var(--mgt-shadow-lg);">
-  <div class="flex items-center justify-between border-b px-6 py-5" style="border-color: rgb(var(--mgt-border));">
+  <div class="flex flex-none items-center justify-between border-b px-6 py-5" style="border-color: rgb(var(--mgt-border));">
     <h2 class="h3 flex items-center gap-2" style="color: rgb(var(--mgt-foreground));">
       <i data-lucide="shopping-bag" class="h-5 w-5" style="color: rgb(var(--mgt-primary));"></i>
       Votre panier
@@ -754,7 +754,8 @@ html.dark {
     </button>
   </div>
 
-  <div id="cart-items" class="flex-1 overflow-y-auto px-6 py-4 no-scrollbar"></div>
+  <div class="flex-1 min-h-0 overflow-y-auto no-scrollbar">
+    <div id="cart-items" class="px-6 py-4"></div>
 
   <!-- Mode de reception -->
   <div class="border-t px-6 py-4" style="border-color: rgb(var(--mgt-border));">
@@ -771,8 +772,9 @@ html.dark {
     </div>
   </div>
 
+  </div>
   <!-- Totaux -->
-  <div class="border-t px-6 py-4" style="border-color: rgb(var(--mgt-border));">
+  <div class="flex-none border-t px-6 py-4" style="border-color: rgb(var(--mgt-border));">
     <div class="mb-3 space-y-1.5">
       <div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);">
         <span style="color: rgb(var(--mgt-muted-foreground));">Sous-total</span>
