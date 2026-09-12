@@ -740,7 +740,7 @@ html.dark {
       <button id="cart-promo-apply" type="button" class="flex-shrink-0 rounded-md px-4 py-2.5 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Appliquer</button>
     </div>
     <p id="cart-promo-feedback" class="caption mt-2 hidden" style="font-family: var(--mgt-font-sans);"></p>
-    <p class="caption mt-1.5" style="color: rgb(var(--mgt-muted-foreground));">Code promo = remise du vendeur · Code de parrainage = −10 % sur votre 1ère commande.</p>
+    <p class="caption mt-1.5" style="color: rgb(var(--mgt-muted-foreground));">Code promo = remise du vendeur · Code de parrainage = −10 % sur votre 1ère commande (connexion requise).</p>
   </div>
 
   <!-- Totaux -->
@@ -1003,12 +1003,22 @@ window.__mgtInitBoutique = function () {
     renderDiscount();
   }
 
-  // Le code de parrainage n'est valable que pour la première commande chez ce vendeur.
-  function hasOrderedBefore() {
-    if (!window.MangooClient || typeof window.MangooClient.getMyOrders !== 'function') return false;
-    var vid = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
-    var orders = window.MangooClient.getMyOrders();
-    return orders.some(function (o) { return o && o.vendorId === vid; });
+  // Identifiant stable de l'appareil (persisté en localStorage) : permet au
+  // serveur d'appliquer la règle « première commande » même si l'utilisateur
+  // change de compte ou efface sa session.
+  function deviceId() {
+    var KEY = 'mgt_device_id_v1';
+    try {
+      var v = localStorage.getItem(KEY);
+      if (v) return v;
+      var id = (window.crypto && typeof window.crypto.randomUUID === 'function')
+        ? window.crypto.randomUUID()
+        : 'dev-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem(KEY, id);
+      return id;
+    } catch (e) {
+      return 'dev-unknown';
+    }
   }
 
   function applyCode(raw) {
@@ -1027,10 +1037,17 @@ window.__mgtInitBoutique = function () {
         if (codes.promo[i].code === code) { match = { type: 'promo', code: code, percent: codes.promo[i].discount, label: 'Remise promo (' + code + ')' }; break; }
       }
       if (!match && codes.referral === code) {
-        if (hasOrderedBefore()) {
+        var tok = null;
+        try { tok = localStorage.getItem('mgt_token'); } catch (e) { tok = null; }
+        var cu = (window.MangooClient && window.MangooClient.getUser) ? window.MangooClient.getUser() : null;
+        if (!tok || !(cu && cu.id)) {
           appliedDiscount = null;
           renderCart();
-          feedback('Ce code de parrainage est réservé à votre 1ère commande ici.', false);
+          if (fb) {
+            fb.innerHTML = 'Connectez-vous pour utiliser un code de parrainage. <a href="auth.html?next=%2Fpages%2Ffiche-boutique.html" style="color:rgb(var(--mgt-primary));font-weight:600;text-decoration:underline;">Se connecter</a>';
+            fb.classList.remove('hidden');
+            fb.style.color = 'rgb(var(--mgt-error))';
+          }
           return;
         }
         match = { type: 'parrainage', code: code, percent: 10, label: 'Parrainage (' + code + ')' };
@@ -1640,6 +1657,7 @@ window.__mgtInitBoutique = function () {
             clientPhone: clientPhone,
             clientEmail: clientEmail,
             clientCity: clientCity,
+            deviceId: deviceId(),
             code: (appliedDiscount && appliedDiscount.code) || '',
             codeType: (appliedDiscount && appliedDiscount.type) || '',
             discountPercent: (appliedDiscount && appliedDiscount.percent) || 0

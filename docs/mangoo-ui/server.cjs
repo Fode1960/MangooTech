@@ -7150,12 +7150,20 @@ function handleHttp(req, res) {
     if (type === 'parrainage' || (raw === referral && type !== 'promo')) {
       if (raw !== referral) return { error: 'Code de parrainage invalide.' };
       const clientId = (opts && opts.user) ? opts.user.id : '';
-      if (clientId) {
-        const already = boutiqueOrders.some(function (o) {
-          return o && o.vendorId === vendorId && o.clientId === clientId && (o.status === 'payee' || o.paidAt);
-        });
-        if (already) return { error: 'Ce code de parrainage est réservé à votre 1ère commande ici.' };
-      }
+      // Un code de parrainage exige un compte : sans identité, impossible de
+      // garantir la règle « première commande ».
+      if (!clientId) return { error: 'Connectez-vous pour utiliser un code de parrainage.' };
+      const phone = normalizePhone((opts && opts.phone) || '');
+      const deviceId = String((opts && opts.deviceId) || '').trim();
+      const already = boutiqueOrders.some(function (o) {
+        if (!o || o.vendorId !== vendorId) return false;
+        if (!(o.status === 'payee' || o.paidAt)) return false;
+        if (o.clientId === clientId) return true;
+        if (phone && normalizePhone(o.clientPhone || '') === phone) return true;
+        if (deviceId && o.deviceId === deviceId) return true;
+        return false;
+      });
+      if (already) return { error: 'Ce code de parrainage est réservé à votre 1ère commande ici.' };
       return { code: raw, codeType: 'parrainage', percent: 10, amount: Math.round(subtotal * 10 / 100), label: 'Parrainage (' + raw + ')' };
     }
 
@@ -7195,7 +7203,7 @@ function handleHttp(req, res) {
       const deliveryFee = fulfillment === 'livraison' ? Math.max(0, Math.round(Number(body.deliveryFee) || 500)) : 0;
 
       const vendorId = canonicalRoutingId(String(body.vendorId || ''));
-      const discountResult = resolveOrderDiscount({ vendorId: vendorId, user: user, code: body.code, codeType: body.codeType, subtotal: subtotal });
+      const discountResult = resolveOrderDiscount({ vendorId: vendorId, user: user, code: body.code, codeType: body.codeType, subtotal: subtotal, phone: body.clientPhone, deviceId: body.deviceId });
       if (discountResult.error) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: discountResult.error, codeError: true })); return; }
       const discount = { code: discountResult.code || '', codeType: discountResult.codeType || '', percent: discountResult.percent || 0, amount: discountResult.amount || 0, label: discountResult.label || '' };
       const total = Math.max(0, subtotal + deliveryFee - discount.amount);
@@ -7209,6 +7217,7 @@ function handleHttp(req, res) {
         clientId: user ? user.id : '',
         clientName: String(body.clientName || '').trim() || 'Client',
         clientPhone: String(body.clientPhone || '').trim(),
+        deviceId: String(body.deviceId || '').trim(),
         clientEmail: String(body.clientEmail || '').trim(),
         clientCity: String(body.clientCity || '').trim(),
         items: items,
