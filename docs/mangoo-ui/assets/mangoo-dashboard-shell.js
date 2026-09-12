@@ -292,7 +292,14 @@
     // inférieure plein écran pour qu'il reste visible au lieu de déborder à gauche.
     '@media (max-width:768px){',
     '  .mgt-popover{position:fixed !important;top:auto !important;bottom:12px !important;left:12px !important;right:12px !important;width:auto !important;min-width:0 !important;max-width:none !important;border-radius:16px !important;}',
-    '}'
+    '}',
+    // — Mode faible connexion : griser les modules indisponibles hors-ligne ———
+    // Hors-ligne, les modules de gestion (commandes, finances, messagerie…) ont
+    // besoin du serveur. On les grise dans le menu latéral et on laisse le module
+    // « Mode faible connexion » accessible (page d'explication de l'accès client).
+    'body.mgt-offline aside nav a:not([href*="dashboard-hors-ligne.html"]){opacity:.4;pointer-events:none;filter:grayscale(.35);}',
+    'body.mgt-offline aside nav a[href*="dashboard-hors-ligne.html"]{box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);}',
+    '.mgt-offline-banner{position:fixed;top:0;left:0;right:0;z-index:2000;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;font-family:var(--mgt-font-sans);font-size:12.5px;font-weight:600;line-height:1.35;text-align:center;background:rgb(var(--mgt-warning));color:rgb(var(--mgt-warning-foreground));}'
   ].join('\n');
 
   function readJSON(key, fb) {
@@ -978,6 +985,28 @@
     window.addEventListener('focus', poll);
   }
 
+  // ---- Mode faible connexion : modules grisés hors-ligne + bandeau ----
+  // Hors-ligne, l'espace de gestion ne peut pas charger ses données. On grise les
+  // modules du menu latéral (sauf « Mode faible connexion ») et on affiche un
+  // bandeau explicatif, pour ne pas laisser croire que tout reste consultable.
+  function applyOfflineNav() {
+    var offline = !navigator.onLine;
+    document.body.classList.toggle('mgt-offline', offline);
+    var banner = document.getElementById('mgt-offline-banner');
+    if (offline) {
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'mgt-offline-banner';
+        banner.className = 'mgt-offline-banner';
+        banner.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>Connexion instable — modules de gestion indisponibles. Vos clients peuvent toujours consulter votre fiche, la carte et leurs favoris.</span>';
+        document.body.appendChild(banner);
+      }
+      banner.style.display = 'flex';
+    } else if (banner) {
+      banner.style.display = 'none';
+    }
+  }
+
   function init() {
     injectStyle();
     prepHeader();
@@ -985,6 +1014,9 @@
     applyVerificationRole();
     applyRoleNav();
     buildLiveNav();
+    applyOfflineNav();
+    window.addEventListener('online', applyOfflineNav);
+    window.addEventListener('offline', applyOfflineNav);
     if (global.MangooVendor) global.MangooVendor.registerRT();
 
     var bell = document.getElementById('btn-notifications');

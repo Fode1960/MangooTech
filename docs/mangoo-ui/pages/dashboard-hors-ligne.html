@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Mode hors-ligne</title>
+    <title>Dashboard - Mode faible connexion</title>
     <style id="theme-vars">
 :root { --mgt-radius-sm: 4px; --mgt-radius-md: 8px; --mgt-radius-lg: 16px; --mgt-radius-full: 9999px; }
 :root, html.light {
@@ -76,7 +76,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
         <a href="./dashboard-classement.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="trophy" class="w-4.5 h-4.5"></i>Classement</a>
         <a href="./dashboard-verification.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="shield-check" class="w-4.5 h-4.5"></i>Vérification</a>
         <a href="./dashboard-recommandation.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="compass" class="w-4.5 h-4.5"></i>Découverte</a>
-        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors"><i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>Mode hors-ligne</a>
+        <a href="./dashboard-hors-ligne.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white text-sm font-medium transition-colors"><i data-lucide="wifi-off" class="w-4.5 h-4.5"></i>Mode faible connexion</a>
         <a href="./dashboard-rapports.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="file-text" class="w-4.5 h-4.5"></i>Rapports</a>
         <a href="./dashboard-support.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="life-buoy" class="w-4.5 h-4.5"></i>Support</a>
         <a href="./dashboard-offres.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium transition-colors"><i data-lucide="tag" class="w-4.5 h-4.5"></i>Offres & Tarifs</a>
@@ -97,7 +97,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     <div id="app-main" class="flex-1 ml-60 min-h-screen flex flex-col">
       <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
         <div class="flex items-center gap-4">
-          <h1 class="h3 tabular-nums">Mode hors-ligne</h1>
+          <h1 class="h3 tabular-nums">Mode faible connexion</h1>
           <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-primary-600))] bg-[rgb(var(--mgt-primary-50))] px-2.5 py-0.5 rounded-full font-medium"><i data-lucide="wifi-off" class="w-3 h-3"></i>Restez visible sans réseau</span>
         </div>
         <div class="flex items-center gap-4">
@@ -127,7 +127,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
             </div>
             <div class="min-w-0">
               <h3 class="h3">À quoi sert ce module ?</h3>
-              <p class="body text-[rgb(var(--mgt-muted-foreground))] mt-1">Le mode hors-ligne permet à vos clients de continuer à consulter votre fiche, votre position sur la carte et leurs favoris même sans connexion internet. Activez-le si vous travaillez dans une zone à couverture instable ou si vos clients ont un accès réseau limité.</p>
+              <p class="body text-[rgb(var(--mgt-muted-foreground))] mt-1">Le mode faible connexion permet à vos clients de continuer à consulter votre fiche, votre position sur la carte et leurs favoris même sans connexion internet. Activez-le si vous travaillez dans une zone à couverture instable ou si vos clients ont un accès réseau limité.</p>
             </div>
           </div>
         </div>
@@ -141,10 +141,10 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
               <p class="body-l text-white/80">Votre fiche, la carte et les favoris de vos clients restent consultables sans réseau. Un vrai différenciateur dans les zones à couverture instable.</p>
             </div>
             <div class="bg-white/10 backdrop-blur rounded-xl p-5 min-w-[200px]">
-              <p class="caption text-white/60 mb-1">Mode hors-ligne</p>
+              <p class="caption text-white/60 mb-1">Mode faible connexion</p>
               <div class="flex items-center gap-2"><span id="offline-status-dot" style="width:10px;height:10px;border-radius:9999px;background:rgb(var(--mgt-success));display:inline-block;"></span><span id="offline-status-text" class="text-xl font-bold">Activé</span></div>
               <p id="offline-last-sync" class="caption text-white/60 mt-2">Dernière synchronisation : —</p>
-              <button id="offline-toggle" type="button" style="margin-top:12px;padding:9px 14px;border-radius:var(--mgt-radius-md);background:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground));border:none;font-size:13px;font-weight:600;cursor:pointer;">Désactiver le mode hors-ligne</button>
+              <button id="offline-toggle" type="button" style="margin-top:12px;padding:9px 14px;border-radius:var(--mgt-radius-md);background:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground));border:none;font-size:13px;font-weight:600;cursor:pointer;">Désactiver le mode faible connexion</button>
             </div>
           </div>
         </div>
@@ -348,7 +348,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     if (statusText) { statusText.textContent = enabled ? 'Activé' : 'Désactivé'; }
     if (statusDot) { statusDot.style.background = enabled ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-warning))'; }
     if (lastSync) { lastSync.textContent = 'Dernière synchronisation : ' + fmtSync(h.lastSyncAt); }
-    if (toggle) { toggle.textContent = enabled ? 'Désactiver le mode hors-ligne' : 'Activer le mode hors-ligne'; }
+    if (toggle) { toggle.textContent = enabled ? 'Désactiver le mode faible connexion' : 'Activer le mode faible connexion'; }
     if (carte) { carte.textContent = h.carte || '0 Mo'; }
     if (fav) { fav.textContent = h.ficheFavoris || '0 Ko'; }
   }
@@ -362,7 +362,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
       MangooVendorConfig.patch('horsLigne', { enabled: next }).then(function () {
         h.enabled = next;
         render();
-        toast(next ? 'Mode hors-ligne activé' : 'Mode hors-ligne désactivé');
+        toast(next ? 'Mode faible connexion activé' : 'Mode faible connexion désactivé');
       }).catch(function () {
         toast('Erreur lors du changement de mode');
       });

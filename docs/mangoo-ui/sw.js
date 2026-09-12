@@ -23,7 +23,7 @@ self.addEventListener('install', function () {
 // professionnel vers la page client chat.html — n'est rejoué après coup.
 var SW_VERSION = 'mgt-sw-2026-09-12-1';
 
-// Cache persistant du mode hors-ligne : les pages et assets pré-cachés depuis
+// Cache persistant du mode faible connexion : les pages et assets pré-cachés depuis
 // « dashboard-hors-ligne.html » y sont conservés pour être servis en repli
 // lorsque le réseau est indisponible (couverture instable).
 var OFFLINE_CACHE = 'mgt-offline-v1';
