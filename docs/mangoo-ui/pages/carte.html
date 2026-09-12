@@ -422,6 +422,15 @@ html.dark {
   <!-- ===== CONTENU CARTE ===== -->
   <div id="map-container" class="w-full h-full" style="min-height: calc(100vh - 64px); min-height: calc(100svh - 64px); min-height: calc(100dvh - 64px);"></div>
 
+  <!-- ===== BANNIERE HORS-LIGNE ===== -->
+  <!-- Visible uniquement en vue Carte hors-ligne : la carte interactive (tuiles
+       OSM) a besoin du réseau. Les données des commerces, elles, sont pré-cachées
+       et restent consultables via la vue Liste. -->
+  <div id="offline-banner" class="hidden absolute top-3 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 px-4 py-2 rounded-full border shadow-md max-w-[92vw]" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-full); box-shadow: var(--mgt-shadow-md); font-family: var(--mgt-font-sans);">
+    <i data-lucide="wifi-off" class="h-4 w-4 flex-shrink-0" style="color: rgb(var(--mgt-warning));"></i>
+    <span class="text-xs font-semibold truncate" style="color: rgb(var(--mgt-foreground));">Hors-ligne — carte interactive indisponible, utilisez la Liste</span>
+  </div>
+
   <!-- ===== CONTROLES CARTE PERSO ===== -->
   <div class="absolute bottom-6 right-4 z-[1000] flex flex-col gap-2" id="map-controls">
     <button id="btn-zoom-in" class="w-10 h-10 rounded-md flex items-center justify-center shadow-sm transition-all hover:brightness-110 cursor-pointer border-0" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm);" title="Zoom avant" aria-label="Zoom avant">
@@ -1685,6 +1694,29 @@ html.dark {
   viewListBtn.addEventListener('click', showListView);
   listClose.addEventListener('click', showMapView);
 
+  /* ===== HORS-LIGNE : banniere + bascule auto vers la Liste ===== */
+  // La carte interactive s'appuie sur des tuiles OSM servies par le réseau et ne
+  // peut pas être pré-cachée à grande échelle. Hors-ligne, on bascule donc
+  // automatiquement vers la vue Liste (dont les données commerces sont pré-cachées)
+  // et on affiche une bannière explicative en vue Carte.
+  var offlineBanner = document.getElementById('offline-banner');
+  var wasOffline = false;
+  function updateOfflineState() {
+    var offline = !navigator.onLine;
+    if (offlineBanner) {
+      if (offline) offlineBanner.classList.remove('hidden');
+      else offlineBanner.classList.add('hidden');
+    }
+    if (offline && !wasOffline) {
+      if (typeof showListView === 'function' && listView && listView.classList.contains('hidden')) {
+        showListView();
+      }
+    }
+    wasOffline = offline;
+  }
+  window.addEventListener('online', updateOfflineState);
+  window.addEventListener('offline', updateOfflineState);
+
   /* ===== CONTROLES CARTE ===== */
   document.getElementById('btn-zoom-in').addEventListener('click', function() { map.zoomIn(); });
   document.getElementById('btn-zoom-out').addEventListener('click', function() { map.zoomOut(); });
@@ -2291,10 +2323,11 @@ html.dark {
     loadOffresJour(),
     loadCities()
   ])
-    .then(function(results) { initCarte(results[0]); })
+    .then(function(results) { initCarte(results[0]); updateOfflineState(); })
     .catch(function(err) {
       console.warn('[Carte] chargement des profils impossible :', err.message);
       initCarte({ vendors: [] });
+      updateOfflineState();
     });
 
   /* ===== MOBILE FILTERS ===== */
