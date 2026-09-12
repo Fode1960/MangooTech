@@ -116,7 +116,10 @@ self.addEventListener('fetch', function (event) {
       }
       return response;
     }).catch(function () {
-      return caches.match(event.request).then(function (cached) {
+      // ignoreSearch : la navigation réelle peut porter une query string
+      // (ex. fiche-boutique.html?vendorId=123) alors que le pré-cache stocke la
+      // page sans query. On matche donc par chemin, pas par URL exacte.
+      return caches.match(event.request, { ignoreSearch: true }).then(function (cached) {
         if (cached) return cached;
         return new Response('Hors ligne', {
           status: 503,

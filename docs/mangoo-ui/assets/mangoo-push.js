@@ -239,8 +239,13 @@
   // contrôle, pour appliquer la correction immédiatement sans vider le cache à la main.
   if ('serviceWorker' in navigator) {
     try {
-      navigator.serviceWorker.getRegistration('/sw.js').then(function (reg) {
-        if (!reg) return;
+      // Enregistre (ou récupère) le service worker de façon inconditionnelle.
+      // Au-delà du Web Push, le SW porte désormais le repli hors-ligne
+      // (fetch réseau-d'abord → cache). Il doit donc être installé dès le
+      // premier chargement du dashboard, pas seulement lors de l'abonnement
+      // aux notifications (sinon, sans permission accordée, aucune page ne
+      // peut être servie hors-ligne).
+      navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).then(function (reg) {
         reg.update().catch(function () { /* ignore */ });
         if (reg.waiting) { try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) { /* ignore */ } }
       }).catch(function () { /* ignore */ });
