@@ -771,9 +771,9 @@ html.dark {
 </aside>
 
 <!-- ===== MODALE COMMANDE ===== -->
-<div id="checkout-modal" data-dom-id="checkout-modal" class="fixed inset-0 z-[100] hidden items-start justify-center p-4">
+<div id="checkout-modal" data-dom-id="checkout-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
   <div class="absolute inset-0" style="background-color: rgba(15,23,42,.55);" onclick="document.getElementById('checkout-modal').classList.add('hidden'); document.getElementById('checkout-modal').classList.remove('flex');"></div>
-  <div id="checkout-card" class="relative z-10 my-auto w-full max-w-md rounded-lg shadow-2xl" style="background-color: rgb(var(--mgt-background)); border-radius: var(--mgt-radius-lg); box-shadow: var(--mgt-shadow-lg); max-height: calc(100vh - 2rem); max-height: calc(100dvh - 2rem); overflow-y: auto; overflow-x: hidden;">
+  <div id="checkout-card" class="relative z-10 flex w-full max-w-md flex-col overflow-hidden rounded-lg shadow-2xl" style="background-color: rgb(var(--mgt-background)); border-radius: var(--mgt-radius-lg); box-shadow: var(--mgt-shadow-lg); max-height: calc(100vh - 2rem); max-height: calc(100dvh - 2rem); max-height: calc(100svh - 2rem);">
     <!-- Contenu injecté dynamiquement -->
   </div>
 </div>
@@ -1515,19 +1515,19 @@ window.__mgtInitBoutique = function () {
       ? '<div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);"><span style="color: rgb(var(--mgt-accent));">' + (appliedDiscount.label || 'Remise') + '</span><span class="tabular-nums font-medium" style="color: rgb(var(--mgt-accent));">- ' + formatFCFA(discountAmount()) + '</span></div>'
       : '';
 
-    checkoutCard.innerHTML = '<div class="border-b px-6 py-5" style="border-color: rgb(var(--mgt-border)); position: sticky; top: 0; background: rgb(var(--mgt-background)); z-index: 5;">' +
+    checkoutCard.innerHTML = '<div class="border-b px-6 py-5" style="border-color: rgb(var(--mgt-border)); background: rgb(var(--mgt-background)); flex-shrink: 0;">' +
       '<div class="flex items-center justify-between">' +
         '<h3 class="h3" style="color: rgb(var(--mgt-foreground));">Confirmer la commande</h3>' +
         '<button id="checkout-close" class="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));"><i data-lucide="x" class="h-4 w-4"></i></button>' +
       '</div>' +
     '</div>' +
-    '<div class="px-6 py-5">' +
+    '<div class="px-6 pt-5" style="flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;">' +
       '<div class="mb-4 space-y-2 rounded-md p-3" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md);">' + itemsHtml + '</div>' +
       '<div class="mb-4 space-y-1.5">' +
         '<div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);"><span style="color: rgb(var(--mgt-muted-foreground));">Sous-total</span><span class="tabular-nums font-medium" style="color: rgb(var(--mgt-foreground));">' + formatFCFA(subtotal()) + '</span></div>' +
         '<div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);"><span style="color: rgb(var(--mgt-muted-foreground));">' + (cart.fulfillment === 'retrait' ? 'Retrait' : 'Livraison') + '</span><span class="tabular-nums font-medium" style="color: rgb(var(--mgt-foreground));">' + (deliveryFee() === 0 ? 'Gratuit' : formatFCFA(deliveryFee())) + '</span></div>' +
         discountLine +
-        '<div class="flex items-center justify-between border-t pt-2 text-sm font-semibold" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><span>Total</span><span class="tabular-nums text-base" style="color: rgb(var(--mgt-primary));">' + formatFCFA(total()) + '</span></div>' +
+
       '</div>' +
       addressHtml +
       '<p class="caption mb-2 font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Mode de paiement</p>' +
@@ -1549,6 +1549,9 @@ window.__mgtInitBoutique = function () {
         '</div>' +
         '<i data-lucide="check-circle-2" class="h-4 w-4 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
       '</div>' +
+    '</div>' +
+    '<div class="border-t px-6 py-4" style="border-color: rgb(var(--mgt-border)); background: rgb(var(--mgt-background)); flex-shrink: 0;">' +
+      '<div class="mb-3 flex items-center justify-between text-sm font-semibold" style="font-family: var(--mgt-font-sans);"><span style="color: rgb(var(--mgt-foreground));">Total</span><span class="tabular-nums text-lg font-bold" style="color: rgb(var(--mgt-primary));">' + formatFCFA(total()) + '</span></div>' +
       '<button id="checkout-confirm" class="w-full rounded-md px-6 py-3.5 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">Confirmer la commande</button>' +
     '</div>';
 
