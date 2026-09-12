@@ -216,6 +216,88 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
 <script>
 (function(){
   var currentConfig = null;
+  var OFFLINE_CACHE = 'mgt-offline-v1';
+
+  var CARTE_URLS = [
+    '/pages/carte.html',
+    '/assets/mangoo-nav-session.js',
+    '/assets/mangoo-connect-plus.js',
+    '/assets/mangoo-welcome-audio.js',
+    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+  ];
+  var FICHE_FAVORIS_URLS = [
+    '/pages/fiche-boutique.html',
+    '/pages/fiche.html',
+    '/assets/mangoo-connect-plus.js',
+    '/assets/mangoo-payment.js',
+    '/assets/mangoo-negotiation.js',
+    '/assets/mangoo-client-data.js',
+    '/assets/mangoo-demo-sandbox.js',
+    '/assets/mangoo-vendor.js',
+    '/assets/mangoo-catalogue.js',
+    '/assets/mangoo-public-nav.js',
+    '/assets/mangoo-welcome-audio.js',
+    '/assets/favicon.png',
+    'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js',
+    'https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js'
+  ];
+
+  function absUrl(u) {
+    try { return new URL(u, window.location.origin).href; } catch (e) { return u; }
+  }
+
+  function humanSize(bytes) {
+    if (!bytes || bytes <= 0) { return '0 Ko'; }
+    if (bytes < 1024) { return bytes + ' o'; }
+    if (bytes < 1024 * 1024) { return Math.round(bytes / 1024) + ' Ko'; }
+    var mo = bytes / (1024 * 1024);
+    if (mo < 10) { return (Math.round(mo * 10) / 10).toString().replace('.', ',') + ' Mo'; }
+    return Math.round(mo) + ' Mo';
+  }
+
+  function cacheGroup(urls) {
+    return caches.open(OFFLINE_CACHE).then(function (cache) {
+      return Promise.all(urls.map(function (url) {
+        return fetch(url, { mode: 'cors', cache: 'no-store' }).then(function (resp) {
+          if (resp && resp.ok) { return cache.put(absUrl(url), resp.clone()); }
+          return null;
+        }).catch(function () { return null; });
+      }));
+    });
+  }
+
+  function groupSize(urls) {
+    var wanted = {};
+    urls.forEach(function (u) { wanted[absUrl(u)] = true; });
+    return caches.open(OFFLINE_CACHE).then(function (cache) {
+      return cache.keys().then(function (keys) {
+        var matched = keys.filter(function (req) { return wanted[req.url]; });
+        return Promise.all(matched.map(function (req) {
+          return cache.match(req).then(function (resp) {
+            if (!resp) { return 0; }
+            return resp.clone().blob().then(function (b) { return b.size; }).catch(function () { return 0; });
+          });
+        }));
+      }).then(function (sizes) {
+        return sizes.reduce(function (a, b) { return a + b; }, 0);
+      });
+    });
+  }
+
+  function reportOnline() {
+    if (window.MangooVendorConfig && typeof window.MangooVendorConfig.patch === 'function') {
+      MangooVendorConfig.patch('horsLigne', {
+        online: navigator.onLine,
+        lastSeenAt: new Date().toISOString()
+      }).catch(function () { /* ignore */ });
+    }
+  }
+
+  function hydrate(res) {
+    currentConfig = (res && res.config) || {};
+    render();
+  }
 
   function toast(message) {
     var old = document.getElementById('mgt-toast');
@@ -290,22 +372,48 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     syncBtn.addEventListener('click', function () {
       if (!currentConfig) { return; }
       var h = currentConfig.horsLigne = currentConfig.horsLigne || {};
-      var nowIso = new Date().toISOString();
       if (syncLabel) { syncLabel.textContent = 'Synchronisation…'; }
-      MangooVendorConfig.patch('horsLigne', { lastSyncAt: nowIso }).then(function () {
-        h.lastSyncAt = nowIso;
-        render();
-        if (syncLabel) { syncLabel.textContent = 'Synchroniser maintenant'; }
-        toast('Synchronisation terminée');
-      }).catch(function () {
-        if (syncLabel) { syncLabel.textContent = 'Synchroniser maintenant'; }
-        toast('Erreur de synchronisation');
-      });
+      if (syncBtn) { syncBtn.disabled = true; }
+
+      cacheGroup(CARTE_URLS)
+        .then(function () { return cacheGroup(FICHE_FAVORIS_URLS); })
+        .then(function () { return Promise.all([groupSize(CARTE_URLS), groupSize(FICHE_FAVORIS_URLS)]); })
+        .then(function (sizes) {
+          var nowIso = new Date().toISOString();
+          var carte = humanSize(sizes[0]);
+          var fav = humanSize(sizes[1]);
+          return MangooVendorConfig.patch('horsLigne', {
+            lastSyncAt: nowIso,
+            carte: carte,
+            ficheFavoris: fav
+          }).then(function () {
+            h.lastSyncAt = nowIso;
+            h.carte = carte;
+            h.ficheFavoris = fav;
+            render();
+            toast('Synchronisation terminée');
+          });
+        })
+        .catch(function () { toast('Erreur de synchronisation'); })
+        .then(function () {
+          if (syncLabel) { syncLabel.textContent = 'Synchroniser maintenant'; }
+          if (syncBtn) { syncBtn.disabled = false; }
+        });
     });
   }
 
-  currentConfig = {};
-  render();
+  window.addEventListener('online', function () { toast('Connexion rétablie'); reportOnline(); });
+  window.addEventListener('offline', function () { toast('Vous êtes hors ligne'); reportOnline(); });
+  reportOnline();
+
+  if (window.MangooVendorConfig && typeof window.MangooVendorConfig.get === 'function') {
+    MangooVendorConfig.get().then(function (res) {
+      if (res && res.ok) { hydrate(res); } else { currentConfig = {}; render(); }
+    }).catch(function () { currentConfig = {}; render(); });
+  } else {
+    currentConfig = {};
+    render();
+  }
 })();
 </script>
 </body>

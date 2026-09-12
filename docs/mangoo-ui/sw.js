@@ -21,14 +21,23 @@ self.addEventListener('install', function () {
 // purge des anciens caches (dont « mgt-push-state » qui mémorisait un landing de
 // notification). Cela garantit qu'aucun vieux routage — ex. renvoyer un
 // professionnel vers la page client chat.html — n'est rejoué après coup.
-var SW_VERSION = 'mgt-sw-2026-09-10-2';
+var SW_VERSION = 'mgt-sw-2026-09-12-1';
+
+// Cache persistant du mode hors-ligne : les pages et assets pré-cachés depuis
+// « dashboard-hors-ligne.html » y sont conservés pour être servis en repli
+// lorsque le réseau est indisponible (couverture instable).
+var OFFLINE_CACHE = 'mgt-offline-v1';
 
 self.addEventListener('activate', function (event) {
   event.waitUntil(
     caches.keys().then(function (keys) {
-      // Aucun cache n'est persistant : le SW est « réseau d'abord » (aucune
-      // écriture de cache de page) et mgt-push-state est un usage one-shot.
-      return Promise.all(keys.map(function (key) { return caches.delete(key); }));
+      // Seul le cache hors-ligne est persistant : il doit survivre aux mises à
+      // jour du SW pour que fiche/carte/favoris restent consultables sans réseau.
+      // Tous les autres caches (dont mgt-push-state, usage one-shot) sont purgés.
+      return Promise.all(keys.map(function (key) {
+        if (key === OFFLINE_CACHE) { return; }
+        return caches.delete(key);
+      }));
     }).then(function () {
       return self.clients.claim();
     }).then(function () {
@@ -78,13 +87,35 @@ function closeAllNotifications() {
 
 // Gestionnaire fetch minimal — requis par Chrome pour rendre l'app installable
 // (déclenchement de `beforeinstallprompt`) et pour fournir un repli hors-ligne
-// basique. Stratégie « réseau d'abord » : aucun cache écrit, donc aucun asset
-// périmé ne peut être servi ; le comportement en ligne reste strictement
-// identique à l'absence de service worker.
+// basique. Stratégie « réseau d'abord » : les réponses pertinentes sont
+// mémoïsées dans le cache hors-ligne et servies en repli si le réseau tombe.
+function isOfflineCacheable(url) {
+  if (!url) return false;
+  var parsed;
+  try { parsed = new URL(url); } catch (e) { return false; }
+  if (parsed.origin === self.location.origin) {
+    if (parsed.pathname.indexOf('/api/') === 0) return false;
+    return true;
+  }
+  return url.indexOf('cdn.jsdelivr.net/npm/@tailwindcss/browser') >= 0
+    || url.indexOf('unpkg.com/lucide') >= 0
+    || url.indexOf('unpkg.com/leaflet') >= 0;
+}
+
 self.addEventListener('fetch', function (event) {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    fetch(event.request, { cache: 'no-store' }).catch(function () {
+    fetch(event.request, { cache: 'no-store' }).then(function (response) {
+      if (response && response.ok && isOfflineCacheable(event.request.url)) {
+        try {
+          var copy = response.clone();
+          caches.open(OFFLINE_CACHE).then(function (cache) {
+            cache.put(event.request, copy);
+          }).catch(function () { /* ignore */ });
+        } catch (e) { /* ignore */ }
+      }
+      return response;
+    }).catch(function () {
       return caches.match(event.request).then(function (cached) {
         if (cached) return cached;
         return new Response('Hors ligne', {

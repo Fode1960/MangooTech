@@ -1505,8 +1505,8 @@ function sanitizeVendorConfig(config) {
       }
     }
     if (c.horsLigne) {
-      c.horsLigne.carte = '0 Ko';
-      c.horsLigne.ficheFavoris = '0 Ko';
+      if (!c.horsLigne.carte) c.horsLigne.carte = '0 Ko';
+      if (!c.horsLigne.ficheFavoris) c.horsLigne.ficheFavoris = '0 Ko';
     }
   });
   return config;
