@@ -304,7 +304,7 @@
                       items: soItems,
                       subtotal: soSubtotal,
                       deliveryFee: Number(opts.order.deliveryFee || 0),
-                      total: Number(amount || 0),
+                      total: (typeof d.total === 'number' ? d.total : Number(amount || 0)),
                       fulfillment: String(opts.order.fulfillment || 'retrait'),
                       vendorId: String(opts.order.vendorId || ''),
                       vendorName: String(opts.order.vendorName || ''),

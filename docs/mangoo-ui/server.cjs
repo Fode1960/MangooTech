@@ -7131,6 +7131,44 @@ function handleHttp(req, res) {
    *  déclenche le checkout redirect. Le settlement (kind boutique-order)
    *  marquera la commande « payee », décrémentera le stock et créditera
    *  le vendeur au retour du webhook / du polling. */
+  // Résout et valide la remise d'une commande (code promo ou parrainage).
+  // Source de vérité du montant facturé : le serveur recalcule le total à
+  // partir du sous-total reçu et de la remise validée, et refuse un code de
+  // parrainage déjà utilisé (réservé à la première commande du client).
+  function resolveOrderDiscount(opts) {
+    const vendorId = String((opts && opts.vendorId) || '');
+    const raw = String((opts && opts.code) || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const type = String((opts && opts.codeType) || '').trim();
+    const subtotal = Math.max(0, Math.round(Number((opts && opts.subtotal) || 0)));
+    if (!raw) return { code: '', codeType: '', percent: 0, amount: 0, label: '' };
+
+    const cfg = vendorConfigFor(vendorId) || {};
+    const referral = (cfg.parrainage && cfg.parrainage.code) ? String(cfg.parrainage.code).toUpperCase() : '';
+    const promos = (cfg.promotions && Array.isArray(cfg.promotions.codes)) ? cfg.promotions.codes : [];
+
+    // Code de parrainage (déclaré ou reconnu) : remise fixe de 10 %.
+    if (type === 'parrainage' || (raw === referral && type !== 'promo')) {
+      if (raw !== referral) return { error: 'Code de parrainage invalide.' };
+      const clientId = (opts && opts.user) ? opts.user.id : '';
+      if (clientId) {
+        const already = boutiqueOrders.some(function (o) {
+          return o && o.vendorId === vendorId && o.clientId === clientId && (o.status === 'payee' || o.paidAt);
+        });
+        if (already) return { error: 'Ce code de parrainage est réservé à votre 1ère commande ici.' };
+      }
+      return { code: raw, codeType: 'parrainage', percent: 10, amount: Math.round(subtotal * 10 / 100), label: 'Parrainage (' + raw + ')' };
+    }
+
+    // Code promo actif du module Promotions.
+    const promo = promos.find(function (p) { return p && String(p.code || '').toUpperCase() === raw && p.status === 'active'; });
+    if (promo) {
+      const percent = Math.max(0, Math.min(100, Number(promo.discount) || 0));
+      return { code: raw, codeType: 'promo', percent: percent, amount: Math.round(subtotal * percent / 100), label: 'Remise promo (' + raw + ')' };
+    }
+
+    return { error: 'Code invalide ou expiré.' };
+  }
+
   if (urlPath === '/api/boutique/order') {
     if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
     readJsonBody(req, function (err, body) {
@@ -7155,9 +7193,12 @@ function handleHttp(req, res) {
       const subtotal = items.reduce(function (s, it) { return s + it.lineTotal; }, 0);
       const fulfillment = String(body.fulfillment || '').trim() === 'livraison' ? 'livraison' : 'retrait';
       const deliveryFee = fulfillment === 'livraison' ? Math.max(0, Math.round(Number(body.deliveryFee) || 500)) : 0;
-      const total = subtotal + deliveryFee;
 
       const vendorId = canonicalRoutingId(String(body.vendorId || ''));
+      const discountResult = resolveOrderDiscount({ vendorId: vendorId, user: user, code: body.code, codeType: body.codeType, subtotal: subtotal });
+      if (discountResult.error) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: discountResult.error, codeError: true })); return; }
+      const discount = { code: discountResult.code || '', codeType: discountResult.codeType || '', percent: discountResult.percent || 0, amount: discountResult.amount || 0, label: discountResult.label || '' };
+      const total = Math.max(0, subtotal + deliveryFee - discount.amount);
       const vendorName = String(body.vendorName || '').trim() || 'Boutique';
       const orderNo = 'CMD-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
       const order = {
@@ -7174,6 +7215,7 @@ function handleHttp(req, res) {
         subtotal: subtotal,
         deliveryFee: deliveryFee,
         total: total,
+        discount: discount,
         fulfillment: fulfillment,
         address: String(body.address || '').trim(),
         status: 'en_attente',
@@ -7232,7 +7274,7 @@ function handleHttp(req, res) {
         txn.instructions = sim.instructions;
         saveTransactions();
         res.writeHead(200, JSON_HEADERS);
-        res.end(JSON.stringify({ ok: true, orderId: order.id, orderNo: orderNo, transactionId: txn.id, checkoutUrl: sim.checkoutUrl, paymentMode: 'live' }));
+        res.end(JSON.stringify({ ok: true, orderId: order.id, orderNo: orderNo, transactionId: txn.id, checkoutUrl: sim.checkoutUrl, paymentMode: 'live', total: total, subtotal: subtotal, deliveryFee: deliveryFee, discount: discount }));
       }).catch(function (e) {
         txn.status = 'failed';
         txn.failedReason = 'Initiation ' + op.label + ' impossible : ' + e.message;

@@ -1639,15 +1639,23 @@ window.__mgtInitBoutique = function () {
             clientName: clientName,
             clientPhone: clientPhone,
             clientEmail: clientEmail,
-            clientCity: clientCity
+            clientCity: clientCity,
+            code: (appliedDiscount && appliedDiscount.code) || '',
+            codeType: (appliedDiscount && appliedDiscount.type) || '',
+            discountPercent: (appliedDiscount && appliedDiscount.percent) || 0
           },
           onCancel: function () { confirmBtn.disabled = false; }
         }).then(function (res) {
           confirmBtn.disabled = false;
           confirmOrder(OP_LABELS[(res && res.operator)] || 'Mobile money');
-        }).catch(function () {
+        }).catch(function (err) {
           confirmBtn.disabled = false;
-          confirmOrder('Mobile money');
+          var msg = (err && err.message) ? err.message : 'Paiement indisponible.';
+          if (msg.indexOf('parrainage') >= 0) {
+            clearDiscount();
+            renderCart();
+          }
+          showToast(msg);
         });
       } else {
         confirmOrder('Orange Money');
