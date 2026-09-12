@@ -471,7 +471,14 @@ html.dark {
         var el = document.getElementById('ref-code');
         return (el && el.textContent || '').trim();
       }
-      function getLink() { return (window.location && window.location.origin ? window.location.origin : '') + '/invite/' + getCode(); }
+      function getLink() {
+        var origin = window.location && window.location.origin ? window.location.origin : '';
+        var vid = (window.MangooVendorConfig && typeof window.MangooVendorConfig.vendorId === 'function') ? window.MangooVendorConfig.vendorId() : '';
+        var params = [];
+        if (vid) params.push('vendorId=' + encodeURIComponent(vid));
+        params.push('invite=' + encodeURIComponent(getCode()));
+        return origin + '/pages/fiche-boutique.html?' + params.join('&');
+      }
       function getInviteText() {
         var c = getCode();
         return 'Rejoignez-moi sur Mangoo Tech ! Utilisez mon code ' + c + ' : ' + getLink();
@@ -593,7 +600,7 @@ html.dark {
 
     var linkLabel = document.getElementById('ref-link-label');
     var hostLabel = (window.location && window.location.host) || 'mangoo.tech';
-    if (linkLabel) linkLabel.textContent = code ? ('Lien unique : ' + hostLabel + '/invite/' + code) : ('Lien unique : ' + hostLabel + '/invite/—');
+    if (linkLabel) linkLabel.textContent = code ? ('Lien unique : ' + hostLabel + '/pages/fiche-boutique.html?invite=' + code) : ('Lien unique : —');
   }
 
   function hydrate(res){

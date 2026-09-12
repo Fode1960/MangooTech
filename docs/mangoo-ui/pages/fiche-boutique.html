@@ -732,6 +732,17 @@ html.dark {
     </div>
   </div>
 
+  <!-- Code promo / parrainage -->
+  <div class="border-t px-6 py-4" style="border-color: rgb(var(--mgt-border));">
+    <p class="caption mb-2 font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Code promo ou parrainage</p>
+    <div class="flex gap-2">
+      <input id="cart-promo-input" type="text" autocomplete="off" spellcheck="false" placeholder="Ex : DAN15" class="flex-1 min-w-0 rounded-md border px-3 py-2.5 text-sm uppercase tracking-widest font-semibold" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); background-color: rgb(var(--mgt-background)); color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">
+      <button id="cart-promo-apply" type="button" class="flex-shrink-0 rounded-md px-4 py-2.5 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Appliquer</button>
+    </div>
+    <p id="cart-promo-feedback" class="caption mt-2 hidden" style="font-family: var(--mgt-font-sans);"></p>
+    <p class="caption mt-1.5" style="color: rgb(var(--mgt-muted-foreground));">Code promo = remise du vendeur · Code de parrainage = −10 % sur votre 1ère commande.</p>
+  </div>
+
   <!-- Totaux -->
   <div class="border-t px-6 py-4" style="border-color: rgb(var(--mgt-border));">
     <div class="mb-3 space-y-1.5">
@@ -742,6 +753,10 @@ html.dark {
       <div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);">
         <span style="color: rgb(var(--mgt-muted-foreground));">Livraison</span>
         <span id="cart-fee" class="tabular-nums font-medium" style="color: rgb(var(--mgt-foreground));">0 FCFA</span>
+      </div>
+      <div id="cart-discount-row" class="hidden items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);">
+        <span id="cart-discount-label" style="color: rgb(var(--mgt-accent)); font-family: var(--mgt-font-sans);">Remise</span>
+        <span id="cart-discount" class="tabular-nums font-medium" style="color: rgb(var(--mgt-accent));">0 FCFA</span>
       </div>
     </div>
     <div class="mb-4 flex items-center justify-between border-t pt-3" style="border-color: rgb(var(--mgt-border));">
@@ -873,6 +888,8 @@ window.__mgtInitBoutique = function () {
   function renderAllStock() { products.forEach(renderStock); }
 
   var cart = { items: [], fulfillment: 'livraison' };
+  var appliedDiscount = null; // { type: 'promo'|'parrainage', code, percent, label }
+  var VENDOR_CODES = null;    // { promo: [{code,discount}], referral: 'DAN10' }
   var DELIVERY_FEE = 500;
   var TRACKING_STEP_MS = 15000;
 
@@ -929,10 +946,86 @@ window.__mgtInitBoutique = function () {
   function qtyTotal() { return cart.items.reduce(function (s, it) { return s + it.qty; }, 0); }
   function subtotal() { return cart.items.reduce(function (s, it) { return s + it.price * it.qty; }, 0); }
   function deliveryFee() { return cart.fulfillment === 'retrait' ? 0 : DELIVERY_FEE; }
-  function total() { return subtotal() + deliveryFee(); }
+  function discountAmount() {
+    if (!appliedDiscount || !appliedDiscount.percent) return 0;
+    return Math.round(subtotal() * appliedDiscount.percent / 100);
+  }
+  function total() { return Math.max(0, subtotal() + deliveryFee() - discountAmount()); }
 
   function clientWalletBalance() {
     return (window.MangooClient && typeof window.MangooClient.getBalance === 'function') ? window.MangooClient.getBalance() : 0;
+  }
+
+  function loadVendorCodes() {
+    if (VENDOR_CODES) return Promise.resolve(VENDOR_CODES);
+    var vid = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
+    return fetch('/api/vendor-config?vendor=' + encodeURIComponent(vid), { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var c = data && data.config;
+        var promos = [];
+        if (c && c.promotions && Array.isArray(c.promotions.codes)) {
+          c.promotions.codes.forEach(function (pc) {
+            if (pc && pc.code && pc.status === 'active') {
+              promos.push({ code: String(pc.code).toUpperCase(), discount: Number(pc.discount) || 0 });
+            }
+          });
+        }
+        var referral = (c && c.parrainage && c.parrainage.code) ? String(c.parrainage.code).toUpperCase() : '';
+        VENDOR_CODES = { promo: promos, referral: referral };
+        return VENDOR_CODES;
+      })
+      .catch(function () { VENDOR_CODES = { promo: [], referral: '' }; return VENDOR_CODES; });
+  }
+
+  function renderDiscount() {
+    var row = document.getElementById('cart-discount-row');
+    if (!row) return;
+    if (appliedDiscount && appliedDiscount.percent) {
+      row.classList.remove('hidden');
+      row.classList.add('flex');
+      var labelEl = document.getElementById('cart-discount-label');
+      var valEl = document.getElementById('cart-discount');
+      if (labelEl) labelEl.textContent = appliedDiscount.label || 'Remise';
+      if (valEl) valEl.textContent = '- ' + formatFCFA(discountAmount());
+    } else {
+      row.classList.add('hidden');
+      row.classList.remove('flex');
+    }
+  }
+
+  function clearDiscount() {
+    appliedDiscount = null;
+    var pi = document.getElementById('cart-promo-input');
+    if (pi) pi.value = '';
+    var pf = document.getElementById('cart-promo-feedback');
+    if (pf) { pf.classList.add('hidden'); pf.textContent = ''; }
+    renderDiscount();
+  }
+
+  function applyCode(raw) {
+    var code = String(raw || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    var fb = document.getElementById('cart-promo-feedback');
+    function feedback(msg, ok) {
+      if (!fb) return;
+      fb.textContent = msg;
+      fb.classList.remove('hidden');
+      fb.style.color = ok ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-error))';
+    }
+    if (!code) { feedback('Saisissez un code.', false); return; }
+    loadVendorCodes().then(function (codes) {
+      var match = null;
+      for (var i = 0; i < codes.promo.length; i++) {
+        if (codes.promo[i].code === code) { match = { type: 'promo', code: code, percent: codes.promo[i].discount, label: 'Remise promo (' + code + ')' }; break; }
+      }
+      if (!match && codes.referral === code) {
+        match = { type: 'parrainage', code: code, percent: 10, label: 'Parrainage (' + code + ')' };
+      }
+      if (!match) { appliedDiscount = null; renderCart(); feedback('Code invalide ou expiré.', false); return; }
+      appliedDiscount = match;
+      renderCart();
+      feedback('- ' + match.percent + '% appliqué. Total mis à jour.', true);
+    });
   }
 
   function setPaymentMethod(method) {
@@ -1023,6 +1116,7 @@ window.__mgtInitBoutique = function () {
     if (subtotalEl) subtotalEl.textContent = formatFCFA(subtotal());
     if (feeEl) feeEl.textContent = deliveryFee() === 0 ? 'Gratuit' : formatFCFA(deliveryFee());
     if (totalEl) totalEl.textContent = formatFCFA(total());
+    renderDiscount();
     renderFulfillment();
     renderFab();
     if (window.lucide) window.lucide.createIcons();
@@ -1329,6 +1423,7 @@ window.__mgtInitBoutique = function () {
       if (done) done.addEventListener('click', function () {
         cart.items = [];
         cart.fulfillment = 'livraison';
+        clearDiscount();
         products.forEach(function (p) { p.sold = 0; });
         renderCart();
         renderAllStock();
@@ -1340,6 +1435,7 @@ window.__mgtInitBoutique = function () {
         closeCheckout();
         cart.items = [];
         cart.fulfillment = 'livraison';
+        clearDiscount();
         products.forEach(function (p) { p.sold = 0; });
         renderCart();
         renderAllStock();
@@ -1383,6 +1479,10 @@ window.__mgtInitBoutique = function () {
         '</div>'
       : '';
 
+    var discountLine = (appliedDiscount && appliedDiscount.percent)
+      ? '<div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);"><span style="color: rgb(var(--mgt-accent));">' + (appliedDiscount.label || 'Remise') + '</span><span class="tabular-nums font-medium" style="color: rgb(var(--mgt-accent));">- ' + formatFCFA(discountAmount()) + '</span></div>'
+      : '';
+
     checkoutCard.innerHTML = '<div class="border-b px-6 py-5" style="border-color: rgb(var(--mgt-border)); position: sticky; top: 0; background: rgb(var(--mgt-background)); z-index: 5;">' +
       '<div class="flex items-center justify-between">' +
         '<h3 class="h3" style="color: rgb(var(--mgt-foreground));">Confirmer la commande</h3>' +
@@ -1394,6 +1494,7 @@ window.__mgtInitBoutique = function () {
       '<div class="mb-4 space-y-1.5">' +
         '<div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);"><span style="color: rgb(var(--mgt-muted-foreground));">Sous-total</span><span class="tabular-nums font-medium" style="color: rgb(var(--mgt-foreground));">' + formatFCFA(subtotal()) + '</span></div>' +
         '<div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);"><span style="color: rgb(var(--mgt-muted-foreground));">' + (cart.fulfillment === 'retrait' ? 'Retrait' : 'Livraison') + '</span><span class="tabular-nums font-medium" style="color: rgb(var(--mgt-foreground));">' + (deliveryFee() === 0 ? 'Gratuit' : formatFCFA(deliveryFee())) + '</span></div>' +
+        discountLine +
         '<div class="flex items-center justify-between border-t pt-2 text-sm font-semibold" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><span>Total</span><span class="tabular-nums text-base" style="color: rgb(var(--mgt-primary));">' + formatFCFA(total()) + '</span></div>' +
       '</div>' +
       addressHtml +
@@ -1585,6 +1686,19 @@ window.__mgtInitBoutique = function () {
   var retBtn = document.getElementById('fulfill-retrait');
   if (livBtn) livBtn.addEventListener('click', function () { cart.fulfillment = 'livraison'; renderCart(); });
   if (retBtn) retBtn.addEventListener('click', function () { cart.fulfillment = 'retrait'; renderCart(); });
+
+  var promoInput = document.getElementById('cart-promo-input');
+  var promoApply = document.getElementById('cart-promo-apply');
+  if (promoApply) promoApply.addEventListener('click', function () { applyCode(promoInput ? promoInput.value : ''); });
+  if (promoInput) promoInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') applyCode(promoInput.value); });
+
+  // Code reçu par URL (lien de parrainage) → pré-rempli et appliqué automatiquement.
+  function urlParam(name) {
+    var m = new RegExp('[?&]' + name + '=([^&]*)').exec(location.search);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  var inviteCode = urlParam('invite') || urlParam('code') || urlParam('promo');
+  if (inviteCode && promoInput) { promoInput.value = inviteCode; applyCode(inviteCode); }
 
   if (itemsEl) itemsEl.addEventListener('click', function (e) {
     var t = e.target.closest ? e.target.closest('.cart-qty, .cart-remove') : null;
