@@ -1240,7 +1240,6 @@ html.dark {
     renderThread();
     renderSidebar();
     if (RT && typeof RT.sendVideoMessage === 'function') RT.sendVideoMessage(PEER.id, data.video, data.duration, data.mime, msgId);
-    scheduleAutoReply(ACTIVE, PEER.name);
   }
 
   function setVoicePlaying(btn, playing){
@@ -1350,7 +1349,6 @@ html.dark {
     renderThread();
     renderSidebar();
     if (RT && typeof RT.sendAudioMessage === 'function') RT.sendAudioMessage(PEER.id, data.audio, data.duration, data.mime, msgId);
-    scheduleAutoReply(ACTIVE, PEER.name);
   }
 
   function lastPreviewOf(id){
@@ -1619,45 +1617,6 @@ html.dark {
     renderSidebar();
   }
 
-  // --- Réponse automatique de démonstration ---
-  // Quand le professionnel destinataire n'est pas connecté en temps réel, aucune
-  // vraie réponse ne revient jamais vers le client (Dida) : son message part
-  // bien, mais reste sans accusé visible. Pour que la messagerie reste
-  // démontrable, on simule un « écrit… » puis une réponse automatique quelques
-  // instants après l'envoi, UNIQUEMENT si le pair est hors ligne (aucun risque
-  // de doublon avec une vraie réponse) et une seule fois par conversation.
-  var autoReplyPending = {};   // vendorId -> timeout id
-  function hasAutoReply(id){
-    var t = threadOf(id);
-    for (var i=0;i<t.length;i++) if (t[i].auto) return true;
-    return false;
-  }
-  function scheduleAutoReply(vendorId, peerName){
-    if (!vendorId) return;
-    if (ONLINE[vendorId]) return;           // le pro est connecté : il répondra lui-même
-    if (autoReplyPending[vendorId]) return;
-    var typingName = peerName || 'Le professionnel';
-    showTypingFor(typingName);
-    autoReplyPending[vendorId] = setTimeout(function(){
-      delete autoReplyPending[vendorId];
-      hideTyping();
-      if (!ACTIVE || ACTIVE !== vendorId) return;
-      var c = convById(vendorId);
-      var isBoutique = c && c.type === 'boutique';
-      var replies = isBoutique ? [
-        'Merci pour votre message ! Notre boutique est momentanément indisponible, mais nous vous répondrons dès que possible. En attendant, vous pouvez passer commande directement depuis notre page Boutique.',
-        'Bien reçu ✅. Un conseiller de la boutique revient vers vous très vite. En attendant, vous pouvez explorer nos produits et commander depuis notre page Boutique.'
-      ] : [
-        'Merci pour votre message ! Nous sommes actuellement indisponibles, mais nous vous répondrons dès que possible. Vous pouvez aussi réserver un créneau directement depuis notre page Boutique.',
-        'Bien reçu ✅. Un conseiller revient vers vous très vite. En attendant, vous pouvez prendre rendez-vous depuis notre page Boutique.'
-      ];
-      var reply = replies[Math.floor(Math.random() * replies.length)];
-      pushMsg(vendorId, { dir:'in', text:reply, time:nowTime(), name: typingName, msgId: genMsgId(), auto: true });
-      renderThread();
-      renderSidebar();
-    }, 1600);
-  }
-
   // --- Envoi ---
   function send(){
     var text = input && input.value.trim();
@@ -1676,7 +1635,6 @@ html.dark {
     renderThread();
     renderSidebar();
     if (RT && typeof RT.sendMessage === 'function') RT.sendMessage(PEER.id, text, msgId);
-    scheduleAutoReply(ACTIVE, PEER.name);
   }
 
   if (sendBtn) sendBtn.addEventListener('click', send);
