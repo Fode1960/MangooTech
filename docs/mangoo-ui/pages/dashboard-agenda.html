@@ -1000,7 +1000,7 @@ html.dark {
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">Nouveau rendez-vous</h3>' +
           '<button id="ag-new-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:20px;line-height:1;cursor:pointer;">&times;</button></div>' +
           field('Prestation', '<input id="ag-new-service" type="text" placeholder="Ex. Coiffure femme" style="' + INPUT_STYLE + '">') +
-          field('Client (nom complet)', '<input id="ag-new-client" type="text" placeholder="Ex. Awa Diallo" style="' + INPUT_STYLE + '">') +
+          field('Client (nom complet)', '<input id="ag-new-client" type="text" autocomplete="off" placeholder="Ex. Awa Diallo" style="' + INPUT_STYLE + '">' + '<div id="ag-client-hint" style="min-height:18px;margin:-4px 0 12px;font-size:12px;font-weight:600;line-height:1.4;"></div>') +
           field('Date', '<input id="ag-new-day" type="date" value="' + isoFromDate(new Date()) + '" style="' + INPUT_STYLE + '">') +
           field('Heure', '<input id="ag-new-time" type="time" value="09:00" style="' + INPUT_STYLE + '">') +
           field('Note (optionnel)', '<textarea id="ag-new-note" rows="2" placeholder="Précisions..." style="' + INPUT_STYLE + 'height:auto;padding-top:10px;"></textarea>') +
@@ -1012,6 +1012,40 @@ html.dark {
         modal.querySelector('#ag-new-close').onclick = close;
         modal.querySelector('#ag-new-cancel').onclick = close;
         modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+
+        // Indicateur en direct : « client reconnu » ou « client introuvable ».
+        var resolvedClientId = '';
+        var clientInput = modal.querySelector('#ag-new-client');
+        var clientHint = modal.querySelector('#ag-client-hint');
+        var lookupTimer = null;
+        function setClientHint(dot, text, color) {
+          clientHint.textContent = dot && text ? (dot + ' ' + text) : (text || '');
+          clientHint.style.color = color || 'rgb(var(--mgt-muted-foreground))';
+        }
+        function lookupClient() {
+          var q = clientInput.value.trim();
+          resolvedClientId = '';
+          if (!q) { setClientHint('', '', ''); return; }
+          setClientHint('●', 'Recherche du client…', 'rgb(var(--mgt-muted-foreground))');
+          fetch(apiUrl(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'lookup', clientName: q })
+          }).then(function (r) { return r.json(); }).then(function (res) {
+            if (!res || !res.ok) { setClientHint('', '', ''); return; }
+            if (res.found && res.client) {
+              resolvedClientId = res.client.id;
+              setClientHint('●', 'Client reconnu : ' + res.client.name, 'rgb(var(--mgt-primary-700))');
+            } else {
+              setClientHint('●', 'Client introuvable — confirmation en attente', 'rgb(var(--mgt-accent-700))');
+            }
+          }).catch(function () { setClientHint('', '', ''); });
+        }
+        clientInput.addEventListener('input', function () {
+          clearTimeout(lookupTimer);
+          lookupTimer = setTimeout(lookupClient, 350);
+        });
+
         var saveBtn = modal.querySelector('#ag-new-save');
         saveBtn.onclick = function () {
           var service = modal.querySelector('#ag-new-service').value.trim();
@@ -1022,10 +1056,12 @@ html.dark {
           if (!service) { modal.querySelector('#ag-new-service').focus(); return; }
           if (!day || !time) { toast('Veuillez indiquer la date et l\'heure.'); return; }
           saveBtn.disabled = true;
+          var createBody = { action: 'create', service: service, clientName: client, day: day, time: time, note: note };
+          if (resolvedClientId) createBody.clientId = resolvedClientId;
           fetch(apiUrl(), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'create', service: service, clientName: client, day: day, time: time, note: note })
+            body: JSON.stringify(createBody)
           }).then(function (r) { return r.json(); }).then(function (res) {
             saveBtn.disabled = false;
             if (res && res.ok) {

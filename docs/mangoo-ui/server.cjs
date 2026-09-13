@@ -658,20 +658,57 @@ function userByRoutingId(rid) {
   return users.find((u) => u && (canonicalRoutingId(u.id) === id || canonicalRoutingId(u.vendorId) === id)) || null;
 }
 
-// Résout l'identifiant d'un client à partir d'un id explicite ou de son nom
-// (recherche insensible à la casse dans users.json). Retourne '' si introuvable.
+// Normalise un texte pour la comparaison de noms : minuscules, sans accents,
+// espaces multiples réduits à un seul. Permet de retrouver « Dida » même si le
+// compte est enregistré « Dida Diallo » ou « Didá Diallo ».
+function normalizeNameForMatch(s) {
+  return String(s == null ? '' : s)
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Recherche un compte CLIENT à partir d'un texte libre (nom complet, prénom,
+// email ou téléphone). Priorité : nom exact, puis email/téléphone, puis
+// correspondance partielle. Retourne l'objet utilisateur ou null.
+function findClientByText(text) {
+  const raw = String(text == null ? '' : text).trim();
+  if (!raw) return null;
+  const t = normalizeNameForMatch(raw);
+  const tl = raw.toLowerCase();
+  const clients = users.filter(function (x) {
+    if (!x) return false;
+    const role = String(x.role || '').toLowerCase();
+    return role === 'client' || role === 'cliente';
+  });
+  const pool = clients.length ? clients : users;
+  function nameOf(x) { return x.name || x.fullName || x.enseigne || ''; }
+  // 1) nom complet exact
+  let found = pool.find(function (x) { return normalizeNameForMatch(nameOf(x)) === t; });
+  if (found) return found;
+  // 2) email ou téléphone exact
+  found = pool.find(function (x) {
+    return String(x.email || '').toLowerCase() === tl || String(x.phone || '') === raw;
+  });
+  if (found) return found;
+  // 3) correspondance partielle (« Dida » retrouve « Dida Diallo »)
+  found = pool.find(function (x) {
+    const n = normalizeNameForMatch(nameOf(x));
+    if (!n || n.length < 2) return false;
+    return n.indexOf(t) >= 0 || (t.length >= 2 && t.indexOf(n) >= 0);
+  });
+  return found || null;
+}
+
+// Résout l'identifiant d'un client à partir d'un id explicite ou d'un texte
+// (nom/email/téléphone). Retourne '' si introuvable.
 function resolveClientId(clientId, clientName) {
   if (clientId) {
     const u = users.find(function (x) { return x && (x.id === clientId || x.vendorId === clientId); });
     return u ? u.id : String(clientId);
   }
-  const n = String(clientName || '').trim().toLowerCase();
-  if (!n) return '';
-  const u = users.find(function (x) {
-    if (!x) return false;
-    const name = String(x.name || x.fullName || x.enseigne || '').trim().toLowerCase();
-    return name === n;
-  });
+  const u = findClientByText(clientName);
   return u ? u.id : '';
 }
 
@@ -7121,6 +7158,20 @@ function handleHttp(req, res) {
         if (err) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
         const action = body.action;
 
+        // Recherche d'un client par nom/email/téléphone pour l'indicateur
+        // « client reconnu / introuvable » du formulaire de création.
+        if (action === 'lookup') {
+          const name = String(body.clientName || body.name || '').trim();
+          const u = findClientByText(name);
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({
+            ok: true,
+            found: !!u,
+            client: u ? { id: u.id, name: u.name || u.fullName || u.enseigne || name } : null
+          }));
+          return;
+        }
+
         // Création d'un RDV par le prestataire + notification au client.
         if (action === 'create') {
           const service = String(body.service || '').trim();
@@ -7156,6 +7207,19 @@ function handleHttp(req, res) {
               from: appt.from, fromName: appt.fromName,
               service: service, day: day, time: time, note: appt.note
             });
+            // Si le client n'est pas actuellement sur sa messagerie (application
+            // fermée ou page quelconque ouverte), on déclenche une notification
+            // Web Push native pour que la demande de rendez-vous lui parvienne
+            // quand même. C'est le correctif du cas « Dida n'a rien reçu ».
+            if (!isOnMessaging(clientId)) {
+              sendPush(clientId, {
+                title: 'Nouveau rendez-vous',
+                body: (appt.fromName || vendor) + ' vous propose un rendez-vous : ' + service + ' le ' + day + ' à ' + time,
+                url: pushLandingUrl({ routingId: clientId, kind: 'message', from: vendor, fromName: appt.fromName, convId: '' }),
+                tag: 'appt-' + appt.apptId,
+                data: { kind: 'appointment', apptId: appt.apptId, from: vendor, fromName: appt.fromName }
+              });
+            }
           }
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({ ok: true, appointment: appt, notified: !!clientId }));
