@@ -5377,8 +5377,9 @@ function handleHttp(req, res) {
       res.end(JSON.stringify({ ok: false, error: 'méthode non autorisée' }));
       return;
     }
+    const myId = routingIdForUser(user);
     const contacts = users
-      .filter(function (u) { return u && u.role !== 'admin' && u.id !== user.id; })
+      .filter(function (u) { return u && u.role !== 'admin' && canonicalRoutingId(u.id) !== canonicalRoutingId(user.id); })
       .map(function (u) {
         return {
           id: u.id,
@@ -5396,10 +5397,53 @@ function handleHttp(req, res) {
           lastSeen: (lastSeenByUser.get(routingIdForUser(u)) || (u.lastSeenAt ? Date.parse(u.lastSeenAt) : null)) || null,
           createdAt: u.createdAt || ''
         };
-      })
-      .sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
+      });
+    // Enrichit l'annuaire avec les pairs réellement rencontrés (conversations
+    // et appels), même si leur compte n'est pas dans `users` (clients mobile
+    // créés à la volée). Le professionnel voit ainsi tous ses interlocuteurs passés.
+    const derived = [];
+    const peerSeen = {};
+    contacts.forEach(function (c) { peerSeen[canonicalRoutingId(c.vendorId || c.id || '')] = true; });
+    function addDerived(peerId, name, role, extra) {
+      if (!peerId) return;
+      const cid = canonicalRoutingId(peerId);
+      if (!cid || cid === myId || peerSeen[cid]) return;
+      peerSeen[cid] = true;
+      const known = users.find(function (u) { return u && canonicalRoutingId(routingIdForUser(u)) === cid; });
+      derived.push({
+        id: known ? known.id : peerId,
+        vendorId: known ? (known.vendorId || known.id) : peerId,
+        routingId: cid,
+        role: known ? known.role : (role || 'client'),
+        name: known ? (displayNameForUser(known) || 'Contact') : (name || peerId),
+        enseigne: known ? (known.enseigne || '') : '',
+        phone: known ? (known.phone || '') : (extra && extra.phone ? extra.phone : ''),
+        email: known ? (known.email || '') : '',
+        city: known ? (known.city || '') : '',
+        logo: known ? (known.logo || '') : '',
+        category: known ? (known.category || '') : '',
+        online: known ? (isOnline(known.id) || isOnline(known.vendorId)) : false,
+        lastSeen: known ? ((lastSeenByUser.get(routingIdForUser(known)) || (known.lastSeenAt ? Date.parse(known.lastSeenAt) : null)) || null) : null,
+        createdAt: known ? (known.createdAt || '') : ''
+      });
+    }
+    chatLog.forEach(function (m) {
+      if (!m) return;
+      const cf = canonicalRoutingId(m.from);
+      const ct = canonicalRoutingId(m.to);
+      if (cf === myId) addDerived(m.to, m.toName || null, 'client', null);
+      else if (ct === myId) addDerived(m.from, m.fromName || null, 'client', null);
+    });
+    callLog.forEach(function (c) {
+      if (!c) return;
+      const cf = canonicalRoutingId(c.callerId);
+      const ct = canonicalRoutingId(c.calleeId);
+      if (cf === myId) addDerived(c.calleeId, c.calleeName || null, 'client', { phone: c.calleePhone });
+      else if (ct === myId) addDerived(c.callerId, c.callerName || null, 'client', { phone: c.callerPhone });
+    });
+    const allContacts = contacts.concat(derived).sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate' });
-    res.end(JSON.stringify({ ok: true, contacts: contacts }));
+    res.end(JSON.stringify({ ok: true, contacts: allContacts }));
     return;
   }
   if (urlPath === '/api/messages') {
