@@ -2915,6 +2915,19 @@ html.dark {
         });
         if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
       }
+      function mergeCallHistory(serverList, localList) {
+        var seen = {};
+        var out = [];
+        (Array.isArray(serverList) ? serverList : []).concat(Array.isArray(localList) ? localList : []).forEach(function (c) {
+          if (!c) return;
+          var key = c.callId || (c.callerId + '|' + c.calleeId + '|' + c.at);
+          if (seen[key]) return;
+          seen[key] = true;
+          out.push(c);
+        });
+        out.sort(function (a, b) { return String(b.at || '').localeCompare(String(a.at || '')); });
+        return out;
+      }
       function loadCalls() {
         var token = null;
         try { token = localStorage.getItem('mgt_token'); } catch (e) {}
@@ -2922,8 +2935,21 @@ html.dark {
           headers: token ? { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' } : { 'Accept': 'application/json' },
           cache: 'no-store'
         }).then(function (r) { return r.json().catch(function () { return {}; }); })
-        .then(function (d) { renderCalls((d && d.ok && Array.isArray(d.calls)) ? d.calls : []); })
-        .catch(function () { renderCalls([]); });
+        .then(function (d) {
+          var server = (d && d.ok && Array.isArray(d.calls)) ? d.calls : [];
+          // Historique local : survit à une perte de données côté serveur et
+          // complète l'affichage quand /api/calls revient vide.
+          var local = [];
+          try { local = JSON.parse(localStorage.getItem('mgt_vendor_calls_last_state_v1') || '[]'); } catch (e) {}
+          var merged = mergeCallHistory(server, Array.isArray(local) ? local : []);
+          try { localStorage.setItem('mgt_vendor_calls_last_state_v1', JSON.stringify(merged)); } catch (e) {}
+          renderCalls(merged);
+        })
+        .catch(function () {
+          var local = [];
+          try { local = JSON.parse(localStorage.getItem('mgt_vendor_calls_last_state_v1') || '[]'); } catch (e) {}
+          renderCalls(Array.isArray(local) ? local : []);
+        });
       }
 
       // ---- Temps réel (serveur /webrtc-ws) ----
