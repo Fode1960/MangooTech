@@ -298,10 +298,15 @@ html.dark {
 <body class="min-h-screen font-sans antialiased">
 <header class="sticky top-0 z-50 w-full border-b shadow-sm" style="background-color: rgb(var(--mgt-primary)); border-color: rgb(var(--mgt-primary-700)); box-shadow: var(--mgt-shadow-sm);">
   <div class="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-3">
-    <a href="./accueil.html" class="flex items-center gap-3 no-underline" style="color: rgb(var(--mgt-primary-foreground));">
+    <div class="flex items-center gap-3">
+      <a id="btn-back" href="./accueil.html" class="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-opacity hover:opacity-80 shrink-0" style="background-color: rgb(var(--mgt-primary-700)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); text-decoration: none;">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i><span>Retour</span>
+      </a>
+      <a href="./accueil.html" class="flex items-center gap-3 no-underline" style="color: rgb(var(--mgt-primary-foreground));">
       <img src="../assets/favicon.png" alt="MangooTech Logo" class="h-10 w-10 rounded-md" style="border-radius: var(--mgt-radius-md);">
       <span class="text-xl font-semibold tracking-tight" style="font-family: var(--mgt-font-sans);">MangooTech</span>
     </a>
+    </div>
     <nav class="hidden items-center gap-6 md:flex">
       <a href="./carte.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Boutique &amp; Prestataires</a>
       <a href="./lives-en-direct.html" class="text-sm font-medium transition-opacity hover:opacity-80" style="color: rgb(var(--mgt-primary-foreground)); font-family: var(--mgt-font-sans);">Lives en direct</a>
@@ -431,6 +436,20 @@ html.dark {
   var activeCategory = 'all';
   var activeSellerType = 'all';
 
+  // Bouton « Retour » contextuel : renvoie au dashboard vendeur si une session
+  // pro est active, sinon vers l'accueil public.
+  try {
+    var _backBtn = document.getElementById('btn-back');
+    if (_backBtn) {
+      var _mgtUser = null;
+      try { _mgtUser = JSON.parse(localStorage.getItem('mgt_user') || 'null'); } catch (e) {}
+      var _mgtRole = _mgtUser && _mgtUser.role;
+      if (_mgtRole === 'vendeur' || _mgtRole === 'prestataire' || _mgtRole === 'livreur') {
+        _backBtn.setAttribute('href', './dashboard-overview.html');
+      }
+    }
+  } catch (e) {}
+
   var CATEGORY_LABELS = {
     'coiffure': 'Coiffure',
     'beaute': 'Beauté & Soins',
@@ -508,19 +527,10 @@ html.dark {
         LIVES = normalizeRooms(rooms);
       })
       .catch(function () {
-        // Repli de démonstration : quelques salles actives simulées quand
-        // l'endpoint /api/lives n'est pas encore déployé.
-        var now = Date.now();
-        LIVES = normalizeRooms([
-          { roomId: 'room-dan', vendorId: 'dan-boutique', vendorName: 'DAN Boutique', sellerType: 'boutique', category: 'coiffure', title: 'Nouveaux soins capillaires en exclusivité', rating: 4.8, viewers: 128, thumb: '../assets/products/soin-capillaire.svg', startedAt: now - 12 * 60000 },
-          { roomId: 'room-awa', vendorId: 'chez-awa', vendorName: 'Chez Awa', sellerType: 'boutique', category: 'restaurant', title: 'Recette du jour : thieboudienne', rating: 4.6, viewers: 87, startedAt: now - 34 * 60000 },
-          { roomId: 'room-fatou', vendorId: 'fatou-style', vendorName: 'Fatou Style', sellerType: 'boutique', category: 'mode', title: 'Collection wax & accessoires', rating: 4.9, viewers: 243, thumb: '../assets/products/coiffure-mariage.svg', startedAt: now - 7 * 60000 },
-          { roomId: 'room-kader', vendorId: 'marche-kader', vendorName: 'Marché Bio de Kader', sellerType: 'prestataire', category: 'epicerie', title: 'Produits frais du jour', rating: 4.7, viewers: 64, startedAt: now - 51 * 60000 },
-          { roomId: 'room-nafi', vendorId: 'atelier-nafi', vendorName: 'Atelier Tissage Nafi', sellerType: 'prestataire', category: 'artisanat', title: 'Démonstration de tissage en direct', rating: 4.5, viewers: 41, thumb: '../assets/products/tresses-senegalaises.svg', startedAt: now - 18 * 60000 },
-          { roomId: 'room-mame', vendorId: 'beaute-mame', vendorName: 'Beauté & Soins de Mame', sellerType: 'prestataire', category: 'beaute', title: 'Routine soin du visage', rating: 4.8, viewers: 156, thumb: '../assets/products/maquillage-professionnel.svg', startedAt: now - 5 * 60000 },
-          { roomId: 'room-sophie', vendorId: 'sophie-nails', vendorName: 'Sophie Nails', sellerType: 'prestataire', category: 'beaute', title: 'Pose de vernis semi-permanent', rating: 4.4, viewers: 39, thumb: '../assets/products/manucure-gel.svg', startedAt: now - 22 * 60000 },
-          { roomId: 'room-lena', vendorId: 'coiffure-lena', vendorName: 'Coiffure Léna', sellerType: 'boutique', category: 'coiffure', title: 'Coiffure enfant en direct', rating: 4.3, viewers: 58, thumb: '../assets/products/coiffure-enfant.svg', startedAt: now - 9 * 60000 }
-        ]);
+        // Production : aucun live fictif. Hors-ligne sans état connu, la
+        // grille reste vide (« Aucun live actif ») au lieu d'afficher des
+        // salles simulées.
+        LIVES = [];
       });
   }
 

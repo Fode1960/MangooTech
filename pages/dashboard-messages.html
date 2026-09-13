@@ -719,7 +719,11 @@ html.dark {
         <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
           <div>
             <label for="nm-recipient" style="display:block;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin-bottom:6px;">Destinataire</label>
-            <input id="nm-recipient" type="text" placeholder="Nom du client…" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));">
+            <select id="nm-recipient" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));">
+              <option value="">— Choisir un contact —</option>
+              <option value="__custom__">Autre (saisie libre)…</option>
+            </select>
+            <input id="nm-recipient-custom" type="text" placeholder="Nom ou numéro du client…" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));margin-top:8px;display:none;">
           </div>
           <div>
             <label for="nm-first" style="display:block;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin-bottom:6px;">Premier message</label>
@@ -739,9 +743,11 @@ html.dark {
       // (appel, planification, menu, nouveau message, notifications, pièce
       // jointe, émojis, envoi, recherche, marquage "lu") sont interconnectés.
       var EMOJIS = ['😊', '👍', '🙏', '❤️', '🎉', '😂', '✅', '👌'];
+      var CONTACTS = [];
 
       // ---- Helpers ----
       function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+      function escAttr(s) { return esc(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
       function fmtSize(bytes) {
         if (!bytes && bytes !== 0) return '';
         if (bytes < 1024) return bytes + ' o';
@@ -1007,6 +1013,7 @@ html.dark {
         return conv;
       }
       function renderContacts(contacts) {
+        CONTACTS = Array.isArray(contacts) ? contacts : [];
         var list = document.getElementById('msg-conv-list');
         var empty = document.getElementById('msg-conv-empty');
         if (!list) return;
@@ -1014,7 +1021,7 @@ html.dark {
         if (!contacts || !contacts.length) {
           if (empty) {
             empty.style.display = '';
-            empty.innerHTML = '<p class="text-sm text-[rgb(var(--mgt-muted-foreground))]">Aucun contact pour le moment. Les comptes créés apparaîtront ici.</p>';
+            empty.innerHTML = '<p class="text-sm text-[rgb(var(--mgt-muted-foreground))]">Aucun contact pour le moment.</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">Cliquez sur « Nouveau message » pour écrire à un client, ou un client qui vous contacte apparaîtra ici.</p>';
           }
           return;
         }
@@ -1029,6 +1036,35 @@ html.dark {
         updateUnreadBadge();
         if (window.lucide) window.lucide.createIcons();
       }
+      function mergeLocalDerived(list) {
+        var out = Array.isArray(list) ? list.slice() : [];
+        var seen = {};
+        out.forEach(function (c) { if (c) seen[(c.id || c.vendorId || c.name || '')] = true; });
+        // Pairs déduits des conversations déjà chargées (clés = peerId).
+        try {
+          var tmap = JSON.parse(localStorage.getItem('mgt_vendor_threads_last_state_v1') || '{}') || {};
+          Object.keys(tmap).forEach(function (peerId) {
+            if (!peerId || seen[peerId]) return;
+            seen[peerId] = true;
+            out.push({ id: peerId, vendorId: peerId, role: 'client', name: peerId, city: '', phone: '' });
+          });
+        } catch (e) {}
+        // Pairs déduits de l'historique d'appels persisté localement.
+        try {
+          var calls = JSON.parse(localStorage.getItem('mgt_vendor_calls_last_state_v1') || '[]');
+          if (!Array.isArray(calls)) calls = [];
+          calls.forEach(function (cc) {
+            if (!cc) return;
+            var id = null, nm = null;
+            if (cc.direction === 'out') { id = cc.calleeId; nm = cc.calleeName; }
+            else { id = cc.callerId; nm = cc.callerName; }
+            if (!id || seen[id]) return;
+            seen[id] = true;
+            out.push({ id: id, vendorId: id, role: 'client', name: nm || id, city: '', phone: '' });
+          });
+        } catch (e) {}
+        return out;
+      }
       function loadContacts() {
         var token = null;
         try { token = localStorage.getItem('mgt_token'); } catch (e) {}
@@ -1037,11 +1073,16 @@ html.dark {
         }).then(function (r) {
           return r.json().catch(function () { return {}; });
         }).then(function (d) {
-          if (d && d.ok) renderContacts(d.contacts);
-          else renderContacts(null);
+          var list = (d && d.ok && Array.isArray(d.contacts)) ? d.contacts : null;
+          if (Array.isArray(list)) {
+            try { localStorage.setItem('mgt_vendor_contacts_last_state_v1', JSON.stringify(list)); } catch (e) {}
+          }
+          renderContacts(mergeLocalDerived(list));
           applyPushLanding();
         }).catch(function () {
-          renderContacts(null);
+          var cached = null;
+          try { var raw = localStorage.getItem('mgt_vendor_contacts_last_state_v1'); if (raw) cached = JSON.parse(raw); } catch (e) {}
+          renderContacts(mergeLocalDerived(cached));
           applyPushLanding();
         });
       }
@@ -2461,8 +2502,33 @@ html.dark {
       });
 
       // ---- Nouveau message ----
+      function populateRecipientPicker() {
+        var sel = document.getElementById('nm-recipient');
+        if (!sel) return;
+        var current = sel.value;
+        var opts = ['<option value="">— Choisir un contact —</option>'];
+        (CONTACTS || []).forEach(function (c) {
+          if (!c) return;
+          var id = c.id || c.vendorId || '';
+          var name = c.name || c.enseigne || 'Contact';
+          var detail = c.city || c.phone || roleLabel(c.role);
+          opts.push('<option value="' + escAttr(id) + '" data-name="' + escAttr(name) + '">' + escAttr(name) + (detail ? ' · ' + escAttr(detail) : '') + '</option>');
+        });
+        opts.push('<option value="__custom__">Autre (saisie libre)…</option>');
+        sel.innerHTML = opts.join('');
+        if (current) sel.value = current;
+        var custom = document.getElementById('nm-recipient-custom');
+        if (custom) custom.style.display = (sel.value === '__custom__') ? '' : 'none';
+      }
+      var nmRecipient = document.getElementById('nm-recipient');
+      if (nmRecipient) {
+        nmRecipient.addEventListener('change', function () {
+          var custom = document.getElementById('nm-recipient-custom');
+          if (custom) custom.style.display = (nmRecipient.value === '__custom__') ? '' : 'none';
+        });
+      }
       var newMsgBtn = document.getElementById('btn-new-message');
-      if (newMsgBtn) newMsgBtn.addEventListener('click', function () { openModal('modal-new-message'); });
+      if (newMsgBtn) newMsgBtn.addEventListener('click', function () { populateRecipientPicker(); openModal('modal-new-message'); });
 
       // Fermeture / soumission de la modale nouveau message.
       document.querySelectorAll('#modal-new-message [data-close]').forEach(function (b) {
@@ -2472,10 +2538,23 @@ html.dark {
       if (nmSend) {
         nmSend.addEventListener('click', function () {
           var recipient = document.getElementById('nm-recipient');
+          var custom = document.getElementById('nm-recipient-custom');
           var body = document.getElementById('nm-first');
-          var name = recipient ? recipient.value.trim() : '';
+          var name = '';
+          var peerId = '';
+          if (recipient) {
+            var val = recipient.value;
+            if (val === '__custom__') {
+              name = custom ? custom.value.trim() : '';
+            } else if (val) {
+              peerId = val;
+              var idx = recipient.selectedIndex;
+              var opt = idx >= 0 ? recipient.options[idx] : null;
+              name = opt ? (opt.getAttribute('data-name') || opt.textContent) : '';
+            }
+          }
           var msg = body ? body.value.trim() : '';
-          if (!name) { toast('Saisissez un destinataire.'); return; }
+          if (!name) { toast('Choisissez ou saisissez un destinataire.'); return; }
           closeModal('modal-new-message');
 
           // Crée réellement une conversation dans la liste.
@@ -2483,6 +2562,7 @@ html.dark {
           var conv = document.createElement('div');
           conv.className = 'msg-conv flex items-start gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))]';
           conv.setAttribute('data-name', name);
+          conv.setAttribute('data-peer-id', peerId || '');
           conv.setAttribute('data-unread', 'false');
           conv.setAttribute('data-online', 'false');
           conv.setAttribute('data-real', 'true');
@@ -2514,6 +2594,7 @@ html.dark {
 
           toast('Conversation créée avec ' + name + '.');
           if (recipient) recipient.value = '';
+          if (custom) custom.value = '';
           if (body) body.value = '';
           if (window.lucide) window.lucide.createIcons();
         });
