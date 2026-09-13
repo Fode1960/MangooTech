@@ -572,6 +572,24 @@ html.dark {
     setTimeout(function () {
       label.textContent = 'Paiement confirmé ✓';
       btn.style.background = 'rgb(var(--mgt-primary))';
+      // Mémorise la commande localement (résilience hors-ligne) afin de
+      // pouvoir la consulter dans "Mes commandes" même sans réseau.
+      try {
+        if (window.MangooClient && typeof window.MangooClient.addOrder === 'function') {
+          window.MangooClient.addOrder({
+            id: 'CMD-' + Date.now().toString(36).toUpperCase(),
+            provider: 'DAN Boutique',
+            initials: 'DB',
+            service: 'Thieboudienne royal',
+            amount: '21 500 FCFA',
+            total: 21500,
+            status: 'en-cours',
+            createdAt: Date.now(),
+            payment: 'Orange Money',
+            vendorId: 'pro-41cafa4bcb31'
+          });
+        }
+      } catch (e) {}
       setTimeout(function () {
         window.location.href = 'delivery-track.html';
       }, 650);

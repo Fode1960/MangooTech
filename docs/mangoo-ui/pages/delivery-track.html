@@ -3639,6 +3639,31 @@ html.dark {
 
         // Timeline status helper
         var STEP_ORDER = ['placed', 'confirmed', 'pickup', 'enroute', 'delivered'];
+        // ---- Dernier état de livraison connu (résilience hors-ligne) ----
+        var DELIVERY_STATUS_KEY = 'mgt_delivery_last_status_v1';
+        function readLastDeliveryStatus() {
+          try {
+            var raw = localStorage.getItem(DELIVERY_STATUS_KEY);
+            return raw ? JSON.parse(raw) : null;
+          } catch (e) { return null; }
+        }
+        function saveLastDeliveryStatus(step) {
+          try {
+            var label = (typeof ROLE_STEPS !== 'undefined' && ROLE_STEPS.client && ROLE_STEPS.client[step]) || step;
+            localStorage.setItem(DELIVERY_STATUS_KEY, JSON.stringify({
+              step: step,
+              label: label,
+              updatedAt: Date.now()
+            }));
+          } catch (e) {}
+        }
+        function restoreLastDeliveryStatus() {
+          var saved = readLastDeliveryStatus();
+          if (!saved || !saved.step) return;
+          // Silencieux : remet la timeline au dernier état connu sans
+          // rouvrir la fiche de signature ni relancer le suivi.
+          setTimelineStatus(saved.step);
+        }
         function setTimelineStatus(activeStep) {
           var idx = STEP_ORDER.indexOf(activeStep);
           document.querySelectorAll('#timeline-list .timeline-step').forEach(function(stepEl) {
@@ -3651,6 +3676,7 @@ html.dark {
             else if (i === idx) { dot.classList.add('active'); }
             else { dot.classList.add('pending'); }
           });
+          saveLastDeliveryStatus(activeStep);
         }
 
         // =========================================================
@@ -4666,6 +4692,10 @@ html.dark {
         // Initial state (client)
         applyRole('client');
 
+        // Résilience hors-ligne : restaure le dernier état de livraison connu
+        // (la timeline de départ étant statique dans la page).
+        restoreLastDeliveryStatus();
+
         // =========================================================
         //  MODE JOUR / NUIT — bascule automatique (production)
         //  Trois états : auto (heure solaire), jour, nuit.
@@ -4829,7 +4859,14 @@ html.dark {
         // =========================================================
         var offlineBanner = document.getElementById('offline-banner');
         function setOffline(off) {
-          if (offlineBanner) offlineBanner.classList.toggle('show', off);
+          if (!offlineBanner) return;
+          offlineBanner.classList.toggle('show', off);
+          if (off) {
+            var saved = readLastDeliveryStatus();
+            offlineBanner.textContent = (saved && saved.step)
+              ? 'Mode faible connexion — dernier état connu : ' + (saved.label || saved.step)
+              : 'Connexion perdue — suivi en attente de reconnexion';
+          }
         }
         window.addEventListener('offline', function() { setOffline(true); });
         window.addEventListener('online', function() { setOffline(false); });
