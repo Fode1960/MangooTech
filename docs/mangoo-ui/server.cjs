@@ -1936,6 +1936,79 @@ function ensureSupportAccount() {
   }
 }
 
+// Suppression ciblée d'un compte prestataire/boutique (nettoyage de doublon ou de
+// compte de test). Retire le compte de users.json, son document vendor-config, ainsi
+// que toute donnée liée (catalogue, prestations, inventaire, galerie, boosters,
+// essais, portefeuilles, offres du jour). Idempotent : ne fait rien si le compte
+// n'existe plus, et ne touche jamais aux autres comptes.
+function reconcileRemoveVendor(vendorIds) {
+  const targets = (Array.isArray(vendorIds) ? vendorIds : [vendorIds])
+    .map(function (id) { return canonicalRoutingId(id); })
+    .filter(Boolean);
+  if (!targets.length) return;
+
+  let changed = false;
+
+  const before = users.length;
+  users = users.filter(function (u) {
+    if (!u) return false;
+    const hit = targets.indexOf(canonicalRoutingId(u.vendorId)) >= 0
+      || targets.indexOf(canonicalRoutingId(u.id)) >= 0;
+    if (hit) changed = true;
+    return !hit;
+  });
+  if (users.length !== before) {
+    console.log('[Nettoyage] compte(s) vendeur retiré(s) de users.json : ' + targets.join(', '));
+  }
+
+  targets.forEach(function (tid) {
+    Object.keys(vendorConfig).forEach(function (key) {
+      if (key === tid || canonicalRoutingId(key) === tid) {
+        delete vendorConfig[key];
+        changed = true;
+      }
+    });
+  });
+
+  function strip(list, fields) {
+    const prev = list.length;
+    const next = list.filter(function (item) {
+      if (!item || typeof item !== 'object') return true;
+      return !fields.some(function (f) {
+        const v = item[f];
+        if (v == null) return false;
+        const c = canonicalRoutingId(v);
+        return !!c && targets.indexOf(c) >= 0;
+      });
+    });
+    if (next.length !== prev) changed = true;
+    return next;
+  }
+
+  catalogue = strip(catalogue, ['vendorId', 'vendor', 'ownerId']);
+  prestations = strip(prestations, ['vendorId', 'vendor', 'ownerId']);
+  inventaire = strip(inventaire, ['vendorId', 'vendor', 'ownerId']);
+  galerie = strip(galerie, ['vendorId', 'vendor', 'ownerId']);
+  boosters = strip(boosters, ['vendorId', 'vendor', 'ownerId']);
+  trials = strip(trials, ['vendorId', 'vendor', 'ownerId']);
+  wallets = strip(wallets, ['vendorId', 'vendor', 'ownerId', 'userId']);
+  offresJour = strip(offresJour, ['vendorId', 'vendor', 'ownerId']);
+
+  if (changed) {
+    saveUsers();
+    saveVendorConfig();
+    saveCatalogue();
+    savePrestations();
+    saveInventaire();
+    saveGalerie();
+    saveBoosters();
+    saveTrials();
+    saveWallets();
+    saveOffresJour();
+    console.log('[Nettoyage] suppression du compte vendeur terminée : ' + targets.join(', '));
+  }
+}
+
 /* ------------------------------------------------------------------ *
  *  Annuaire public (Local+ / carte)
  * ------------------------------------------------------------------ *
@@ -9029,6 +9102,7 @@ loadVendorConfig();
 loadUsers();
 ensureSeedVendorUsers();
 ensureSupportAccount();
+reconcileRemoveVendor(['ven-f9d9419fcc11']);
 loadSessions();
 normalizeVendorCities();
 loadPaymentMethods();
