@@ -433,7 +433,7 @@ html.dark {
       <header class="sticky top-0 z-30 flex items-center justify-between gap-4 bg-[rgb(var(--mgt-background))] border-b border-[rgb(var(--mgt-border))] px-8 py-3.5">
         <div class="flex items-center gap-4">
           <h1 class="text-lg font-semibold tabular-nums text-[rgb(var(--mgt-foreground))]">Équipe &amp; Personnel</h1>
-          <span class="text-xs text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">0 membres</span>
+          <span id="team-count-badge" class="text-xs text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">0 membres</span>
         </div>
         <div class="flex items-center gap-4">
           <button id="btn-add-member" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">
@@ -466,7 +466,7 @@ html.dark {
               <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> 0</span>
             </div>
             <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Membres actifs</p>
-            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">0</p>
+            <p id="team-active-count" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">0</p>
           </div>
 
           <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
@@ -498,14 +498,14 @@ html.dark {
         </div>
 
         <!-- ===== MEMBRES (grille de cartes) ===== -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div id="team-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     <div id="team-empty" class="sm:col-span-2 lg:col-span-3 flex flex-col items-center justify-center py-12 text-center">
             <i data-lucide="users" class="w-10 h-10 text-[rgb(var(--mgt-border))] mb-3"></i>
             <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Aucune donnée disponible</p>
             <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">Aucun membre pour le moment</p>
           </div>
           <!-- Membre 6 (inviter) -->
-          <div class="rounded-xl border border-dashed border-[rgb(var(--mgt-border))] p-6 flex flex-col items-center justify-center text-center gap-3">
+          <div id="team-invite-card" class="rounded-xl border border-dashed border-[rgb(var(--mgt-border))] p-6 flex flex-col items-center justify-center text-center gap-3">
             <span class="w-12 h-12 rounded-full bg-[rgb(var(--mgt-muted))] flex items-center justify-center text-[rgb(var(--mgt-muted-foreground))]"><i data-lucide="user-plus" class="w-6 h-6"></i></span>
             <div>
               <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Inviter un membre</p>
@@ -523,8 +523,8 @@ html.dark {
               <h2 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Planning de la semaine</h2>
               <button id="btn-edit-planning" class="text-xs font-medium text-[rgb(var(--mgt-primary))] hover:text-[rgb(var(--mgt-primary-700))]">Modifier</button>
             </div>
-            <div class="space-y-3"></div>
-            <div class="flex flex-col items-center justify-center py-12 text-center">
+            <div id="planning-list" class="space-y-3"></div>
+            <div id="planning-empty" class="flex flex-col items-center justify-center py-12 text-center">
               <i data-lucide="users" class="w-10 h-10 text-[rgb(var(--mgt-border))] mb-3"></i>
               <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Aucune donnée disponible</p>
               <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">Aucun planning pour le moment</p>
@@ -540,21 +540,21 @@ html.dark {
             <div class="space-y-3">
               <div class="flex items-center justify-between text-sm">
                 <span class="text-[rgb(var(--mgt-foreground))]">Commission de base</span>
-                <span class="font-semibold text-[rgb(var(--mgt-foreground))]">0 %</span>
+                <span id="comm-base" class="font-semibold text-[rgb(var(--mgt-foreground))]">0 %</span>
               </div>
               <div class="flex items-center justify-between text-sm">
                 <span class="text-[rgb(var(--mgt-foreground))]">Bonus performance</span>
-                <span class="font-semibold text-[rgb(var(--mgt-primary-700))]">0 %</span>
+                <span id="comm-bonus" class="font-semibold text-[rgb(var(--mgt-primary-700))]">0 %</span>
               </div>
               <div class="flex items-center justify-between text-sm">
                 <span class="text-[rgb(var(--mgt-foreground))]">Seuil bonus (CA mensuel)</span>
-                <span class="font-semibold text-[rgb(var(--mgt-foreground))]">0 FCFA</span>
+                <span id="comm-seuil" class="font-semibold text-[rgb(var(--mgt-foreground))]">0 FCFA</span>
               </div>
             </div>
 
             <div class="border-t border-[rgb(var(--mgt-border))] pt-4 mt-4">
               <p class="text-xs font-semibold text-[rgb(var(--mgt-muted-foreground))] mb-3 uppercase tracking-wide">Commissions individuelles</p>
-              <div class="flex flex-col items-center justify-center py-12 text-center">
+              <div id="comm-individual" class="flex flex-col items-center justify-center py-12 text-center">
                 <i data-lucide="users" class="w-10 h-10 text-[rgb(var(--mgt-border))] mb-3"></i>
                 <p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Aucune donnée disponible</p>
                 <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">Aucune commission individuelle</p>
@@ -571,8 +571,11 @@ html.dark {
     <script>lucide.createIcons();</script>
     <script>
     (function () {
-      // Comportement de production de l'équipe : ajout de membre, modification
-      // de rôle et désactivation/réactivation.
+      'use strict';
+
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
       function toast(msg) {
         var t = document.getElementById('tm-toast');
         if (!t) {
@@ -586,174 +589,197 @@ html.dark {
         clearTimeout(t._timer);
         t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2600);
       }
-
-      var main = document.querySelector('main');
-      if (!main) return;
-      var memberGrid = main.children[1];
-      if (!memberGrid) return;
-      var cards = Array.prototype.slice.call(memberGrid.children);
-
-      // Repère les cartes "membre" (elles ont un badge Active / En pause).
-      var memberCards = cards.filter(function (c) {
-        var badge = c.querySelector('span');
-        var t = (badge && badge.textContent) || '';
-        return t.indexOf('Active') !== -1 || t.indexOf('pause') !== -1;
-      });
-
-      // Identifie chaque carte par le nom du membre.
-      memberCards.forEach(function (card) {
-        var nameEl = card.querySelector('p.text-sm.font-semibold');
-        var name = nameEl ? nameEl.textContent.trim() : 'Membre';
-        card.setAttribute('data-name', name);
-        var badge = card.querySelector('span.inline-flex');
-        card.setAttribute('data-active', badge && badge.textContent.indexOf('Active') !== -1 ? 'true' : 'false');
-
-        // Injecte les actions Modifier / Désactiver sous les statistiques.
-        var actions = document.createElement('div');
-        actions.className = 'flex items-center gap-2 mt-4 pt-3 border-t border-[rgb(var(--mgt-border))]';
-        actions.innerHTML =
-          '<button class="tm-role flex-1 h-8 rounded-md border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))]">Modifier le rôle</button>' +
-          '<button class="tm-toggle flex-1 h-8 rounded-md border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))]">Désactiver</button>';
-        card.appendChild(actions);
-
-        actions.querySelector('.tm-role').addEventListener('click', function () {
-          openModal('role', card);
-        });
-        actions.querySelector('.tm-toggle').addEventListener('click', function () {
-          var active = card.getAttribute('data-active') === 'true';
-          setActive(card, !active);
-          toast(name + (active ? ' désactivé(e).' : ' réactivé(e).'));
-        });
-      });
-
-      function badgeEl(card) { return card.querySelector('span.inline-flex'); }
-
-      function setActive(card, active) {
-        card.setAttribute('data-active', active ? 'true' : 'false');
-        var badge = badgeEl(card);
-        if (badge) {
-          badge.textContent = active ? 'Active' : 'Désactivée';
-          badge.className = active
-            ? 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]'
-            : 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]';
-        }
-        card.style.opacity = active ? '1' : '0.55';
-        var toggle = card.querySelector('.tm-toggle');
-        if (toggle) toggle.textContent = active ? 'Désactiver' : 'Réactiver';
+      function initials(name) {
+        var n = String(name || '').trim();
+        if (!n) return '?';
+        var parts = n.split(/\s+/).filter(Boolean);
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
       }
+      function fmtFcfa(n) { return (Number(n) || 0).toLocaleString('fr-FR') + ' FCFA'; }
+      function fmtPct(n) { return (Number(n) || 0) + ' %'; }
 
-      var modalMode = 'add';
-      var modalTarget = null;
-      function openModal(mode, card) {
-        modalMode = mode;
-        modalTarget = card || null;
-        var old = document.getElementById('tm-modal');
-        if (old) old.remove();
-        var modal = document.createElement('div');
-        modal.id = 'tm-modal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
-        var isRole = mode === 'role';
-        var title = isRole ? 'Modifier le rôle' : 'Ajouter un membre';
-        var nameVal = isRole && card ? card.getAttribute('data-name') : '';
-        modal.innerHTML =
-          '<div style="background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:420px;padding:24px;font-family:var(--mgt-font-sans);">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));">' + title + '</h3>' +
-          '<button id="tm-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:20px;cursor:pointer;">&times;</button></div>' +
-          (isRole ? '' :
-          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Nom complet</label>' +
-          '<input id="tm-name" placeholder="Ex. Adama Sarr" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">' +
-          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Email</label>' +
-          '<input id="tm-email" type="email" placeholder="adama@exemple.com" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">') +
-          (isRole ? '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));margin-bottom:12px;">' + nameVal + '</p>' : '') +
-          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Rôle</label>' +
-          '<select id="tm-role" style="width:100%;height:42px;padding:0 10px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:16px;">' +
-          '<option>Coiffeuse senior</option><option>Coloriste</option><option>Manucure</option><option>Esthéticienne</option><option>Coiffeur</option><option>Réceptionniste</option><option>Gérante</option></select>' +
-          '<div style="display:flex;gap:10px;"><button id="tm-cancel" style="flex:1;height:42px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>' +
-          '<button id="tm-confirm" style="flex:1;height:42px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">' + (isRole ? 'Enregistrer' : 'Ajouter') + '</button></div></div>';
-        document.body.appendChild(modal);
-        function close() { modal.remove(); }
-        modal.querySelector('#tm-close').onclick = close;
-        modal.querySelector('#tm-cancel').onclick = close;
-        modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
-        modal.querySelector('#tm-confirm').onclick = function () {
-          var role = modal.querySelector('#tm-role').value;
-          if (isRole && modalTarget) {
-            var sub = modalTarget.querySelector('p.text-xs.text-\\[rgb\\(var\\(--mgt-muted-foreground\\)\\)\\]');
-            if (sub) sub.textContent = role;
-            close();
-            toast('Rôle mis à jour : ' + role + '.');
-          } else {
-            var name = modal.querySelector('#tm-name').value.trim();
-            var email = modal.querySelector('#tm-email').value.trim();
-            if (!name || !email) { modal.querySelector('#tm-name').focus(); return; }
-            addMember(name, email, role);
-            close();
+      // Identité prestataire réelle (même logique que la page Rendez-vous) :
+      // session mgt_user puis identité prestataire partagée, avec repli sécurisé
+      // sur la boutique de démonstration.
+      function vendorId() {
+        try {
+          var u = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+          if (u && (u.role === 'vendeur' || u.role === 'prestataire')) {
+            var id = u.vendorId || u.id || '';
+            if (id) return id;
           }
-        };
-        setTimeout(function () { var n = modal.querySelector('#tm-name'); if (n) n.focus(); }, 50);
+        } catch (e) {}
+        try {
+          var v = JSON.parse(localStorage.getItem('mgt_vendor_identity_v1') || 'null');
+          if (v && v.vendorId) return v.vendorId;
+        } catch (e) {}
+        try {
+          if (window.MangooVendor && typeof window.MangooVendor.connectedVendorId === 'function') {
+            var cid = window.MangooVendor.connectedVendorId();
+            if (cid) return cid;
+          }
+        } catch (e) {}
+        return 'pro-41cafa4bcb31';
       }
 
-      function addMember(name, email, role) {
-        var ini = name.split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
-        var card = document.createElement('div');
-        card.className = 'bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]';
-        card.setAttribute('data-name', name);
-        card.setAttribute('data-active', 'true');
-        card.innerHTML =
-          '<div class="flex items-center gap-3 mb-4">' +
-          '<div class="flex items-center justify-center w-12 h-12 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-sm flex-shrink-0">' + ini + '</div>' +
-          '<div class="flex-1 min-w-0"><p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">' + name + '</p>' +
-          '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">' + role + ' · 0 %</p></div>' +
-          '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]">Active</span></div>' +
-          '<div class="grid grid-cols-3 gap-3 text-center border-t border-[rgb(var(--mgt-border))] pt-4">' +
-          '<div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">0</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Prestations</p></div>' +
-          '<div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">—</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Note</p></div>' +
-          '<div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">0</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">CA</p></div></div>';
-        // Insère avant la carte "Inviter".
-        var invite = memberGrid.querySelector('div.border-dashed');
-        var teamEmpty = document.getElementById('team-empty');
-        if (teamEmpty) teamEmpty.remove();
-        memberGrid.insertBefore(card, invite);
-        // Réattache les actions du nouveau membre.
-        var actions = document.createElement('div');
-        actions.className = 'flex items-center gap-2 mt-4 pt-3 border-t border-[rgb(var(--mgt-border))]';
-        actions.innerHTML =
-          '<button class="tm-role flex-1 h-8 rounded-md border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))]">Modifier le rôle</button>' +
-          '<button class="tm-toggle flex-1 h-8 rounded-md border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))]">Désactiver</button>';
-        card.appendChild(actions);
-        actions.querySelector('.tm-role').addEventListener('click', function () { openModal('role', card); });
-        actions.querySelector('.tm-toggle').addEventListener('click', function () {
-          var active = card.getAttribute('data-active') === 'true';
-          setActive(card, !active);
-          toast(name + (active ? ' désactivé(e).' : ' réactivé(e).'));
+      function apiUrl() { return '/api/team?vendor=' + encodeURIComponent(vendorId()); }
+      function load(cb) {
+        fetch(apiUrl(), { cache: 'no-store' })
+          .then(function (r) { return r.json(); })
+          .then(function (res) { cb(res && res.ok ? (res.team || { members: [], commission: {} }) : { members: [], commission: {} }); })
+          .catch(function () { cb({ members: [], commission: {} }); });
+      }
+      function post(action, payload, cb) {
+        payload = payload || {};
+        payload.action = action;
+        fetch(apiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(function (r) { return r.json(); }).then(function (res) {
+          cb(res || {});
+        }).catch(function (err) {
+          cb({ ok: false, error: (err && err.message) || 'Erreur réseau' });
         });
-        lucide.createIcons();
-        toast(name + ' ajouté(e) à l\'équipe.');
       }
 
-      var addBtn = document.getElementById('btn-add-member');
-      var inviteBtn = document.getElementById('btn-invite-member');
-      if (addBtn) addBtn.addEventListener('click', function () { openModal('add'); });
-      if (inviteBtn) inviteBtn.addEventListener('click', function () { openModal('add'); });
+      var state = { team: { members: [], commission: {} } };
+      function members() { return Array.isArray(state.team.members) ? state.team.members : []; }
+      function commission() { return state.team.commission || {}; }
+      function reload() { load(function (team) { state.team = team; render(); }); }
 
-      // --- Cloche du header -> notifications ---
-      var bellBtn = document.getElementById('btn-notifications');
-      if (bellBtn) bellBtn.addEventListener('click', function () { window.location.href = './dashboard-notifications.html'; });
+      function render() {
+        var ms = members();
+        var active = ms.filter(function (m) { return m && m.active !== false; }).length;
+        var badge = document.getElementById('team-count-badge');
+        if (badge) badge.textContent = ms.length + (ms.length > 1 ? ' membres' : ' membre');
+        var ac = document.getElementById('team-active-count');
+        if (ac) ac.textContent = active;
+        renderMembers(ms);
+        renderPlanning(ms);
+        renderCommission(commission(), ms);
+      }
 
-      // --- Modale générique (titre + contenu + bouton de confirmation) ---
-      function genericModal(title, innerHTML, confirmLabel) {
+      function renderMembers(ms) {
+        var grid = document.getElementById('team-grid');
+        var empty = document.getElementById('team-empty');
+        var invite = document.getElementById('team-invite-card');
+        if (!grid) return;
+        Array.prototype.slice.call(grid.children).forEach(function (c) {
+          if (c === empty || c === invite) return;
+          c.remove();
+        });
+        if (empty) empty.style.display = ms.length ? 'none' : '';
+
+        ms.forEach(function (m) {
+          if (!m) return;
+          var active = m.active !== false;
+          var card = document.createElement('div');
+          card.className = 'bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]';
+          card.setAttribute('data-id', m.id || '');
+          card.style.opacity = active ? '1' : '0.55';
+          var sub = (m.role || 'Membre') + ' · ' + (Number(m.commission) || 0) + ' %';
+          if (m.email) sub += ' · ' + m.email;
+          card.innerHTML =
+            '<div class="flex items-center gap-3 mb-4">' +
+              '<div class="flex items-center justify-center w-12 h-12 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-sm flex-shrink-0">' + esc(initials(m.name)) + '</div>' +
+              '<div class="flex-1 min-w-0"><p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))] truncate">' + esc(m.name || '') + '</p>' +
+              '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))] truncate">' + esc(sub) + '</p></div>' +
+              '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ' + (active ? 'bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]' : 'bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]') + '">' + (active ? 'Active' : 'En pause') + '</span>' +
+            '</div>' +
+            '<div class="grid grid-cols-3 gap-3 text-center border-t border-[rgb(var(--mgt-border))] pt-4">' +
+              '<div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">' + (Number(m.prestations) || 0) + '</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Prestations</p></div>' +
+              '<div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">—</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Note</p></div>' +
+              '<div><p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">' + (Number(m.ca) || 0) + '</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">CA</p></div>' +
+            '</div>' +
+            '<div class="flex items-center gap-2 mt-4 pt-3 border-t border-[rgb(var(--mgt-border))]">' +
+              '<button class="tm-edit flex-1 h-8 rounded-md border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))]">Modifier</button>' +
+              '<button class="tm-toggle flex-1 h-8 rounded-md border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))]">' + (active ? 'Désactiver' : 'Réactiver') + '</button>' +
+              '<button class="tm-remove h-8 px-2 rounded-md border border-[rgb(var(--mgt-border))] text-xs font-medium text-[rgb(var(--mgt-error))] hover:bg-[rgb(var(--mgt-error)/0.08)]" title="Supprimer"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>' +
+            '</div>';
+          grid.insertBefore(card, invite || null);
+          card.querySelector('.tm-edit').addEventListener('click', function () { openMemberModal(m); });
+          card.querySelector('.tm-toggle').addEventListener('click', function () {
+            post('toggle', { id: m.id, active: !active }, function (res) {
+              if (res.ok) { reload(); toast((m.name || 'Membre') + (active ? ' désactivé(e).' : ' réactivé(e).')); }
+              else toast(res.error || 'Erreur');
+            });
+          });
+          card.querySelector('.tm-remove').addEventListener('click', function () {
+            if (!window.confirm('Supprimer ' + (m.name || 'ce membre') + ' de l\'équipe ?')) return;
+            post('remove', { id: m.id }, function (res) {
+              if (res.ok) { reload(); toast((m.name || 'Membre') + ' supprimé(e).'); }
+              else toast(res.error || 'Erreur');
+            });
+          });
+        });
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      function renderPlanning(ms) {
+        var list = document.getElementById('planning-list');
+        var empty = document.getElementById('planning-empty');
+        if (!list) return;
+        list.innerHTML = '';
+        var rows = 0;
+        ms.forEach(function (m) {
+          if (!m || m.active === false) return;
+          var p = String(m.planning || '').trim();
+          if (!p) return;
+          rows++;
+          var row = document.createElement('div');
+          row.className = 'flex items-center justify-between gap-3 text-sm py-2 border-b border-[rgb(var(--mgt-border))] last:border-0';
+          row.innerHTML = '<span class="font-medium text-[rgb(var(--mgt-foreground))]">' + esc(m.name || '') + '</span>' +
+            '<span class="text-[rgb(var(--mgt-muted-foreground))] text-right">' + esc(p) + '</span>';
+          list.appendChild(row);
+        });
+        if (empty) empty.style.display = rows ? 'none' : '';
+      }
+
+      function renderCommission(comm, ms) {
+        var base = document.getElementById('comm-base');
+        var bonus = document.getElementById('comm-bonus');
+        var seuil = document.getElementById('comm-seuil');
+        if (base) base.textContent = fmtPct(comm.base);
+        if (bonus) bonus.textContent = fmtPct(comm.bonus);
+        if (seuil) seuil.textContent = fmtFcfa(comm.seuilCa);
+
+        var ind = document.getElementById('comm-individual');
+        if (!ind) return;
+        var withComm = ms.filter(function (m) { return m && (Number(m.commission) || 0) > 0; });
+        if (!withComm.length) {
+          ind.className = 'flex flex-col items-center justify-center py-12 text-center';
+          ind.innerHTML = '<i data-lucide="users" class="w-10 h-10 text-[rgb(var(--mgt-border))] mb-3"></i>' +
+            '<p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Aucune donnée disponible</p>' +
+            '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">Aucune commission individuelle</p>';
+          if (window.lucide) window.lucide.createIcons();
+          return;
+        }
+        ind.className = 'space-y-3';
+        ind.innerHTML = '';
+        withComm.forEach(function (m) {
+          var row = document.createElement('div');
+          row.className = 'flex items-center justify-between text-sm';
+          row.innerHTML = '<span class="text-[rgb(var(--mgt-foreground))]">' + esc(m.name || '') + '</span>' +
+            '<span class="font-semibold text-[rgb(var(--mgt-foreground))]">' + fmtPct(m.commission) + '</span>';
+          ind.appendChild(row);
+        });
+      }
+
+      function genericModal(title, innerHtml, confirmLabel) {
         var old = document.getElementById('tm-generic-modal');
         if (old) old.remove();
         var modal = document.createElement('div');
         modal.id = 'tm-generic-modal';
         modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
         modal.innerHTML =
-          '<div style="background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:440px;padding:24px;font-family:var(--mgt-font-sans);max-height:90vh;overflow:auto;">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">' + title + '</h3>' +
+          '<div style="background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:460px;padding:24px;font-family:var(--mgt-font-sans);max-height:90vh;overflow:auto;">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">' + esc(title) + '</h3>' +
           '<button id="tm-gm-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:20px;line-height:1;cursor:pointer;">&times;</button></div>' +
-          '<div id="tm-gm-body">' + innerHTML + '</div>' +
+          '<div id="tm-gm-body">' + innerHtml + '</div>' +
           '<div style="display:flex;gap:10px;margin-top:20px;"><button id="tm-gm-cancel" style="flex:1;height:42px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>' +
-          '<button id="tm-gm-confirm" style="flex:1;height:42px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">' + confirmLabel + '</button></div></div>';
+          '<button id="tm-gm-confirm" style="flex:1;height:42px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">' + esc(confirmLabel) + '</button></div></div>';
         document.body.appendChild(modal);
         function close() { modal.remove(); }
         modal.querySelector('#tm-gm-close').onclick = close;
@@ -761,60 +787,120 @@ html.dark {
         modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
         return { modal: modal, confirmBtn: modal.querySelector('#tm-gm-confirm'), body: modal.querySelector('#tm-gm-body') };
       }
-
-      function cardByHeading(text) {
-        var h2 = Array.prototype.slice.call(document.querySelectorAll('h2')).filter(function (h) { return h.textContent.trim() === text; })[0];
-        return h2 ? h2.closest('.p-6') : null;
+      function field(label, html) {
+        return '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">' + label + '</label>' + html;
+      }
+      function textInput(id, placeholder, value, type) {
+        return '<input id="' + id + '" type="' + (type || 'text') + '" placeholder="' + esc(placeholder || '') + '" value="' + esc(value || '') + '" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">';
+      }
+      var ROLES = ['Coiffeuse senior', 'Coloriste', 'Manucure', 'Esthéticienne', 'Coiffeur', 'Réceptionniste', 'Gérante'];
+      function roleSelect(selected) {
+        var opts = ROLES.map(function (r) {
+          return '<option' + (r === selected ? ' selected' : '') + '>' + esc(r) + '</option>';
+        }).join('');
+        return '<select id="tm-role" style="width:100%;height:42px;padding:0 10px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">' + opts + '</select>';
       }
 
-      // --- Modifier le planning de la semaine ---
-      var planningBtn = document.getElementById('btn-edit-planning');
-      if (planningBtn) planningBtn.addEventListener('click', function () {
-        var card = cardByHeading('Planning de la semaine');
-        var rows = card ? Array.prototype.slice.call(card.querySelector('.space-y-3').children) : [];
-        var inputsHtml = '';
-        rows.forEach(function (row, i) {
-          var name = row.children[0] ? row.children[0].textContent.trim() : 'Membre';
-          var sched = row.children[1] ? row.children[1].textContent.trim() : '';
-          inputsHtml += '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:4px;">' + name + '</label>' +
-            '<input data-idx="' + i + '" value="' + sched + '" style="width:100%;height:40px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">';
-        });
-        var g = genericModal('Planning de la semaine', inputsHtml, 'Enregistrer');
+      function openAddModal() {
+        var g = genericModal('Ajouter un membre',
+          field('Nom complet', textInput('tm-name', 'Ex. Adama Sarr')) +
+          field('Email', textInput('tm-email', 'adama@exemple.com', '', 'email')) +
+          field('Rôle', roleSelect('Coiffeuse senior')) +
+          field('Commission individuelle (%)', textInput('tm-comm', '0', '0', 'number')) +
+          field('Planning (ex. Lun–Ven 9h–18h)', textInput('tm-planning', 'Lun – Ven · 09:00 – 18:00')),
+          'Ajouter');
         g.confirmBtn.onclick = function () {
-          g.body.querySelectorAll('input').forEach(function (inp) {
-            var i = parseInt(inp.getAttribute('data-idx'), 10);
-            var row = rows[i];
-            if (row && row.children[1]) row.children[1].textContent = inp.value.trim() || row.children[1].textContent;
+          var name = g.body.querySelector('#tm-name').value.trim();
+          var email = g.body.querySelector('#tm-email').value.trim();
+          var role = g.body.querySelector('#tm-role').value;
+          var commission = g.body.querySelector('#tm-comm').value;
+          var planning = g.body.querySelector('#tm-planning').value.trim();
+          if (!name) { g.body.querySelector('#tm-name').focus(); return; }
+          post('add', { name: name, email: email, role: role, commission: commission, planning: planning }, function (res) {
+            if (res.ok) { g.modal.remove(); reload(); toast(name + ' ajouté(e) à l\'équipe.'); }
+            else toast(res.error || 'Erreur');
           });
-          g.modal.remove();
-          toast('Planning de la semaine mis à jour.');
         };
-      });
+        setTimeout(function () { var n = g.body.querySelector('#tm-name'); if (n) n.focus(); }, 50);
+      }
 
-      // --- Modifier les règles de commission ---
-      var commissionBtn = document.getElementById('btn-edit-commission');
-      if (commissionBtn) commissionBtn.addEventListener('click', function () {
-        var card = cardByHeading('Règles de commission');
-        var box = card ? card.querySelector('.space-y-3') : null;
-        var rows = box ? Array.prototype.slice.call(box.children) : [];
-        var inputsHtml = '';
-        rows.forEach(function (row, i) {
-          var label = row.children[0] ? row.children[0].textContent.trim() : 'Règle';
-          var val = row.children[1] ? row.children[1].textContent.trim() : '';
-          inputsHtml += '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:4px;">' + label + '</label>' +
-            '<input data-idx="' + i + '" value="' + val + '" style="width:100%;height:40px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">';
-        });
-        var g = genericModal('Règles de commission', inputsHtml, 'Enregistrer');
+      function openMemberModal(m) {
+        var g = genericModal('Modifier ' + (m.name || 'le membre'),
+          field('Nom', textInput('tm-name', '', m.name)) +
+          field('Email', textInput('tm-email', '', m.email, 'email')) +
+          field('Rôle', roleSelect(m.role || 'Coiffeuse senior')) +
+          field('Commission individuelle (%)', textInput('tm-comm', '0', String(m.commission == null ? 0 : m.commission), 'number')) +
+          field('Planning', textInput('tm-planning', '', m.planning)),
+          'Enregistrer');
         g.confirmBtn.onclick = function () {
-          g.body.querySelectorAll('input').forEach(function (inp) {
-            var i = parseInt(inp.getAttribute('data-idx'), 10);
-            var row = rows[i];
-            if (row && row.children[1]) row.children[1].textContent = inp.value.trim() || row.children[1].textContent;
+          var name = g.body.querySelector('#tm-name').value.trim();
+          if (!name) { g.body.querySelector('#tm-name').focus(); return; }
+          post('update', {
+            id: m.id,
+            name: name,
+            email: g.body.querySelector('#tm-email').value.trim(),
+            role: g.body.querySelector('#tm-role').value,
+            commission: g.body.querySelector('#tm-comm').value,
+            planning: g.body.querySelector('#tm-planning').value.trim()
+          }, function (res) {
+            if (res.ok) { g.modal.remove(); reload(); toast('Membre mis à jour.'); }
+            else toast(res.error || 'Erreur');
           });
-          g.modal.remove();
-          toast('Règles de commission mises à jour.');
         };
-      });
+      }
+
+      function openCommissionModal() {
+        var c = commission();
+        var g = genericModal('Règles de commission',
+          field('Commission de base (%)', textInput('tm-base', '0', String(c.base == null ? 0 : c.base), 'number')) +
+          field('Bonus performance (%)', textInput('tm-bonus', '0', String(c.bonus == null ? 0 : c.bonus), 'number')) +
+          field('Seuil bonus (CA mensuel, FCFA)', textInput('tm-seuil', '0', String(c.seuilCa == null ? 0 : c.seuilCa), 'number')),
+          'Enregistrer');
+        g.confirmBtn.onclick = function () {
+          post('set-commission', {
+            base: g.body.querySelector('#tm-base').value,
+            bonus: g.body.querySelector('#tm-bonus').value,
+            seuilCa: g.body.querySelector('#tm-seuil').value
+          }, function (res) {
+            if (res.ok) { g.modal.remove(); reload(); toast('Règles de commission mises à jour.'); }
+            else toast(res.error || 'Erreur');
+          });
+        };
+      }
+
+      function openPlanningModal() {
+        var ms = members().filter(function (m) { return m && m.active !== false; });
+        var inner = ms.length ? ms.map(function (m) {
+          return field(m.name || 'Membre', textInput('tm-plan-' + (m.id || ''), 'Lun – Ven · 09:00 – 18:00', m.planning));
+        }).join('') : '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));">Aucun membre actif à planifier.</p>';
+        var g = genericModal('Planning de la semaine', inner, 'Enregistrer');
+        if (!ms.length) { g.confirmBtn.style.display = 'none'; return; }
+        g.confirmBtn.onclick = function () {
+          var pending = ms.length;
+          var done = 0;
+          ms.forEach(function (m) {
+            var inp = g.body.querySelector('#tm-plan-' + (m.id || ''));
+            var val = inp ? inp.value.trim() : '';
+            post('update', { id: m.id, planning: val }, function () {
+              done++;
+              if (done >= pending) { g.modal.remove(); reload(); toast('Planning de la semaine mis à jour.'); }
+            });
+          });
+        };
+      }
+
+      var addBtn = document.getElementById('btn-add-member');
+      var inviteBtn = document.getElementById('btn-invite-member');
+      if (addBtn) addBtn.addEventListener('click', openAddModal);
+      if (inviteBtn) inviteBtn.addEventListener('click', openAddModal);
+      var planningBtn = document.getElementById('btn-edit-planning');
+      if (planningBtn) planningBtn.addEventListener('click', openPlanningModal);
+      var commissionBtn = document.getElementById('btn-edit-commission');
+      if (commissionBtn) commissionBtn.addEventListener('click', openCommissionModal);
+      var bellBtn = document.getElementById('btn-notifications');
+      if (bellBtn) bellBtn.addEventListener('click', function () { window.location.href = './dashboard-notifications.html'; });
+
+      reload();
     })();
     </script>
 

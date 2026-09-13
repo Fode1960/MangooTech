@@ -483,7 +483,7 @@ html.dark {
               <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> 0</span>
             </div>
             <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">À venir (7 jours)</p>
-            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">0</p>
+            <p id="kpi-upcoming" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">0</p>
             <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">aucun rendez-vous</p>
           </div>
 
@@ -494,9 +494,9 @@ html.dark {
               </div>
               <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]"><i data-lucide="trending-up" class="w-3 h-3"></i> 0</span>
             </div>
-            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Taux d'occupation</p>
-            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">0 %</p>
-            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">créneaux réservés</p>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Créneaux réservés</p>
+            <p id="kpi-occupancy" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">0</p>
+            <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">cette semaine</p>
           </div>
 
           <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
@@ -507,7 +507,7 @@ html.dark {
               <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-warning)/0.15)] text-[rgb(var(--mgt-accent-700))]"><i data-lucide="trending-down" class="w-3 h-3"></i> 0</span>
             </div>
             <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mb-1">Annulations</p>
-            <p class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">0</p>
+            <p id="kpi-cancelled" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">0</p>
             <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-1">ce mois-ci</p>
           </div>
         </div>
@@ -638,106 +638,6 @@ html.dark {
         clearTimeout(t._timer);
         t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2400);
       }
-
-      function confirmAppointment(row) {
-        row.setAttribute('data-status', 'confirmed');
-        var status = row.querySelector('.js-status');
-        if (status) {
-          status.className = 'js-status inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]';
-          status.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> Confirmé';
-        }
-        var confirm = row.querySelector('.js-confirm');
-        var refuse = row.querySelector('.js-refuse');
-        if (confirm) confirm.remove();
-        if (refuse) refuse.remove();
-        lucide.createIcons();
-        toast('Rendez-vous confirmé.');
-      }
-
-      document.querySelectorAll('.js-appointment[data-status="pending"]').forEach(function (row) {
-        var confirm = row.querySelector('.js-confirm');
-        var refuse = row.querySelector('.js-refuse');
-        if (confirm) confirm.addEventListener('click', function () { confirmAppointment(row); });
-        if (refuse) refuse.addEventListener('click', function () {
-          row.remove();
-          lucide.createIcons();
-          toast('Rendez-vous refusé.');
-        });
-      });
-
-      function openNewAppointment() {
-        var old = document.getElementById('ag-modal');
-        if (old) old.remove();
-        var modal = document.createElement('div');
-        modal.id = 'ag-modal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
-        modal.innerHTML =
-          '<div style="background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:440px;padding:24px;font-family:var(--mgt-font-sans);max-height:90vh;overflow:auto;">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
-          '<h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));">Nouveau rendez-vous</h3>' +
-          '<button id="ag-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:20px;cursor:pointer;">&times;</button></div>' +
-          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Cliente</label>' +
-          '<input id="ag-client" placeholder="Nom de la cliente" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">' +
-          '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Prestation</label>' +
-          '<input id="ag-service" placeholder="Ex. Tresse, Coloration…" style="width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:12px;">' +
-          '<div style="display:flex;gap:10px;margin-bottom:12px;">' +
-          '<div style="flex:1;"><label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Jour</label>' +
-          '<select id="ag-day" style="width:100%;height:42px;padding:0 10px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;"><option>Aujourd\'hui</option><option>Demain</option><option>Mercredi</option><option>Jeudi</option><option>Vendredi</option></select></div>' +
-          '<div style="flex:1;"><label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Heure</label>' +
-          '<input id="ag-time" type="time" value="10:00" style="width:100%;height:42px;padding:0 10px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;"></div></div>' +
-          '<div style="display:flex;gap:10px;margin-top:12px;">' +
-          '<button id="ag-cancel" style="flex:1;height:42px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>' +
-          '<button id="ag-save" style="flex:1;height:42px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Ajouter</button></div></div>';
-        document.body.appendChild(modal);
-        function close() { modal.remove(); }
-        modal.querySelector('#ag-close').onclick = close;
-        modal.querySelector('#ag-cancel').onclick = close;
-        modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
-        modal.querySelector('#ag-save').onclick = function () {
-          var client = modal.querySelector('#ag-client').value.trim();
-          var service = modal.querySelector('#ag-service').value.trim();
-          if (!client || !service) { modal.querySelector('#ag-client').focus(); return; }
-          var day = modal.querySelector('#ag-day').value;
-          var time = modal.querySelector('#ag-time').value;
-          addAppointment(client, service, day, time);
-          close();
-          toast('Rendez-vous ajouté.');
-        };
-        setTimeout(function () { modal.querySelector('#ag-client').focus(); }, 50);
-      }
-
-      function addAppointment(client, service, day, time) {
-        var container = document.getElementById('ag-list');
-        if (!container) return;
-        var empty = document.getElementById('ag-empty');
-        if (empty) empty.remove();
-        var ini = client.split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
-        var div = document.createElement('div');
-        div.className = 'flex items-center gap-3 p-3 rounded-lg border border-[rgb(var(--mgt-border))]';
-        div.innerHTML =
-          '<div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))] font-semibold text-xs flex-shrink-0">' + ini + '</div>' +
-          '<div class="flex-1 min-w-0"><p class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">' + client + ' — ' + service + '</p>' +
-          '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">' + day + ' · ' + time + '</p></div>' +
-          '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]"><i data-lucide="check" class="w-3 h-3"></i> Confirmé</span>';
-        container.insertBefore(div, container.firstChild);
-        lucide.createIcons();
-      }
-
-      // Délégation au niveau document : ouvre le formulaire « Nouveau
-      // rendez-vous » même si le bouton de la topbar est re-rendu / remplacé par un
-      // autre script (un gestionnaire direct attaché une seule fois serait alors
-      // perdu et la « case de prise de RDV » resterait fermée sur mobile).
-      document.addEventListener('click', function (e) {
-        var el = e.target;
-        while (el && el !== document) {
-          if (el.id === 'btn-new-appointment') {
-            e.preventDefault();
-            openNewAppointment();
-            return;
-          }
-          el = el.parentNode;
-        }
-      });
 
       var bookingToggle = document.querySelector('input[type="checkbox"].sr-only');
       if (bookingToggle) {
@@ -890,142 +790,273 @@ html.dark {
     <script src="../assets/mangoo-connect-plus.js"></script>
     <script>
     (function () {
-      var RT = window.MangooConnect;
-      if (!RT || typeof RT.register !== 'function') return;
-      // Identité du professionnel réellement connecté (session `mgt_user` puis
-      // identité prestataire partagée). Aucun repli codé en dur : on ne doit
-      // jamais enregistrer DAN Coiffure sous l'identifiant de DAN Boutique.
-      function resolveVendor() {
-        try {
-          var u = JSON.parse(localStorage.getItem('mgt_user') || 'null');
-          if (u && (u.role === 'vendeur' || u.role === 'prestataire')) {
-            var id = u.vendorId || u.id || '';
-            if (id) return { id: id, name: u.enseigne || u.name || id };
-          }
-        } catch (e) {}
-        try {
-          var v = JSON.parse(localStorage.getItem('mgt_vendor_identity_v1') || 'null');
-          if (v && v.vendorId) return { id: v.vendorId, name: v.name || v.vendorId };
-        } catch (e) {}
-        try {
-          if (window.MangooVendor && typeof window.MangooVendor.connectedVendorId === 'function') {
-            var vid = window.MangooVendor.connectedVendorId();
-            if (vid) {
-              var cur = window.MangooVendor.current();
-              return { id: vid, name: (cur && cur.name) || vid };
-            }
-          }
-        } catch (e) {}
-        return { id: '', name: '' };
-      }
-      var _v = resolveVendor();
-      if (_v.id) RT.register('vendor', _v.id, _v.name);
+      'use strict';
 
-      var AGENDA_KEY = 'mgt_vendor_appointments_last_state_v1';
-      function loadSavedAppointments() {
-        try {
-          var list = JSON.parse(localStorage.getItem(AGENDA_KEY) || 'null');
-          if (Array.isArray(list)) list.forEach(function (a) { if (a && a.status !== 'declined') renderRequest(a, a.status); });
-        } catch (e) {}
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       }
-      function saveAppointmentState(a) {
-        try {
-          var list = JSON.parse(localStorage.getItem(AGENDA_KEY) || 'null') || [];
-          var idx = -1;
-          for (var i = 0; i < list.length; i++) { if (list[i] && list[i].apptId === a.apptId) { idx = i; break; } }
-          if (idx >= 0) list[idx] = a; else list.push(a);
-          localStorage.setItem(AGENDA_KEY, JSON.stringify(list));
-        } catch (e) {}
-      }
-
-      function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
       function toast(msg) {
-        var t = document.getElementById('ag-rt-toast');
+        var t = document.getElementById('ag-api-toast');
         if (!t) {
           t = document.createElement('div');
-          t.id = 'ag-rt-toast';
+          t.id = 'ag-api-toast';
           t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translate(-50%,16px);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;font-family:var(--mgt-font-sans);z-index:9999;opacity:0;transition:all .25s ease;pointer-events:none;';
           document.body.appendChild(t);
         }
         t.textContent = msg;
         requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translate(-50%,0)'; });
         clearTimeout(t._timer);
-        t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2400);
+        t._timer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%,16px)'; }, 2600);
+      }
+      function initials(name) {
+        var n = String(name || '').trim();
+        if (!n) return '?';
+        var parts = n.split(/\s+/).filter(Boolean);
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
       }
 
-      function confirmRow(row, apptId) {
-        row.setAttribute('data-status', 'confirmed');
-        var status = row.querySelector('.js-status');
-        if (status) {
-          status.className = 'js-status inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]';
-          status.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> Confirmé';
-        }
-        var c = row.querySelector('.js-confirm'); if (c) c.remove();
-        var r = row.querySelector('.js-refuse'); if (r) r.remove();
-        if (window.lucide) window.lucide.createIcons();
-        toast('Rendez-vous confirmé.');
-        if (apptId) saveAppointmentState({ apptId: apptId, fromName: row.getAttribute('data-name') || '', service: row.getAttribute('data-service') || '', day: row.getAttribute('data-day') || '', time: row.getAttribute('data-time') || '', status: 'confirmed' });
+      // Identité prestataire réelle : session mgt_user puis identité prestataire
+      // partagée, avec repli sur la boutique de démonstration.
+      function vendorId() {
+        try {
+          var u = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+          if (u && (u.role === 'vendeur' || u.role === 'prestataire')) {
+            var id = u.vendorId || u.id || '';
+            if (id) return id;
+          }
+        } catch (e) {}
+        try {
+          var v = JSON.parse(localStorage.getItem('mgt_vendor_identity_v1') || 'null');
+          if (v && v.vendorId) return v.vendorId;
+        } catch (e) {}
+        try {
+          if (window.MangooVendor && typeof window.MangooVendor.connectedVendorId === 'function') {
+            var cid = window.MangooVendor.connectedVendorId();
+            if (cid) return cid;
+          }
+        } catch (e) {}
+        return 'pro-41cafa4bcb31';
       }
 
-      function renderRequest(a, status) {
-        var list = document.getElementById('ag-list');
-        if (!list) return;
-        status = status || 'pending';
-        var name = a.fromName || a.from || 'Client';
-        var ini = name.split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
+      var RT = window.MangooConnect;
+      if (RT && typeof RT.register === 'function') {
+        RT.register('vendor', vendorId(), '');
+      }
+
+      function apiUrl() { return '/api/appointments?vendor=' + encodeURIComponent(vendorId()); }
+      function loadAppointments(cb) {
+        fetch(apiUrl(), { cache: 'no-store' })
+          .then(function (r) { return r.json(); })
+          .then(function (res) { cb(res && res.ok && Array.isArray(res.appointments) ? res.appointments : []); })
+          .catch(function () { cb([]); });
+      }
+
+      var state = { appointments: [] };
+      function refresh() {
+        loadAppointments(function (list) { state.appointments = list; render(); });
+      }
+
+      function clientLabel(a) {
+        if (a.createdByVendor) return a.clientName || a.to || 'Client';
+        return a.fromName || a.from || 'Client';
+      }
+      function dayISO(a) {
+        var d = String(a.day || '').trim();
+        return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
+      }
+      function isoFromDate(d) {
+        var m = ('0' + (d.getMonth() + 1)).slice(-2);
+        var dd = ('0' + d.getDate()).slice(-2);
+        return d.getFullYear() + '-' + m + '-' + dd;
+      }
+      function addDaysISO(iso, n) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+        if (!m) return iso;
+        var d = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+        d.setDate(d.getDate() + n);
+        return isoFromDate(d);
+      }
+      var MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+      function formatDayFR(iso) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+        if (!m) return iso;
+        return parseInt(m[3], 10) + ' ' + MONTHS[parseInt(m[2], 10) - 1] + ' ' + m[1];
+      }
+      function displayDay(a) {
+        var iso = dayISO(a);
+        return iso ? formatDayFR(iso) : (a.day || '');
+      }
+
+      function statusInfo(a) {
+        var s = a.status;
+        if (s === 'confirmed') return { label: 'Confirmé', icon: 'check', cls: 'bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]' };
+        if (s === 'declined') return { label: 'Refusé', icon: 'x', cls: 'bg-[rgb(var(--mgt-error)/0.15)] text-[rgb(var(--mgt-error))]' };
+        if (a.createdByVendor) return { label: 'Envoyé au client', icon: 'send', cls: 'bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))]' };
+        return { label: 'En attente', icon: 'clock', cls: 'bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-800))]' };
+      }
+
+      function replyAppointment(apptId, accept) {
+        fetch(apiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'reply', apptId: apptId, accept: accept })
+        }).then(function (r) { return r.json(); }).then(function (res) {
+          if (res && res.ok) { toast(accept ? 'Rendez-vous confirmé.' : 'Rendez-vous refusé.'); refresh(); }
+          else toast((res && res.error) || 'Erreur lors de la mise à jour.');
+        }).catch(function () { toast('Erreur réseau.'); });
+      }
+
+      function renderRow(a) {
+        var name = clientLabel(a);
+        var si = statusInfo(a);
+        var note = String(a.note || '').trim();
         var row = document.createElement('div');
         row.className = 'js-appointment flex items-center gap-3 p-3 rounded-lg border border-[rgb(var(--mgt-border))]';
-        row.setAttribute('data-status', status);
-        row.setAttribute('data-name', name);
-        row.setAttribute('data-service', a.service || '');
-        row.setAttribute('data-day', a.day || '');
-        row.setAttribute('data-time', a.time || '');
-        var statusHtml;
-        if (status === 'confirmed') {
-          statusHtml = '<span class="js-status inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]"><i data-lucide="check" class="w-3 h-3"></i> Confirmé</span>';
-        } else if (status === 'declined') {
-          statusHtml = '<span class="js-status inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-error)/0.15)] text-[rgb(var(--mgt-error))]"><i data-lucide="x" class="w-3 h-3"></i> Refusé</span>';
-        } else {
-          statusHtml = '<span class="js-status inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgb(var(--mgt-warning)/0.20)] text-[rgb(var(--mgt-accent-800))]"><i data-lucide="clock" class="w-3 h-3"></i> En attente</span>';
+        var actions = '';
+        if (a.status === 'requested' && !a.createdByVendor) {
+          actions =
+            '<button class="js-confirm inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-[rgb(var(--mgt-primary))] text-white hover:bg-[rgb(var(--mgt-primary-700))] transition-colors"><i data-lucide="check" class="w-3 h-3"></i> Confirmer</button>' +
+            '<button class="js-refuse inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors"><i data-lucide="x" class="w-3 h-3"></i> Refuser</button>';
         }
-        var actionsHtml = (status === 'pending')
-          ? '<button class="js-confirm inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-[rgb(var(--mgt-primary))] text-white hover:bg-[rgb(var(--mgt-primary-700))] transition-colors"><i data-lucide="check" class="w-3 h-3"></i> Confirmer</button>' +
-            '<button class="js-refuse inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold border border-[rgb(var(--mgt-border))] text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors"><i data-lucide="x" class="w-3 h-3"></i> Refuser</button>'
-          : '';
+        var meta = esc(displayDay(a)) + ' · ' + esc(a.time || '');
+        if (note) meta += ' · ' + esc(note);
         row.innerHTML =
-          '<div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] font-semibold text-xs flex-shrink-0">' + esc(ini) + '</div>' +
+          '<div class="flex items-center justify-center w-10 h-10 rounded-full bg-[rgb(var(--mgt-accent-50))] text-[rgb(var(--mgt-accent-700))] font-semibold text-xs flex-shrink-0">' + esc(initials(name)) + '</div>' +
           '<div class="flex-1 min-w-0">' +
             '<p class="text-sm font-medium text-[rgb(var(--mgt-foreground))] truncate">' + esc(name) + ' — ' + esc(a.service || 'Prestation') + '</p>' +
-            '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">' + esc(a.day || '') + ' · ' + esc(a.time || '') + '</p>' +
+            '<p class="text-xs text-[rgb(var(--mgt-muted-foreground))] truncate">' + meta + '</p>' +
           '</div>' +
-          statusHtml +
-          actionsHtml;
-        list.insertBefore(row, list.firstChild);
-        if (status === 'pending') {
-          row.querySelector('.js-confirm').addEventListener('click', function () {
-            if (RT.replyAppointment) RT.replyAppointment(a.apptId, true);
-            confirmRow(row, a.apptId);
-          });
-          row.querySelector('.js-refuse').addEventListener('click', function () {
-            if (RT.replyAppointment) RT.replyAppointment(a.apptId, false);
-            saveAppointmentState({ apptId: a.apptId, fromName: name, service: a.service || '', day: a.day || '', time: a.time || '', status: 'declined' });
-            row.remove();
-            toast('Rendez-vous refusé.');
-          });
+          '<span class="js-status inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ' + si.cls + '"><i data-lucide="' + si.icon + '" class="w-3 h-3"></i> ' + esc(si.label) + '</span>' +
+          actions;
+        if (actions) {
+          row.querySelector('.js-confirm').addEventListener('click', function () { replyAppointment(a.apptId, true); });
+          row.querySelector('.js-refuse').addEventListener('click', function () { replyAppointment(a.apptId, false); });
         }
-        if (window.lucide) window.lucide.createIcons();
-        toast('Nouvelle demande de rendez-vous de ' + name);
+        return row;
       }
 
-      RT.onAppointment(function (a) {
-        saveAppointmentState({ apptId: a.apptId, fromName: a.fromName || a.from || 'Client', service: a.service || '', day: a.day || '', time: a.time || '', status: 'pending' });
-        renderRequest(a);
-      });
-      RT.onAppointmentReply(function (r) {
-        var declined = r.type === 'appointment-declined';
-        toast('Le client a ' + (declined ? 'refusé' : 'accepté') + ' le rendez-vous.');
-      });
-      loadSavedAppointments();
+      function renderList() {
+        var list = document.getElementById('ag-list');
+        var empty = document.getElementById('ag-empty');
+        if (!list) return;
+        Array.prototype.slice.call(list.children).forEach(function (c) { if (c !== empty) c.remove(); });
+        var items = state.appointments;
+        if (!items.length) {
+          if (empty) empty.style.display = '';
+          return;
+        }
+        if (empty) empty.style.display = 'none';
+        items.forEach(function (a) { list.appendChild(renderRow(a)); });
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = String(val); }
+      function mondayISO() {
+        var d = new Date();
+        d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+        return isoFromDate(d);
+      }
+      function renderKPIs() {
+        var items = state.appointments;
+        var today = isoFromDate(new Date());
+        var in7 = addDaysISO(today, 7);
+        var todayItems = items.filter(function (a) { return dayISO(a) === today && a.status !== 'declined'; });
+        var todayPending = todayItems.filter(function (a) { return a.status === 'requested'; }).length;
+        var upcoming = items.filter(function (a) { var d = dayISO(a); return d && d >= today && d <= in7 && a.status !== 'declined'; }).length;
+        var wkStart = mondayISO();
+        var wkEnd = addDaysISO(wkStart, 6);
+        var weekReserved = items.filter(function (a) { var d = dayISO(a); return d && d >= wkStart && d <= wkEnd && a.status !== 'declined'; }).length;
+        var curMonth = new Date().getMonth() + 1;
+        var declinedMonth = items.filter(function (a) {
+          if (a.status !== 'declined') return false;
+          var d = dayISO(a);
+          if (!d) return true;
+          var mm = /^\d{4}-(\d{2})/.exec(d);
+          return mm && parseInt(mm[1], 10) === curMonth;
+        }).length;
+        setText('kpi-today', todayItems.length);
+        setText('kpi-today-pending', todayPending);
+        setText('kpi-upcoming', upcoming);
+        setText('kpi-occupancy', weekReserved);
+        setText('kpi-cancelled', declinedMonth);
+      }
+
+      function render() { renderList(); renderKPIs(); }
+
+      function field(label, html) {
+        return '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">' + label + '</label>' + html;
+      }
+      var INPUT_STYLE = 'width:100%;height:42px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;margin-bottom:14px;box-sizing:border-box;';
+
+      function openNewAppointment() {
+        var old = document.getElementById('ag-new-modal');
+        if (old) old.remove();
+        var modal = document.createElement('div');
+        modal.id = 'ag-new-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;';
+        modal.innerHTML =
+          '<div style="background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:460px;padding:24px;font-family:var(--mgt-font-sans);max-height:90vh;overflow:auto;">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">Nouveau rendez-vous</h3>' +
+          '<button id="ag-new-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:20px;line-height:1;cursor:pointer;">&times;</button></div>' +
+          field('Prestation', '<input id="ag-new-service" type="text" placeholder="Ex. Coiffure femme" style="' + INPUT_STYLE + '">') +
+          field('Client (nom complet)', '<input id="ag-new-client" type="text" placeholder="Ex. Awa Diallo" style="' + INPUT_STYLE + '">') +
+          field('Date', '<input id="ag-new-day" type="date" value="' + isoFromDate(new Date()) + '" style="' + INPUT_STYLE + '">') +
+          field('Heure', '<input id="ag-new-time" type="time" value="09:00" style="' + INPUT_STYLE + '">') +
+          field('Note (optionnel)', '<textarea id="ag-new-note" rows="2" placeholder="Précisions..." style="' + INPUT_STYLE + 'height:auto;padding-top:10px;"></textarea>') +
+          '<div style="display:flex;gap:10px;margin-top:6px;">' +
+          '<button id="ag-new-cancel" style="flex:1;height:42px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>' +
+          '<button id="ag-new-save" style="flex:1;height:42px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Créer et notifier</button></div></div>';
+        document.body.appendChild(modal);
+        function close() { modal.remove(); }
+        modal.querySelector('#ag-new-close').onclick = close;
+        modal.querySelector('#ag-new-cancel').onclick = close;
+        modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+        var saveBtn = modal.querySelector('#ag-new-save');
+        saveBtn.onclick = function () {
+          var service = modal.querySelector('#ag-new-service').value.trim();
+          var client = modal.querySelector('#ag-new-client').value.trim();
+          var day = modal.querySelector('#ag-new-day').value;
+          var time = modal.querySelector('#ag-new-time').value;
+          var note = modal.querySelector('#ag-new-note').value.trim();
+          if (!service) { modal.querySelector('#ag-new-service').focus(); return; }
+          if (!day || !time) { toast('Veuillez indiquer la date et l\'heure.'); return; }
+          saveBtn.disabled = true;
+          fetch(apiUrl(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'create', service: service, clientName: client, day: day, time: time, note: note })
+          }).then(function (r) { return r.json(); }).then(function (res) {
+            saveBtn.disabled = false;
+            if (res && res.ok) {
+              close();
+              refresh();
+              toast(res.notified ? 'Rendez-vous créé, confirmation envoyée au client.' : 'Rendez-vous enregistré (client introuvable, confirmation en attente).');
+            } else {
+              toast((res && res.error) || 'Erreur lors de la création.');
+            }
+          }).catch(function () { saveBtn.disabled = false; toast('Erreur réseau.'); });
+        };
+        setTimeout(function () { var s = modal.querySelector('#ag-new-service'); if (s) s.focus(); }, 50);
+      }
+
+      var newBtn = document.getElementById('btn-new-appointment');
+      if (newBtn) newBtn.addEventListener('click', openNewAppointment);
+
+      if (RT) {
+        if (typeof RT.onAppointment === 'function') {
+          RT.onAppointment(function () { toast('Nouvelle demande de rendez-vous reçue.'); refresh(); });
+        }
+        if (typeof RT.onAppointmentReply === 'function') {
+          RT.onAppointmentReply(function (r) {
+            var declined = r && r.type === 'appointment-declined';
+            toast('Le client a ' + (declined ? 'refusé' : 'accepté') + ' le rendez-vous.');
+            refresh();
+          });
+        }
+      }
+
+      refresh();
     })();
     </script>
 

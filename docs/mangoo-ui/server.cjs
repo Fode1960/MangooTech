@@ -551,6 +551,19 @@ function saveCallLog() {
   if (Array.isArray(arr)) callLog = arr;
 })();
 
+// ---- Persistance des rendez-vous ----
+// Le flux temps réel (client -> pro) vit en mémoire, mais on le journalise dans
+// data/appointments.json pour que l'historique survive à un redémarrage et reste
+// consultable depuis l'onglet Rendez-vous du dashboard, sur n'importe quel appareil.
+const APPOINTMENTS_FILE = 'appointments.json';
+function saveAppointments() {
+  writeJsonAtomic(APPOINTMENTS_FILE, appointmentLog);
+}
+(function loadAppointments() {
+  const arr = readJsonFile(APPOINTMENTS_FILE, []);
+  if (Array.isArray(arr)) appointmentLog.splice(0, appointmentLog.length, ...arr);
+})();
+
 // Retourne true si un chemin ne doit JAMAIS être servi comme fichier statique
 // (données applicatives, secrets, code serveur, certificats, fichiers temporaires).
 function isSensitiveFile(filePath) {
@@ -643,6 +656,23 @@ function userByRoutingId(rid) {
   // (ex. pro-41cafa4bcb31 <-> ven-e9e831ccf698) : on compare sur la forme
   // canonique des deux identifiants, pas sur la valeur brute.
   return users.find((u) => u && (canonicalRoutingId(u.id) === id || canonicalRoutingId(u.vendorId) === id)) || null;
+}
+
+// Résout l'identifiant d'un client à partir d'un id explicite ou de son nom
+// (recherche insensible à la casse dans users.json). Retourne '' si introuvable.
+function resolveClientId(clientId, clientName) {
+  if (clientId) {
+    const u = users.find(function (x) { return x && (x.id === clientId || x.vendorId === clientId); });
+    return u ? u.id : String(clientId);
+  }
+  const n = String(clientName || '').trim().toLowerCase();
+  if (!n) return '';
+  const u = users.find(function (x) {
+    if (!x) return false;
+    const name = String(x.name || x.fullName || x.enseigne || '').trim().toLowerCase();
+    return name === n;
+  });
+  return u ? u.id : '';
 }
 
 function applyVapidDetails() {
@@ -1269,6 +1299,10 @@ function seedVendorConfig() {
         codes: [],
         campaigns: []
       },
+      team: {
+        members: [],
+        commission: { base: 10, bonus: 5, seuilCa: 500000 }
+      },
       decouverte: {
         public: true,
         rayonKm: 25,
@@ -1410,6 +1444,10 @@ function blankVendorConfig(vendorId) {
       ca: 0,
       codes: [],
       campaigns: []
+    },
+    team: {
+      members: [],
+      commission: { base: 10, bonus: 5, seuilCa: 500000 }
     },
     decouverte: {
       public: false,
@@ -4682,6 +4720,7 @@ function handleApptRequest(ws, msg) {
     status: 'requested', createdAt: nowIso()
   };
   appointmentLog.push(appt);
+  saveAppointments();
   broadcastToPeer(to, {
     type: 'appointment-new', apptId: appt.apptId,
     from: appt.from, fromName: appt.fromName,
@@ -4695,6 +4734,7 @@ function handleApptReply(ws, msg) {
   if (!appt) return;
   const accepted = msg.type === 'appointment-confirm';
   appt.status = accepted ? 'confirmed' : 'declined';
+  saveAppointments();
   broadcastToPeer(appt.from, {
     type: accepted ? 'appointment-accepted' : 'appointment-declined',
     apptId: appt.apptId, name: ws.meta.name
@@ -6957,6 +6997,195 @@ function handleHttp(req, res) {
     }
 
     res.writeHead(405, JSON_HEADERS);
+    res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' }));
+    return;
+  }
+
+  if (urlPath === '/api/team') {
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || cookieFromReq(req, 'mgt_session');
+    const authedUser = userByToken(token);
+    const vendor = canonicalRoutingId(queryParam(req, 'vendor') || (authedUser && authedUser.vendorId) || 'pro-41cafa4bcb31') || 'pro-41cafa4bcb31';
+    const doc = vendorConfigFor(vendor);
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: true, team: doc.team || { members: [], commission: {} } }));
+      return;
+    }
+    if (req.method === 'POST') {
+      readJsonBody(req, function (err, body) {
+        if (err) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+        const team = doc.team || (doc.team = { members: [], commission: { base: 10, bonus: 5, seuilCa: 500000 } });
+        const action = body.action;
+        const members = Array.isArray(team.members) ? team.members : (team.members = []);
+        const now = new Date().toISOString();
+
+        if (action === 'add') {
+          const name = String(body.name || '').trim();
+          const role = String(body.role || 'Coiffeuse').trim();
+          if (!name) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Nom requis' })); return; }
+          const member = {
+            id: 'mem-' + crypto.randomBytes(6).toString('hex'),
+            name: name,
+            email: String(body.email || '').trim(),
+            role: role,
+            active: true,
+            commission: Number(body.commission) || 0,
+            planning: String(body.planning || '').trim(),
+            prestations: 0,
+            ca: 0,
+            createdAt: now
+          };
+          members.push(member);
+          doc.updatedAt = now;
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, team: team }));
+          return;
+        }
+        if (action === 'update') {
+          const id = String(body.id || '');
+          const m = members.find(function (x) { return x && x.id === id; });
+          if (!m) { res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Membre introuvable' })); return; }
+          if (body.role !== undefined) m.role = String(body.role || '').trim();
+          if (body.email !== undefined) m.email = String(body.email || '').trim();
+          if (body.name !== undefined) m.name = String(body.name || '').trim();
+          if (body.commission !== undefined) m.commission = Number(body.commission) || 0;
+          if (body.planning !== undefined) m.planning = String(body.planning || '').trim();
+          doc.updatedAt = now;
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, team: team }));
+          return;
+        }
+        if (action === 'toggle') {
+          const id = String(body.id || '');
+          const m = members.find(function (x) { return x && x.id === id; });
+          if (!m) { res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Membre introuvable' })); return; }
+          m.active = body.active !== undefined ? !!body.active : !m.active;
+          doc.updatedAt = now;
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, team: team }));
+          return;
+        }
+        if (action === 'remove') {
+          const id = String(body.id || '');
+          const before = members.length;
+          team.members = members.filter(function (x) { return x && x.id !== id; });
+          doc.updatedAt = now;
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, team: team, removed: before - team.members.length }));
+          return;
+        }
+        if (action === 'set-commission') {
+          team.commission = Object.assign({}, team.commission || {}, {
+            base: Number(body.base) || 0,
+            bonus: Number(body.bonus) || 0,
+            seuilCa: Number(body.seuilCa) || 0
+          });
+          doc.updatedAt = now;
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, team: team }));
+          return;
+        }
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, error: 'action inconnue' }));
+      });
+      return;
+    }
+    res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' }));
+    return;
+  }
+
+  if (urlPath === '/api/appointments') {
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || cookieFromReq(req, 'mgt_session');
+    const authedUser = userByToken(token);
+    const vendor = canonicalRoutingId(queryParam(req, 'vendor') || (authedUser && authedUser.vendorId) || 'pro-41cafa4bcb31') || 'pro-41cafa4bcb31';
+    const now = new Date().toISOString();
+
+    if (req.method === 'GET') {
+      const list = appointmentLog
+        .filter(function (a) { return a && (canonicalRoutingId(a.to) === vendor || canonicalRoutingId(a.from) === vendor); })
+        .map(function (a) { return Object.assign({}, a, { from: canonicalRoutingId(a.from), to: canonicalRoutingId(a.to) }); })
+        .sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); });
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: true, appointments: list }));
+      return;
+    }
+
+    if (req.method === 'POST') {
+      readJsonBody(req, function (err, body) {
+        if (err) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+        const action = body.action;
+
+        // Création d'un RDV par le prestataire + notification au client.
+        if (action === 'create') {
+          const service = String(body.service || '').trim();
+          const day = String(body.day || '').trim();
+          const time = String(body.time || '').trim();
+          const clientName = String(body.clientName || '').trim();
+          if (!service || !day || !time) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ ok: false, error: 'Prestation, jour et heure requis' }));
+            return;
+          }
+          const clientId = resolveClientId(body.clientId, clientName);
+          const appt = {
+            apptId: rand(),
+            from: vendor,
+            fromName: (authedUser && displayNameForUser(authedUser)) || vendor,
+            to: clientId || '',
+            clientName: clientName,
+            service: service,
+            day: day,
+            time: time,
+            note: String(body.note || ''),
+            status: 'requested',
+            createdByVendor: true,
+            deliveryPending: !clientId,
+            createdAt: now
+          };
+          appointmentLog.push(appt);
+          saveAppointments();
+          if (clientId) {
+            broadcastToPeer(clientId, {
+              type: 'appointment-new', apptId: appt.apptId,
+              from: appt.from, fromName: appt.fromName,
+              service: service, day: day, time: time, note: appt.note
+            });
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, appointment: appt, notified: !!clientId }));
+          return;
+        }
+
+        // Réponse du prestataire à une demande (confirmer / refuser).
+        if (action === 'reply') {
+          const appt = appointmentLog.find(function (a) { return a && a.apptId === body.apptId; });
+          if (!appt) { res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Rendez-vous introuvable' })); return; }
+          const accepted = body.accept !== false;
+          appt.status = accepted ? 'confirmed' : 'declined';
+          appt.updatedAt = now;
+          saveAppointments();
+          broadcastToPeer(appt.from, {
+            type: accepted ? 'appointment-accepted' : 'appointment-declined',
+            apptId: appt.apptId,
+            name: (authedUser && displayNameForUser(authedUser)) || vendor
+          });
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, appointment: appt }));
+          return;
+        }
+
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, error: 'action inconnue' }));
+      });
+      return;
+    }
+    res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' }));
     return;
   }
