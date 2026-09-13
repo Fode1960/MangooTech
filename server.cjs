@@ -5372,7 +5372,7 @@ function handleHttp(req, res) {
     // tous les comptes non-admin (clients, prestataires, boutiques, livreurs)
     // à l'exception de l'utilisateur courant. Le statut en ligne est déduit de
     // la présence temps réel (clients map), clé par id ou vendorId.
-    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const token = tokenFromReq(req);
     const user = userByToken(token);
     if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
     if (req.method !== 'GET') {
@@ -5455,7 +5455,7 @@ function handleHttp(req, res) {
     // messagerie via une notification (dashboard fermé) voie bien le message qui
     // a déclenché la notification : le chatLog vit en mémoire du processus et
     // n'est pas persisté, il faut donc le relire à l'ouverture de la page.
-    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const token = tokenFromReq(req);
     const user = userByToken(token);
     if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
     if (req.method !== 'GET') {
@@ -5498,7 +5498,7 @@ function handleHttp(req, res) {
     // confondues (vue « Messages enregistrés » du Dashboard). Repli REST au canal
     // temps réel `chat-saved-list` : garantit l'affichage même si le WebSocket
     // n'est pas encore enregistré au moment du clic sur « Enregistrés ».
-    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const token = tokenFromReq(req);
     const user = userByToken(token);
     if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
     if (req.method !== 'GET') {
@@ -5523,7 +5523,7 @@ function handleHttp(req, res) {
     // Persisté dans data/calls.json : il survit au redémarrage du serveur et
     // est partagé entre les appareils du même compte (PC + mobile). Comparé sous
     // forme canonique (alias de comptes pro dupliqués réconciliés).
-    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const token = tokenFromReq(req);
     const user = userByToken(token);
     if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
     if (req.method !== 'GET') {
