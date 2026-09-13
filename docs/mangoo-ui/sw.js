@@ -23,7 +23,7 @@ self.addEventListener('install', function (event) {
 // purge des anciens caches (dont « mgt-push-state » qui mémorisait un landing de
 // notification). Cela garantit qu'aucun vieux routage — ex. renvoyer un
 // professionnel vers la page client chat.html — n'est rejoué après coup.
-var SW_VERSION = 'mgt-sw-2026-09-13-2';
+var SW_VERSION = 'mgt-sw-2026-09-13-3';
 
 // Cache persistant du mode faible connexion : les pages et assets pré-cachés depuis
 // « dashboard-hors-ligne.html » y sont conservés pour être servis en repli
@@ -105,6 +105,8 @@ var VENDOR_PRECACHE = [
   '/pages/dashboard-settings.html',
   '/pages/dashboard-support-messages.html',
   '/pages/dashboard-support-console.html',
+  '/pages/annuaire-prestataires.html',
+  '/pages/lives-en-direct.html',
   '/assets/mangoo-dashboard-shell.js',
   '/assets/mangoo-vendor-config.js',
   '/assets/mangoo-inventory.js',

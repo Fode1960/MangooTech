@@ -456,10 +456,14 @@ html.dark {
             badgeKind: b ? b.badgeKind : null
           };
         });
+        try { localStorage.setItem('mgt_annuaire_last_state_v1', JSON.stringify(PROVIDERS)); } catch (e) {}
         PROVIDERS_READY = true;
       })
       .catch(function () {
-        PROVIDERS = [];
+        try {
+          var cached = JSON.parse(localStorage.getItem('mgt_annuaire_last_state_v1') || 'null');
+          PROVIDERS = Array.isArray(cached) ? cached : [];
+        } catch (e) { PROVIDERS = []; }
         PROVIDERS_READY = true;
       });
   }

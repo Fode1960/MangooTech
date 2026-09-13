@@ -506,8 +506,13 @@ html.dark {
       .then(function (data) {
         var rooms = (data && data.rooms) ? data.rooms : [];
         LIVES = normalizeRooms(rooms);
+        try { localStorage.setItem('mgt_vendor_lives_last_state_v1', JSON.stringify(LIVES)); } catch (e) {}
       })
       .catch(function () {
+        try {
+          var cached = JSON.parse(localStorage.getItem('mgt_vendor_lives_last_state_v1') || 'null');
+          if (Array.isArray(cached) && cached.length) { LIVES = cached; return; }
+        } catch (e) {}
         // Repli de démonstration : quelques salles actives simulées quand
         // l'endpoint /api/lives n'est pas encore déployé.
         var now = Date.now();
@@ -795,6 +800,7 @@ html.dark {
         var next = normalizeRooms((data && data.rooms) ? data.rooms : []);
         if (signatureOf(next) === signatureOf(LIVES)) return; // rien de changé
         LIVES = next;
+        try { localStorage.setItem('mgt_vendor_lives_last_state_v1', JSON.stringify(LIVES)); } catch (e) {}
         var key = categoryKey();
         if (key !== lastCategoryKey) {
           lastCategoryKey = key;

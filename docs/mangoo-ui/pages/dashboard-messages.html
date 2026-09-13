@@ -1025,7 +1025,8 @@ html.dark {
         fetch('/api/contacts', {
           headers: token ? { 'Authorization': 'Bearer ' + token } : {}
         }).then(function (r) {
-          return r.json().catch(function () { return {}; });
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
         }).then(function (d) {
           if (d && d.ok && Array.isArray(d.contacts)) {
             try { localStorage.setItem('mgt_vendor_contacts_last_state_v1', JSON.stringify(d.contacts)); } catch (e) {}
@@ -2743,7 +2744,7 @@ html.dark {
         try { token = localStorage.getItem('mgt_token'); } catch (e) {}
         fetch('/api/messages?peer=' + encodeURIComponent(peerId), {
           headers: token ? { 'Authorization': 'Bearer ' + token } : {}
-        }).then(function (r) { return r.json().catch(function () { return {}; }); })
+        }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
         .then(function (d) {
           if (currentConv !== conv) return;
           var msgs = (d && d.ok && Array.isArray(d.messages)) ? d.messages : [];
@@ -2845,7 +2846,7 @@ html.dark {
         fetch('/api/calls', {
           headers: token ? { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' } : { 'Accept': 'application/json' },
           cache: 'no-store'
-        }).then(function (r) { return r.json().catch(function () { return {}; }); })
+        }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
         .then(function (d) {
           var calls = (d && d.ok && Array.isArray(d.calls)) ? d.calls : [];
           if (calls.length) { try { localStorage.setItem('mgt_vendor_calls_last_state_v1', JSON.stringify(calls)); } catch (e) {} }

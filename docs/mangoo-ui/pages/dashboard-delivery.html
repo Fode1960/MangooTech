@@ -172,10 +172,26 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
 
   function loadMe() {
     return apiGet('/api/auth/me').then(function (res) {
-      if (!res.ok || !res.data.ok) { redirectLogin(); return; }
-      me = res.data.user;
-      if (me.role !== 'vendeur' && me.role !== 'prestataire' && me.role !== 'admin') { redirectLogin(); return; }
-      renderIdentity();
+      if (res.ok && res.data.ok) {
+        me = res.data.user;
+        if (me.role !== 'vendeur' && me.role !== 'prestataire' && me.role !== 'admin') { redirectLogin(); return; }
+        try { localStorage.setItem('mgt_delivery_me_v1', JSON.stringify(me)); } catch (e) {}
+        renderIdentity();
+        return;
+      }
+      // Hors-ligne : le Service Worker renvoie 503 (ou le réseau est coupé).
+      // On reprend l'identité mémorisée au lieu de renvoyer vers la connexion.
+      if (res.status === 503 || (typeof navigator !== 'undefined' && navigator.onLine === false)) {
+        try {
+          var cached = JSON.parse(localStorage.getItem('mgt_delivery_me_v1') || 'null');
+          if (cached && (cached.role === 'vendeur' || cached.role === 'prestataire' || cached.role === 'admin')) { me = cached; renderIdentity(); return; }
+        } catch (e) {}
+        try {
+          var u = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+          if (u && (u.role === 'vendeur' || u.role === 'prestataire' || u.role === 'admin')) { me = u; renderIdentity(); return; }
+        } catch (e) {}
+      }
+      redirectLogin();
     });
   }
   function renderIdentity() {
@@ -191,8 +207,27 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
   function loadAll() {
     return Promise.all([ apiGet('/api/delivery/orders'), apiGet('/api/delivery/couriers') ]).then(function (res) {
       var o = res[0], c = res[1];
-      if (o.ok && o.data.ok) { myDeliveries = {}; (o.data.deliveries || []).forEach(function (d) { myDeliveries[d.id] = d; }); }
+      if (o.ok && o.data.ok) {
+        myDeliveries = {};
+        (o.data.deliveries || []).forEach(function (d) { myDeliveries[d.id] = d; });
+        try { localStorage.setItem('mgt_vendor_deliveries_last_state_v1', JSON.stringify(o.data.deliveries || [])); } catch (e) {}
+      } else {
+        // Hors-ligne : dernier état connu des livraisons.
+        myDeliveries = {};
+        try {
+          var saved = JSON.parse(localStorage.getItem('mgt_vendor_deliveries_last_state_v1') || '[]');
+          (Array.isArray(saved) ? saved : []).forEach(function (d) { myDeliveries[d.id] = d; });
+        } catch (e) {}
+      }
       if (c.ok && c.data.ok) { couriers = (c.data.couriers || []).filter(function (x) { return x.status === 'online'; }); }
+      renderAll();
+    }).catch(function () {
+      // Réseau coupé sans Service Worker : restaure le dernier état connu.
+      myDeliveries = {};
+      try {
+        var saved = JSON.parse(localStorage.getItem('mgt_vendor_deliveries_last_state_v1') || '[]');
+        (Array.isArray(saved) ? saved : []).forEach(function (d) { myDeliveries[d.id] = d; });
+      } catch (e) {}
       renderAll();
     });
   }
