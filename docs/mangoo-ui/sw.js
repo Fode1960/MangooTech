@@ -23,7 +23,7 @@ self.addEventListener('install', function (event) {
 // purge des anciens caches (dont « mgt-push-state » qui mémorisait un landing de
 // notification). Cela garantit qu'aucun vieux routage — ex. renvoyer un
 // professionnel vers la page client chat.html — n'est rejoué après coup.
-var SW_VERSION = 'mgt-sw-2026-09-12-1';
+var SW_VERSION = 'mgt-sw-2026-09-13-1';
 
 // Cache persistant du mode faible connexion : les pages et assets pré-cachés depuis
 // « dashboard-hors-ligne.html » y sont conservés pour être servis en repli
@@ -155,6 +155,14 @@ function isOfflineCacheable(url) {
     || url.indexOf('unpkg.com/leaflet') >= 0;
 }
 
+var OFFLINE_HTML = [
+  '<!DOCTYPE html>',
+  '<html lang="fr">',
+  '<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Hors ligne</title>',
+  '<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f8fafc;color:#0f172a;text-align:center;}h1{font-size:20px;margin:0 0 8px;color:#1a5c2a;}p{font-size:14px;color:#64748b;margin:0 auto 20px;line-height:1.5;max-width:340px;}button{background:#e8610c;color:#fff;border:none;border-radius:8px;padding:12px 22px;font-size:14px;font-weight:600;cursor:pointer;}</style></head>',
+  '<body><div style="padding:32px 24px"><h1>Vous êtes hors ligne</h1><p>Impossible de charger cette page sans connexion. Reconnectez-vous puis réessayez.</p><button onclick="location.reload()">Réessayer</button></div></body>',
+  '</html>'
+].join('\n');
 self.addEventListener('fetch', function (event) {
   if (event.request.method !== 'GET') return;
   event.respondWith(
@@ -174,7 +182,17 @@ self.addEventListener('fetch', function (event) {
       // page sans query. On matche donc par chemin, pas par URL exacte.
       return caches.match(event.request, { ignoreSearch: true }).then(function (cached) {
         if (cached) return cached;
-        return new Response('Hors ligne', {
+        // Navigation : sert une page « hors ligne » lisible (HTTP 200) plutôt
+        // qu'un 503 text/plain, que Chrome afficherait comme « Ce site est
+        // inaccessible ». Pour les sous-ressources (JS/CSS/img), on renvoie un
+        // 503 vide classique, qui n'est pas affiché par le navigateur.
+        if (event.request.mode === 'navigate') {
+          return new Response(OFFLINE_HTML, {
+            status: 200,
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+          });
+        }
+        return new Response('', {
           status: 503,
           statusText: 'Offline',
           headers: { 'Content-Type': 'text/plain; charset=utf-8' }
