@@ -290,11 +290,11 @@ html.dark {
           </span>
           <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">
             <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-success))]"></span>
-            <span id="promo-header-active-count">3</span> actives
+            <span id="promo-header-active-count">0</span> actives
           </span>
           <span class="inline-flex items-center gap-2 caption text-[rgb(var(--mgt-muted-foreground))] bg-[rgb(var(--mgt-muted))] px-2.5 py-0.5 rounded-full">
             <span class="w-2 h-2 rounded-full bg-[rgb(var(--mgt-info))]"></span>
-            <span id="promo-header-upcoming-count">3</span> à venir
+            <span id="promo-header-upcoming-count">0</span> à venir
           </span>
         </div>
         <div class="flex items-center gap-4">
@@ -320,55 +320,40 @@ html.dark {
       </header>
 
       <main class="flex-1 p-8 space-y-6">
+<!-- ===== STATUT / ACTIVATION ===== -->
+        <div id="promo-activation-banner" class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
+          <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Chargement du statut des promotions…</p>
+        </div>
+
 <!-- ===== KPIs PROMOTIONS ===== -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
-            <div class="flex items-start justify-between mb-3">
-              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
-                <i data-lucide="badge-percent" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
-              </div>
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
-                <i data-lucide="trending-up" class="w-3 h-3"></i> +2
-              </span>
+            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))] mb-3">
+              <i data-lucide="badge-percent" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
             </div>
             <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Codes promo actifs</p>
-            <p id="kpi-active" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">3</p>
+            <p id="kpi-active" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">0</p>
           </div>
           <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
-            <div class="flex items-start justify-between mb-3">
-              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
-                <i data-lucide="ticket" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
-              </div>
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
-                <i data-lucide="trending-up" class="w-3 h-3"></i> +24%
-              </span>
+            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))] mb-3">
+              <i data-lucide="ticket" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
             </div>
             <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Utilisations (30j)</p>
-            <p id="kpi-uses" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">67</p>
+            <p id="kpi-uses" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">0</p>
           </div>
           <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
-            <div class="flex items-start justify-between mb-3">
-              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))]">
-                <i data-lucide="wallet" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
-              </div>
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">
-                <i data-lucide="trending-up" class="w-3 h-3"></i> +11%
-              </span>
+            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-primary-50))] mb-3">
+              <i data-lucide="wallet" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
             </div>
             <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">CA généré</p>
-            <p id="kpi-ca" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">486 000 <span class="text-sm font-medium text-[rgb(var(--mgt-muted-foreground))]">FCFA</span></p>
+            <p id="kpi-ca" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">0 <span class="text-sm font-medium text-[rgb(var(--mgt-muted-foreground))]">FCFA</span></p>
           </div>
           <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]">
-            <div class="flex items-start justify-between mb-3">
-              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))]">
-                <i data-lucide="percent" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
-              </div>
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-primary-50))] text-[rgb(var(--mgt-primary-700))]">
-                <i data-lucide="sparkles" class="w-3 h-3"></i> Moyenne
-              </span>
+            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-accent-50))] mb-3">
+              <i data-lucide="percent" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
             </div>
             <p class="caption text-[rgb(var(--mgt-muted-foreground))] mb-1">Remise moyenne</p>
-            <p id="kpi-avg" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">15<span class="text-lg font-medium text-[rgb(var(--mgt-muted-foreground))]">%</span></p>
+            <p id="kpi-avg" class="text-2xl font-bold tracking-tight tabular-nums text-[rgb(var(--mgt-foreground))]">0<span class="text-lg font-medium text-[rgb(var(--mgt-muted-foreground))]">%</span></p>
           </div>
         </div>
 
@@ -464,60 +449,7 @@ html.dark {
               </div>
             </div>
             <div id="codes-list" class="space-y-4">
-              <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-lg border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-primary))] transition-colors">
-                <div class="flex items-center gap-3">
-                  <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-primary-50))]">
-                    <i data-lucide="ticket" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
-                  </div>
-                  <div>
-                    <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">DAN15</p>
-                    <p class="caption text-[rgb(var(--mgt-muted-foreground))] js-expire-label" data-expire-days="14" data-base="-15 % sur tout le magasin">-15 % sur tout le magasin · expire dans 14 j</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-4">
-                  <div class="text-right">
-                    <p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">42</p>
-                    <p class="caption text-[rgb(var(--mgt-muted-foreground))]">utilisations</p>
-                  </div>
-                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">Actif</span>
-                </div>
-              </div>
-              <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-lg border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-primary))] transition-colors">
-                <div class="flex items-center gap-3">
-                  <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-accent-50))]">
-                    <i data-lucide="gift" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
-                  </div>
-                  <div>
-                    <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">VETEMENTS20</p>
-                    <p class="caption text-[rgb(var(--mgt-muted-foreground))] js-expire-label" data-expire-days="7" data-base="-20 % sur les vêtements">-20 % sur les vêtements · expire dans 7 j</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-4">
-                  <div class="text-right">
-                    <p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">18</p>
-                    <p class="caption text-[rgb(var(--mgt-muted-foreground))]">utilisations</p>
-                  </div>
-                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">Actif</span>
-                </div>
-              </div>
-              <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-lg border border-[rgb(var(--mgt-border))] hover:border-[rgb(var(--mgt-primary))] transition-colors">
-                <div class="flex items-center gap-3">
-                  <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-primary-50))]">
-                    <i data-lucide="scissors" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
-                  </div>
-                  <div>
-                    <p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">ACCESSOIRES10</p>
-                    <p class="caption text-[rgb(var(--mgt-muted-foreground))] js-expire-label" data-expire-days="5" data-base="-10 % sur les accessoires">-10 % sur les accessoires · expire dans 5 j</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-4">
-                  <div class="text-right">
-                    <p class="text-sm font-bold tabular-nums text-[rgb(var(--mgt-foreground))]">7</p>
-                    <p class="caption text-[rgb(var(--mgt-muted-foreground))]">utilisations</p>
-                  </div>
-                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-600))]">Actif</span>
-                </div>
-              </div>
+              <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Aucun code actif. Créez-en un pour lancer votre première promotion.</p>
             </div>
           </div>
         </div>
@@ -529,60 +461,18 @@ html.dark {
               <h2 class="h2 mb-1">Campagnes à venir</h2>
               <p class="body text-[rgb(var(--mgt-muted-foreground))]">Planifiez vos offres saisonnières pour attirer plus de clients</p>
             </div>
-            <div class="relative shrink-0">
-              <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
-              <input id="campaign-search" type="text" placeholder="Rechercher une campagne..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+            <div class="flex items-center gap-3">
+              <div class="relative shrink-0">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--mgt-muted-foreground))]"></i>
+                <input id="campaign-search" type="text" placeholder="Rechercher une campagne..." class="pl-9 pr-4 py-2 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]">
+              </div>
+              <button id="campaign-create-btn" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-primary))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-primary-700))] transition-colors">
+                <i data-lucide="plus" class="w-4 h-4"></i> Nouvelle campagne
+              </button>
             </div>
           </div>
           <div id="campaigns-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]" data-campaign-id="camp-soldes-ete">
-              <div class="flex items-start justify-between mb-4">
-                <div class="flex items-center gap-3">
-                  <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-accent-50))]">
-                    <i data-lucide="sun" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
-                  </div>
-                  <div>
-                    <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Soldes d'été</h3>
-                    <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Démarre le 25 Août</p>
-                  </div>
-                </div>
-                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-info)/0.15)] text-[rgb(var(--mgt-info))]">À venir</span>
-              </div>
-              <p class="text-sm text-[rgb(var(--mgt-muted-foreground))] mb-4">-20 % sur la collection été pendant 2 semaines</p>
-              <button class="w-full py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">Modifier</button>
-            </div>
-            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]" data-campaign-id="camp-rentree">
-              <div class="flex items-start justify-between mb-4">
-                <div class="flex items-center gap-3">
-                  <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-primary-50))]">
-                    <i data-lucide="heart" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
-                  </div>
-                  <div>
-                    <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Collection rentrée</h3>
-                    <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Démarre le 1 Sept.</p>
-                  </div>
-                </div>
-                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-info)/0.15)] text-[rgb(var(--mgt-info))]">À venir</span>
-              </div>
-              <p class="text-sm text-[rgb(var(--mgt-muted-foreground))] mb-4">-15 % sur les nouveautés de la rentrée</p>
-              <button class="w-full py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">Modifier</button>
-            </div>
-            <div class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-5 shadow-[var(--mgt-shadow-sm)]" data-campaign-id="camp-fidelite">
-              <div class="flex items-start justify-between mb-4">
-                <div class="flex items-center gap-3">
-                  <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-[rgb(var(--mgt-accent-50))]">
-                    <i data-lucide="sparkles" class="w-5 h-5 text-[rgb(var(--mgt-accent))]"></i>
-                  </div>
-                  <div>
-                    <h3 class="text-base font-semibold text-[rgb(var(--mgt-foreground))]">Offre fidélité</h3>
-                    <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Démarre le 10 Sept.</p>
-                  </div>
-                </div>
-                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--mgt-info)/0.15)] text-[rgb(var(--mgt-info))]">À venir</span>
-              </div>
-              <p class="text-sm text-[rgb(var(--mgt-muted-foreground))] mb-4">-10 % pour les clients fidèles sur présentation de la carte</p>
-              <button class="w-full py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors">Modifier</button>
-            </div>
+            <p class="caption text-[rgb(var(--mgt-muted-foreground))]">Aucune campagne à venir. Planifiez votre première campagne pour une offre saisonnière.</p>
           </div>
         </div>
       </main>
@@ -824,8 +714,134 @@ html.dark {
     });
   }
 
+  function renderActivationBanner(p){
+    var banner = document.getElementById('promo-activation-banner');
+    if (!banner) return;
+    var enabled = !!p.enabled;
+    var codesCount = (p.codes || []).filter(function(c){ return c.status === 'active'; }).length;
+    var campCount = (p.campaigns || []).length;
+
+    var steps = '<ol style="list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px;">'
+      + '<li style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:rgb(var(--mgt-muted-foreground));"><span style="flex-shrink:0;width:20px;height:20px;border-radius:9999px;background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary-700));display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">1</span><span>Créez un code promo : il devient actif immédiatement.</span></li>'
+      + '<li style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:rgb(var(--mgt-muted-foreground));"><span style="flex-shrink:0;width:20px;height:20px;border-radius:9999px;background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary-700));display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">2</span><span>Publiez une offre du jour (payante) pour une visibilité immédiate.</span></li>'
+      + '<li style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:rgb(var(--mgt-muted-foreground));"><span style="flex-shrink:0;width:20px;height:20px;border-radius:9999px;background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary-700));display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">3</span><span>Planifiez une campagne à venir pour une offre saisonnière.</span></li>'
+      + '</ol>';
+
+    if (enabled) {
+      banner.innerHTML = '<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">'
+        + '<div class="flex items-start gap-3">'
+        + '<div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-success)/0.15)] text-[rgb(var(--mgt-primary-700))]"><i data-lucide="check-circle" class="w-5 h-5"></i></div>'
+        + '<div><p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Promotions actives</p>'
+        + '<p class="caption text-[rgb(var(--mgt-muted-foreground))] mt-0.5">' + codesCount + ' code(s) actif(s) · ' + campCount + ' campagne(s) planifiée(s).</p>'
+        + steps
+        + '</div></div>'
+        + '<button data-promo-action="deactivate" class="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-muted-foreground))] hover:bg-[rgb(var(--mgt-muted))] transition-colors"><i data-lucide="power-off" class="w-4 h-4"></i> Désactiver</button>'
+        + '</div>';
+    } else {
+      banner.innerHTML = '<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">'
+        + '<div class="flex items-start gap-3">'
+        + '<div class="flex items-center justify-center w-10 h-10 rounded-lg bg-[rgb(var(--mgt-muted))] text-[rgb(var(--mgt-muted-foreground))]"><i data-lucide="power" class="w-5 h-5"></i></div>'
+        + '<div><p class="text-sm font-semibold text-[rgb(var(--mgt-foreground))]">Les promotions ne sont pas encore activées</p>'
+        + '<p class="caption text-[rgb(var(--mgt-muted-foreground))] mt-0.5">Activez le module puis créez vos codes promo pour lancer des offres.</p>'
+        + steps
+        + '</div></div>'
+        + '<button data-promo-action="activate" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-600))] transition-colors"><i data-lucide="power" class="w-4 h-4"></i> Activer les promotions</button>'
+        + '</div>';
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function activatePromotions(){
+    if (!window.MangooVendorConfig) return;
+    MangooVendorConfig.patch('promotions', { enabled: true }).then(function(res){
+      if (res && res.ok) { currentConfig = res.config || currentConfig; render(); toast('Promotions activées.'); }
+      else { toast((res && res.error) || 'Activation impossible.'); }
+    }).catch(function(){ toast('Erreur réseau lors de l\'activation.'); });
+  }
+
+  function deactivatePromotions(){
+    if (!window.MangooVendorConfig) return;
+    MangooVendorConfig.patch('promotions', { enabled: false }).then(function(res){
+      if (res && res.ok) { currentConfig = res.config || currentConfig; render(); toast('Promotions désactivées.'); }
+      else { toast((res && res.error) || 'Désactivation impossible.'); }
+    }).catch(function(){ toast('Erreur réseau lors de la désactivation.'); });
+  }
+
+  function bindActivationBanner(){
+    var banner = document.getElementById('promo-activation-banner');
+    if (!banner || banner.getAttribute('data-bound') === '1') return;
+    banner.setAttribute('data-bound', '1');
+    banner.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-promo-action]');
+      if (!btn) return;
+      var action = btn.getAttribute('data-promo-action');
+      if (action === 'activate') activatePromotions();
+      else if (action === 'deactivate') deactivatePromotions();
+    });
+  }
+
+  function createCampaign(name, startsAt, desc, done){
+    if (!currentConfig) return;
+    currentConfig.promotions = currentConfig.promotions || { campaigns: [] };
+    var list = (currentConfig.promotions.campaigns || []).slice();
+    list.push({
+      id: 'camp-' + Date.now(),
+      name: name,
+      startsAt: startsAt,
+      desc: desc,
+      status: 'upcoming',
+      createdAt: new Date().toISOString()
+    });
+    MangooVendorConfig.patch('promotions', { enabled: true, campaigns: list }).then(function(res){
+      if (res && res.ok) {
+        currentConfig = res.config || currentConfig;
+        render();
+        toast('Campagne « ' + name + ' » planifiée.');
+        if (done) done();
+      } else {
+        toast((res && res.error) || 'Création impossible.');
+      }
+    }).catch(function(){ toast('Erreur réseau lors de la création de la campagne.'); });
+  }
+
+  function openCampaignCreate(){
+    var old = document.getElementById('promo-campaign-create-modal');
+    if (old) old.remove();
+    var modal = document.createElement('div');
+    modal.id = 'promo-campaign-create-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9500;display:flex;align-items:center;justify-content:center;padding:20px;font-family:var(--mgt-font-sans);';
+    modal.innerHTML = '<div style="background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:480px;display:flex;flex-direction:column;overflow:hidden;">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid rgb(var(--mgt-border));">'
+      + '<h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">Nouvelle campagne</h3>'
+      + '<button id="promo-campaign-create-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:22px;cursor:pointer;line-height:1;">&times;</button></div>'
+      + '<div style="padding:18px 24px;display:grid;gap:14px;">'
+      + '<div><label style="display:block;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin-bottom:6px;">Nom de la campagne</label><input id="campaign-create-name" type="text" placeholder="Ex. Soldes de rentrée" style="width:100%;box-sizing:border-box;padding:10px 12px;font-size:14px;background:rgb(var(--mgt-muted));border:1px solid rgb(var(--mgt-border));border-radius:8px;color:rgb(var(--mgt-foreground));"></div>'
+      + '<div><label style="display:block;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin-bottom:6px;">Date de démarrage</label><input id="campaign-create-date" type="date" style="width:100%;box-sizing:border-box;padding:10px 12px;font-size:14px;background:rgb(var(--mgt-muted));border:1px solid rgb(var(--mgt-border));border-radius:8px;color:rgb(var(--mgt-foreground));"></div>'
+      + '<div><label style="display:block;font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin-bottom:6px;">Description</label><textarea id="campaign-create-desc" rows="2" placeholder="Décrivez votre campagne..." style="width:100%;box-sizing:border-box;padding:10px 12px;font-size:14px;background:rgb(var(--mgt-muted));border:1px solid rgb(var(--mgt-border));border-radius:8px;color:rgb(var(--mgt-foreground));"></textarea></div>'
+      + '<div style="display:flex;gap:10px;margin-top:4px;">'
+      + '<button id="campaign-create-submit" style="flex:1;padding:10px;border-radius:8px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;border:none;cursor:pointer;">Créer la campagne</button>'
+      + '<button id="campaign-create-cancel" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgb(var(--mgt-border));background:none;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:500;cursor:pointer;">Annuler</button>'
+      + '</div></div></div>';
+    document.body.appendChild(modal);
+    function close(){ modal.remove(); }
+    modal.querySelector('#promo-campaign-create-close').onclick = close;
+    modal.querySelector('#campaign-create-cancel').onclick = close;
+    modal.addEventListener('click', function(e){ if (e.target === modal) close(); });
+    modal.querySelector('#campaign-create-submit').onclick = function(){
+      var nameEl = modal.querySelector('#campaign-create-name');
+      var dateEl = modal.querySelector('#campaign-create-date');
+      var descEl = modal.querySelector('#campaign-create-desc');
+      var name = (nameEl && nameEl.value || '').trim();
+      if (!name) { toast('Veuillez saisir un nom de campagne'); if (nameEl) nameEl.focus(); return; }
+      var startsAt = (dateEl && dateEl.value) || new Date().toISOString().slice(0, 10);
+      var desc = (descEl && descEl.value || '').trim();
+      createCampaign(name, startsAt, desc, close);
+    };
+  }
+
   function render(){
     var p = (currentConfig && currentConfig.promotions) || {};
+    renderActivationBanner(p);
     var codes = p.codes || [];
     var active = codes.filter(function(c){ return c.status === 'active'; });
     var uses = codes.reduce(function(s, c){ return s + (c.uses || 0); }, 0);
@@ -1008,13 +1024,19 @@ html.dark {
       var newCode = { id: 'promo-' + code.toLowerCase() + '-' + Date.now(), code: code, label: '-' + remise + ' % sur ' + name.toLowerCase(), discount: remise, durationDays: duree, uses: 0, status: 'active', createdAt: new Date().toISOString() };
       currentConfig.promotions = currentConfig.promotions || { codes: [] };
       currentConfig.promotions.codes = (currentConfig.promotions.codes || []).concat([newCode]);
-      MangooVendorConfig.patch('promotions', { codes: currentConfig.promotions.codes }).then(function(){
+      MangooVendorConfig.patch('promotions', { enabled: true, codes: currentConfig.promotions.codes }).then(function(res){
+        if (res && res.ok) currentConfig = res.config || currentConfig;
         render();
         if (nameInput) nameInput.value = '';
-        toast('Code ' + code + ' créé');
+        toast('Code ' + code + ' créé — promotions activées.');
       }).catch(function(){ toast('Erreur lors de la création du code'); });
     });
   }
+
+  var campaignCreateBtn = document.getElementById('campaign-create-btn');
+  if (campaignCreateBtn) campaignCreateBtn.addEventListener('click', openCampaignCreate);
+
+  bindActivationBanner();
 
   if (window.MangooVendorConfig) {
     MangooVendorConfig.get().then(function(res){ if (res && res.ok) hydrate(res); }).catch(function(){});

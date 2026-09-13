@@ -1494,7 +1494,7 @@ function sanitizeVendorConfig(config) {
     c.parrainage = Object.assign({}, c.parrainage || {}, { invited: 0, earned: 0 });
     c.rapports = Object.assign({}, c.rapports || {}, { revenue: 0, orders: 0, views: 0, conversion: 0, generated: 0, downloads: 0, scheduled: 0, storage: '0 Ko', lastExportAt: '', periods: { '7j': { orders: 0, revenue: 0 }, '30j': { orders: 0, revenue: 0 }, '90j': { orders: 0, revenue: 0 } } });
     c.support = Object.assign({}, c.support || {}, { openTickets: 0, resolvedTickets: 0, avgResponseHours: 0, articles: 0, tickets: [] });
-    c.promotions = Object.assign({}, c.promotions || {}, { ca: 0, codes: [], campaigns: [] });
+    c.promotions = Object.assign({}, c.promotions || {}, { ca: 0 });
     if (c.decouverte) {
       c.decouverte.impressions = 0;
       c.decouverte.clics = 0;
