@@ -1414,10 +1414,8 @@
       return queueOutboxPayload(payload);
     },
     replyAppointment: function (apptId, accept) {
-      if (isReal() && apptId) {
-        return sendWS({ type: accept ? 'appointment-confirm' : 'appointment-decline', apptId: apptId });
-      }
-      return false;
+      if (!apptId) return false;
+      return queueOutboxPayload({ type: accept ? 'appointment-confirm' : 'appointment-decline', apptId: apptId });
     },
 
     /* Appels */

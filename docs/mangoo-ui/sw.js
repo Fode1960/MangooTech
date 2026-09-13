@@ -23,7 +23,7 @@ self.addEventListener('install', function (event) {
 // purge des anciens caches (dont « mgt-push-state » qui mémorisait un landing de
 // notification). Cela garantit qu'aucun vieux routage — ex. renvoyer un
 // professionnel vers la page client chat.html — n'est rejoué après coup.
-var SW_VERSION = 'mgt-sw-2026-09-13-1';
+var SW_VERSION = 'mgt-sw-2026-09-13-2';
 
 // Cache persistant du mode faible connexion : les pages et assets pré-cachés depuis
 // « dashboard-hors-ligne.html » y sont conservés pour être servis en repli
@@ -70,9 +70,53 @@ var CLIENT_PRECACHE = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
 ];
 
+// ---- Pré-cache de l'espace professionnel (vendeur / prestataire) ---------
+// Comme côté client, les modules de gestion sont pré-cachés pour rester
+// consultables en zone à couverture instable (affichage du dernier état connu).
+var VENDOR_PRECACHE = [
+  '/pages/dashboard-overview.html',
+  '/pages/dashboard-performance.html',
+  '/pages/dashboard-reviews.html',
+  '/pages/dashboard-agenda.html',
+  '/pages/dashboard-finances.html',
+  '/pages/dashboard-notifications.html',
+  '/pages/dashboard-orders.html',
+  '/pages/dashboard-clients.html',
+  '/pages/dashboard-team.html',
+  '/pages/dashboard-messages.html',
+  '/pages/dashboard-live.html',
+  '/pages/dashboard-services.html',
+  '/pages/dashboard-catalogue.html',
+  '/pages/dashboard-inventaire.html',
+  '/pages/dashboard-delivery.html',
+  '/pages/dashboard-gallery.html',
+  '/pages/dashboard-boosters.html',
+  '/pages/dashboard-promotions.html',
+  '/pages/dashboard-fidelite.html',
+  '/pages/dashboard-parrainage.html',
+  '/pages/dashboard-classement.html',
+  '/pages/dashboard-verification.html',
+  '/pages/dashboard-recommandation.html',
+  '/pages/dashboard-hors-ligne.html',
+  '/pages/dashboard-rapports.html',
+  '/pages/dashboard-support.html',
+  '/pages/dashboard-offres.html',
+  '/pages/dashboard-abonnement.html',
+  '/pages/dashboard-settings.html',
+  '/pages/dashboard-support-messages.html',
+  '/pages/dashboard-support-console.html',
+  '/assets/mangoo-dashboard-shell.js',
+  '/assets/mangoo-vendor-config.js',
+  '/assets/mangoo-inventory.js',
+  '/assets/mangoo-gallery.js',
+  '/assets/mangoo-boosters.js',
+  '/assets/mangoo-prestations.js',
+];
+
 function precacheClientPages() {
   return caches.open(OFFLINE_CACHE).then(function (cache) {
-    return Promise.all(CLIENT_PRECACHE.map(function (url) {
+    var ALL = CLIENT_PRECACHE.concat(VENDOR_PRECACHE);
+    return Promise.all(ALL.map(function (url) {
       return fetch(url, { cache: 'no-store' }).then(function (resp) {
         if (resp && resp.ok) { return cache.put(url, resp); }
         return null;

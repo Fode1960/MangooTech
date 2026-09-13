@@ -1494,6 +1494,22 @@ html.dark {
     if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
   }
 
+  function showOfflineOrdersNote(savedAt) {
+    var el = document.getElementById('mgt-orders-offline-note');
+    if (!savedAt) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'mgt-orders-offline-note';
+      el.style.cssText = 'display:flex;align-items:center;gap:8px;margin:0 0 16px;padding:10px 14px;border-radius:12px;background:rgb(var(--mgt-warning)/0.18);color:rgb(var(--mgt-foreground));font-size:13px;font-weight:500;border:1px solid rgb(var(--mgt-warning)/0.4);';
+      var main = document.querySelector('main');
+      if (main) main.insertBefore(el, main.firstChild);
+    }
+    var txt = 'Dernier état connu';
+    var d = new Date(savedAt);
+    if (!isNaN(d.getTime())) txt += ' — ' + d.toLocaleString();
+    el.textContent = txt;
+  }
+
   function run() {
     var vendor = (window.MangooVendor && window.MangooVendor.current) ? window.MangooVendor.current() : null;
     if (!vendor || (vendor.role !== 'vendeur' && vendor.role !== 'prestataire')) return;
@@ -1503,8 +1519,13 @@ html.dark {
       return;
     }
     window.MangooVendor.fetchServerOrders(function (res) {
-      if (res && res.ok && Array.isArray(res.orders)) renderFromServer(res.orders);
-      else renderFromServer([]);
+      if (res && res.ok && Array.isArray(res.orders)) {
+        renderFromServer(res.orders);
+        if (res.offline) showOfflineOrdersNote(res.savedAt);
+      } else {
+        renderFromServer([]);
+        showOfflineOrdersNote(null);
+      }
     });
   }
 

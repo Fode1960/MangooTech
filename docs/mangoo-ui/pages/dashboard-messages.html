@@ -1027,11 +1027,17 @@ html.dark {
         }).then(function (r) {
           return r.json().catch(function () { return {}; });
         }).then(function (d) {
-          if (d && d.ok) renderContacts(d.contacts);
-          else renderContacts(null);
+          if (d && d.ok && Array.isArray(d.contacts)) {
+            try { localStorage.setItem('mgt_vendor_contacts_last_state_v1', JSON.stringify(d.contacts)); } catch (e) {}
+            renderContacts(d.contacts);
+          } else {
+            renderContacts(null);
+          }
           applyPushLanding();
         }).catch(function () {
-          renderContacts(null);
+          var cached = null;
+          try { var raw = localStorage.getItem('mgt_vendor_contacts_last_state_v1'); if (raw) cached = JSON.parse(raw); } catch (e) {}
+          renderContacts(cached);
           applyPushLanding();
         });
       }
@@ -2704,6 +2710,31 @@ html.dark {
       // Appelé à chaque sélection de conversation (setActive), y compris après un
       // atterrissage push (notification reçue dashboard fermé) : c'est ce qui fait
       // apparaître le message de l'émetteur dans le fil.
+      function renderThreadMsgs(conv, msgs) {
+        clearThread();
+        if (!msgs.length) return;
+        var myId = '';
+        try { myId = connectedVendorIdentity().id || ''; } catch (e) {}
+        msgs.forEach(function (m) {
+          SAVED[m.msgId] = !!(m.saved === true);
+          var isMine = (m.mine === true) || (m.from === myId);
+          if (m.kind === 'audio') {
+            if (isMine) appendVendorVoice(m.audio, m.duration, m.msgId);
+            else appendIncomingVoice(m.audio, m.duration, m.msgId);
+          } else if (m.kind === 'video') {
+            if (isMine) appendVendorVideo(m.video, m.duration, m.msgId);
+            else appendIncomingVideo(m.video, m.duration, m.msgId);
+          } else if (isMine) {
+            appendVendorBubble('<p class="text-sm">' + esc(m.text || '') + '</p><span class="text-[10px] text-white/70 mt-1 block text-right">' + fmtTime(m.sentAt) + '</span>', [], m.msgId, m.replyPreview);
+          } else {
+            appendIncomingBubble(m.text || '', m.msgId, m.replyPreview);
+          }
+        });
+        var last = msgs[msgs.length - 1];
+        var p = conv.querySelector('p.truncate');
+        if (p && last) p.textContent = last.kind === 'audio' ? '🎤 Message vocal' : (last.kind === 'video' ? '🎥 Message vidéo' : ((last.file ? '📎 ' : '') + (last.text || '')));
+        if (conv.getAttribute('data-unread') === 'true') markRead(conv, true);
+      }
       function loadThreadHistory(conv) {
         if (!conv || !thread) return;
         var peerId = conv.getAttribute('data-peer-id');
@@ -2714,40 +2745,24 @@ html.dark {
           headers: token ? { 'Authorization': 'Bearer ' + token } : {}
         }).then(function (r) { return r.json().catch(function () { return {}; }); })
         .then(function (d) {
-          // La conversation a pu changer pendant le fetch : on n'écrase alors rien.
           if (currentConv !== conv) return;
           var msgs = (d && d.ok && Array.isArray(d.messages)) ? d.messages : [];
-          clearThread();
-          if (!msgs.length) return;
-          var myId = '';
-          try { myId = connectedVendorIdentity().id || ''; } catch (e) {}
-          msgs.forEach(function (m) {
-            // État « enregistré » calculé côté serveur (savedBy) : on le reflète
-            // dans SAVED pour que le bouton signet soit correct dès l'affichage.
-            SAVED[m.msgId] = !!(m.saved === true);
-            // `mine` est calculé côté serveur sur l'id CANONIQUE (alias de comptes
-            // pro dupliqués réconciliés) : fiable même quand le compte réel
-            // (ven-…) diffère du seed (pro-…). Repli sur la comparaison directe
-            // pour les réponses non enrichies.
-            var isMine = (m.mine === true) || (m.from === myId);
-            if (m.kind === 'audio') {
-              if (isMine) appendVendorVoice(m.audio, m.duration, m.msgId);
-              else appendIncomingVoice(m.audio, m.duration, m.msgId);
-            } else if (m.kind === 'video') {
-              if (isMine) appendVendorVideo(m.video, m.duration, m.msgId);
-              else appendIncomingVideo(m.video, m.duration, m.msgId);
-            } else if (isMine) {
-              appendVendorBubble('<p class="text-sm">' + esc(m.text || '') + '</p><span class="text-[10px] text-white/70 mt-1 block text-right">' + fmtTime(m.sentAt) + '</span>', [], m.msgId, m.replyPreview);
-            } else {
-              appendIncomingBubble(m.text || '', m.msgId, m.replyPreview);
-            }
-          });
-          // Met à jour l'aperçu (dernier message) dans la liste de conversations.
-          var last = msgs[msgs.length - 1];
-          var p = conv.querySelector('p.truncate');
-          if (p && last) p.textContent = last.kind === 'audio' ? '🎤 Message vocal' : (last.kind === 'video' ? '🎥 Message vidéo' : ((last.file ? '📎 ' : '') + (last.text || '')));
-          if (conv.getAttribute('data-unread') === 'true') markRead(conv, true);
-        }).catch(function () {});
+          if (msgs.length) {
+            try {
+              var _tmap = JSON.parse(localStorage.getItem('mgt_vendor_threads_last_state_v1') || '{}') || {};
+              _tmap[peerId] = msgs;
+              localStorage.setItem('mgt_vendor_threads_last_state_v1', JSON.stringify(_tmap));
+            } catch (e) {}
+          }
+          renderThreadMsgs(conv, msgs);
+        }).catch(function () {
+          var cached = null;
+          try {
+            var _tmap = JSON.parse(localStorage.getItem('mgt_vendor_threads_last_state_v1') || '{}') || {};
+            if (Array.isArray(_tmap[peerId])) cached = _tmap[peerId];
+          } catch (e) {}
+          if (currentConv === conv && cached) renderThreadMsgs(conv, cached);
+        });
       }
 
       // ---- Journal d'appels (persisté côté serveur, data/calls.json) ----
@@ -2831,8 +2846,16 @@ html.dark {
           headers: token ? { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' } : { 'Accept': 'application/json' },
           cache: 'no-store'
         }).then(function (r) { return r.json().catch(function () { return {}; }); })
-        .then(function (d) { renderCalls((d && d.ok && Array.isArray(d.calls)) ? d.calls : []); })
-        .catch(function () { renderCalls([]); });
+        .then(function (d) {
+          var calls = (d && d.ok && Array.isArray(d.calls)) ? d.calls : [];
+          if (calls.length) { try { localStorage.setItem('mgt_vendor_calls_last_state_v1', JSON.stringify(calls)); } catch (e) {} }
+          renderCalls(calls);
+        })
+        .catch(function () {
+          var cached = null;
+          try { var raw = localStorage.getItem('mgt_vendor_calls_last_state_v1'); if (raw) cached = JSON.parse(raw); } catch (e) {}
+          renderCalls(cached);
+        });
       }
 
       // ---- Temps réel (serveur /webrtc-ws) ----

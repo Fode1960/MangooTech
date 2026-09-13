@@ -227,10 +227,33 @@
   function authToken() {
     try { return localStorage.getItem('mgt_token') || null; } catch (e) { return null; }
   }
+  var VENDOR_ORDERS_KEY = 'mgt_vendor_orders_last_state_v1';
+  function readLastOrders() {
+    try {
+      var raw = localStorage.getItem(VENDOR_ORDERS_KEY);
+      if (!raw) return null;
+      var d = JSON.parse(raw);
+      if (d && Array.isArray(d.orders)) return d;
+      return null;
+    } catch (e) { return null; }
+  }
+  function writeLastOrders(list) {
+    try {
+      localStorage.setItem(VENDOR_ORDERS_KEY, JSON.stringify({
+        orders: Array.isArray(list) ? list : [],
+        savedAt: new Date().toISOString()
+      }));
+    } catch (e) { /* ignore */ }
+  }
   function fetchServerOrders(cb) {
     cb = typeof cb === 'function' ? cb : function () {};
     var token = authToken();
-    if (!token) { cb({ ok: false, error: 'Non authentifié' }); return; }
+    if (!token) {
+      var last0 = readLastOrders();
+      if (last0 && last0.orders.length) { cb({ ok: true, orders: last0.orders, offline: true, savedAt: last0.savedAt }); }
+      else { cb({ ok: false, error: 'Non authentifié' }); }
+      return;
+    }
     var headers = { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token };
     try {
       fetch('/api/orders', { headers: headers }).then(function (r) {
@@ -238,11 +261,18 @@
         return r.json();
       }).then(function (res) {
         var list = Array.isArray(res && res.orders) ? res.orders : [];
+        writeLastOrders(list);
         cb({ ok: true, orders: list });
       }).catch(function (err) {
-        cb({ ok: false, error: (err && err.message) || 'Erreur réseau' });
+        var last = readLastOrders();
+        if (last && last.orders.length) { cb({ ok: true, orders: last.orders, offline: true, savedAt: last.savedAt }); }
+        else { cb({ ok: false, error: (err && err.message) || 'Erreur réseau' }); }
       });
-    } catch (e) { cb({ ok: false, error: 'Erreur' }); }
+    } catch (e) {
+      var last2 = readLastOrders();
+      if (last2 && last2.orders.length) { cb({ ok: true, orders: last2.orders, offline: true, savedAt: last2.savedAt }); }
+      else { cb({ ok: false, error: 'Erreur' }); }
+    }
   }
 
   // Met à jour le statut d'une commande côté serveur (source de vérité).
