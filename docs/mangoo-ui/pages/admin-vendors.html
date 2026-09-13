@@ -721,6 +721,7 @@ html.dark {
         } else {
           h += btn('Rouvrir', 'reopen', 'rgb(var(--mgt-success))', 'rgb(var(--mgt-success-foreground))', 'play-circle');
         }
+        h += btn('Supprimer', 'delete', 'rgb(var(--mgt-error))', 'rgb(var(--mgt-error-foreground))', 'trash-2');
         return h;
       }
 
@@ -790,13 +791,22 @@ html.dark {
 
       var ACTION_LABELS = {
         approve: 'Prestataire approuvé', reject: 'Prestataire rejeté', suspend: 'Prestataire suspendu',
-        reactivate: 'Prestataire réactivé', close: 'Prestataire fermé', reopen: 'Prestataire rouvert'
+        reactivate: 'Prestataire réactivé', close: 'Prestataire fermé', reopen: 'Prestataire rouvert',
+        delete: 'Prestataire supprimé'
       };
 
       function doAction(id, action) {
+        if (action === 'delete' && !window.confirm('Supprimer définitivement ce prestataire et toutes ses données ? Cette action est irréversible.')) return;
         api('/api/admin/prestataires', { method: 'POST', body: JSON.stringify({ action: action, vendorId: id }) })
           .then(function (res) {
-            if (res && res.ok && res.prestataire) {
+            if (res && res.ok) {
+              if (action === 'delete') {
+                prestataires = prestataires.filter(function (x) { return x.id !== id && x.userId !== id; });
+                toast('Prestataire supprimé');
+                closeDrawer();
+                load();
+                return;
+              }
               var p = res.prestataire;
               var idx = prestataires.findIndex(function (x) { return x.id === p.id || x.userId === p.userId; });
               if (idx >= 0) prestataires[idx] = p; else prestataires.push(p);

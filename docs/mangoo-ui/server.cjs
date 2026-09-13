@@ -6762,6 +6762,12 @@ function handleHttp(req, res) {
         } else if (action === 'reopen') {
           targetDoc.admin = Object.assign({}, targetDoc.admin || {}, { status: 'active', updatedAt: new Date().toISOString() });
           pushHistory(targetDoc, 'reopen', 'Boutique rouverte', by);
+        } else if (action === 'delete') {
+          // Suppression définitive du compte boutique et de toutes ses données.
+          reconcileRemoveVendor([targetId]);
+          res.writeHead(200, JSON_HEADERS);
+          res.end(JSON.stringify({ ok: true, deleted: true, vendorId: targetId }));
+          return;
         } else {
           res.writeHead(400, JSON_HEADERS);
           res.end(JSON.stringify({ ok: false, error: 'action inconnue' }));
@@ -6896,6 +6902,12 @@ function handleHttp(req, res) {
         } else if (action === 'reopen') {
           targetDoc.admin = Object.assign({}, targetDoc.admin || {}, { status: 'active', updatedAt: new Date().toISOString() });
           pushPrestaHistory(targetDoc, 'reopen', 'Prestataire rouvert', by);
+        } else if (action === 'delete') {
+          // Suppression définitive du compte prestataire et de toutes ses données.
+          reconcileRemoveVendor([targetId]);
+          res.writeHead(200, JSON_HEADERS);
+          res.end(JSON.stringify({ ok: true, deleted: true, vendorId: targetId }));
+          return;
         } else {
           res.writeHead(400, JSON_HEADERS);
           res.end(JSON.stringify({ ok: false, error: 'action inconnue' }));

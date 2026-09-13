@@ -704,6 +704,7 @@ html.dark {
         } else {
           h += btn('Rouvrir', 'reopen', 'rgb(var(--mgt-success))', 'rgb(var(--mgt-success-foreground))', 'play-circle');
         }
+        h += btn('Supprimer', 'delete', 'rgb(var(--mgt-error))', 'rgb(var(--mgt-error-foreground))', 'trash-2');
         return h;
       }
 
@@ -765,13 +766,22 @@ html.dark {
 
       var ACTION_LABELS = {
         approve: 'Boutique approuvée', reject: 'Boutique rejetée', suspend: 'Boutique suspendue',
-        reactivate: 'Boutique réactivée', close: 'Boutique fermée', reopen: 'Boutique rouverte'
+        reactivate: 'Boutique réactivée', close: 'Boutique fermée', reopen: 'Boutique rouverte',
+        delete: 'Boutique supprimée'
       };
 
       function doAction(id, action) {
+        if (action === 'delete' && !window.confirm('Supprimer définitivement cette boutique et toutes ses données ? Cette action est irréversible.')) return;
         api('/api/admin/boutiques', { method: 'POST', body: JSON.stringify({ action: action, vendorId: id }) })
           .then(function (res) {
-            if (res && res.ok && res.boutique) {
+            if (res && res.ok) {
+              if (action === 'delete') {
+                boutiques = boutiques.filter(function (x) { return x.id !== id && x.userId !== id; });
+                toast('Boutique supprimée');
+                closeDrawer();
+                load();
+                return;
+              }
               var b = res.boutique;
               var idx = boutiques.findIndex(function (x) { return x.id === b.id || x.userId === b.userId; });
               if (idx >= 0) boutiques[idx] = b; else boutiques.push(b);
