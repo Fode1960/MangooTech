@@ -297,8 +297,8 @@
     // Hors-ligne, les modules de gestion (commandes, finances, messagerie…) ont
     // besoin du serveur. On les grise dans le menu latéral et on laisse le module
     // « Mode faible connexion » accessible (page d'explication de l'accès client).
-    'body.mgt-offline aside nav a:not([href*="dashboard-hors-ligne.html"]){opacity:.4;pointer-events:none;filter:grayscale(.35);}',
-    'body.mgt-offline aside nav a[href*="dashboard-hors-ligne.html"]{box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);}',
+    'body.mgt-offline aside nav a:not([href*="dashboard-hors-ligne.html"]):not([href*="dashboard-overview.html"]){opacity:.4;pointer-events:none;filter:grayscale(.35);}',
+    'body.mgt-offline aside nav a[href*="dashboard-hors-ligne.html"],body.mgt-offline aside nav a[href*="dashboard-overview.html"]{box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);}',
     '.mgt-offline-banner{position:fixed;top:0;left:0;right:0;z-index:2000;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;font-family:var(--mgt-font-sans);font-size:12.5px;font-weight:600;line-height:1.35;text-align:center;background:rgb(var(--mgt-warning));color:rgb(var(--mgt-warning-foreground));}'
   ].join('\n');
 
