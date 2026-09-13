@@ -617,6 +617,38 @@
   // isReal() devient vrai (événement 'registered').
   var outbox = [];
 
+  // File d'attente PERSISTANTE (localStorage) des envois à différer quand le
+  // réseau est coupé (messages, notes vocales, vidéos, demandes de rendez-vous).
+  // Contrairement à la file « outbox » (mémoire), elle survit au rechargement / à la
+  // fermeture de l'appli : on peut écrire un message hors-ligne, fermer l'appli,
+  // et le voir repartir seul au retour de la connexion.
+  var OUTBOX_KEY = 'mgt_outbox_v1';
+  function readPersistedOutbox() {
+    try { return JSON.parse(localStorage.getItem(OUTBOX_KEY) || '[]'); } catch (e) { return []; }
+  }
+  function writePersistedOutbox(arr) {
+    try { localStorage.setItem(OUTBOX_KEY, JSON.stringify(arr)); } catch (e) { /* ignore */ }
+  }
+  // Met en file un payload WS sérialisable. Hors-ligne, il est persisté ; en ligne
+  // (isReal), il part immédiatement.
+  function queueOutboxPayload(payload) {
+    if (isReal()) { sendWS(payload); return true; }
+    var arr = readPersistedOutbox();
+    arr.push({ payload: payload, ts: Date.now() });
+    writePersistedOutbox(arr);
+    ensureGuest();
+    return true;
+  }
+  function flushPersistedOutbox() {
+    if (!isReal()) return;
+    var arr = readPersistedOutbox();
+    if (!arr.length) return;
+    writePersistedOutbox([]);
+    arr.forEach(function (item) {
+      try { if (item && item.payload) sendWS(item.payload); } catch (e) {}
+    });
+  }
+
   function enqueueOutbox(fn) {
     if (isReal()) { fn(); return true; }
     outbox.push(fn);
@@ -628,7 +660,17 @@
     if (!isReal()) return;
     var queue = outbox.splice(0, outbox.length);
     queue.forEach(function (fn) { try { fn(); } catch (e) {} });
+    // Rejoue aussi les envois différés persistés (messages / rendez-vous écrits
+    // hors-ligne), désormais livrables.
+    flushPersistedOutbox();
   }
+
+  // Au retour du réseau, on relance immédiatement la connexion WebSocket (au lieu
+  // d'attendre le backoff de reconnexion) : le 'registered' serveur déclenchera
+  // flushOutbox(), qui rejouera la file persistée.
+  window.addEventListener('online', function () {
+    ensureWS();
+  });
 
   // Résout l'identifiant de routage d'une cible : un prestataire/boutique est
   // référencé par `vendorId` (ex. pro-41cafa4bcb31) côté annuaire, pas par
@@ -1295,7 +1337,7 @@
       var payload = { type: 'chat-message', to: to, text: String(text || '') };
       if (msgId) payload.msgId = String(msgId);
       if (replyTo) payload.replyTo = String(replyTo);
-      return enqueueOutbox(function () { sendWS(payload); });
+      return queueOutboxPayload(payload);
     },
     // Envoie un message vocal (note audio) : `audio` est une data URL base64,
     // `duration` la durée en secondes, `mime` le type MIME de l'enregistrement.
@@ -1306,7 +1348,7 @@
         duration: Number(duration) || 0, mime: String(mime || 'audio/webm')
       };
       if (msgId) payload.msgId = String(msgId);
-      return enqueueOutbox(function () { sendWS(payload); });
+      return queueOutboxPayload(payload);
     },
     // Envoie un message vidéo (capture caméra) : video est une data URL base64,
     // duration la durée en secondes, mime le type MIME (video/webm…).
@@ -1317,7 +1359,7 @@
         duration: Number(duration) || 0, mime: String(mime || 'video/webm')
       };
       if (msgId) payload.msgId = String(msgId);
-      return enqueueOutbox(function () { sendWS(payload); });
+      return queueOutboxPayload(payload);
     },
     // Modifie un message déjà envoyé (auteur uniquement, résolu par msgId côté
     // serveur). Le destinataire reçoit `chat-edited`.
@@ -1369,7 +1411,7 @@
         service: data && data.service, day: data && data.day,
         time: data && data.time, note: data && data.note
       };
-      return enqueueOutbox(function () { sendWS(payload); });
+      return queueOutboxPayload(payload);
     },
     replyAppointment: function (apptId, accept) {
       if (isReal() && apptId) {
