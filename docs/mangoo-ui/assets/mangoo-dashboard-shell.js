@@ -299,7 +299,7 @@
     // « Mode faible connexion » accessible (page d'explication de l'accès client).
     'body.mgt-offline aside nav a:not([href*="dashboard-hors-ligne.html"]):not([href*="dashboard-overview.html"]){opacity:.4;pointer-events:none;filter:grayscale(.35);}',
     'body.mgt-offline aside nav a[href*="dashboard-hors-ligne.html"],body.mgt-offline aside nav a[href*="dashboard-overview.html"]{box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);}',
-    '.mgt-offline-banner{position:fixed;top:0;left:0;right:0;z-index:2000;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;font-family:var(--mgt-font-sans);font-size:12.5px;font-weight:600;line-height:1.35;text-align:center;background:rgb(var(--mgt-warning));color:rgb(var(--mgt-warning-foreground));}'
+    '.mgt-offline-banner{position:sticky;top:0;z-index:32;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;font-family:var(--mgt-font-sans);font-size:12.5px;font-weight:600;line-height:1.35;text-align:center;background:rgb(var(--mgt-warning));color:rgb(var(--mgt-warning-foreground));}','body.mgt-offline header.sticky{top:var(--mgt-banner-h,0px) !important;}'
   ].join('\n');
 
   function readJSON(key, fb) {
@@ -999,11 +999,17 @@
         banner.id = 'mgt-offline-banner';
         banner.className = 'mgt-offline-banner';
         banner.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>Connexion instable — modules de gestion indisponibles. Vos clients peuvent toujours consulter votre fiche, la carte et leurs favoris.</span>';
-        document.body.appendChild(banner);
+        var main = document.getElementById('app-main') || document.querySelector('div.flex-1.ml-60');
+        var header = document.querySelector('#app-main header') || document.querySelector('header');
+        if (main && header) { main.insertBefore(banner, header); }
+        else if (main) { main.insertBefore(banner, main.firstChild); }
+        else { document.body.insertBefore(banner, document.body.firstChild); }
       }
       banner.style.display = 'flex';
+      document.documentElement.style.setProperty('--mgt-banner-h', (banner.offsetHeight || 0) + 'px');
     } else if (banner) {
       banner.style.display = 'none';
+      document.documentElement.style.setProperty('--mgt-banner-h', '0px');
     }
   }
 
@@ -1017,6 +1023,12 @@
     applyOfflineNav();
     window.addEventListener('online', applyOfflineNav);
     window.addEventListener('offline', applyOfflineNav);
+    window.addEventListener('resize', function () {
+      var b = document.getElementById('mgt-offline-banner');
+      if (b && b.style.display !== 'none') {
+        document.documentElement.style.setProperty('--mgt-banner-h', (b.offsetHeight || 0) + 'px');
+      }
+    });
     if (global.MangooVendor) global.MangooVendor.registerRT();
 
     var bell = document.getElementById('btn-notifications');
