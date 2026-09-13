@@ -316,14 +316,20 @@ html.dark {
               <p class="caption text-white/60 mb-1.5">Statut du parrainage</p>
               <span id="ref-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/20 text-white mb-4">Chargement…</span>
               <p class="caption text-white/60 mb-1">Votre code de parrainage</p>
-              <div id="ref-code-wrap" class="flex items-center gap-3" style="display:none;">
-                <span class="text-2xl font-bold tracking-widest tabular-nums" id="ref-code">—</span>
-                <button id="btn-copy-code" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-[rgb(var(--mgt-primary))] text-xs font-semibold hover:bg-white/90 transition-colors">
-                  <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copier
+              <div id="ref-code-wrap" style="display:none;">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="text-2xl font-bold tracking-widest tabular-nums" id="ref-code">—</span>
+                  <button id="btn-copy-code" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-[rgb(var(--mgt-primary))] text-xs font-semibold hover:bg-white/90 transition-colors">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copier
+                  </button>
+                </div>
+                <button id="btn-regen-code" class="flex items-center justify-center gap-1.5 w-full px-3 py-1.5 rounded-lg border border-white/40 text-white text-xs font-medium hover:bg-white/10 transition-colors mb-2">
+                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Générer un nouveau code
                 </button>
+                <p class="caption text-white/70">Partagez ce code ou votre lien : votre client/filleul le saisit lors du paiement.</p>
               </div>
               <div id="ref-activate-wrap" class="space-y-2" style="display:none;">
-                <p class="caption text-white/70">Activez pour obtenir votre code et commencer à gagner des crédits.</p>
+                <p class="caption text-white/70">Activez pour générer automatiquement votre code et commencer à gagner des crédits.</p>
                 <button id="btn-activate-ref" class="flex items-center justify-center gap-1.5 w-full px-3 py-2 rounded-lg bg-white text-[rgb(var(--mgt-primary))] text-xs font-semibold hover:bg-white/90 transition-colors">
                   <i data-lucide="power" class="w-3.5 h-3.5"></i> Activer le parrainage
                 </button>
@@ -613,7 +619,7 @@ html.dark {
     }
 
     var codeWrap = document.getElementById('ref-code-wrap');
-    if (codeWrap) codeWrap.style.display = enabled ? 'flex' : 'none';
+    if (codeWrap) codeWrap.style.display = enabled ? 'block' : 'none';
     var activateWrap = document.getElementById('ref-activate-wrap');
     if (activateWrap) activateWrap.style.display = enabled ? 'none' : 'block';
     var deactivateBtn = document.getElementById('btn-deactivate-ref');
@@ -666,10 +672,26 @@ html.dark {
     }).catch(function () { toast('Erreur réseau lors de la désactivation.'); });
   }
 
+  function regen() {
+    if (!window.MangooVendorConfig) return;
+    var code = generateCode();
+    MangooVendorConfig.patch('parrainage', { enabled: true, code: code }).then(function (res) {
+      if (res && res.ok) {
+        currentConfig = res.config || currentConfig;
+        render();
+        toast('Nouveau code généré : ' + code);
+      } else {
+        toast((res && res.error) || 'Impossible de générer un nouveau code.');
+      }
+    }).catch(function () { toast('Erreur réseau lors de la génération du code.'); });
+  }
+
   var activateBtn = document.getElementById('btn-activate-ref');
   if (activateBtn) activateBtn.addEventListener('click', activate);
   var deactivateBtn = document.getElementById('btn-deactivate-ref');
   if (deactivateBtn) deactivateBtn.addEventListener('click', deactivate);
+  var regenBtn = document.getElementById('btn-regen-code');
+  if (regenBtn) regenBtn.addEventListener('click', regen);
 
   if (window.MangooVendorConfig) {
     MangooVendorConfig.get().then(function(res){ if (res && res.ok) hydrate(res); }).catch(function(){});
