@@ -64,6 +64,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
   <header class="sticky top-0 z-30 flex items-center justify-between gap-4 border-b px-6 py-3.5" style="background-color: rgb(var(--mgt-background)); border-color: rgb(var(--mgt-border));">
     <div class="flex items-center gap-3">
       <button id="menu-btn" class="mobile-menu-btn hidden md:hidden w-10 h-10 items-center justify-center rounded-lg" style="color: rgb(var(--mgt-foreground));"><i data-lucide="menu" class="w-5 h-5"></i></button>
+      <a href="./dashboard-overview.html" title="Retour au Dashboard" aria-label="Retour au Dashboard" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors hover:opacity-80 shrink-0" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); text-decoration: none;"><i data-lucide="arrow-left" class="w-4 h-4"></i><span class="hidden sm:inline">Retour</span></a>
       <div><h1 class="text-xl font-semibold" style="color: rgb(var(--mgt-foreground));">Livraisons</h1><p class="text-sm" style="color: rgb(var(--mgt-muted-foreground));" id="subtitle">Chargement…</p></div>
     </div>
     <div class="flex items-center gap-3">
@@ -186,7 +187,7 @@ html.dark { --mgt-background: 11 11 15; --mgt-foreground: 248 250 252; --mgt-car
     document.querySelectorAll('[data-vendor-initials]').forEach(function (el) { el.textContent = initials(name); });
     $('subtitle').textContent = name + ' · gestion des livraisons';
   }
-  function redirectLogin() { window.location.href = './auth.html'; }
+  function redirectLogin() { window.location.replace('./auth.html'); }
 
   function loadAll() {
     return Promise.all([ apiGet('/api/delivery/orders'), apiGet('/api/delivery/couriers') ]).then(function (res) {
