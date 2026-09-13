@@ -13,8 +13,10 @@
  * ========================================================================== */
 'use strict';
 
-self.addEventListener('install', function () {
+self.addEventListener('install', function (event) {
   self.skipWaiting();
+  // Pré-cache tolérant du parcours client (consultation hors-ligne).
+  event.waitUntil(precacheClientPages());
 });
 
 // Identifiant de version : à chaque déploiement, on le change pour forcer la
@@ -27,6 +29,57 @@ var SW_VERSION = 'mgt-sw-2026-09-12-1';
 // « dashboard-hors-ligne.html » y sont conservés pour être servis en repli
 // lorsque le réseau est indisponible (couverture instable).
 var OFFLINE_CACHE = 'mgt-offline-v1';
+
+// ---- Pré-cache du parcours client (consultation hors-ligne) -------------
+// Les pages de lecture du client (accueil, espace, boutiques/carte, commandes,
+// favoris, profil, messagerie) et leurs assets communs sont pré-cachés dès
+// l'installation du Service Worker. Ainsi, même sans avoir visité chaque page
+// en ligne, le client peut continuer à consulter l'appli en zone à couverture
+// instable. Pré-cache tolérant : une ressource indisponible (ex. CDN hors
+// ligne) n'empêche pas l'installation du SW.
+var CLIENT_PRECACHE = [
+  '/pages/accueil.html',
+  '/pages/client-dashboard.html',
+  '/pages/client-orders.html',
+  '/pages/client-favorites.html',
+  '/pages/client-profile.html',
+  '/pages/chat.html',
+  '/pages/carte.html',
+  '/pages/fiche-boutique.html',
+  '/pages/fiche.html',
+  '/assets/mangoo-client-shell.js',
+  '/assets/mangoo-client-data.js',
+  '/assets/mangoo-connect-plus.js',
+  '/assets/mangoo-support-widget.js',
+  '/assets/mangoo-autocorrect.js',
+  '/assets/mangoo-nav-session.js',
+  '/assets/mangoo-welcome-audio.js',
+  '/assets/mangoo-push.js',
+  '/assets/mangoo-payment.js',
+  '/assets/mangoo-catalogue.js',
+  '/assets/mangoo-public-nav.js',
+  '/assets/mangoo-negotiation.js',
+  '/assets/mangoo-demo-sandbox.js',
+  '/assets/mangoo-vendor.js',
+  '/assets/favicon.png',
+  '/api/carte',
+  '/api/cities',
+  'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js',
+  'https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+];
+
+function precacheClientPages() {
+  return caches.open(OFFLINE_CACHE).then(function (cache) {
+    return Promise.all(CLIENT_PRECACHE.map(function (url) {
+      return fetch(url, { cache: 'no-store' }).then(function (resp) {
+        if (resp && resp.ok) { return cache.put(url, resp); }
+        return null;
+      }).catch(function () { return null; });
+    }));
+  });
+}
 
 self.addEventListener('activate', function (event) {
   event.waitUntil(
