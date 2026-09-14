@@ -4349,11 +4349,12 @@ async function handleCallOffer(ws, msg) {
   const callMode = msg.mode || 'audio';
   const callerName = (ws.meta && ws.meta.name) || 'Quelqu\'un';
 
-  // Pays de l'appelant : donnée client d'abord, sinon résolution par IP (attente
-  // bornée ~1,5 s, dédupliquée + mise en cache). Garantit que le pays est connu
-  // AVANT d'envoyer le push / la sonnerie, donc présent dans le landing.
-  let callerGeo = effectiveCallerCountry(ws, msg);
-  if (!callerGeo.country && ws.meta && ws.meta.ip) {
+  // Pays de l'appelant : résolution par IP d'abord (fiable), avec repli sur la
+  // donnée client (fuseau/langue) puis le profil si l'IP échoue (IP privée,
+  // timeout, service indisponible). Garantit que le pays est connu AVANT
+  // d'envoyer le push / la sonnerie, donc présent dans le landing.
+  let callerGeo = { country: '', countryCode: '' };
+  if (ws.meta && ws.meta.ip) {
     try {
       const resolved = await resolveIpCountry(ws.meta.ip);
       if (resolved && resolved.country) {
@@ -4364,6 +4365,9 @@ async function handleCallOffer(ws, msg) {
         }
       }
     } catch (e) { /* ignore */ }
+  }
+  if (!callerGeo.country) {
+    callerGeo = effectiveCallerCountry(ws, msg);
   }
   const callerCountry = callerGeo.country;
   const callerCountryCode = callerGeo.countryCode;
@@ -9247,7 +9251,7 @@ function resolveIpCountry(ip) {
         try {
           const data = JSON.parse(body);
           if (data && data.success !== false && data.country) {
-            const country = String(data.country || '').trim();
+            const country = countryLabelFr(String(data.country || '').trim());
             const countryCode = String(data.country_code || '').trim().toUpperCase();
             cacheIpCountry(key, country, countryCode);
             console.log('[IP] pays résolu', { ip: key, country: country, countryCode: countryCode });
