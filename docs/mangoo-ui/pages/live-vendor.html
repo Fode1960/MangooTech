@@ -709,17 +709,29 @@ html.dark {
       function setBroadcastMicMuted(muted) {
         if (localStream) localStream.getAudioTracks().forEach(function (t) { t.enabled = !muted; });
       }
+      function flagEmoji(cc) {
+        if (!cc || cc.length !== 2) return '';
+        var A = 'A'.charCodeAt(0);
+        var RI = 127462;
+        var c0 = cc.charCodeAt(0);
+        var c1 = cc.charCodeAt(1);
+        if (c0 < A || c0 > A + 25 || c1 < A || c1 > A + 25) return '';
+        try { return String.fromCodePoint(RI + (c0 - A), RI + (c1 - A)); }
+        catch (e) { return ''; }
+      }
       function handleCallRing(msg) {
         if (callState !== 'idle') { send({ type: 'call-reject', callId: msg.callId }); return; }
         callId = msg.callId;
         callState = 'ringing';
         callOfferSdp = msg.sdp;
         var name = msg.fromName || 'Client';
-        document.getElementById('call-caller').textContent = name;
+        var country = msg.country || '';
+        var flag = flagEmoji(msg.countryCode);
+        document.getElementById('call-caller').textContent = flag ? (flag + ' ' + name) : name;
         document.getElementById('call-avatar').textContent = name.charAt(0).toUpperCase();
-        document.getElementById('call-status').textContent = 'vous appelle · négociation privée';
+        document.getElementById('call-status').textContent = 'vous appelle · négociation privée' + (country ? ' · ' + country : '');
         showCallOverlay('ringing');
-        toast('Appel entrant de ' + name);
+        toast('Appel entrant de ' + name + (country ? ' · ' + country : ''));
       }
       function acceptCall() {
         if (callState !== 'ringing') return;

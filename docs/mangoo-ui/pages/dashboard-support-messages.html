@@ -91,6 +91,16 @@ button{font-family:inherit}
 .ring-badge .dot{width:9px;height:9px;border-radius:50%;background:rgb(var(--mgt-accent));animation:pulse 1.4s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(232,97,12,.55)}70%{box-shadow:0 0 0 10px rgba(232,97,12,0)}100%{box-shadow:0 0 0 0 rgba(232,97,12,0)}}
 .footer-note{text-align:center;font-size:12px;color:rgb(var(--mgt-muted-foreground));padding:18px 0 28px}
+@media(max-width:640px){
+  .topbar-inner{flex-wrap:wrap;gap:8px 10px;padding:10px 12px}
+  .brand{flex:1}
+  .brand>div:last-child{min-width:0}
+  .brand-title{font-size:14px}
+  .brand-sub{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pill{font-size:11px;padding:5px 9px}
+  .nav-actions{width:100%;justify-content:flex-end}
+  .nav-link{font-size:12px;padding:7px 10px}
+}
 </style>
 </head>
 <body>
@@ -104,7 +114,7 @@ button{font-family:inherit}
         </div>
       </div>
       <div class="pill"><span class="dot" id="status-dot"></span><span id="status-text">Connexion…</span></div>
-      <div style="display:flex;align-items:center;gap:8px;">
+      <div class="nav-actions" style="display:flex;align-items:center;gap:8px;">
         <a href="./dashboard-support-console.html" class="nav-link" aria-label="Retour à la console">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           Console

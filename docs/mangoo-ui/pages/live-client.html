@@ -950,15 +950,27 @@ html.dark {
         .catch(function () { setCallOverlay('idle'); toast('Accès au micro refusé'); });
     }
 
+    function flagEmoji(cc) {
+      if (!cc || cc.length !== 2) return '';
+      var A = 'A'.charCodeAt(0);
+      var RI = 127462;
+      var c0 = cc.charCodeAt(0);
+      var c1 = cc.charCodeAt(1);
+      if (c0 < A || c0 > A + 25 || c1 < A || c1 > A + 25) return '';
+      try { return String.fromCodePoint(RI + (c0 - A), RI + (c1 - A)); }
+      catch (e) { return ''; }
+    }
     function handleCallRing(msg) {
       if (callState !== 'idle') { send({ type: 'call-reject', callId: msg.callId }); return; }
       callId = msg.callId;
       callState = 'ringing';
       incomingCallSdp = msg.sdp;
       var name = msg.fromName || 'DAN Boutique';
+      var country = msg.country || '';
+      var flag = flagEmoji(msg.countryCode);
       $('call-avatar').textContent = name.charAt(0).toUpperCase();
-      $('call-peer-name').textContent = name;
-      setCallOverlay('ringing', 'vous appelle · négociation privée');
+      $('call-peer-name').textContent = flag ? (flag + ' ' + name) : name;
+      setCallOverlay('ringing', 'vous appelle · négociation privée' + (country ? ' · ' + country : ''));
       startIncomingRing();
     }
 
