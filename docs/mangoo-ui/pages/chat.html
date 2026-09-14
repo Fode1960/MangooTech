@@ -2008,7 +2008,7 @@ html.dark {
     RT.onIncomingCall(function(c){
       var from = c.from || '';
       if (from && convById(from) && from !== ACTIVE) selectConversation(from);
-      sysMsg('Appel entrant de ' + (c.fromName || c.from));
+      sysMsg('Appel entrant de ' + (c.fromName || c.from) + (c.country ? ' · ' + c.country : ''));
     });
     RT.onAppointment(function(a){
       var from = a.from || '';
@@ -2094,7 +2094,7 @@ html.dark {
     if (initial) {
       selectConversation(initial);
       if (qp.get('kind') === 'call') {
-        showCallPushOverlay(qp.get('fromName') || wantName || 'Professionnel', qp.get('mode') || 'audio');
+        showCallPushOverlay(qp.get('fromName') || wantName || 'Professionnel', qp.get('mode') || 'audio', qp.get('country') || '');
       }
     } else {
       renderHeader();

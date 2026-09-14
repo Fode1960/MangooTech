@@ -53,6 +53,13 @@
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
+  function flagEmoji(cc) {
+    if (!cc || cc.length !== 2) return '';
+    var base = 127397;
+    try {
+      return String.fromCodePoint(cc.charCodeAt(0) - 65 + base, cc.charCodeAt(1) - 65 + base);
+    } catch (e) { return ''; }
+  }
   function detectCountry() {
     var tzMap = {
       'Africa/Dakar': 'Sénégal', 'Africa/Abidjan': "Côte d'Ivoire", 'Africa/Douala': 'Cameroun',
@@ -120,6 +127,7 @@
     '.mcp-call-overlay .mcp-center{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:420px;margin-top:96px;}',
     '.mcp-call-overlay .mcp-avatar{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgb(232,97,12);color:#fff;font-size:32px;font-weight:700;text-transform:uppercase;border:3px solid rgba(255,255,255,.25);margin-bottom:16px;}',
     '.mcp-call-overlay .mcp-name{color:#fff;font-size:20px;font-weight:600;margin-bottom:4px;text-align:center;}',
+    '.mcp-call-overlay .mcp-country{color:rgba(255,255,255,.72);font-size:13px;font-weight:500;margin:-1px 0 6px;text-align:center;letter-spacing:.2px;}',
     '.mcp-call-overlay .mcp-state{color:rgba(255,255,255,.92);font-size:14px;margin-bottom:8px;text-align:center;}',
     '.mcp-call-overlay .mcp-timer{color:rgba(255,255,255,.85);font-size:15px;font-variant-numeric:tabular-nums;margin-bottom:32px;}',
     '.mcp-call-overlay .mcp-actions{display:flex;gap:20px;}',
@@ -195,6 +203,7 @@
     '<div class="mcp-center">' +
       '<div class="mcp-avatar" data-mcp="avatar">MT</div>' +
       '<div class="mcp-name" data-mcp="name">—</div>' +
+      '<div class="mcp-country" data-mcp="country" style="display:none;"></div>' +
       '<div class="mcp-state" data-mcp="state">Connexion…</div>' +
       '<div class="mcp-timer" data-mcp="timer"></div>' +
       '<div class="mcp-actions">' +
@@ -323,6 +332,12 @@
     callState.target = target;
     q('[data-mcp="avatar"]', callOverlay).textContent = initials(target && target.name);
     q('[data-mcp="name"]', callOverlay).textContent = target && target.name ? target.name : '—';
+    var countryEl = q('[data-mcp="country"]', callOverlay);
+    var country = target && target.country;
+    if (countryEl) {
+      countryEl.textContent = country ? (target.countryCode ? flagEmoji(target.countryCode) + ' ' : '') + country : '';
+      countryEl.style.display = country ? '' : 'none';
+    }
   }
 
   function resetVideos() {
@@ -838,7 +853,7 @@
       accept: function () { acceptIncoming(); },
       reject: function () { rejectIncoming(); }
     });
-    incomingCall({ id: msg.from, name: msg.fromName, role: 'peer' });
+    incomingCall({ id: msg.from, name: msg.fromName, role: 'peer', country: msg.country, countryCode: msg.countryCode });
   }
 
   function acceptIncoming() {
