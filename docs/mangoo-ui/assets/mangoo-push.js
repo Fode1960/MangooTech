@@ -680,7 +680,7 @@
     btn.type = 'button';
     btn.id = 'mgt-install-button';
     btn.setAttribute('aria-label', 'Installer l\'application MangooTech');
-    btn.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483600;display:flex;align-items:center;gap:8px;' +
+    btn.style.cssText = 'position:fixed;right:16px;bottom:84px;z-index:2147483600;display:flex;align-items:center;gap:8px;' +
       'background:#16a34a;color:#fff;border:0;border-radius:999px;padding:12px 16px;font-size:13.5px;font-weight:700;' +
       'cursor:pointer;box-shadow:0 12px 36px rgba(0,0,0,.35);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;';
 
