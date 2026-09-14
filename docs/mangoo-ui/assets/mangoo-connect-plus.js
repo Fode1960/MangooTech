@@ -1020,6 +1020,37 @@
     return '';
   }
 
+  var VM_REC_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg>';
+  var VM_STOP_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+
+  // État du bouton principal : « Enregistrer » au repos, « Arrêter » pendant la
+  // capture. Le bouton reste TOUJOURS cliquable (c'est lui qui démarre et arrête).
+  function vmSetRecordButton(state) {
+    var btn = vmEl('record');
+    if (!btn) return;
+    if (state === 'recording') {
+      btn.innerHTML = VM_STOP_SVG + 'Arrêter';
+      btn.disabled = false;
+    } else {
+      btn.innerHTML = VM_REC_SVG + (voicemail.chunks.length ? 'Réenregistrer' : 'Enregistrer');
+      btn.disabled = false;
+    }
+  }
+
+  // Le support étant indisponible, on lit à voix haute la consigne affichée à
+  // l'écran (message vocal du support), avant que l'appelant enregistre le sien.
+  function speakVoicemailGreeting() {
+    try {
+      if (!global.speechSynthesis || !global.SpeechSynthesisUtterance) return;
+      var u = new global.SpeechSynthesisUtterance("Le support ne peut pas répondre pour le moment. Veuillez laisser votre message après le bip, et l'équipe vous rappellera dès que possible.");
+      u.lang = 'fr-FR';
+      u.rate = 1;
+      u.pitch = 1;
+      global.speechSynthesis.cancel();
+      global.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
   function vmReset() {
     vmStopRecording();
     voicemail.chunks = [];
@@ -1046,6 +1077,7 @@
     vmReset();
     voicemail.open = true;
     voicemailOverlay.classList.add('open');
+    speakVoicemailGreeting();
   }
 
   function closeVoicemail() {
@@ -1078,8 +1110,7 @@
           voicemail.stream = null;
         }
         voicemail.recorder = null;
-        vmEl('record').disabled = false;
-        vmEl('record').textContent = voicemail.chunks.length ? 'Réenregistrer' : 'Enregistrer';
+        vmSetRecordButton('idle');
         vmEl('send').disabled = !voicemail.chunks.length;
       };
       rec.start();
@@ -1091,8 +1122,7 @@
         vmSetTimer();
         if (voicemail.seconds >= 120) vmStopRecording();
       }, 1000);
-      vmEl('record').disabled = true;
-      vmEl('record').textContent = 'Enregistrement…';
+      vmSetRecordButton('recording');
       vmEl('send').disabled = true;
     }).catch(function () {
       var sub = q('.mcp-voicemail-sub', voicemailOverlay);
@@ -1105,6 +1135,7 @@
     voicemail.recording = false;
     if (voicemail.timer) { clearInterval(voicemail.timer); voicemail.timer = null; }
     if (voicemail.recorder) {
+      try { if (voicemail.recorder.state === 'recording') voicemail.recorder.requestData(); } catch (e) {}
       try { if (voicemail.recorder.state !== 'inactive') voicemail.recorder.stop(); } catch (e) {}
     }
   }
@@ -1174,7 +1205,7 @@
     var btn = e.target && e.target.closest ? e.target.closest('[data-mcp-voicemail]') : null;
     if (!btn) return;
     var act = btn.getAttribute('data-mcp-voicemail');
-    if (act === 'record') vmStartRecording();
+    if (act === 'record') { if (voicemail.recording) vmStopRecording(); else vmStartRecording(); }
     else if (act === 'send') vmSend();
     else if (act === 'cancel' || act === 'done') closeVoicemail();
   });
