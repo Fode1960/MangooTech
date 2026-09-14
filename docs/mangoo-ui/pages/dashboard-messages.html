@@ -2897,10 +2897,11 @@ html.dark {
           if (!c) return;
           var isOut = c.direction === 'out';
           var peerName = isOut ? (c.calleeName || c.calleeId) : (c.callerName || c.callerId);
+          var peerId = isOut ? (c.calleeId || '') : (c.callerId || '');
           var icon = (c.status === 'missed') ? 'phone-missed' : (isOut ? 'phone-outgoing' : 'phone-incoming');
           var iconColor = (c.status === 'missed') ? 'rgb(var(--mgt-error))' : 'rgb(var(--mgt-muted-foreground))';
           var item = document.createElement('div');
-          item.className = 'msg-call-item flex items-center gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))] cursor-default';
+          item.className = 'msg-call-item flex items-center gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))] cursor-pointer';
           item.innerHTML =
             '<div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style="background:rgb(var(--mgt-muted));color:' + iconColor + ';">' +
               '<i data-lucide="' + icon + '" class="w-4 h-4"></i>' +
@@ -2909,7 +2910,18 @@ html.dark {
               '<p class="text-sm font-semibold truncate" style="color:rgb(var(--mgt-foreground));">' + esc(peerName) + '</p>' +
               '<p class="text-xs" style="color:rgb(var(--mgt-muted-foreground));">' + (isOut ? 'Sortant' : 'Entrant') + (c.mode === 'video' ? ' · Vidéo' : '') + (c.status ? ' · ' + callStatusLabel(c.status) : '') + '</p>' +
             '</div>' +
-            '<span class="text-xs shrink-0" style="color:rgb(var(--mgt-muted-foreground));">' + fmtCallTime(c.at) + '</span>';
+            '<span class="text-xs shrink-0" style="color:rgb(var(--mgt-muted-foreground));">' + fmtCallTime(c.at) + '</span>' +
+            '<button type="button" class="msg-call-back shrink-0 w-9 h-9 rounded-full flex items-center justify-center" title="Rappeler" aria-label="Rappeler ' + esc(peerName) + '" style="background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary));border:none;cursor:pointer;">' +
+              '<i data-lucide="phone" class="w-4 h-4"></i>' +
+            '</button>';
+          item.addEventListener('click', function () {
+            if (!peerId) { toast('Correspondant introuvable.'); return; }
+            if (window.MangooConnect && typeof window.MangooConnect.call === 'function') {
+              window.MangooConnect.call({ vendorId: peerId, id: peerId, name: peerName }, { mode: 'audio' });
+            } else {
+              toast('Mangoo Connect+ indisponible.');
+            }
+          });
           callListEl.appendChild(item);
         });
         if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();

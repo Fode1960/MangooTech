@@ -96,7 +96,8 @@
       'Algérie': 'DZ', 'Égypte': 'EG', 'Libye': 'LY', 'Maroc': 'MA', 'Tunisie': 'TN',
       'France': 'FR', 'Belgique': 'BE', 'Luxembourg': 'LU', 'Monaco': 'MC', 'Espagne': 'ES',
       'Canada': 'CA', 'Guadeloupe': 'GP', 'Martinique': 'MQ', 'Guyane': 'GF', 'La Réunion': 'RE',
-      'Maurice': 'MU', 'Comores': 'KM', 'Madagascar': 'MG'
+      'Maurice': 'MU', 'Comores': 'KM', 'Madagascar': 'MG', 'États-Unis': 'US', 'Royaume-Uni': 'GB',
+      'Portugal': 'PT', 'Suisse': 'CH', 'Italie': 'IT', 'Allemagne': 'DE'
     };
     var country = '';
     try {

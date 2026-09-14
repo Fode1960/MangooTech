@@ -4370,7 +4370,7 @@ async function handleCallOffer(ws, msg) {
     callerGeo = effectiveCallerCountry(ws, msg);
   }
   const callerCountry = callerGeo.country;
-  const callerCountryCode = callerGeo.countryCode;
+  const callerCountryCode = callerGeo.countryCode || countryCodeForLabel(callerCountry);
   const callerLabel = callerCountry ? (callerName + ' (' + callerCountry + ')') : callerName;
   console.log('[Call] pays effectif', { callId: callId, to: cto, fromIp: (ws.meta && ws.meta.ip) || '', country: callerCountry || '—', countryCode: callerCountryCode || '—' });
 
@@ -9302,6 +9302,26 @@ function countryLabelFr(raw) {
   return map[key] || label;
 }
 
+// Code ISO 2 lettres correspondant au libellé français d'un pays (miroir de
+// countryLabelFr). Permet de reconstruire le drapeau même quand seule la donnée
+// « pays » est connue (détection navigateur sans code, profil sans countryCode,
+// ou résolution IP sans country_code). Évite l'écart « nom affiché mais pas de
+// drapeau », notamment sur certains postes PC dont la détection ne renvoie pas
+// de code.
+const COUNTRY_CODE_BY_LABEL = {
+  'Sénégal': 'SN', "Côte d'Ivoire": 'CI', 'Cameroun': 'CM', 'Gabon': 'GA', 'Congo': 'CG',
+  'RD Congo': 'CD', 'Mali': 'ML', 'Burkina Faso': 'BF', 'Niger': 'NE', 'Mauritanie': 'MR',
+  'Guinée': 'GN', 'Togo': 'TG', 'Bénin': 'BJ', 'Centrafrique': 'CF', 'Tchad': 'TD',
+  'Algérie': 'DZ', 'Égypte': 'EG', 'Libye': 'LY', 'Maroc': 'MA', 'Tunisie': 'TN',
+  'France': 'FR', 'Belgique': 'BE', 'Luxembourg': 'LU', 'Monaco': 'MC', 'Espagne': 'ES',
+  'Canada': 'CA', 'Guadeloupe': 'GP', 'Martinique': 'MQ', 'Guyane': 'GF', 'La Réunion': 'RE',
+  'Maurice': 'MU', 'Comores': 'KM', 'Madagascar': 'MG', 'États-Unis': 'US', 'Royaume-Uni': 'GB',
+  'Portugal': 'PT', 'Suisse': 'CH', 'Italie': 'IT', 'Allemagne': 'DE'
+};
+function countryCodeForLabel(label) {
+  return COUNTRY_CODE_BY_LABEL[String(label || '').trim()] || '';
+}
+
 // Dernier recours : le pays déclaré sur le compte de l'appelant (ex. un client
 // connecté). Garantit une provenance affichée même quand la détection côté
 // navigateur échoue et que l'IP est privée (localhost / réseau local).
@@ -9330,7 +9350,7 @@ function effectiveCallerCountry(ws, msg) {
     country = prof.country;
     countryCode = prof.countryCode || countryCode;
   }
-  return { country: country, countryCode: countryCode };
+  return { country: country, countryCode: countryCode || countryCodeForLabel(country) };
 }
 
 function handleRealtimeConnection(ws, req, label) {
