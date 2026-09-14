@@ -27,7 +27,7 @@
     if (page === 'dashboard-live.html') return;
     try {
       var xhr = new XMLHttpRequest();
-      xhr.open('GET', '../assets/mangoo-connect-plus.js', false);
+      xhr.open('GET', '../assets/mangoo-connect-plus.js?v=20260914', false);
       xhr.send(null);
       if (xhr.status >= 200 && xhr.status < 300) {
         (0, eval)(xhr.responseText);
