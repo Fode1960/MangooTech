@@ -64,6 +64,20 @@
       return String.fromCodePoint(RI + (c0 - A), RI + (c1 - A));
     } catch (e) { return ''; }
   }
+  // Drapeau sous forme d'IMAGE (et non d'emoji) : Windows n'affiche pas les
+  // emoji-drapeaux (paires d'indicateurs régionaux) dans Chrome/Edge. Une image
+  // garantit un rendu identique PC et mobile. `onerror` retire l'image si le CDN
+  // est indisponible, laissant le nom du pays lisible.
+  function flagHtml(cc) {
+    cc = String(cc || '').trim().toUpperCase();
+    if (cc.length !== 2) return '';
+    return '<img src="https://flagcdn.com/w40/' + cc.toLowerCase() + '.png" alt="' + cc + '" width="20" height="15" style="width:20px;height:15px;object-fit:cover;border-radius:2px;vertical-align:-2px;box-shadow:0 0 0 1px rgba(0,0,0,.15);" onerror="this.remove()">';
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
   function detectCountry() {
     var tzMap = {
       'Africa/Dakar': 'Sénégal', 'Africa/Abidjan': "Côte d'Ivoire", 'Africa/Douala': 'Cameroun',
@@ -187,6 +201,22 @@
     '.mcp-delivery-badge{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:9999px;font-size:12px;font-weight:600;line-height:1.2;background:rgb(var(--mgt-primary-50,232,245,233));color:rgb(var(--mgt-primary-700,38,112,42));}',
     'html.dark .mcp-delivery-badge{background:rgba(76,168,82,.16);color:rgb(129,199,134);}',
     '.mcp-delivery-badge svg{width:15px;height:15px;flex-shrink:0;}',
+    '',
+    '.mcp-voicemail-overlay{position:fixed;inset:0;z-index:9700;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.55);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s;}',
+    '.mcp-voicemail-overlay.open{opacity:1;visibility:visible;}',
+    '.mcp-voicemail-card{background:rgb(var(--mgt-card,255,255,255));color:rgb(var(--mgt-foreground,15,23,42));border:1px solid rgb(var(--mgt-border,226,232,240));border-radius:16px;width:100%;max-width:400px;padding:26px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.4);}',
+    '.mcp-voicemail-icon{width:60px;height:60px;margin:0 auto 14px;border-radius:50%;background:rgb(var(--mgt-accent-50,255,243,224));display:flex;align-items:center;justify-content:center;color:rgb(var(--mgt-accent,232,97,12));}',
+    '.mcp-voicemail-title{font-size:18px;font-weight:700;margin:0 0 6px;}',
+    '.mcp-voicemail-sub{font-size:13.5px;color:rgb(var(--mgt-muted-foreground,100,116,139));margin:0 0 18px;line-height:1.5;}',
+    '.mcp-voicemail-timer{font-size:13px;font-weight:600;color:rgb(var(--mgt-accent,232,97,12));margin-bottom:12px;min-height:18px;font-variant-numeric:tabular-nums;}',
+    '.mcp-voicemail-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}',
+    '.mcp-voicemail-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border-radius:10px;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:transform .12s,opacity .15s;}',
+    '.mcp-voicemail-btn:active{transform:scale(.98);}',
+    '.mcp-voicemail-btn.primary{background:rgb(var(--mgt-primary,26,92,42));color:rgb(var(--mgt-primary-foreground,255,255,255));}',
+    '.mcp-voicemail-btn.rec{background:rgb(var(--mgt-accent,232,97,12));color:#fff;}',
+    '.mcp-voicemail-btn.ghost{background:transparent;color:rgb(var(--mgt-foreground,15,23,42));border:1px solid rgb(var(--mgt-border,226,232,240));}',
+    '.mcp-voicemail-btn[disabled]{opacity:.5;cursor:default;}',
+    '.mcp-voicemail-note{font-size:11.5px;color:rgb(var(--mgt-muted-foreground,100,116,139));margin-top:14px;}',
     ''
   ].join('\n');
 
@@ -259,6 +289,33 @@
       '</button>' +
     '</div>';
   document.body.appendChild(chatEl);
+
+  /* ------------------------------------------------------------------ *
+   *  DOM : répondeur (message vocal vers le support)
+   * ------------------------------------------------------------------ */
+  var voicemailOverlay = document.createElement('div');
+  voicemailOverlay.className = 'mcp-voicemail-overlay';
+  voicemailOverlay.setAttribute('role', 'dialog');
+  voicemailOverlay.setAttribute('aria-label', 'Laissez un message vocal');
+  voicemailOverlay.innerHTML =
+    '<div class="mcp-voicemail-card">' +
+      '<div class="mcp-voicemail-icon">' +
+        '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>' +
+      '</div>' +
+      '<h3 class="mcp-voicemail-title">Laisser un message vocal</h3>' +
+      '<p class="mcp-voicemail-sub">Le support ne peut pas répondre pour le moment. Enregistrez un message et l\'équipe vous rappellera.</p>' +
+      '<div class="mcp-voicemail-timer" data-mcp-voicemail="timer">0:00</div>' +
+      '<div class="mcp-voicemail-actions">' +
+        '<button type="button" class="mcp-voicemail-btn rec" data-mcp-voicemail="record">' +
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg>' +
+          'Enregistrer' +
+        '</button>' +
+        '<button type="button" class="mcp-voicemail-btn primary" data-mcp-voicemail="send" disabled>Envoyer</button>' +
+        '<button type="button" class="mcp-voicemail-btn ghost" data-mcp-voicemail="cancel">Annuler</button>' +
+      '</div>' +
+      '<p class="mcp-voicemail-note">Le message est envoyé uniquement à l\'équipe support MangooTech.</p>' +
+    '</div>';
+  document.body.appendChild(voicemailOverlay);
 
   function q(sel, root) { return (root || document).querySelector(sel); }
 
@@ -340,7 +397,11 @@
     var countryEl = q('[data-mcp="country"]', callOverlay);
     var country = target && target.country;
     if (countryEl) {
-      countryEl.textContent = country ? (target.countryCode ? flagEmoji(target.countryCode) + ' ' : '') + country : '';
+      if (country) {
+        countryEl.innerHTML = (target.countryCode ? flagHtml(target.countryCode) + ' ' : '') + escapeHtml(country);
+      } else {
+        countryEl.innerHTML = '';
+      }
       countryEl.style.display = country ? '' : 'none';
     }
   }
@@ -926,10 +987,210 @@
     endCall(false);
   }
 
+  /* ------------------------------------------------------------------ *
+   *  Répondeur (message vocal vers le support)
+   * ------------------------------------------------------------------ */
+  var voicemail = {
+    open: false,
+    stream: null,
+    recorder: null,
+    chunks: [],
+    mime: 'audio/webm',
+    timer: null,
+    seconds: 0,
+    recording: false,
+    sending: false
+  };
+
+  function vmEl(sel) { return q('[data-mcp-voicemail="' + sel + '"]', voicemailOverlay); }
+
+  function vmSetTimer() {
+    var el = vmEl('timer');
+    if (el) el.textContent = formatTimer(voicemail.seconds);
+  }
+
+  function vmPickMime() {
+    if (!global.MediaRecorder) return '';
+    var candidates = ['audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+    for (var i = 0; i < candidates.length; i++) {
+      try {
+        if (global.MediaRecorder.isTypeSupported && global.MediaRecorder.isTypeSupported(candidates[i])) return candidates[i];
+      } catch (e) {}
+    }
+    return '';
+  }
+
+  function vmReset() {
+    vmStopRecording();
+    voicemail.chunks = [];
+    voicemail.seconds = 0;
+    voicemail.sending = false;
+    vmSetTimer();
+    var title = q('.mcp-voicemail-title', voicemailOverlay);
+    var sub = q('.mcp-voicemail-sub', voicemailOverlay);
+    if (title) title.textContent = 'Laisser un message vocal';
+    if (sub) sub.textContent = 'Le support ne peut pas répondre pour le moment. Enregistrez un message et l\'équipe vous rappellera.';
+    var actions = q('.mcp-voicemail-actions', voicemailOverlay);
+    if (actions) {
+      actions.innerHTML =
+        '<button type="button" class="mcp-voicemail-btn rec" data-mcp-voicemail="record">' +
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg>' +
+          'Enregistrer' +
+        '</button>' +
+        '<button type="button" class="mcp-voicemail-btn primary" data-mcp-voicemail="send" disabled>Envoyer</button>' +
+        '<button type="button" class="mcp-voicemail-btn ghost" data-mcp-voicemail="cancel">Annuler</button>';
+    }
+  }
+
+  function openVoicemail() {
+    vmReset();
+    voicemail.open = true;
+    voicemailOverlay.classList.add('open');
+  }
+
+  function closeVoicemail() {
+    vmStopRecording();
+    voicemail.open = false;
+    voicemailOverlay.classList.remove('open');
+  }
+
+  function vmStartRecording() {
+    if (voicemail.recording || voicemail.sending) return;
+    getMedia('audio').then(function (stream) {
+      var Rec = global.MediaRecorder || global.webkitMediaRecorder;
+      if (!Rec) {
+        var sub = q('.mcp-voicemail-sub', voicemailOverlay);
+        if (sub) sub.textContent = 'L\'enregistrement n\'est pas pris en charge par ce navigateur.';
+        return;
+      }
+      voicemail.stream = stream;
+      voicemail.chunks = [];
+      var mime = vmPickMime();
+      var rec;
+      try { rec = mime ? new Rec(stream, { mimeType: mime }) : new Rec(stream); }
+      catch (e) { rec = new Rec(stream); }
+      voicemail.recorder = rec;
+      voicemail.mime = rec.mimeType || 'audio/webm';
+      rec.ondataavailable = function (e) { if (e.data && e.data.size) voicemail.chunks.push(e.data); };
+      rec.onstop = function () {
+        if (voicemail.stream) {
+          voicemail.stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} });
+          voicemail.stream = null;
+        }
+        voicemail.recorder = null;
+        vmEl('record').disabled = false;
+        vmEl('record').textContent = voicemail.chunks.length ? 'Réenregistrer' : 'Enregistrer';
+        vmEl('send').disabled = !voicemail.chunks.length;
+      };
+      rec.start();
+      voicemail.recording = true;
+      voicemail.seconds = 0;
+      vmSetTimer();
+      voicemail.timer = setInterval(function () {
+        voicemail.seconds++;
+        vmSetTimer();
+        if (voicemail.seconds >= 120) vmStopRecording();
+      }, 1000);
+      vmEl('record').disabled = true;
+      vmEl('record').textContent = 'Enregistrement…';
+      vmEl('send').disabled = true;
+    }).catch(function () {
+      var sub = q('.mcp-voicemail-sub', voicemailOverlay);
+      if (sub) sub.textContent = 'Micro indisponible ou refusé. Autorisez le micro pour laisser un message.';
+    });
+  }
+
+  function vmStopRecording() {
+    if (!voicemail.recording) return;
+    voicemail.recording = false;
+    if (voicemail.timer) { clearInterval(voicemail.timer); voicemail.timer = null; }
+    if (voicemail.recorder) {
+      try { if (voicemail.recorder.state !== 'inactive') voicemail.recorder.stop(); } catch (e) {}
+    }
+  }
+
+  function vmShowError(text) {
+    voicemail.sending = false;
+    var sub = q('.mcp-voicemail-sub', voicemailOverlay);
+    if (sub) sub.textContent = text;
+    vmEl('send').disabled = !voicemail.chunks.length;
+    vmEl('record').disabled = false;
+    var cancel = vmEl('cancel');
+    if (cancel) cancel.disabled = false;
+  }
+
+  function vmSend() {
+    if (voicemail.sending || !voicemail.chunks.length) return;
+    voicemail.sending = true;
+    vmEl('send').disabled = true;
+    vmEl('record').disabled = true;
+    var cancel = vmEl('cancel');
+    if (cancel) cancel.disabled = true;
+    var blob;
+    try { blob = new Blob(voicemail.chunks, { type: voicemail.mime }); }
+    catch (e) { blob = new Blob(voicemail.chunks); }
+    var reader = new FileReader();
+    reader.onerror = function () { vmShowError('Impossible de lire l\'enregistrement. Réessayez.'); };
+    reader.onload = function () {
+      var geo = detectCountry();
+      var id = ensureGuest();
+      var payload = {
+        audio: String(reader.result || ''),
+        mime: voicemail.mime,
+        duration: voicemail.seconds,
+        fromId: id ? id.id : '',
+        fromName: id ? id.name : 'Visiteur',
+        country: geo.country,
+        countryCode: geo.countryCode
+      };
+      fetch('/api/voicemail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (d) {
+          if (d && d.ok) {
+            voicemail.sending = false;
+            var title = q('.mcp-voicemail-title', voicemailOverlay);
+            var sub = q('.mcp-voicemail-sub', voicemailOverlay);
+            var timer = vmEl('timer');
+            if (title) title.textContent = 'Message envoyé';
+            if (sub) sub.textContent = 'Merci ! L\'équipe support vous rappellera dès que possible.';
+            if (timer) timer.textContent = '';
+            var actions = q('.mcp-voicemail-actions', voicemailOverlay);
+            if (actions) {
+              actions.innerHTML = '<button type="button" class="mcp-voicemail-btn primary" data-mcp-voicemail="done">Fermer</button>';
+            }
+          } else {
+            vmShowError('Impossible d\'envoyer le message. Réessayez.');
+          }
+        })
+        .catch(function () { vmShowError('Erreur réseau. Réessayez.'); });
+    };
+    reader.readAsDataURL(blob);
+  }
+
+  voicemailOverlay.addEventListener('click', function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest('[data-mcp-voicemail]') : null;
+    if (!btn) return;
+    var act = btn.getAttribute('data-mcp-voicemail');
+    if (act === 'record') vmStartRecording();
+    else if (act === 'send') vmSend();
+    else if (act === 'cancel' || act === 'done') closeVoicemail();
+  });
+
   function onCallError(msg) {
     stopRingback();
-    if (msg.reason === 'offline') setCallState('Utilisateur indisponible');
-    else setCallState('Appel impossible');
+    if (msg.reason === 'no-answer') {
+      // Le support n'a pas décroché dans le délai imparti : on propose au
+      // correspondant de laisser un message vocal.
+      endCall(false);
+      openVoicemail();
+    } else if (msg.reason === 'offline') {
+      setCallState('Utilisateur indisponible');
+    } else {
+      setCallState('Appel impossible');
+    }
   }
 
   function addRemoteIce(candidate) {

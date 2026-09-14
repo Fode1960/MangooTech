@@ -93,6 +93,26 @@ a{text-decoration:none;color:inherit}
 .call-badge.missed{background:rgb(var(--mgt-accent-50));color:rgb(var(--mgt-accent))}
 .call-badge.rejected{background:rgb(var(--mgt-error)/.12);color:rgb(var(--mgt-error))}
 .call-badge.ringing{background:rgb(var(--mgt-warning)/.18);color:#b45309}
+.vm-section{margin-top:18px;background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:var(--mgt-radius-lg);padding:22px;box-shadow:var(--mgt-shadow-sm)}
+.vm-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.vm-head h2{font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em}
+.vm-count{font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));background:rgb(var(--mgt-muted));padding:4px 10px;border-radius:999px}
+.vm-list{display:flex;flex-direction:column}
+.vm-empty{padding:24px 8px;text-align:center;font-size:13.5px;color:rgb(var(--mgt-muted-foreground))}
+.vm-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-top:1px solid rgb(var(--mgt-border))}
+.vm-row:first-child{border-top:none}
+.vm-row.unread{background:linear-gradient(90deg,rgb(var(--mgt-primary-50)),rgba(255,255,255,0))}
+.vm-play{width:40px;height:40px;border-radius:50%;border:none;background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary));cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s}
+.vm-play.playing{background:rgb(var(--mgt-primary));color:#fff}
+.vm-meta{flex:1;min-width:0}
+.vm-name{font-size:14px;font-weight:600;color:rgb(var(--mgt-foreground));display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.vm-name .flag{display:inline-flex;align-items:center}
+.vm-name .flag img{width:20px;height:15px;object-fit:cover;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.15);vertical-align:-2px}
+.vm-sub{font-size:12px;color:rgb(var(--mgt-muted-foreground));margin-top:2px}
+.vm-dot{width:8px;height:8px;border-radius:50%;background:rgb(var(--mgt-accent));flex-shrink:0}
+.vm-del{width:36px;height:36px;border-radius:8px;border:none;background:transparent;color:rgb(var(--mgt-error));cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.vm-del:hover{background:rgb(var(--mgt-error)/.1)}
+@media(max-width:640px){.vm-section{padding:16px}}
 @media(max-width:640px){.calls-section{padding:16px}}
 </style>
 </head>
@@ -155,6 +175,16 @@ a{text-decoration:none;color:inherit}
       </div>
       <div class="calls-list" id="calls-list">
         <div class="calls-empty">Chargement de l'historique…</div>
+      </div>
+    </section>
+
+    <section class="vm-section">
+      <div class="vm-head">
+        <h2>Messages vocaux</h2>
+        <span class="vm-count" id="vm-count">0</span>
+      </div>
+      <div class="vm-list" id="vm-list">
+        <div class="vm-empty">Chargement des messages…</div>
       </div>
     </section>
 
@@ -240,7 +270,7 @@ a{text-decoration:none;color:inherit}
           if (countryRow) {
             if (c && c.country) {
               countryRow.style.display = 'block';
-              if (countryTxt) countryTxt.textContent = c.country;
+              if (countryTxt) countryTxt.innerHTML = (c.countryCode ? flagHtml(c.countryCode) + ' ' : '') + esc(c.country);
             } else {
               countryRow.style.display = 'none';
             }
@@ -257,6 +287,8 @@ a{text-decoration:none;color:inherit}
       } else {
         setStatus('offline');
       }
+      loadCallHistory();
+      loadVoicemails();
     }
 
     function setupNotifications() {
@@ -284,6 +316,13 @@ a{text-decoration:none;color:inherit}
       return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
       });
+    }
+
+    // Drapeau image (Windows ne rend pas les emoji-drapeaux dans Chrome/Edge).
+    function flagHtml(cc) {
+      cc = String(cc || '').trim().toUpperCase();
+      if (cc.length !== 2) return '';
+      return '<span class="flag"><img src="https://flagcdn.com/w40/' + cc.toLowerCase() + '.png" alt="' + cc + '" onerror="this.parentNode.remove()"></span>';
     }
 
     function fmtDateTime(iso) {
@@ -357,6 +396,114 @@ a{text-decoration:none;color:inherit}
       });
     }
 
+    // --- Répondeur : boîte de réception des messages vocaux ---
+    var vmAudio = null;
+    var vmCurrentId = null;
+
+    function fmtDuration(s) {
+      s = Number(s) || 0;
+      var m = Math.floor(s / 60);
+      var sec = Math.floor(s % 60);
+      return m + ':' + String(sec).padStart(2, '0');
+    }
+
+    function supportToken() {
+      try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; }
+    }
+
+    function vmHeaders() {
+      var t = supportToken();
+      return t ? { 'Authorization': 'Bearer ' + t } : {};
+    }
+
+    function stopVmAudio() {
+      if (vmAudio) { try { vmAudio.pause(); } catch (e) {} vmAudio = null; }
+      vmCurrentId = null;
+      var list = document.getElementById('vm-list');
+      if (list) list.querySelectorAll('.vm-play.playing').forEach(function (b) { b.classList.remove('playing'); });
+    }
+
+    function loadVoicemails() {
+      fetch('/api/voicemail', { headers: vmHeaders() })
+        .then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (d) {
+          var list = document.getElementById('vm-list');
+          var count = document.getElementById('vm-count');
+          var msgs = (d && d.ok && Array.isArray(d.voicemails)) ? d.voicemails : [];
+          if (count) count.textContent = String(msgs.length);
+          if (!list) return;
+          if (!msgs.length) {
+            list.innerHTML = '<div class="vm-empty">Aucun message vocal.</div>';
+            return;
+          }
+          var html = '';
+          msgs.forEach(function (v) {
+            html += '<div class="vm-row' + (v.read ? '' : ' unread') + '" data-vm-id="' + esc(v.id) + '">' +
+              '<button type="button" class="vm-play" data-act="play" title="Écouter" aria-label="Écouter le message">' +
+                '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>' +
+              '</button>' +
+              '<div class="vm-meta">' +
+                '<div class="vm-name">' + esc(v.fromName || 'Visiteur') + (v.countryCode ? ' ' + flagHtml(v.countryCode) : '') + (v.country ? ' <span style="font-weight:400;color:rgb(var(--mgt-muted-foreground));font-size:12px;">' + esc(v.country) + '</span>' : '') + '</div>' +
+                '<div class="vm-sub">' + esc(fmtDateTime(v.at)) + ' · ' + fmtDuration(v.duration) + '</div>' +
+              '</div>' +
+              (v.read ? '' : '<span class="vm-dot" title="Non lu"></span>') +
+              '<button type="button" class="vm-del" data-act="delete" title="Supprimer" aria-label="Supprimer le message">' +
+                '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>' +
+              '</button>' +
+            '</div>';
+          });
+          list.innerHTML = html;
+        })
+        .catch(function () {
+          var list = document.getElementById('vm-list');
+          if (list) list.innerHTML = '<div class="vm-empty">Impossible de charger les messages vocaux.</div>';
+        });
+    }
+
+    function vmTogglePlay(id, btn) {
+      if (vmCurrentId === id) { stopVmAudio(); return; }
+      stopVmAudio();
+      var t = supportToken();
+      if (!t) return;
+      vmCurrentId = id;
+      if (btn) btn.classList.add('playing');
+      vmAudio = new Audio('/api/voicemail/audio?id=' + encodeURIComponent(id) + '&token=' + encodeURIComponent(t));
+      vmAudio.onended = function () { stopVmAudio(); };
+      vmAudio.onerror = function () { stopVmAudio(); };
+      vmAudio.play().catch(function () { stopVmAudio(); });
+      fetch('/api/voicemail/read?id=' + encodeURIComponent(id) + '&token=' + encodeURIComponent(t), { method: 'POST' })
+        .then(function () {
+          var row = document.querySelector('.vm-row[data-vm-id="' + id + '"]');
+          if (row) {
+            row.classList.remove('unread');
+            var dot = row.querySelector('.vm-dot');
+            if (dot) dot.remove();
+          }
+        }).catch(function () {});
+    }
+
+    function vmDelete(id) {
+      var t = supportToken();
+      if (!t) return;
+      stopVmAudio();
+      fetch('/api/voicemail/delete?id=' + encodeURIComponent(id) + '&token=' + encodeURIComponent(t), { method: 'POST' })
+        .then(function () { loadVoicemails(); })
+        .catch(function () {});
+    }
+
+    var vmListEl = document.getElementById('vm-list');
+    if (vmListEl) {
+      vmListEl.addEventListener('click', function (e) {
+        var btn = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
+        if (!btn) return;
+        var row = btn.closest('.vm-row');
+        var id = row ? row.getAttribute('data-vm-id') : '';
+        if (!id) return;
+        if (btn.getAttribute('data-act') === 'play') vmTogglePlay(id, btn);
+        else if (btn.getAttribute('data-act') === 'delete') vmDelete(id);
+      });
+    }
+
     // --- Atterrissage depuis une notification push d'appel (dashboard fermé) ---
     // Au clic sur la notification (ou via le logo PWA), le serveur cible cette
     // console avec ?kind=call&from=…&fromName=…&mode=…. L'appel est déjà terminé
@@ -368,7 +515,7 @@ a{text-decoration:none;color:inherit}
       var from = qp.get('from');
       var fromName = qp.get('fromName');
       if (!from && !fromName) return null;
-      return { from: from, fromName: fromName, mode: qp.get('mode') || 'audio', country: qp.get('country') || '' };
+      return { from: from, fromName: fromName, mode: qp.get('mode') || 'audio', country: qp.get('country') || '', countryCode: qp.get('countryCode') || '' };
     }
 
     function showCallbackOverlay(p) {
@@ -384,7 +531,7 @@ a{text-decoration:none;color:inherit}
           '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgb(var(--mgt-primary))" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
         '</div>' +
         '<div style="font-size:17px;font-weight:700;color:rgb(var(--mgt-foreground));">Appel entrant</div>' +
-        '<div style="font-size:13px;color:rgb(var(--mgt-muted-foreground));margin-top:4px;">' + esc(name) + ' a tenté de vous joindre.' + (p.country ? '<br><span style="color:rgb(var(--mgt-primary));font-weight:600;">Provenance : ' + esc(p.country) + '</span>' : '') + '</div>' +
+        '<div style="font-size:13px;color:rgb(var(--mgt-muted-foreground));margin-top:4px;">' + esc(name) + ' a tenté de vous joindre.' + (p.country ? '<br><span style="color:rgb(var(--mgt-primary));font-weight:600;">Provenance : ' + (p.countryCode ? flagHtml(p.countryCode) + ' ' : '') + esc(p.country) + '</span>' : '') + '</div>' +
         '<div style="display:flex;gap:10px;margin-top:20px;">' +
           '<button data-act="close" style="flex:1;height:42px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Fermer</button>' +
           '<button data-act="callback" style="flex:1;height:42px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Rappeler</button>' +

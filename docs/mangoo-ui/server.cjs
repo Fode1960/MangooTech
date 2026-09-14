@@ -551,6 +551,24 @@ function saveCallLog() {
   if (Array.isArray(arr)) callLog = arr;
 })();
 
+// ---- Répondeur du support (messages vocaux) ----
+// Lorsqu'un appel vers le support reste sans réponse (indisponible ou délai
+// dépassé), l'appelant peut laisser un message vocal. L'audio est stocké dans
+// DATA_DIR/voicemails/ et les métadonnées dans data/voicemails.json. Le support
+// les écoute depuis sa console (preuve en cas de contestation).
+const VOICEMAIL_FILE = 'voicemails.json';
+const VOICEMAIL_DIR = path.join(DATA_DIR, 'voicemails');
+let voicemails = [];
+function saveVoicemails() { writeJsonAtomic(VOICEMAIL_FILE, voicemails); }
+function ensureVoicemailDir() {
+  try { if (!fs.existsSync(VOICEMAIL_DIR)) fs.mkdirSync(VOICEMAIL_DIR, { recursive: true }); } catch (e) {}
+}
+(function loadVoicemails() {
+  const arr = readJsonFile(VOICEMAIL_FILE, []);
+  if (Array.isArray(arr)) voicemails = arr;
+  ensureVoicemailDir();
+})();
+
 // ---- Persistance des rendez-vous ----
 // Le flux temps réel (client -> pro) vit en mémoire, mais on le journalise dans
 // data/appointments.json pour que l'historique survive à un redémarrage et reste
@@ -4330,6 +4348,10 @@ function updateCall(callId, patch) {
 // l'appel, les autres cessent de sonner immédiatement.
 const SUPPORT_RING_GROUP_ID = 'support-mangoo';
 
+// Durée de sonnerie avant bascule vers le répondeur (message vocal) lorsque
+// personne ne décroche. S'applique à la sonnerie de groupe du support.
+const CALL_RING_TIMEOUT = 30000;
+
 function isRingGroup(id) {
   return canonicalRoutingId(id) === SUPPORT_RING_GROUP_ID;
 }
@@ -4410,6 +4432,16 @@ async function handleCallOffer(ws, msg) {
         sdp: msg.sdp, mode: callMode
       });
     });
+    // Personne n'a décroché dans le délai : on prévient l'appelant (il pourra
+    // laisser un message vocal) et on marque l'appel comme manqué.
+    setTimeout(function () {
+      const c = calls.get(callId);
+      if (!c || !c.group || c.answeredWs) return;
+      updateCall(callId, { status: 'missed' });
+      send(c.callerWs, { type: 'call-error', callId, reason: 'no-answer' });
+      c.candidates.forEach(function (cand) { send(cand.ws, { type: 'call-cancelled', callId }); });
+      calls.delete(callId);
+    }, CALL_RING_TIMEOUT);
     return;
   }
 
@@ -5697,6 +5729,105 @@ function handleHttp(req, res) {
       .sort(function (a, b) { return String(b.at || '').localeCompare(String(a.at || '')); });
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate' });
     res.end(JSON.stringify({ ok: true, calls: list }));
+    return;
+  }
+
+  if (urlPath === '/api/voicemail') {
+    // Répondeur du support. POST : dépôt d'un message vocal (appelant, même
+    // invité). GET : liste des messages pour l'équipe support.
+    if (req.method === 'POST') {
+      readJsonBody(req, function (err, body) {
+        if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Corps invalide.' })); return; }
+        body = body || {};
+        const audio = String(body.audio || '');
+        if (!audio) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Aucun audio.' })); return; }
+        let b64 = audio;
+        const comma = audio.indexOf(',');
+        if (audio.indexOf('data:') === 0 && comma > 0) b64 = audio.slice(comma + 1);
+        if (b64.length > 8 * 1024 * 1024) { res.writeHead(413, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Message trop long.' })); return; }
+        let buf;
+        try { buf = Buffer.from(b64, 'base64'); } catch (e) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Audio invalide.' })); return; }
+        if (buf.length === 0 || buf.length > 5 * 1024 * 1024) { res.writeHead(413, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Message trop long.' })); return; }
+        const mime = String(body.mime || 'audio/webm').slice(0, 80);
+        const ext = mime.indexOf('ogg') >= 0 ? 'ogg' : (mime.indexOf('mp4') >= 0 ? 'm4a' : 'webm');
+        const id = rand();
+        const fileName = id + '.' + ext;
+        ensureVoicemailDir();
+        try { fs.writeFileSync(path.join(VOICEMAIL_DIR, fileName), buf); }
+        catch (e) { res.writeHead(500, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Stockage impossible.' })); return; }
+        const entry = {
+          id: id,
+          to: 'support-mangoo',
+          fromId: String(body.fromId || '').slice(0, 120),
+          fromName: String(body.fromName || 'Visiteur').slice(0, 120),
+          country: String(body.country || '').slice(0, 80),
+          countryCode: String(body.countryCode || '').slice(0, 2).toUpperCase(),
+          mime: mime,
+          duration: Number(body.duration) || 0,
+          size: buf.length,
+          fileName: fileName,
+          at: nowIso(),
+          read: false
+        };
+        voicemails.push(entry);
+        saveVoicemails();
+        sendPush('support-mangoo', {
+          title: 'Nouveau message vocal',
+          body: (entry.fromName || 'Visiteur') + ' a laissé un message sur le répondeur',
+          url: '/pages/dashboard-support-console.html',
+          tag: 'voicemail-' + id,
+          requireInteraction: false,
+          data: { kind: 'voicemail', id: id }
+        });
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, id: id }));
+      });
+      return;
+    }
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const user = userByToken(token);
+    if (!user || !isSupportAccount(user)) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès réservé au support.' })); return; }
+    if (req.method !== 'GET') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non autorisée' })); return; }
+    const list = voicemails.slice().sort(function (a, b) { return String(b.at || '').localeCompare(String(a.at || '')); });
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify({ ok: true, voicemails: list }));
+    return;
+  }
+
+  if (urlPath === '/api/voicemail/audio') {
+    const id = queryParam(req, 'id');
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const user = userByToken(token);
+    if (!user || !isSupportAccount(user)) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès réservé au support.' })); return; }
+    const v = voicemails.find(function (x) { return x && x.id === id; });
+    if (!v) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Message introuvable.' })); return; }
+    const p = path.join(VOICEMAIL_DIR, v.fileName);
+    if (!fs.existsSync(p)) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Audio introuvable.' })); return; }
+    const buf = fs.readFileSync(p);
+    res.writeHead(200, { 'Content-Type': v.mime || 'audio/webm', 'Content-Length': buf.length, 'Cache-Control': 'no-store' });
+    res.end(buf);
+    return;
+  }
+
+  if (urlPath === '/api/voicemail/read' || urlPath === '/api/voicemail/delete') {
+    const id = queryParam(req, 'id');
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const user = userByToken(token);
+    if (!user || !isSupportAccount(user)) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Accès réservé au support.' })); return; }
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non autorisée' })); return; }
+    const v = voicemails.find(function (x) { return x && x.id === id; });
+    if (urlPath === '/api/voicemail/delete') {
+      if (v) {
+        try { fs.unlinkSync(path.join(VOICEMAIL_DIR, v.fileName)); } catch (e) {}
+        voicemails = voicemails.filter(function (x) { return x.id !== id; });
+        saveVoicemails();
+      }
+    } else if (v && !v.read) {
+      v.read = true;
+      saveVoicemails();
+    }
+    res.writeHead(200, JSON_HEADERS);
+    res.end(JSON.stringify({ ok: true }));
     return;
   }
 

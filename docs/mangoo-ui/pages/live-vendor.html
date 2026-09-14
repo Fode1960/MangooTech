@@ -709,15 +709,10 @@ html.dark {
       function setBroadcastMicMuted(muted) {
         if (localStream) localStream.getAudioTracks().forEach(function (t) { t.enabled = !muted; });
       }
-      function flagEmoji(cc) {
-        if (!cc || cc.length !== 2) return '';
-        var A = 'A'.charCodeAt(0);
-        var RI = 127462;
-        var c0 = cc.charCodeAt(0);
-        var c1 = cc.charCodeAt(1);
-        if (c0 < A || c0 > A + 25 || c1 < A || c1 > A + 25) return '';
-        try { return String.fromCodePoint(RI + (c0 - A), RI + (c1 - A)); }
-        catch (e) { return ''; }
+      function flagHtml(cc) {
+        cc = String(cc || '').trim().toUpperCase();
+        if (cc.length !== 2) return '';
+        return '<img src="https://flagcdn.com/w40/' + cc.toLowerCase() + '.png" alt="' + cc + '" width="20" height="15" style="width:20px;height:15px;object-fit:cover;border-radius:2px;vertical-align:-2px;box-shadow:0 0 0 1px rgba(0,0,0,.15);margin-right:6px;" onerror="this.remove()">';
       }
       function handleCallRing(msg) {
         if (callState !== 'idle') { send({ type: 'call-reject', callId: msg.callId }); return; }
@@ -726,8 +721,9 @@ html.dark {
         callOfferSdp = msg.sdp;
         var name = msg.fromName || 'Client';
         var country = msg.country || '';
-        var flag = flagEmoji(msg.countryCode);
-        document.getElementById('call-caller').textContent = flag ? (flag + ' ' + name) : name;
+        var callerEl = document.getElementById('call-caller');
+        callerEl.textContent = name;
+        callerEl.insertAdjacentHTML('afterbegin', flagHtml(msg.countryCode));
         document.getElementById('call-avatar').textContent = name.charAt(0).toUpperCase();
         document.getElementById('call-status').textContent = 'vous appelle · négociation privée' + (country ? ' · ' + country : '');
         showCallOverlay('ringing');
