@@ -55,9 +55,13 @@
   }
   function flagEmoji(cc) {
     if (!cc || cc.length !== 2) return '';
-    var base = 127397;
+    var A = 'A'.charCodeAt(0);
+    var RI = 127462; // U+1F1E6 = indicateur régional lettre A
+    var c0 = cc.charCodeAt(0);
+    var c1 = cc.charCodeAt(1);
+    if (c0 < A || c0 > A + 25 || c1 < A || c1 > A + 25) return '';
     try {
-      return String.fromCodePoint(cc.charCodeAt(0) - 65 + base, cc.charCodeAt(1) - 65 + base);
+      return String.fromCodePoint(RI + (c0 - A), RI + (c1 - A));
     } catch (e) { return ''; }
   }
   function detectCountry() {
