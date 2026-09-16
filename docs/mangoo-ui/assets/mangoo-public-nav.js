@@ -33,7 +33,10 @@
     '.mgt-nav-link.cta{margin-top:8px;background:rgb(var(--mgt-accent));color:rgb(var(--mgt-accent-foreground));justify-content:center;font-weight:600;}',
     '.mgt-nav-link.cta:hover{background:rgb(var(--mgt-accent));filter:brightness(1.05);}',
     '.mgt-nav-foot{padding:12px;border-top:1px solid rgb(var(--mgt-border));}',
-    '.mgt-live-dot-nav{position:relative;display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef4444;margin-left:6px;vertical-align:middle;box-shadow:0 0 0 2px rgb(var(--mgt-primary));}'
+    '.mgt-live-dot-nav{position:relative;display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef4444;margin-left:6px;vertical-align:middle;box-shadow:0 0 0 2px rgb(var(--mgt-primary));}',
+    '.mgt-nav-back{display:flex;align-items:center;gap:10px;width:100%;padding:12px 12px;border:none;background:none;cursor:pointer;border-radius:10px;color:rgb(var(--mgt-primary));font-size:14px;font-weight:600;text-align:left;font-family:inherit;}',
+    '.mgt-nav-back:hover{background:rgb(var(--mgt-muted));}',
+    '.mgt-nav-back svg{flex-shrink:0;}'
   ].join('\n');
 
   function injectStyle() {
@@ -139,7 +142,8 @@
     var drawer = document.createElement('aside');
     drawer.className = 'mgt-nav-drawer';
 
-    var items = links.map(function (l) {
+    var backItem = '<button class="mgt-nav-back" id="mgt-nav-back" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Retour</button>';
+    var items = backItem + links.map(function (l) {
       var isCta = /connexion|inscri|connect|log\s*in/i.test(l.text);
       return '<a class="mgt-nav-link' + (isCta ? ' cta' : '') + '" href="' + escapeHtml(l.href) + '">' + escapeHtml(l.text) + '</a>';
     }).join('');
@@ -161,6 +165,15 @@
     });
     overlay.addEventListener('click', close);
     drawer.querySelector('#mgt-nav-close').addEventListener('click', close);
+    var backBtn = drawer.querySelector('#mgt-nav-back');
+    if (backBtn) backBtn.addEventListener('click', function () {
+      close();
+      var ref = document.referrer || '';
+      var sameOrigin = false;
+      try { sameOrigin = !!ref && new URL(ref).origin === window.location.origin; } catch (e) {}
+      if (sameOrigin && window.history.length > 1) { window.history.back(); }
+      else { window.location.href = './carte.html'; }
+    });
     drawer.querySelectorAll('.mgt-nav-link').forEach(function (a) {
       a.addEventListener('click', function () { if (window.innerWidth <= 768) close(); });
     });
