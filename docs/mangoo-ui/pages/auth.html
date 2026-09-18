@@ -315,13 +315,18 @@ html.dark {
       }
       function go(u) {
         // Rejoue l'atterrissage d'une notification push mémorisé avant la
-        // redirection (appel -> console, message -> messagerie Support), sinon
-        // renvoie le compte Support vers sa console.
+        // redirection, pour TOUT compte professionnel (prestataire, vendeur,
+        // livreur, Support). Sans cela, un pro au dashboard fermé (session
+        // expirée mais localStorage conservé) retombait sur la « Vue
+        // d'ensemble » au lieu de la page Rendez-vous après un clic sur une
+        // notification.
+        var role = String((u && u.role) || '').toLowerCase();
+        var isPro = role === 'prestataire' || role === 'vendeur' || role === 'livreur';
         var landing = null;
         try { landing = localStorage.getItem('mgt_push_landing_v1'); } catch (e) { landing = null; }
         if (landing) {
           try { localStorage.removeItem('mgt_push_landing_v1'); } catch (e) {}
-          if (isSupportUser(u) && /^\/pages\/(dashboard-support-console|dashboard-support-messages)\.html(\?.*)?$/.test(landing) && landing.indexOf('//') < 0) {
+          if (isPro && /^\/pages\/[A-Za-z0-9._-]+\.html(\?.*)?$/.test(landing) && landing.indexOf('//') < 0) {
             window.location.replace(landing);
             return;
           }
