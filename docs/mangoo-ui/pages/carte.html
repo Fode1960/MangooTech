@@ -2501,9 +2501,9 @@ html.dark {
       var _rv = JSON.parse(localStorage.getItem('mgt_user') || 'null');
       var _rr = _rv && String(_rv.role || '').toLowerCase();
       // « Rendez-vous » (dashboard-agenda.html) est TRANSVERSE : vendeur (boutique)
-      // et prestataire y accèdent tous deux. Seul le client passe par chat.html#rdv.
-      return (_rr === 'vendeur' || _rr === 'prestataire') ? 'dashboard-agenda.html' : 'chat.html#rdv';
-    } catch (e) { return 'chat.html#rdv'; }
+      // et prestataire y accèdent tous deux. Seul le client passe par client-agenda.html.
+      return (_rr === 'vendeur' || _rr === 'prestataire') ? 'dashboard-agenda.html' : 'client-agenda.html';
+    } catch (e) { return 'client-agenda.html'; }
   })();
   var rdvFlag = (rdvTarget.indexOf('#rdv') >= 0) ? 'rdv' : '';
   var msgTarget = (function(){

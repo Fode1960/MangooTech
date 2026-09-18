@@ -319,7 +319,7 @@ textarea.mgt-field { resize: vertical; min-height: 64px; }
       </div>
       <div>
         <div class="mgt-label">Destinataire (professionnel)</div>
-        <select id="ag-recipient" class="mgt-field"><option value="">Choisir un professionnel…</option></select>
+        <select id="ag-recipient" class="mgt-field"><option value="">Choisir un prestataire…</option></select>
       </div>
       <div class="mgt-row2">
         <div>
@@ -647,7 +647,7 @@ textarea.mgt-field { resize: vertical; min-height: 64px; }
         }).filter(function (c) { return c.vendorId; });
         var sel = document.getElementById('ag-recipient');
         if (sel) {
-          sel.innerHTML = '<option value="">Choisir un professionnel…</option>';
+          sel.innerHTML = '<option value="">Choisir un prestataire…</option>';
           recipients.forEach(function (c) {
             var o = document.createElement('option');
             o.value = c.vendorId;
@@ -691,7 +691,7 @@ textarea.mgt-field { resize: vertical; min-height: 64px; }
       .catch(function () { /* le temps réel et le cache local restent la source principale */ });
   }
 
-  function openModal() { document.getElementById('mgt-overlay').classList.add('open'); }
+  function openModal() { document.getElementById('mgt-overlay').classList.add('open'); if (!recipients.length) loadRecipients(); }
   function closeModal() { document.getElementById('mgt-overlay').classList.remove('open'); }
 
   // --- Bindings UI ---

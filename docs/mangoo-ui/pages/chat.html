@@ -1877,7 +1877,7 @@ html.dark {
   if (agendaCloseBtn) agendaCloseBtn.addEventListener('click', agClose);
   if (agendaSubmitBtn) agendaSubmitBtn.addEventListener('click', agSubmit);
   if (agendaOverlay) agendaOverlay.addEventListener('click', function(e){ if (e.target === agendaOverlay) agClose(); });
-  if (location.hash === '#rdv'){ setTimeout(agOpen, 0); history.replaceState(null, '', location.pathname + location.search); }
+  if (location.hash === '#rdv'){ history.replaceState(null, '', location.pathname + location.search); location.href = './client-agenda.html'; }
 
   // --- Synchronisation des rendez-vous depuis le serveur ---
   // Quand une demande de RDV arrive pendant que le client n'est pas sur la
