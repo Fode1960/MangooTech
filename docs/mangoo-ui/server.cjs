@@ -1001,6 +1001,17 @@ function pushLandingUrl(opts) {
   return '/pages/accueil.html' + qs;
 }
 
+// URL d'atterrissage d'une notification de rendez-vous. Le professionnel
+// atterrit sur son agenda (dashboard-agenda.html), le client sur son chat,
+// le compte Support sur sa messagerie dediee.
+function appointmentLandingUrl(routingId) {
+  const u = userByRoutingId(routingId);
+  const role = (u && String(u.role || '').toLowerCase()) || '';
+  if (role === 'client' || role === 'cliente') return '/pages/chat.html';
+  if (isSupportAccount(u) || /^(support-mangoo|pro-support-mangoo|support)$/i.test(canonicalRoutingId(routingId))) return '/pages/dashboard-support-messages.html';
+  return '/pages/dashboard-agenda.html';
+}
+
 const PRESTATIONS_FILE = dataPath('prestations.json');
 let prestations = [];
 
@@ -4872,6 +4883,17 @@ function handleApptRequest(ws, msg) {
     from: appt.from, fromName: appt.fromName,
     service: appt.service, day: appt.day, time: appt.time, note: appt.note
   });
+  // Si le destinataire n'est pas sur sa messagerie, notification Web Push
+  // native pour que la demande lui parvienne quel que soit l'appareil.
+  if (!isOnMessaging(to)) {
+    sendPush(to, {
+      title: 'Nouvelle demande de rendez-vous',
+      body: (ws.meta.name || 'Un contact') + ' vous propose un rendez-vous : ' + (msg.service || 'prestation') + ' le ' + (msg.day || '') + ' à ' + (msg.time || ''),
+      url: appointmentLandingUrl(to),
+      tag: 'appt-' + appt.apptId,
+      data: { kind: 'appointment', apptId: appt.apptId, from: appt.from, fromName: appt.fromName }
+    });
+  }
   send(ws, { type: 'appointment-ack', apptId: appt.apptId });
 }
 
@@ -4885,6 +4907,15 @@ function handleApptReply(ws, msg) {
     type: accepted ? 'appointment-accepted' : 'appointment-declined',
     apptId: appt.apptId, name: ws.meta.name
   });
+  if (!isOnMessaging(appt.from)) {
+    sendPush(appt.from, {
+      title: accepted ? 'Rendez-vous accepté' : 'Rendez-vous refusé',
+      body: (ws.meta.name || 'Votre contact') + ' a ' + (accepted ? 'accepté' : 'refusé') + ' le rendez-vous.',
+      url: appointmentLandingUrl(appt.from),
+      tag: 'appt-' + appt.apptId,
+      data: { kind: 'appointment', apptId: appt.apptId, from: ws.meta.id, fromName: ws.meta.name }
+    });
+  }
 }
 
 /* --- Live Shopping (multi-salles) --- */
@@ -7459,6 +7490,15 @@ function handleHttp(req, res) {
             apptId: appt.apptId,
             name: (authedUser && displayNameForUser(authedUser)) || vendor
           });
+          if (!isOnMessaging(appt.from)) {
+            sendPush(appt.from, {
+              title: accepted ? 'Rendez-vous accepté' : 'Rendez-vous refusé',
+              body: ((authedUser && displayNameForUser(authedUser)) || vendor) + ' a ' + (accepted ? 'accepté' : 'refusé') + ' le rendez-vous.',
+              url: appointmentLandingUrl(appt.from),
+              tag: 'appt-' + appt.apptId,
+              data: { kind: 'appointment', apptId: appt.apptId, from: vendor, fromName: (authedUser && displayNameForUser(authedUser)) || vendor }
+            });
+          }
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({ ok: true, appointment: appt }));
           return;
