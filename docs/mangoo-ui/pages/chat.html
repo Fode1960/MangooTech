@@ -663,6 +663,7 @@ html.dark {
       <p style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0 0 10px;">Nouvelle demande de rendez-vous</p>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <input id="ag-service" type="text" placeholder="Prestation (ex : Coiffure)" style="width:100%;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));">
+        <select id="ag-recipient" style="width:100%;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));"><option value="">Choisir un destinataire…</option></select>
         <div style="display:flex;gap:8px;">
           <input id="ag-day" type="text" placeholder="Jour (ex : Demain)" style="flex:1;min-width:0;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));">
           <input id="ag-time" type="text" placeholder="Heure (ex : 10:00)" style="flex:1;min-width:0;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));">
@@ -1820,19 +1821,46 @@ html.dark {
       items.appendChild(row);
     });
   }
-  function agOpen(){ var m = document.getElementById('client-agenda'); if (m){ m.style.display = 'flex'; agRender(); } }
+  function agOpen(){
+    var m = document.getElementById('client-agenda');
+    if (!m) return;
+    m.style.display = 'flex';
+    var sel = document.getElementById('ag-recipient');
+    if (sel){
+      var prev = sel.value;
+      sel.innerHTML = '<option value="">Choisir un destinataire…</option>';
+      CONVERSATIONS.forEach(function(c){
+        var o = document.createElement('option');
+        o.value = c.vendorId;
+        o.textContent = c.name || c.vendorId;
+        sel.appendChild(o);
+      });
+      var want = (ACTIVE && convById(ACTIVE)) ? ACTIVE : ((prev && convById(prev)) ? prev : '');
+      sel.value = want;
+    }
+    agRender();
+  }
   function agClose(){ var m = document.getElementById('client-agenda'); if (m) m.style.display = 'none'; }
   function agSubmit(){
-    var service = (document.getElementById('ag-service')||{}).value || 'Consultation';
-    var day = (document.getElementById('ag-day')||{}).value || 'Demain';
-    var time = (document.getElementById('ag-time')||{}).value || '10:00';
-    if (RT && typeof RT.sendAppointment === 'function' && ACTIVE) RT.sendAppointment(PEER.id, { service:service, day:day, time:time });
+    var service = (document.getElementById('ag-service')||{}).value.trim() || 'Consultation';
+    var day = (document.getElementById('ag-day')||{}).value.trim() || 'Demain';
+    var time = (document.getElementById('ag-time')||{}).value.trim() || '10:00';
+    var sel = document.getElementById('ag-recipient');
+    var to = sel ? sel.value : '';
+    if (!to && ACTIVE) to = PEER.id;
+    if (!to){
+      if (sel) sel.focus();
+      toast("Choisissez d'abord un destinataire.");
+      return;
+    }
+    var c = convById(to);
+    if (RT && typeof RT.sendAppointment === 'function') RT.sendAppointment(to, { service:service, day:day, time:time });
     myAppointments.push({ service:service, day:day, time:time, status:'pending' });
     if (document.getElementById('ag-service')) document.getElementById('ag-service').value = '';
     if (document.getElementById('ag-day')) document.getElementById('ag-day').value = '';
     if (document.getElementById('ag-time')) document.getElementById('ag-time').value = '';
     agRender();
-    sysMsg('Demande de rendez-vous envoyée : ' + service + ' (' + day + ' · ' + time + ')');
+    toast('Demande de rendez-vous envoyée à ' + (c ? c.name : 'votre contact') + '.');
   }
   var myAgendaBtn = document.getElementById('btn-my-agenda');
   var agendaCloseBtn = document.getElementById('agenda-close');
@@ -1843,6 +1871,43 @@ html.dark {
   if (agendaOverlay) agendaOverlay.addEventListener('click', function(e){ if (e.target === agendaOverlay) agClose(); });
   if (myAgendaBtn) myAgendaBtn.addEventListener('click', agOpen);
   if (location.hash === '#rdv'){ setTimeout(agOpen, 0); history.replaceState(null, '', location.pathname + location.search); }
+
+  // --- Synchronisation des rendez-vous depuis le serveur ---
+  // Quand une demande de RDV arrive pendant que le client n'est pas sur la
+  // page de chat, le message temps reel est perdu. On recharge donc l'historique
+  // au chargement pour reafficher les demandes entrantes (Accepter / Refuser).
+  function syncAppointments(){
+    if (!CLIENT || !CLIENT.id) return;
+    fetch('/api/appointments?vendor=' + encodeURIComponent(CLIENT.id), { cache: 'no-store', headers: { 'Accept': 'application/json' } })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var list = (res && res.ok && Array.isArray(res.appointments)) ? res.appointments : [];
+        if (!list.length) return;
+        var myId = CLIENT.id;
+        var pendingIncoming = [];
+        list.forEach(function(a){
+          if (!a || !a.apptId) return;
+          var from = String(a.from || '').trim();
+          var to = String(a.to || '').trim();
+          if (!(to === myId && from && from !== myId)) return;
+          var srv = a.status;
+          var threadStatus = srv === 'confirmed' ? 'accepted' : (srv === 'declined' ? 'declined' : 'pending');
+          upsertConversation(from, a.fromName || from, '');
+          var thr = threadOf(from);
+          var exists = thr.some(function(m){ return m && m.kind === 'appt' && m.apptId === a.apptId; });
+          if (!exists){
+            thr.push({ dir:'in', kind:'appt', apptId:a.apptId, service:a.service, day:a.day, time:a.time, status:threadStatus, time:nowTime() });
+            if (threadStatus === 'pending' && from !== ACTIVE) UNREAD[from] = (UNREAD[from]||0)+1;
+          }
+          if (threadStatus === 'pending') pendingIncoming.push(from);
+        });
+        saveStore();
+        renderSidebar();
+        renderThread();
+        if (!ACTIVE && pendingIncoming.length) selectConversation(pendingIncoming[0]);
+      })
+      .catch(function(){ /* non bloquant : le temps reel reste la source principale */ });
+  }
 
   // --- Messages enregistrés (consulter) ---
   function savedMessagesList(){
@@ -2135,6 +2200,7 @@ html.dark {
       });
   }
   loadConversations();
+  syncAppointments();
 
   // Masque l'indicateur statique « en train d'écrire » par défaut.
   var typing = document.getElementById('typing-indicator');
