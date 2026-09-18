@@ -364,9 +364,9 @@ html.dark {
             <button id="btn-call-video" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors" title="Appel vidéo" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12);">
               <i data-lucide="video" class="w-4 h-4"></i>
             </button>
-            <button id="btn-my-agenda" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors" title="Mes rendez-vous" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12);">
+            <a id="btn-my-agenda" href="./client-agenda.html" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors" title="Mes rendez-vous" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12); text-decoration:none;">
               <i data-lucide="calendar-days" class="w-4 h-4"></i>
-            </button>
+            </a>
             <button id="btn-saved-messages" class="w-9 h-9 flex items-center justify-center rounded-full transition-colors" title="Messages favoris" style="color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.12);">
               <i data-lucide="bookmark" class="w-4 h-4"></i>
             </button>
@@ -474,7 +474,7 @@ html.dark {
             <i data-lucide="map" class="w-5 h-5"></i>
             <span>Boutiques</span>
           </a>
-          <a href="#" class="client-nav-item" id="bottom-nav-agenda">
+          <a href="./client-agenda.html" class="client-nav-item" id="bottom-nav-agenda">
             <i data-lucide="calendar-days" class="w-5 h-5"></i>
             <span>RDV</span>
           </a>
@@ -668,6 +668,7 @@ html.dark {
           <input id="ag-day" type="text" placeholder="Jour (ex : Demain)" style="flex:1;min-width:0;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));">
           <input id="ag-time" type="text" placeholder="Heure (ex : 10:00)" style="flex:1;min-width:0;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));">
         </div>
+        <textarea id="ag-note" placeholder="Note (optionnel) : précisions…" rows="2" style="width:100%;padding:10px 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;font-size:14px;color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-background));resize:vertical;font-family:inherit;"></textarea>
         <button id="ag-submit" style="width:100%;padding:11px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Envoyer la demande</button>
       </div>
     </div>
@@ -1517,7 +1518,8 @@ html.dark {
       body =
         '<div class="bg-white rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">' +
           '<p class="text-sm font-medium text-foreground">Proposition de rendez-vous</p>' +
-          '<p class="text-xs text-muted-foreground mt-1">'+esc(m.service||'')+' · '+esc(m.day||'')+' · '+esc(m.time||'')+'</p>' +
+          '<p class="text-xs text-muted-foreground mt-1">'+esc(m.service||'')+' · '+esc(m.day||'')+' · '+esc(m.apptTime||m.time||'')+'</p>' +
+          (m.note ? '<p class="text-xs text-muted-foreground mt-1">'+esc(m.note)+'</p>' : '') +
           (m.status === 'pending'
             ? '<div class="flex gap-2 mt-2.5">' +
                 '<button data-appt="accept" data-appt-id="'+esc(m.apptId||'')+'" class="flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-white" style="background:rgb(var(--mgt-primary))">Accepter</button>' +
@@ -1794,7 +1796,9 @@ html.dark {
   if (RT && typeof RT.onStatus === 'function') RT.onStatus(function(){ refreshVideoButton(); });
 
   // --- Agenda client (mes rendez-vous) ---
-  var myAppointments = [];
+  var myAppointments = loadAppointments();
+  function loadAppointments(){ try { var v = JSON.parse(localStorage.getItem('mgt_client_appointments_v1')||'[]'); return (Array.isArray(v)?v:[]); } catch(e){ return []; } }
+  function saveAppointments(){ try { localStorage.setItem('mgt_client_appointments_v1', JSON.stringify(myAppointments)); } catch(e){} }
   function agRender(){
     var items = document.getElementById('ag-items');
     if (!items) return;
@@ -1804,7 +1808,7 @@ html.dark {
     }
     var map = {
       pending: ['En attente', 'rgb(var(--mgt-warning))', 'rgb(var(--mgt-warning-foreground))'],
-      confirmed: ['Confirmé', 'rgb(var(--mgt-primary-500))', '#fff'],
+      accepted: ['Confirmé', 'rgb(var(--mgt-primary-500))', '#fff'],
       declined: ['Refusé', 'rgb(var(--mgt-error))', '#fff']
     };
     items.innerHTML = '';
@@ -1815,7 +1819,8 @@ html.dark {
       row.innerHTML =
         '<div style="flex:1;min-width:0;">' +
           '<p style="font-size:14px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(a.service)+'</p>' +
-          '<p style="font-size:12px;color:rgb(var(--mgt-muted-foreground));margin:2px 0 0;">'+esc(a.day)+' · '+esc(a.time)+'</p>' +
+          '<p style="font-size:12px;color:rgb(var(--mgt-muted-foreground));margin:2px 0 0;">'+esc(a.day)+' · '+esc(a.apptTime||a.time)+'</p>' +
+          (a.note ? '<p style="font-size:12px;color:rgb(var(--mgt-muted-foreground));margin:2px 0 0;">'+esc(a.note)+'</p>' : '') +
         '</div>' +
         '<span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;background:'+st[1]+';color:'+st[2]+';white-space:nowrap;flex-shrink:0;">'+st[0]+'</span>';
       items.appendChild(row);
@@ -1845,6 +1850,7 @@ html.dark {
     var service = (document.getElementById('ag-service')||{}).value.trim() || 'Consultation';
     var day = (document.getElementById('ag-day')||{}).value.trim() || 'Demain';
     var time = (document.getElementById('ag-time')||{}).value.trim() || '10:00';
+    var note = (document.getElementById('ag-note')||{}).value.trim() || '';
     var sel = document.getElementById('ag-recipient');
     var to = sel ? sel.value : '';
     if (!to && ACTIVE) to = PEER.id;
@@ -1854,22 +1860,23 @@ html.dark {
       return;
     }
     var c = convById(to);
-    if (RT && typeof RT.sendAppointment === 'function') RT.sendAppointment(to, { service:service, day:day, time:time });
-    myAppointments.push({ service:service, day:day, time:time, status:'pending' });
+    var apptId = 'appt-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
+    if (RT && typeof RT.sendAppointment === 'function') RT.sendAppointment(to, { service:service, day:day, time:time, note:note, apptId:apptId });
+    myAppointments.push({ apptId:apptId, dir:'out', peerId:to, peerName:(c?c.name:to), service:service, day:day, apptTime:time, note:note, status:'pending', createdAt:new Date().toISOString() });
+    saveAppointments();
     if (document.getElementById('ag-service')) document.getElementById('ag-service').value = '';
     if (document.getElementById('ag-day')) document.getElementById('ag-day').value = '';
     if (document.getElementById('ag-time')) document.getElementById('ag-time').value = '';
+    if (document.getElementById('ag-note')) document.getElementById('ag-note').value = '';
     agRender();
     toast('Demande de rendez-vous envoyée à ' + (c ? c.name : 'votre contact') + '.');
   }
-  var myAgendaBtn = document.getElementById('btn-my-agenda');
   var agendaCloseBtn = document.getElementById('agenda-close');
   var agendaSubmitBtn = document.getElementById('ag-submit');
   var agendaOverlay = document.getElementById('client-agenda');
   if (agendaCloseBtn) agendaCloseBtn.addEventListener('click', agClose);
   if (agendaSubmitBtn) agendaSubmitBtn.addEventListener('click', agSubmit);
   if (agendaOverlay) agendaOverlay.addEventListener('click', function(e){ if (e.target === agendaOverlay) agClose(); });
-  if (myAgendaBtn) myAgendaBtn.addEventListener('click', agOpen);
   if (location.hash === '#rdv'){ setTimeout(agOpen, 0); history.replaceState(null, '', location.pathname + location.search); }
 
   // --- Synchronisation des rendez-vous depuis le serveur ---
@@ -1896,12 +1903,32 @@ html.dark {
           var thr = threadOf(from);
           var exists = thr.some(function(m){ return m && m.kind === 'appt' && m.apptId === a.apptId; });
           if (!exists){
-            thr.push({ dir:'in', kind:'appt', apptId:a.apptId, service:a.service, day:a.day, time:a.time, status:threadStatus, time:nowTime() });
+            thr.push({ dir:'in', kind:'appt', apptId:a.apptId, service:a.service, day:a.day, apptTime:a.time, note:a.note, status:threadStatus, time:nowTime() });
             if (threadStatus === 'pending' && from !== ACTIVE) UNREAD[from] = (UNREAD[from]||0)+1;
           }
           if (threadStatus === 'pending') pendingIncoming.push(from);
         });
+        // Demandes sortantes : le client a envoyé une demande à un professionnel.
+        list.forEach(function(a){
+          if (!a || !a.apptId) return;
+          var from2 = String(a.from || '').trim();
+          var to2 = String(a.to || '').trim();
+          if (!(from2 === myId && to2 && to2 !== myId)) return;
+          var srv2 = a.status;
+          var internal2 = srv2 === 'confirmed' ? 'accepted' : (srv2 === 'declined' ? 'declined' : 'pending');
+          var ex = null;
+          for (var i=0;i<myAppointments.length;i++) if (myAppointments[i].apptId === a.apptId){ ex = myAppointments[i]; break; }
+          if (!ex){
+            myAppointments.push({ apptId:a.apptId, dir:'out', peerId:to2, peerName:a.toName || to2, service:a.service, day:a.day, apptTime:a.time, note:a.note, status:internal2, createdAt:a.createdAt || new Date().toISOString() });
+          } else {
+            if (ex.status !== internal2) ex.status = internal2;
+            if (a.note) ex.note = a.note;
+            if (a.time) ex.apptTime = a.time;
+          }
+        });
         saveStore();
+        saveAppointments();
+        agRender();
         renderSidebar();
         renderThread();
         if (!ACTIVE && pendingIncoming.length) selectConversation(pendingIncoming[0]);
@@ -2078,16 +2105,22 @@ html.dark {
     RT.onAppointment(function(a){
       var from = a.from || '';
       if (!from) return;
-      pushMsg(from, { dir:'in', kind:'appt', apptId:a.apptId, service:a.service, day:a.day, time:a.time, status:'pending', time:nowTime() });
+      pushMsg(from, { dir:'in', kind:'appt', apptId:a.apptId, service:a.service, day:a.day, apptTime:a.time, note:a.note, status:'pending', time:nowTime() });
       if (from !== ACTIVE) UNREAD[from] = (UNREAD[from]||0)+1;
       if (from === ACTIVE) renderThread();
       renderSidebar();
     });
     RT.onAppointmentReply(function(r){
       var accepted = r.type === 'appointment-accepted';
+      var apptId = r.apptId || '';
       for (var i = myAppointments.length-1; i>=0; i--){
-        if (myAppointments[i].status === 'pending'){ myAppointments[i].status = accepted ? 'confirmed' : 'declined'; break; }
+        if (apptId && myAppointments[i].apptId === apptId){
+          myAppointments[i].status = accepted ? 'accepted' : 'declined';
+        } else if (!apptId && myAppointments[i].status === 'pending'){
+          myAppointments[i].status = accepted ? 'accepted' : 'declined';
+        }
       }
+      saveAppointments();
       if (typeof agRender === 'function') agRender();
       if (ACTIVE) sysMsg('Rendez-vous ' + (accepted ? 'confirmé' : 'refusé') + ' par ' + (r.name || 'le professionnel'));
     });
@@ -2226,7 +2259,7 @@ html.dark {
   <nav class="client-nav-list">
     <a href="./client-dashboard.html" class="client-nav-link"><i data-lucide="home" class="w-4 h-4"></i><span>Accueil</span></a>
     <a href="./chat.html" class="client-nav-link active"><i data-lucide="message-circle" class="w-4 h-4"></i><span>Messagerie</span></a>
-    <a href="#" class="client-nav-link" id="drawer-nav-agenda"><i data-lucide="calendar-days" class="w-4 h-4"></i><span>Mes rendez-vous</span></a>
+    <a href="./client-agenda.html" class="client-nav-link" id="drawer-nav-agenda"><i data-lucide="calendar-days" class="w-4 h-4"></i><span>Mes rendez-vous</span></a>
     <a href="./carte.html" class="client-nav-link"><i data-lucide="map" class="w-4 h-4"></i><span>Boutiques &amp; Prestataires</span></a>
     <a href="./client-orders.html" class="client-nav-link"><i data-lucide="package" class="w-4 h-4"></i><span>Mes commandes</span></a>
     <a href="./client-favorites.html" class="client-nav-link"><i data-lucide="heart" class="w-4 h-4"></i><span>Mes favoris</span></a>
@@ -2289,16 +2322,7 @@ html.dark {
   menuBtn.addEventListener('click', open);
   if (closeBtn) closeBtn.addEventListener('click', close);
   overlay.addEventListener('click', close);
-  function openAgenda() {
-    var b = document.getElementById('btn-my-agenda');
-    if (b) b.click();
-    close();
-  }
-  var bna = document.getElementById('bottom-nav-agenda');
-  if (bna) bna.addEventListener('click', function (e) { e.preventDefault(); openAgenda(); });
-  var dna = document.getElementById('drawer-nav-agenda');
-  if (dna) dna.addEventListener('click', function (e) { e.preventDefault(); openAgenda(); });
-  drawer.querySelectorAll('a[href]:not(#drawer-nav-agenda)').forEach(function (a) {
+  drawer.querySelectorAll('a[href]').forEach(function (a) {
     a.addEventListener('click', close);
   });
 

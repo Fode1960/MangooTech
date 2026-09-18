@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mes rendez-vous - Mangoo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style id="theme-vars">
+/* ===== MangooTech Brand Design Tokens ===== */
+:root {
+  --mgt-radius-sm: 4px;
+  --mgt-radius-md: 8px;
+  --mgt-radius-lg: 16px;
+  --mgt-radius-full: 9999px;
+}
+:root, html.light {
+  --mgt-primary: 26 92 42;
+  --mgt-primary-50: 232 245 233;
+  --mgt-primary-100: 200 230 201;
+  --mgt-primary-200: 165 214 168;
+  --mgt-primary-300: 129 199 134;
+  --mgt-primary-400: 102 183 108;
+  --mgt-primary-500: 76 168 82;
+  --mgt-primary-600: 56 142 60;
+  --mgt-primary-700: 38 112 42;
+  --mgt-primary-800: 26 92 42;
+  --mgt-primary-900: 13 71 18;
+  --mgt-primary-foreground: 255 255 255;
+  --mgt-accent: 232 97 12;
+  --mgt-accent-50: 255 243 224;
+  --mgt-accent-100: 255 224 178;
+  --mgt-accent-200: 255 204 128;
+  --mgt-accent-300: 255 183 77;
+  --mgt-accent-400: 255 153 31;
+  --mgt-accent-500: 232 97 12;
+  --mgt-accent-600: 209 78 0;
+  --mgt-accent-700: 163 61 0;
+  --mgt-accent-800: 130 49 0;
+  --mgt-accent-900: 97 36 0;
+  --mgt-accent-foreground: 255 255 255;
+  --mgt-background: 255 255 255;
+  --mgt-foreground: 15 23 42;
+  --mgt-card: 255 255 255;
+  --mgt-card-foreground: 15 23 42;
+  --mgt-popover: 255 255 255;
+  --mgt-popover-foreground: 15 23 42;
+  --mgt-muted: 248 250 252;
+  --mgt-muted-foreground: 100 116 139;
+  --mgt-border: 226 232 240;
+  --mgt-input: 226 232 240;
+  --mgt-ring: 26 92 42;
+  --mgt-success: 129 199 134;
+  --mgt-success-foreground: 255 255 255;
+  --mgt-warning: 255 183 77;
+  --mgt-warning-foreground: 15 23 42;
+  --mgt-error: 239 68 68;
+  --mgt-error-foreground: 255 255 255;
+  --mgt-info: 59 130 246;
+  --mgt-info-foreground: 255 255 255;
+  --mgt-shadow-sm: 0 1px 2px rgba(15 23 42 / .05), 0 1px 1px rgba(15 23 42 / .03);
+  --mgt-shadow-md: 0 8px 24px -8px rgba(15 23 42 / .18);
+  --mgt-shadow-lg: 0 24px 60px -20px rgba(15 23 42 / .30);
+  --mgt-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --mgt-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+html.dark {
+  --mgt-background: 11 11 15;
+  --mgt-foreground: 248 250 252;
+  --mgt-card: 20 20 26;
+  --mgt-card-foreground: 248 250 252;
+  --mgt-popover: 20 20 26;
+  --mgt-popover-foreground: 248 250 252;
+  --mgt-muted: 30 30 38;
+  --mgt-muted-foreground: 148 163 184;
+  --mgt-border: 40 40 50;
+  --mgt-input: 40 40 50;
+  --mgt-ring: 76 168 82;
+}
+</style>
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--mgt-font-sans);
+  background: rgb(var(--mgt-background));
+  color: rgb(var(--mgt-foreground));
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+a { color: inherit; }
+button { font-family: inherit; }
+.mgt-wrap { max-width: 960px; margin: 0 auto; padding: 0 16px 96px; }
+.mgt-topbar {
+  position: sticky; top: 0; z-index: 40;
+  background: rgb(var(--mgt-primary));
+  color: rgb(var(--mgt-primary-foreground));
+  box-shadow: 0 4px 20px rgba(15 23 42 / .14);
+}
+.mgt-topbar-inner {
+  max-width: 960px; margin: 0 auto; padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.mgt-brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+.mgt-brand-logo {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  background: rgba(255,255,255,.16); display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px;
+}
+.mgt-brand-text { min-width: 0; }
+.mgt-brand-title { font-size: 15px; font-weight: 700; margin: 0; line-height: 1.2; }
+.mgt-brand-sub { font-size: 11px; opacity: .82; margin: 1px 0 0; }
+.mgt-top-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.mgt-icon-btn {
+  width: 38px; height: 38px; border-radius: 999px; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: rgb(var(--mgt-primary-foreground)); background: rgba(255,255,255,.14);
+}
+.mgt-icon-btn:hover { background: rgba(255,255,255,.24); }
+.mgt-icon-btn svg { width: 18px; height: 18px; }
+
+.mgt-hero { margin: 20px 0 16px; }
+.mgt-hero h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 4px; }
+.mgt-hero p { font-size: 13px; color: rgb(var(--mgt-muted-foreground)); margin: 0; }
+
+.mgt-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.mgt-stat {
+  border: 1px solid rgb(var(--mgt-border)); background: rgb(var(--mgt-card));
+  border-radius: 14px; padding: 12px 14px;
+}
+.mgt-stat-val { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+.mgt-stat-lbl { font-size: 11px; color: rgb(var(--mgt-muted-foreground)); margin-top: 5px; }
+.mgt-stat.is-pending .mgt-stat-val { color: rgb(var(--mgt-warning)); }
+.mgt-stat.is-accepted .mgt-stat-val { color: rgb(var(--mgt-primary-500)); }
+.mgt-stat.is-declined .mgt-stat-val { color: rgb(var(--mgt-error)); }
+
+.mgt-card {
+  background: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border));
+  border-radius: 16px; box-shadow: var(--mgt-shadow-sm);
+}
+.mgt-card-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; }
+.mgt-card-title { font-size: 14px; font-weight: 700; margin: 0; }
+.mgt-cal { padding: 0 12px 14px; }
+.mgt-cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.mgt-cal-month { font-size: 15px; font-weight: 600; }
+.mgt-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.mgt-cal-dow { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: rgb(var(--mgt-muted-foreground)); text-align: center; padding: 4px 0; }
+.mgt-cal-day {
+  position: relative; aspect-ratio: 1; border: none; border-radius: 10px; cursor: pointer;
+  background: transparent; color: rgb(var(--mgt-foreground)); font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; justify-content: center;
+}
+.mgt-cal-day:hover { background: rgb(var(--mgt-muted)); }
+.mgt-cal-day.other { color: rgb(var(--mgt-muted-foreground)); opacity: .4; }
+.mgt-cal-day.today { outline: 2px solid rgb(var(--mgt-primary)); outline-offset: -2px; }
+.mgt-cal-day.selected { background: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); }
+.mgt-cal-day.has { background: rgb(var(--mgt-primary-50)); }
+.mgt-cal-day .dot {
+  position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
+  width: 5px; height: 5px; border-radius: 999px; background: rgb(var(--mgt-primary));
+}
+.mgt-cal-day.selected .dot { background: #fff; }
+
+.mgt-filters { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 14px; }
+.mgt-chip {
+  flex-shrink: 0; border: 1px solid rgb(var(--mgt-border)); background: rgb(var(--mgt-card));
+  color: rgb(var(--mgt-foreground)); border-radius: 999px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.mgt-chip.active { background: rgb(var(--mgt-primary)); border-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); }
+
+.mgt-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.mgt-appt { border: 1px solid rgb(var(--mgt-border)); background: rgb(var(--mgt-card)); border-radius: 14px; padding: 14px; }
+.mgt-appt-top { display: flex; align-items: flex-start; gap: 10px; }
+.mgt-appt-ico {
+  width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700));
+}
+.mgt-appt-ico svg { width: 20px; height: 20px; }
+.mgt-appt-main { flex: 1; min-width: 0; }
+.mgt-appt-title { font-size: 14px; font-weight: 700; margin: 0; }
+.mgt-appt-meta { font-size: 12px; color: rgb(var(--mgt-muted-foreground)); margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.mgt-appt-meta span { display: inline-flex; align-items: center; gap: 4px; }
+.mgt-appt-note {
+  margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: rgb(var(--mgt-foreground));
+  background: rgb(var(--mgt-muted)); border-left: 3px solid rgb(var(--mgt-primary-300));
+  padding: 8px 10px; border-radius: 0 8px 8px 0; white-space: pre-wrap; word-break: break-word;
+}
+.mgt-appt-note .lbl { color: rgb(var(--mgt-muted-foreground)); font-weight: 600; }
+.mgt-appt-actions { display: flex; gap: 8px; margin-top: 12px; }
+.mgt-btn {
+  flex: 1; border: none; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.mgt-btn svg { width: 15px; height: 15px; }
+.mgt-btn.primary { background: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); }
+.mgt-btn.primary:hover { background: rgb(var(--mgt-primary-700)); }
+.mgt-btn.ghost { background: rgb(var(--mgt-muted)); color: rgb(var(--mgt-foreground)); }
+.mgt-btn.ghost:hover { background: rgb(var(--mgt-border)); }
+.mgt-btn.danger { background: rgb(var(--mgt-error)); color: #fff; }
+.mgt-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+.mgt-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+.mgt-badge.pending { background: rgb(var(--mgt-warning)); color: rgb(var(--mgt-warning-foreground)); }
+.mgt-badge.accepted { background: rgb(var(--mgt-primary-100)); color: rgb(var(--mgt-primary-700)); }
+.mgt-badge.declined { background: rgb(var(--mgt-error)); color: #fff; }
+.mgt-badge.dir { background: rgb(var(--mgt-muted)); color: rgb(var(--mgt-muted-foreground)); }
+
+.mgt-empty { text-align: center; padding: 44px 16px; color: rgb(var(--mgt-muted-foreground)); font-size: 13px; }
+.mgt-empty svg { width: 40px; height: 40px; margin: 0 auto 10px; color: rgb(var(--mgt-border)); }
+
+/* Modal */
+.mgt-overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(15,23,42,.5); align-items: center; justify-content: center; padding: 16px; }
+.mgt-overlay.open { display: flex; }
+.mgt-modal { background: rgb(var(--mgt-background)); border: 1px solid rgb(var(--mgt-border)); border-radius: 20px; width: 100%; max-width: 480px; max-height: 88vh; overflow: auto; box-shadow: var(--mgt-shadow-lg); }
+.mgt-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid rgb(var(--mgt-border)); position: sticky; top: 0; background: rgb(var(--mgt-background)); }
+.mgt-modal-head h3 { font-size: 16px; font-weight: 700; margin: 0; }
+.mgt-modal-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+.mgt-field { width: 100%; padding: 11px 12px; border: 1px solid rgb(var(--mgt-input)); border-radius: 10px; font-size: 14px; color: rgb(var(--mgt-foreground)); background: rgb(var(--mgt-background)); font-family: inherit; }
+.mgt-field:focus { outline: 2px solid rgb(var(--mgt-ring)); outline-offset: 0; border-color: rgb(var(--mgt-ring)); }
+textarea.mgt-field { resize: vertical; min-height: 64px; }
+.mgt-row2 { display: flex; gap: 8px; }
+.mgt-row2 .mgt-field { flex: 1; min-width: 0; }
+.mgt-label { font-size: 12px; font-weight: 600; color: rgb(var(--mgt-muted-foreground)); margin-bottom: 4px; }
+
+/* Bottom nav */
+.mgt-bottom-nav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  background: rgb(var(--mgt-card)); border-top: 1px solid rgb(var(--mgt-border));
+  display: flex; padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+}
+.mgt-bottom-nav a {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 4px; font-size: 11px; font-weight: 500; color: rgb(var(--mgt-muted-foreground)); text-decoration: none;
+}
+.mgt-bottom-nav a.active { color: rgb(var(--mgt-primary)); font-weight: 600; }
+.mgt-bottom-nav a svg { width: 21px; height: 21px; }
+
+/* Toast */
+#mgt-toast {
+  position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%) translateY(20px);
+  background: rgb(var(--mgt-foreground)); color: rgb(var(--mgt-background));
+  padding: 10px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; z-index: 300;
+  opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; max-width: 90vw; text-align: center;
+}
+#mgt-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (min-width: 640px) {
+  .mgt-hero h1 { font-size: 28px; }
+  .mgt-stats { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="mgt-topbar">
+  <div class="mgt-topbar-inner">
+    <a class="mgt-brand" href="./chat.html" style="text-decoration:none;">
+      <div class="mgt-brand-logo" id="mgt-brand-logo">M</div>
+      <div class="mgt-brand-text">
+        <p class="mgt-brand-title">Mangoo</p>
+        <p class="mgt-brand-sub">Mes rendez-vous</p>
+      </div>
+    </a>
+    <div class="mgt-top-actions">
+      <a class="mgt-icon-btn" href="./chat.html" title="Messagerie" aria-label="Messagerie"><i data-lucide="message-circle"></i></a>
+      <button class="mgt-icon-btn" id="btn-new-appt" title="Nouvelle demande" aria-label="Nouvelle demande"><i data-lucide="plus"></i></button>
+    </div>
+  </div>
+</div>
+
+<main class="mgt-wrap">
+  <div class="mgt-hero">
+    <h1>Mes rendez-vous</h1>
+    <p>Consultez, acceptez ou proposez vos rendez-vous avec les professionnels.</p>
+  </div>
+
+  <div class="mgt-stats">
+    <div class="mgt-stat is-pending"><div class="mgt-stat-val" id="stat-pending">0</div><div class="mgt-stat-lbl">En attente</div></div>
+    <div class="mgt-stat is-accepted"><div class="mgt-stat-val" id="stat-accepted">0</div><div class="mgt-stat-lbl">Acceptés</div></div>
+    <div class="mgt-stat is-declined"><div class="mgt-stat-val" id="stat-declined">0</div><div class="mgt-stat-lbl">Refusés</div></div>
+  </div>
+
+  <div class="mgt-card">
+    <div class="mgt-card-head">
+      <p class="mgt-card-title">Calendrier</p>
+      <button class="mgt-icon-btn" id="btn-cal-today" style="width:auto;height:auto;padding:6px 12px;font-size:12px;font-weight:600;background:rgb(var(--mgt-muted));color:rgb(var(--mgt-foreground));border-radius:999px;">Aujourd'hui</button>
+    </div>
+    <div class="mgt-cal">
+      <div class="mgt-cal-nav">
+        <button class="mgt-icon-btn" id="cal-prev" style="color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-muted));"><i data-lucide="chevron-left"></i></button>
+        <span class="mgt-cal-month" id="cal-month-label">—</span>
+        <button class="mgt-icon-btn" id="cal-next" style="color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-muted));"><i data-lucide="chevron-right"></i></button>
+      </div>
+      <div class="mgt-cal-grid" id="cal-grid"></div>
+    </div>
+  </div>
+
+  <div class="mgt-filters" id="mgt-filters" style="margin-top:14px;">
+    <button class="mgt-chip active" data-filter="all">Tous</button>
+    <button class="mgt-chip" data-filter="pending">En attente</button>
+    <button class="mgt-chip" data-filter="accepted">Acceptés</button>
+    <button class="mgt-chip" data-filter="declined">Refusés</button>
+  </div>
+
+  <div class="mgt-list" id="mgt-list"></div>
+</main>
+
+<div class="mgt-overlay" id="mgt-overlay">
+  <div class="mgt-modal">
+    <div class="mgt-modal-head">
+      <h3>Nouvelle demande de rendez-vous</h3>
+      <button class="mgt-icon-btn" id="btn-modal-close" style="color:rgb(var(--mgt-foreground));background:rgb(var(--mgt-muted));"><i data-lucide="x"></i></button>
+    </div>
+    <div class="mgt-modal-body">
+      <div>
+        <div class="mgt-label">Prestation</div>
+        <input id="ag-service" class="mgt-field" type="text" placeholder="Ex : Coiffure">
+      </div>
+      <div>
+        <div class="mgt-label">Destinataire (professionnel)</div>
+        <select id="ag-recipient" class="mgt-field"><option value="">Choisir un professionnel…</option></select>
+      </div>
+      <div class="mgt-row2">
+        <div>
+          <div class="mgt-label">Jour</div>
+          <input id="ag-day" class="mgt-field" type="date">
+        </div>
+        <div>
+          <div class="mgt-label">Heure</div>
+          <input id="ag-time" class="mgt-field" type="time" value="10:00">
+        </div>
+      </div>
+      <div>
+        <div class="mgt-label">Note (optionnel)</div>
+        <textarea id="ag-note" class="mgt-field" placeholder="Précisions, adresse, rappel…"></textarea>
+      </div>
+      <button id="ag-submit" class="mgt-btn primary" style="width:100%;">Envoyer la demande</button>
+    </div>
+  </div>
+</div>
+
+<nav class="mgt-bottom-nav">
+  <a href="./client-dashboard.html"><i data-lucide="home"></i><span>Accueil</span></a>
+  <a href="./chat.html"><i data-lucide="message-circle"></i><span>Messages</span></a>
+  <a href="./client-agenda.html" class="active"><i data-lucide="calendar-days"></i><span>RDV</span></a>
+  <a href="./carte.html"><i data-lucide="map"></i><span>Boutiques</span></a>
+  <a href="./client-profile.html"><i data-lucide="user"></i><span>Profil</span></a>
+</nav>
+
+<div id="mgt-toast" role="status" aria-live="polite"></div>
+
+<script src="../assets/mangoo-connect-plus.js?v=20260914b"></script>
+<script>
+(function () {
+  'use strict';
+
+  var STORE_KEY = 'mgt_client_agenda_v1';
+  var RT = window.MangooConnect;
+
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function nowIso() { return new Date().toISOString(); }
+
+  function readClient() {
+    try {
+      var u = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+      if (u) {
+        var role = String(u.role || '').toLowerCase();
+        if (role === 'vendeur' || role === 'prestataire' || role === 'livreur' || role === 'support') {
+          location.replace('./dashboard-agenda.html');
+          return null;
+        }
+        var id = u.id || u.vendorId || '';
+        var name = u.fullName || u.name || '';
+        if (id && name) return { id: String(id), name: String(name) };
+      }
+    } catch (e) {}
+    var anon = '';
+    try { anon = localStorage.getItem('mgt_client_anon_id_v1') || ''; } catch (e) {}
+    if (!anon) {
+      anon = 'guest-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1e6).toString(36);
+      try { localStorage.setItem('mgt_client_anon_id_v1', anon); } catch (e) {}
+    }
+    return { id: anon, name: 'Client' };
+  }
+
+  var CLIENT = readClient();
+  if (!CLIENT) return;
+
+  var appointments = loadStore();
+  var recipients = [];   // [{ vendorId, name }]
+  var statusFilter = 'all';
+  var filterDate = null; // Date selectionnée (null = toutes)
+  var calYear, calMonth;
+
+  function loadStore() {
+    try { var v = JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); return Array.isArray(v) ? v : []; }
+    catch (e) { return []; }
+  }
+  function saveStore() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(appointments)); } catch (e) {}
+  }
+  function normStatus(s) {
+    return s === 'confirmed' ? 'accepted' : (s === 'declined' ? 'declined' : 'pending');
+  }
+
+  function toast(msg) {
+    var el = document.getElementById('mgt-toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { el.classList.remove('show'); }, 2600);
+  }
+
+  function parseDay(s) {
+    s = String(s || '').trim();
+    if (!s) return null;
+    var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) {
+      var d = new Date(+m[1], (+m[2]) - 1, +m[3]);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    var d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function fmtDay(s) {
+    var d = parseDay(s);
+    if (!d) return String(s || '');
+    return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  function sameDay(a, b) {
+    return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  }
+
+  function statusBadge(st) {
+    var map = {
+      pending: '<span class="mgt-badge pending">En attente</span>',
+      accepted: '<span class="mgt-badge accepted">Accepté</span>',
+      declined: '<span class="mgt-badge declined">Refusé</span>'
+    };
+    return map[st] || map.pending;
+  }
+
+  function renderStats() {
+    var p = 0, a = 0, d = 0;
+    appointments.forEach(function (x) {
+      if (x.status === 'accepted') a++;
+      else if (x.status === 'declined') d++;
+      else p++;
+    });
+    setText('stat-pending', p);
+    setText('stat-accepted', a);
+    setText('stat-declined', d);
+  }
+  function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+
+  function renderCalendar() {
+    var grid = document.getElementById('cal-grid');
+    var label = document.getElementById('cal-month-label');
+    if (!grid || !label) return;
+
+    var now = new Date();
+    if (calYear == null) { calYear = now.getFullYear(); calMonth = now.getMonth(); }
+
+    label.textContent = new Date(calYear, calMonth, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+    var counts = {};
+    appointments.forEach(function (x) {
+      var d = parseDay(x.day);
+      if (!d) return;
+      var key = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+      counts[key] = (counts[key] || 0) + 1;
+    });
+
+    var first = new Date(calYear, calMonth, 1);
+    var startWeekday = (first.getDay() + 6) % 7; // lundi = 0
+    var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+    var html = '';
+    ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].forEach(function (d) {
+      html += '<div class="mgt-cal-dow">' + d + '</div>';
+    });
+
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    for (var i = 0; i < startWeekday; i++) {
+      html += '<div class="mgt-cal-day other"></div>';
+    }
+    for (var d = 1; d <= daysInMonth; d++) {
+      var date = new Date(calYear, calMonth, d);
+      var key = date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate();
+      var cls = 'mgt-cal-day';
+      if (counts[key]) cls += ' has';
+      if (sameDay(date, today)) cls += ' today';
+      if (filterDate && sameDay(date, filterDate)) cls += ' selected';
+      html += '<button type="button" class="' + cls + '" data-date="' + date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate() + '">' + d + (counts[key] ? '<span class="dot"></span>' : '') + '</button>';
+    }
+    grid.innerHTML = html;
+
+    grid.querySelectorAll('.mgt-cal-day[data-date]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var parts = btn.getAttribute('data-date').split('-');
+        var clicked = new Date(+parts[0], (+parts[1]) - 1, +parts[2]);
+        if (filterDate && sameDay(filterDate, clicked)) filterDate = null;
+        else filterDate = clicked;
+        renderCalendar();
+        renderList();
+      });
+    });
+  }
+
+  function renderList() {
+    var box = document.getElementById('mgt-list');
+    if (!box) return;
+    var list = appointments.slice().sort(function (a, b) {
+      return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+    });
+
+    if (statusFilter !== 'all') list = list.filter(function (x) { return x.status === statusFilter; });
+    if (filterDate) list = list.filter(function (x) { var d = parseDay(x.day); return sameDay(d, filterDate); });
+
+    if (!list.length) {
+      box.innerHTML = '<div class="mgt-empty"><i data-lucide="calendar-days"></i><div>Aucun rendez-vous' + (statusFilter !== 'all' || filterDate ? ' pour ce filtre' : '') + '.</div></div>';
+      if (window.lucide) window.lucide.createIcons();
+      return;
+    }
+
+    box.innerHTML = '';
+    list.forEach(function (x) {
+      var isIncoming = x.dir === 'in';
+      var el = document.createElement('div');
+      el.className = 'mgt-appt';
+      var noteHtml = x.note ? '<div class="mgt-appt-note"><span class="lbl">Note :</span> ' + esc(x.note) + '</div>' : '';
+      var actionsHtml = '';
+      if (isIncoming && x.status === 'pending') {
+        actionsHtml =
+          '<div class="mgt-appt-actions">' +
+            '<button class="mgt-btn primary" data-act="accept" data-id="' + esc(x.apptId) + '"><i data-lucide="check"></i> Accepter</button>' +
+            '<button class="mgt-btn ghost" data-act="decline" data-id="' + esc(x.apptId) + '"><i data-lucide="x"></i> Refuser</button>' +
+          '</div>';
+      }
+      el.innerHTML =
+        '<div class="mgt-appt-top">' +
+          '<div class="mgt-appt-ico"><i data-lucide="' + (isIncoming ? 'inbox' : 'send') + '"></i></div>' +
+          '<div class="mgt-appt-main">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+              '<p class="mgt-appt-title">' + esc(x.service || 'Rendez-vous') + '</p>' +
+              statusBadge(x.status) +
+            '</div>' +
+            '<div class="mgt-appt-meta">' +
+              '<span class="mgt-badge dir">' + (isIncoming ? 'Reçu de' : 'Envoyé à') + '</span>' +
+              '<span>' + esc(x.peerName || (isIncoming ? 'un professionnel' : 'un contact')) + '</span>' +
+              '<span><i data-lucide="calendar" style="width:13px;height:13px;"></i> ' + esc(fmtDay(x.day)) + '</span>' +
+              (x.time ? '<span><i data-lucide="clock" style="width:13px;height:13px;"></i> ' + esc(x.time) + '</span>' : '') +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        noteHtml +
+        actionsHtml;
+      box.appendChild(el);
+    });
+
+    box.querySelectorAll('[data-act]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-id');
+        var accept = btn.getAttribute('data-act') === 'accept';
+        replyAppointment(id, accept);
+      });
+    });
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function renderAll() { renderStats(); renderCalendar(); renderList(); }
+
+  function upsert(record) {
+    if (!record || !record.apptId) return;
+    for (var i = 0; i < appointments.length; i++) {
+      if (appointments[i].apptId === record.apptId) {
+        appointments[i] = record;
+        saveStore();
+        return;
+      }
+    }
+    appointments.push(record);
+    saveStore();
+  }
+  function findByApptId(id) {
+    for (var i = 0; i < appointments.length; i++) if (appointments[i].apptId === id) return appointments[i];
+    return null;
+  }
+
+  function replyAppointment(apptId, accept) {
+    var rec = findByApptId(apptId);
+    if (!rec) return;
+    rec.status = accept ? 'accepted' : 'declined';
+    saveStore();
+    renderAll();
+    var done = false;
+    if (RT && typeof RT.replyAppointment === 'function') {
+      try { done = RT.replyAppointment(apptId, accept) !== false; } catch (e) { done = false; }
+    }
+    // Repli HTTP si le temps réel n'est pas disponible.
+    if (!done) {
+      fetch('/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reply', apptId: apptId, accept: accept })
+      }).catch(function () {});
+    }
+    toast(accept ? 'Rendez-vous accepté ✓' : 'Rendez-vous refusé');
+  }
+
+  function submitAppointment() {
+    var service = (document.getElementById('ag-service') || {}).value.trim() || 'Consultation';
+    var day = (document.getElementById('ag-day') || {}).value.trim();
+    var time = (document.getElementById('ag-time') || {}).value.trim() || '10:00';
+    var note = (document.getElementById('ag-note') || {}).value.trim() || '';
+    var sel = document.getElementById('ag-recipient');
+    var to = sel ? sel.value : '';
+    if (!to) { toast('Choisissez d\u2019abord un professionnel.'); if (sel) sel.focus(); return; }
+    var peer = null;
+    for (var i = 0; i < recipients.length; i++) if (recipients[i].vendorId === to) { peer = recipients[i]; break; }
+
+    var apptId = 'appt-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+    upsert({ apptId: apptId, dir: 'out', peerId: to, peerName: (peer ? peer.name : to), service: service, day: day, time: time, note: note, status: 'pending', createdAt: nowIso() });
+
+    if (RT && typeof RT.sendAppointment === 'function') {
+      RT.sendAppointment(to, { service: service, day: day, time: time, note: note, apptId: apptId });
+    }
+
+    document.getElementById('ag-service').value = '';
+    document.getElementById('ag-day').value = '';
+    document.getElementById('ag-time').value = '10:00';
+    document.getElementById('ag-note').value = '';
+    closeModal();
+    renderAll();
+    toast('Demande envoyée à ' + (peer ? peer.name : 'votre contact') + '.');
+  }
+
+  function loadRecipients() {
+    fetch('/api/carte', { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var list = (data && data.vendors) || [];
+        recipients = list.map(function (v) {
+          return { vendorId: String(v.vendorId || v.id || ''), name: v.name || 'Professionnel' };
+        }).filter(function (c) { return c.vendorId; });
+        var sel = document.getElementById('ag-recipient');
+        if (sel) {
+          sel.innerHTML = '<option value="">Choisir un professionnel…</option>';
+          recipients.forEach(function (c) {
+            var o = document.createElement('option');
+            o.value = c.vendorId;
+            o.textContent = c.name;
+            sel.appendChild(o);
+          });
+        }
+      })
+      .catch(function () { /* non bloquant */ });
+  }
+
+  function syncFromServer() {
+    if (!CLIENT || !CLIENT.id) return;
+    fetch('/api/appointments?vendor=' + encodeURIComponent(CLIENT.id), { cache: 'no-store', headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        var list = (res && res.ok && Array.isArray(res.appointments)) ? res.appointments : [];
+        var myId = CLIENT.id;
+        var changed = false;
+        list.forEach(function (a) {
+          if (!a || !a.apptId) return;
+          var from = String(a.from || '').trim();
+          var to = String(a.to || '').trim();
+          var st = normStatus(a.status);
+          var record;
+          if (to === myId && from && from !== myId) {
+            record = { apptId: a.apptId, dir: 'in', peerId: from, peerName: a.fromName || from, service: a.service, day: a.day, time: a.time, note: a.note, status: st, createdAt: a.createdAt || nowIso() };
+          } else if (from === myId && to && to !== myId) {
+            record = { apptId: a.apptId, dir: 'out', peerId: to, peerName: a.toName || to, service: a.service, day: a.day, time: a.time, note: a.note, status: st, createdAt: a.createdAt || nowIso() };
+          } else {
+            return;
+          }
+          var ex = findByApptId(record.apptId);
+          if (!ex) { appointments.push(record); changed = true; }
+          else if (ex.status !== record.status || ex.time !== record.time || ex.note !== record.note) {
+            appointments[appointments.indexOf(ex)] = record; changed = true;
+          }
+        });
+        if (changed) { saveStore(); renderAll(); }
+      })
+      .catch(function () { /* le temps réel et le cache local restent la source principale */ });
+  }
+
+  function openModal() { document.getElementById('mgt-overlay').classList.add('open'); }
+  function closeModal() { document.getElementById('mgt-overlay').classList.remove('open'); }
+
+  // --- Bindings UI ---
+  document.getElementById('btn-new-appt').addEventListener('click', openModal);
+  document.getElementById('btn-modal-close').addEventListener('click', closeModal);
+  document.getElementById('ag-submit').addEventListener('click', submitAppointment);
+  document.getElementById('mgt-overlay').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
+
+  document.getElementById('mgt-filters').querySelectorAll('.mgt-chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      document.getElementById('mgt-filters').querySelectorAll('.mgt-chip').forEach(function (c) { c.classList.remove('active'); });
+      chip.classList.add('active');
+      statusFilter = chip.getAttribute('data-filter');
+      renderList();
+    });
+  });
+
+  document.getElementById('cal-prev').addEventListener('click', function () { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); });
+  document.getElementById('cal-next').addEventListener('click', function () { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); });
+  document.getElementById('btn-cal-today').addEventListener('click', function () {
+    var n = new Date(); calYear = n.getFullYear(); calMonth = n.getMonth(); filterDate = null; renderAll();
+  });
+
+  // --- Temps réel ---
+  if (RT) {
+    if (typeof RT.disableAutoOpenChat === 'function') RT.disableAutoOpenChat();
+    if (typeof RT.register === 'function') RT.register('client', CLIENT.id, CLIENT.name);
+    RT.onAppointment(function (a) {
+      var from = a.from || '';
+      if (!from || !a.apptId) return;
+      upsert({ apptId: a.apptId, dir: 'in', peerId: from, peerName: a.fromName || from, service: a.service, day: a.day, time: a.time, note: a.note, status: 'pending', createdAt: nowIso() });
+      renderAll();
+      toast('Nouvelle demande de rendez-vous reçue');
+    });
+    RT.onAppointmentReply(function (r) {
+      var accepted = r.type === 'appointment-accepted';
+      var rec = r.apptId ? findByApptId(r.apptId) : null;
+      if (!rec && !r.apptId) {
+        for (var i = appointments.length - 1; i >= 0; i--) {
+          if (appointments[i].dir === 'out' && appointments[i].status === 'pending') { rec = appointments[i]; break; }
+        }
+      }
+      if (rec) {
+        rec.status = accepted ? 'accepted' : 'declined';
+        saveStore();
+        renderAll();
+      }
+      toast('Rendez-vous ' + (accepted ? 'accepté ✓' : 'refusé') + ' par ' + (r.name || 'le professionnel'));
+    });
+  }
+
+  // --- Init ---
+  var now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+  loadRecipients();
+  renderAll();
+  syncFromServer();
+  if (window.lucide) window.lucide.createIcons();
+})();
+</script>
+</body>
+</html>

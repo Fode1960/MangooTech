@@ -791,7 +791,7 @@
     var p = (location.pathname || '').toLowerCase();
     var m = p.match(/\/([^/]+)$/);
     var name = m ? m[1] : p;
-    if (name === 'chat.html' || name === 'messages.html') return 'chat';
+    if (name === 'chat.html' || name === 'messages.html' || name === 'client-agenda.html') return 'chat';
     if (name === 'dashboard-messages.html') return 'dashboard';
     if (name === 'dashboard-agenda.html') return 'dashboard';
     if (name === 'dashboard-support-messages.html') return 'dashboard';
@@ -1722,7 +1722,8 @@
       var payload = {
         type: 'appointment-request', to: to,
         service: data && data.service, day: data && data.day,
-        time: data && data.time, note: data && data.note
+        time: data && data.time, note: data && data.note,
+        apptId: data && data.apptId
       };
       return queueOutboxPayload(payload);
     },
