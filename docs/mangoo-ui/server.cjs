@@ -1007,9 +1007,14 @@ function pushLandingUrl(opts) {
 function appointmentLandingUrl(routingId) {
   const u = userByRoutingId(routingId);
   const role = (u && String(u.role || '').toLowerCase()) || '';
-  if (role === 'client' || role === 'cliente') return '/pages/chat.html';
-  if (isSupportAccount(u) || /^(support-mangoo|pro-support-mangoo|support)$/i.test(canonicalRoutingId(routingId))) return '/pages/dashboard-support-messages.html';
-  return '/pages/dashboard-agenda.html';
+  // Le marqueur kind=appointment est lu par les shells (hasPushLanding) pour
+  // préserver l'atterrissage à travers une éventuelle reconnexion. Sans lui, un
+  // professionnel au dashboard fermé (session expirée) retombait sur la
+  // « Vue d'ensemble » au lieu de la page Rendez-vous après s'être reconnecté.
+  const qs = '?kind=appointment';
+  if (role === 'client' || role === 'cliente') return '/pages/client-agenda.html' + qs;
+  if (isSupportAccount(u) || /^(support-mangoo|pro-support-mangoo|support)$/i.test(canonicalRoutingId(routingId))) return '/pages/dashboard-support-messages.html' + qs;
+  return '/pages/dashboard-agenda.html' + qs;
 }
 
 const PRESTATIONS_FILE = dataPath('prestations.json');
@@ -7466,7 +7471,7 @@ function handleHttp(req, res) {
               sendPush(clientId, {
                 title: 'Nouveau rendez-vous',
                 body: (appt.fromName || vendor) + ' vous propose un rendez-vous : ' + service + ' le ' + day + ' à ' + time,
-                url: pushLandingUrl({ routingId: clientId, kind: 'message', from: vendor, fromName: appt.fromName, convId: '' }),
+                url: appointmentLandingUrl(clientId),
                 tag: 'appt-' + appt.apptId,
                 data: { kind: 'appointment', apptId: appt.apptId, from: vendor, fromName: appt.fromName }
               });
