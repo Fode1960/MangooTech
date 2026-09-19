@@ -23,7 +23,7 @@ self.addEventListener('install', function (event) {
 // purge des anciens caches (dont « mgt-push-state » qui mémorisait un landing de
 // notification). Cela garantit qu'aucun vieux routage — ex. renvoyer un
 // professionnel vers la page client chat.html — n'est rejoué après coup.
-var SW_VERSION = 'mgt-sw-2026-09-19';
+var SW_VERSION = 'mgt-sw-2026-09-19b';
 
 // Cache persistant du mode faible connexion : les pages et assets pré-cachés depuis
 // « dashboard-hors-ligne.html » y sont conservés pour être servis en repli
@@ -363,30 +363,23 @@ self.addEventListener('notificationclick', function (event) {
     clearAppBadge().then(function () { return closeAllNotifications(); }).then(function () {
       return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     }).then(function (clientList) {
-      // 1) Une fenêtre est déjà sur la page cible : on la ramène au premier plan.
+      // 1) Une fenêtre est déjà sur la page cible (même URL ou même page sans
+      //    la query string) : on la ramène au premier plan, sans nouvel onglet.
+      var targetPath = '';
+      try { targetPath = new URL(target, self.location.origin).pathname; } catch (e) { targetPath = ''; }
       for (var i = 0; i < clientList.length; i++) {
         var client = clientList[i];
-        if (client.url === target || (client.url && client.url.indexOf(target) === 0)) {
-          return client.focus().then(function () { return clearLastLanding(); });
-        }
-      }
-      // 2) Une autre fenêtre Mangoo est déjà ouverte : on la réutilise (on la
-      //    fait naviguer vers la cible) au lieu d'ouvrir un nouvel onglet.
-      var reuse = null;
-      for (var j = 0; j < clientList.length; j++) {
-        var w = clientList[j];
         try {
-          if (new URL(w.url).origin === self.location.origin) { reuse = w; break; }
+          var clientPath = new URL(client.url, self.location.origin).pathname;
+          if (client.url === target || (targetPath && clientPath === targetPath)) {
+            return client.focus().then(function () { return clearLastLanding(); });
+          }
         } catch (e) { /* ignore */ }
       }
-      if (reuse && typeof reuse.navigate === 'function') {
-        return reuse.navigate(target).then(function () {
-          return reuse.focus().then(function () { return clearLastLanding(); });
-        }).catch(function () {
-          return self.clients.openWindow(target).then(function () { return clearLastLanding(); });
-        });
-      }
-      // 3) Aucune fenêtre ouverte : on en ouvre une nouvelle.
+      // 2) Sinon on ouvre une fenêtre dédiée vers la cible. On ne navigue plus
+      //    une fenêtre « même origine » arbitraire : cela détournait la mauvaise
+      //    fenêtre (ex. celle d'un autre compte ouvert dans le même navigateur)
+      //    et donnait l'impression qu'il ne se passait rien au clic.
       return self.clients.openWindow(target).then(function () { return clearLastLanding(); });
     })
   );
