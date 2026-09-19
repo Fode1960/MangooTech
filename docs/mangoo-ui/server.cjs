@@ -60,6 +60,47 @@ try {
   console.warn('[Paiement] module orange-money.cjs indisponible — Orange Money désactivé :', e.message);
 }
 
+// Module d'envoi d'e-mails transactionnels (Brevo SMTP). Chargé de façon
+// défensive : si `email.cjs` / `nodemailer` ou les variables BREVO_* manquent,
+// `isConfigured()` renvoie false et les envois sont désactivés (les codes 2FA
+// restent renvoyés en `demoCode`).
+let email = null;
+try {
+  email = require('./email.cjs');
+} catch (e) {
+  console.warn('[Email] module email.cjs indisponible — e-mails désactivés :', e.message);
+}
+
+// Envoie (si configuré) le code de vérification à 6 chiffres par e-mail.
+// L'envoi est non bloquant et échoue silencieusement : le code reste renvoyé
+// en `demoCode` par les endpoints pour la démo / le débogage.
+function sendVerificationEmail(user, code, scope) {
+  if (!email || !email.isConfigured()) return;
+  if (!user || !user.email) return;
+  const labels = {
+    login: 'connexion',
+    enable: 'activation de la double authentification',
+    'pin-reset': 'réinitialisation de votre PIN',
+  };
+  const label = labels[scope] || 'vérification';
+  const subject = 'Mangoo — votre code de ' + label;
+  const text = 'Bonjour,\n\nVotre code de ' + label + ' Mangoo est : ' + code +
+    '\n\nCe code expire dans 10 minutes. Si vous n\'êtes pas à l\'origine de cette demande, ignorez cet e-mail.';
+  const html = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#1a1a2e;background:#ffffff">' +
+    '<h2 style="margin:0 0 8px;font-size:20px">Mangoo</h2>' +
+    '<p style="margin:0 0 16px">Votre code de ' + label + ' est :</p>' +
+    '<div style="font-size:32px;letter-spacing:6px;font-weight:bold;color:#7c3aed;padding:12px 16px;background:#f4f0ff;border-radius:8px;text-align:center;margin:0 0 16px">' + code + '</div>' +
+    '<p style="font-size:13px;color:#6b7280;margin:0">Ce code expire dans 10 minutes. Si vous n\'êtes pas à l\'origine de cette demande, ignorez cet e-mail.</p>' +
+    '</div>';
+  email.sendMail({ to: user.email, subject: subject, text: text, html: html }).then(function (r) {
+    if (r && r.ok) console.log('[Email] code envoyé à', user.email, '(scope=' + scope + ')');
+    else console.warn('[Email] échec d\'envoi vers', user.email, ':', r && r.error);
+  }).catch(function (e) {
+    console.warn('[Email] échec d\'envoi vers', user.email, ':', e && e.message);
+  });
+}
+
+
 const ROOT = __dirname;
 const HOST = '0.0.0.0';
 const HTTP_PORT = Number(process.env.PORT || 8080);
@@ -6460,6 +6501,7 @@ function handleHttp(req, res) {
       if (user.twoFactorEnabled) {
         const code = String(Math.floor(100000 + Math.random() * 900000));
         twoFactorCodes[user.id] = { code, expiresAt: Date.now() + 10 * 60 * 1000, scope: 'login' };
+        sendVerificationEmail(user, code, 'login');
         res.writeHead(200, JSON_HEADERS);
         res.end(JSON.stringify({ ok: true, twoFactor: true, userId: user.id, demoCode: code, expiresIn: 600, email: user.email || '' }));
         return;
@@ -6712,6 +6754,7 @@ function handleHttp(req, res) {
     if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
     const code = String(Math.floor(100000 + Math.random() * 900000));
     twoFactorCodes[user.id] = { code, expiresAt: Date.now() + 10 * 60 * 1000, scope: 'enable' };
+    sendVerificationEmail(user, code, 'enable');
     res.writeHead(200, JSON_HEADERS);
     res.end(JSON.stringify({ ok: true, demoCode: code, expiresIn: 600, email: user.email || '' }));
     return;
@@ -6777,6 +6820,7 @@ function handleHttp(req, res) {
 
       const code = String(Math.floor(100000 + Math.random() * 900000)); // 6 chiffres
       pinResets[phone] = { code, userId: user.id, expiresAt: Date.now() + 10 * 60 * 1000 };
+      sendVerificationEmail(user, code, 'pin-reset');
       // En production, le code serait envoyé par SMS. En démo, on le renvoie
       // directement pour que l'utilisateur puisse terminer le parcours.
       res.writeHead(200, JSON_HEADERS);
