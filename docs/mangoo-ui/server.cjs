@@ -101,6 +101,45 @@ function sendVerificationEmail(user, code, scope) {
 }
 
 
+// Résout l'adresse e-mail d'un destinataire à partir de son identifiant de
+// routage (compte client ou boutique). Priorité au compte utilisateur, puis au
+// profil de la boutique (vendor-config). Renvoie '' si introuvable.
+function emailForRoutingId(rid) {
+  if (!rid) return '';
+  const u = userByRoutingId(rid);
+  if (u && u.email) return String(u.email).trim();
+  const cfg = vendorConfigFor(canonicalRoutingId(rid));
+  const p = (cfg && cfg.profile) || {};
+  if (p.email) return String(p.email).trim();
+  return '';
+}
+
+// Construit un e-mail (sujet + texte + HTML) pour les rendez-vous.
+function appointmentMail(subject, paragraphs) {
+  const text = 'Bonjour,\n\n' + paragraphs.join('\n\n') + '\n\n— L\'équipe Mangoo';
+  const html = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#1a1a2e;background:#ffffff">' +
+    '<h2 style="margin:0 0 16px;font-size:20px;color:#1a5c2a">Mangoo</h2>' +
+    paragraphs.map(function (p) { return '<p style="margin:0 0 12px;line-height:1.6;font-size:14px">' + String(p).replace(/\n/g, '<br>') + '</p>'; }).join('') +
+    '<p style="font-size:12px;color:#9ca3af;margin:16px 0 0">Cet e-mail est envoyé automatiquement. Merci de ne pas y répondre directement.</p>' +
+    '</div>';
+  return { subject: subject, text: text, html: html };
+}
+
+// Envoie un e-mail de rendez-vous à `rid` (client ou boutique), si l'e-mail
+// est configuré et l'adresse connue. Non bloquant.
+function sendAppointmentEmail(rid, mail) {
+  if (!email || !email.isConfigured()) return;
+  const to = emailForRoutingId(rid);
+  if (!to) return;
+  email.sendMail({ to: to, subject: mail.subject, text: mail.text, html: mail.html }).then(function (r) {
+    if (r && r.ok) console.log('[Email] rendez-vous envoyé à', to);
+    else console.warn('[Email] échec rendez-vous vers', to, ':', r && r.error);
+  }).catch(function (e) {
+    console.warn('[Email] échec rendez-vous vers', to, ':', e && e.message);
+  });
+}
+
+
 const ROOT = __dirname;
 const HOST = '0.0.0.0';
 const HTTP_PORT = Number(process.env.PORT || 8080);
@@ -4940,6 +4979,12 @@ function handleApptRequest(ws, msg) {
       data: { kind: 'appointment', apptId: appt.apptId, from: appt.from, fromName: appt.fromName }
     });
   }
+  var apptMail = appointmentMail('Mangoo — nouvelle demande de rendez-vous', [
+    (ws.meta.name || 'Un contact') + ' vous propose un rendez-vous.',
+    'Prestation : ' + (msg.service || '—'),
+    'Date : ' + (msg.day || '') + ' à ' + (msg.time || '')
+  ]);
+  sendAppointmentEmail(to, apptMail);
   send(ws, { type: 'appointment-ack', apptId: appt.apptId });
 }
 
@@ -4962,6 +5007,12 @@ function handleApptReply(ws, msg) {
       data: { kind: 'appointment', apptId: appt.apptId, from: ws.meta.id, fromName: ws.meta.name }
     });
   }
+  var apptMail = appointmentMail(accepted ? 'Mangoo — rendez-vous confirmé' : 'Mangoo — rendez-vous refusé', [
+    (ws.meta.name || 'Votre prestataire') + ' a ' + (accepted ? 'accepté' : 'refusé') + ' le rendez-vous.',
+    'Prestation : ' + (appt.service || '—'),
+    'Date : ' + (appt.day || '') + ' à ' + (appt.time || '')
+  ]);
+  sendAppointmentEmail(appt.from, apptMail);
 }
 
 /* --- Live Shopping (multi-salles) --- */
@@ -7521,6 +7572,12 @@ function handleHttp(req, res) {
               });
             }
           }
+          var apptMail = appointmentMail('Mangoo — nouveau rendez-vous', [
+            (appt.fromName || vendor) + ' vous propose un rendez-vous.',
+            'Prestation : ' + service,
+            'Date : ' + day + ' à ' + time + (appt.note ? '\nNote : ' + appt.note : '')
+          ]);
+          sendAppointmentEmail(clientId, apptMail);
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({ ok: true, appointment: appt, notified: !!clientId }));
           return;
@@ -7548,6 +7605,12 @@ function handleHttp(req, res) {
               data: { kind: 'appointment', apptId: appt.apptId, from: vendor, fromName: (authedUser && displayNameForUser(authedUser)) || vendor }
             });
           }
+          var apptMail = appointmentMail(accepted ? 'Mangoo — rendez-vous confirmé' : 'Mangoo — rendez-vous refusé', [
+            ((authedUser && displayNameForUser(authedUser)) || vendor) + ' a ' + (accepted ? 'accepté' : 'refusé') + ' le rendez-vous.',
+            'Prestation : ' + (appt.service || '—'),
+            'Date : ' + (appt.day || '') + ' à ' + (appt.time || '')
+          ]);
+          sendAppointmentEmail(appt.from, apptMail);
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({ ok: true, appointment: appt }));
           return;
