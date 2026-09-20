@@ -140,6 +140,31 @@ function sendAppointmentEmail(rid, mail) {
 }
 
 
+// Envoie un e-mail de bienvenue après l'inscription, si l'adresse e-mail est
+// renseignée et l'envoi configuré. Non bloquant.
+function sendWelcomeEmail(user) {
+  if (!email || !email.isConfigured()) return;
+  if (!user || !user.email) return;
+  const role = String(user.role || '').toLowerCase();
+  const isPro = role === 'prestataire' || role === 'vendeur';
+  const isClient = role === 'client' || role === 'cliente';
+  let intro;
+  if (isPro) intro = 'Merci d\'avoir rejoint Mangoo, ' + (user.name || user.enseigne || '') + ' ! Votre boutique est prête à être personnalisée.';
+  else if (isClient) intro = 'Merci d\'avoir rejoint Mangoo, ' + (user.name || '') + ' ! Retrouvez les meilleurs commerçants près de chez vous.';
+  else intro = 'Bienvenue sur Mangoo, ' + (user.name || '') + ' !';
+  const mail = appointmentMail('Bienvenue sur Mangoo', [
+    intro,
+    'Découvrez dès maintenant votre espace et commencez à utiliser la plateforme.'
+  ]);
+  email.sendMail({ to: user.email, subject: mail.subject, text: mail.text, html: mail.html }).then(function (r) {
+    if (r && r.ok) console.log('[Email] bienvenue envoyé à', user.email);
+    else console.warn('[Email] échec bienvenue vers', user.email, ':', r && r.error);
+  }).catch(function (e) {
+    console.warn('[Email] échec bienvenue vers', user.email, ':', e && e.message);
+  });
+}
+
+
 const ROOT = __dirname;
 const HOST = '0.0.0.0';
 const HTTP_PORT = Number(process.env.PORT || 8080);
@@ -6459,6 +6484,9 @@ function handleHttp(req, res) {
       };
       users.push(user);
       saveUsers();
+
+      // E-mail de bienvenue (si l'adresse e-mail est renseignée et l'envoi configuré).
+      sendWelcomeEmail(user);
 
       // Crée un document vendor-config pour les comptes prestataires et vendeurs
       // afin que leur dashboard soit alimenté dès la première connexion.
