@@ -664,6 +664,23 @@ html.dark {
           </div>
         </section>
 
+        <!-- Authentification a deux facteurs -->
+        <section class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center gap-2.5 mb-4">
+            <i data-lucide="shield-check" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+            <h3 class="h3 text-[rgb(var(--mgt-foreground))]">Authentification a deux facteurs</h3>
+          </div>
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex flex-col gap-0.5 min-w-0">
+              <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Double authentification</span>
+              <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Recevez un code a 6 chiffres par e-mail pour renforcer la securite de votre compte.</span>
+            </div>
+            <span id="security-2fa-status" class="text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">Desactivee</span>
+          </div>
+          <p id="security-2fa-message" class="text-sm font-medium mt-3" style="display:none;"></p>
+          <div id="security-2fa-actions" class="mt-4"></div>
+        </section>
+
         <!-- Sécurité (zone sensible) -->
         <section class="rounded-xl p-6 border" style="background:rgb(var(--mgt-error) / 0.05);border-color:rgb(var(--mgt-error) / 0.18);">
           <div class="flex items-center gap-2.5 mb-4">
@@ -1280,5 +1297,163 @@ html.dark {
       });
     })();
     </script>
+    <script>
+    (function () {
+      function getToken() {
+        try { return localStorage.getItem('mgt_token'); } catch (e) { return null; }
+      }
+      function toast(message) {
+        var existing = document.getElementById('mgt-toast');
+        if (existing) existing.remove();
+        var t = document.createElement('div');
+        t.id = 'mgt-toast';
+        t.textContent = message;
+        t.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgb(var(--mgt-foreground));color:rgb(var(--mgt-background));padding:10px 18px;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);font-size:14px;font-weight:500;box-shadow:var(--mgt-shadow-md);z-index:9999;opacity:0;transition:opacity .25s ease;';
+        document.body.appendChild(t);
+        requestAnimationFrame(function () { t.style.opacity = '1'; });
+        setTimeout(function () { t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 300); }, 2600);
+      }
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+      function authFetch(path, payload) {
+        var t = getToken();
+        var headers = { 'Content-Type': 'application/json' };
+        if (t) headers['Authorization'] = 'Bearer ' + t;
+        return fetch(path, { method: 'POST', headers: headers, body: JSON.stringify(payload || {}) })
+          .then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, data: d }; });
+          });
+      }
+      function setMessage(text, isError) {
+        var el = document.getElementById('security-2fa-message');
+        if (!el) return;
+        el.textContent = text;
+        el.style.display = text ? 'block' : 'none';
+        el.style.color = isError ? 'rgb(var(--mgt-error))' : 'rgb(var(--mgt-primary))';
+      }
+
+      var twoFactorEnabled = false;
+      var userEmail = '';
+
+      function loadSecurityState() {
+        var t = getToken();
+        if (!t) return;
+        fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + t } })
+          .then(function (r) { return r.json().catch(function () { return {}; }); })
+          .then(function (data) {
+            var u = (data && data.user) || {};
+            twoFactorEnabled = !!u.twoFactorEnabled;
+            userEmail = u.email || '';
+            updateTwoFactorStatus();
+          })
+          .catch(function () {});
+      }
+
+      function updateTwoFactorStatus() {
+        var badge = document.getElementById('security-2fa-status');
+        if (badge) {
+          badge.textContent = twoFactorEnabled ? 'Activee' : 'Desactivee';
+          badge.style.background = twoFactorEnabled ? 'rgb(var(--mgt-success))' : 'rgb(var(--mgt-border))';
+          badge.style.color = twoFactorEnabled ? '#fff' : 'rgb(var(--mgt-muted-foreground))';
+        }
+        renderTwoFactorPanel();
+      }
+
+      function renderTwoFactorPanel() {
+        var container = document.getElementById('security-2fa-actions');
+        if (!container) return;
+        setMessage('', false);
+        if (!userEmail) {
+          container.innerHTML = '<p class="text-sm font-medium" style="color:rgb(var(--mgt-warning));">Aucune adresse e-mail renseignee. Ajoutez votre e-mail dans &laquo; Profil boutique &raquo; avant d\'activer la double authentification.</p>';
+          return;
+        }
+        if (twoFactorEnabled) {
+          container.innerHTML = '<button id="security-2fa-disable-start" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold" style="color:rgb(var(--mgt-error));background-color:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.30);"><i data-lucide="shield-off" class="w-4 h-4"></i> Desactiver</button>';
+          if (window.lucide) window.lucide.createIcons();
+          document.getElementById('security-2fa-disable-start').addEventListener('click', renderDisablePinForm);
+        } else {
+          container.innerHTML = '<button id="security-2fa-enable-start" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold" style="color:rgb(var(--mgt-primary-foreground));background-color:rgb(var(--mgt-accent));"><i data-lucide="mail" class="w-4 h-4"></i> Envoyer le code par e-mail</button>';
+          if (window.lucide) window.lucide.createIcons();
+          document.getElementById('security-2fa-enable-start').addEventListener('click', requestTwoFactorCode);
+        }
+      }
+
+      function requestTwoFactorCode() {
+        setMessage('', false);
+        authFetch('/api/auth/2fa/request-code', {}).then(function (res) {
+          var d = res.data;
+          if (d && d.ok) {
+            var container = document.getElementById('security-2fa-actions');
+            container.innerHTML =
+              '<div style="display:flex;flex-direction:column;gap:12px;">' +
+                '<p class="text-sm" style="color:rgb(var(--mgt-foreground));">Un code a ete envoye a <strong>' + esc(userEmail || 'votre e-mail') + '</strong>.</p>' +
+                '<input id="security-2fa-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000" class="mgt-input" style="max-width:180px;font-size:18px;letter-spacing:0.3em;font-weight:700;">' +
+                '<div class="flex gap-2">' +
+                  '<button id="security-2fa-enable-confirm" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold" style="color:rgb(var(--mgt-primary-foreground));background-color:rgb(var(--mgt-primary));"><i data-lucide="check" class="w-4 h-4"></i> Activer</button>' +
+                  '<button id="security-2fa-enable-cancel" type="button" class="px-4 py-2 rounded-lg text-sm font-medium" style="color:rgb(var(--mgt-foreground));background-color:rgb(var(--mgt-background));border:1px solid rgb(var(--mgt-border));">Annuler</button>' +
+                '</div>' +
+              '</div>';
+            if (window.lucide) window.lucide.createIcons();
+            document.getElementById('security-2fa-enable-confirm').addEventListener('click', enableTwoFactor);
+            document.getElementById('security-2fa-enable-cancel').addEventListener('click', renderTwoFactorPanel);
+          } else {
+            setMessage((d && d.error) || 'Impossible d\'envoyer le code.', true);
+          }
+        }).catch(function () { setMessage('Erreur reseau.', true); });
+      }
+
+      function enableTwoFactor() {
+        var code = document.getElementById('security-2fa-code');
+        var val = (code ? code.value : '').trim();
+        if (!/^\d{6}$/.test(val)) { setMessage('Entrez le code a 6 chiffres.', true); return; }
+        authFetch('/api/auth/2fa/enable', { code: val }).then(function (res) {
+          var d = res.data;
+          if (d && d.ok) {
+            twoFactorEnabled = true;
+            updateTwoFactorStatus();
+            toast('Authentification a deux facteurs activee');
+          } else {
+            setMessage((d && d.error) || 'Echec de l\'activation.', true);
+          }
+        }).catch(function () { setMessage('Erreur reseau.', true); });
+      }
+
+      function renderDisablePinForm() {
+        var container = document.getElementById('security-2fa-actions');
+        container.innerHTML =
+          '<div style="display:flex;flex-direction:column;gap:12px;">' +
+            '<p class="text-sm" style="color:rgb(var(--mgt-foreground));">Confirmez votre PIN actuel pour desactiver la double authentification.</p>' +
+            '<input id="security-2fa-disable-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" class="mgt-input" style="max-width:160px;font-size:18px;letter-spacing:0.3em;font-weight:700;">' +
+            '<div class="flex gap-2">' +
+              '<button id="security-2fa-disable-confirm" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold" style="color:#fff;background-color:rgb(var(--mgt-error));"><i data-lucide="shield-off" class="w-4 h-4"></i> Desactiver</button>' +
+              '<button id="security-2fa-disable-cancel" type="button" class="px-4 py-2 rounded-lg text-sm font-medium" style="color:rgb(var(--mgt-foreground));background-color:rgb(var(--mgt-background));border:1px solid rgb(var(--mgt-border));">Annuler</button>' +
+            '</div>' +
+          '</div>';
+        if (window.lucide) window.lucide.createIcons();
+        document.getElementById('security-2fa-disable-confirm').addEventListener('click', disableTwoFactor);
+        document.getElementById('security-2fa-disable-cancel').addEventListener('click', renderTwoFactorPanel);
+      }
+
+      function disableTwoFactor() {
+        var pin = document.getElementById('security-2fa-disable-pin');
+        var val = (pin ? pin.value : '').trim();
+        if (!/^\d{4}$/.test(val)) { setMessage('Entrez votre PIN a 4 chiffres.', true); return; }
+        authFetch('/api/auth/2fa/disable', { currentPin: val }).then(function (res) {
+          var d = res.data;
+          if (d && d.ok) {
+            twoFactorEnabled = false;
+            updateTwoFactorStatus();
+            toast('Authentification a deux facteurs desactivee');
+          } else {
+            setMessage((d && d.error) || 'Echec de la desactivation.', true);
+          }
+        }).catch(function () { setMessage('Erreur reseau.', true); });
+      }
+
+      loadSecurityState();
+    })();
+    </script>
+
     </body>
     </html>
