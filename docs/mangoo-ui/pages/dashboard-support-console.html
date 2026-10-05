@@ -371,8 +371,11 @@ a{text-decoration:none;color:inherit}
           var meta = callStatusMeta(c.status);
           var peerId = dir === 'out' ? (c.calleeId || '') : (c.callerId || '');
           var peer = dir === 'out' ? (c.calleeName || c.calleeId || 'Inconnu') : (c.callerName || c.callerId || 'Inconnu');
-          var flag = flagHtml(c.countryCode);
-          var country = String(c.country || '').trim();
+          // Le pays stocke est celui de l'appelant : il ne s'affiche que pour
+          // un appel entrant (le correspondant est l'appelant). Pour un appel
+          // sortant, ce serait le pays du support, donc on ne l'affiche pas.
+          var flag = (dir === 'in') ? flagHtml(c.countryCode) : '';
+          var country = (dir === 'in') ? String(c.country || '').trim() : '';
           var nameHtml = esc(peer) + (flag ? ' ' + flag : '') + (country ? ' <span class="call-country">' + esc(country) + '</span>' : '');
           var subParts = [(dir === 'out' ? 'Appel sortant' : 'Appel entrant'), esc(fmtDateTime(c.at))];
           if ((c.status === 'answered' || c.status === 'ended') && c.durationSec != null && !isNaN(c.durationSec) && c.durationSec >= 0) {

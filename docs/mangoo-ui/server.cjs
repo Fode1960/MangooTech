@@ -5810,16 +5810,29 @@ function handleHttp(req, res) {
         }
       });
       if (last) {
+        // Le pays stocke est celui de l'appelant. Il ne correspond au contact
+        // que si celui-ci etait l'appelant (appel entrant). Pour un appel
+        // sortant (le contact est l'appele), ne pas lui attribuer le pays du
+        // support : on retombe alors sur le pays du profil du contact.
+        const contactWasCaller = canonicalRoutingId(last.callerId) === cid;
         c.lastCall = {
           at: last.at || '',
           status: last.status || '',
           durationSec: (typeof last.durationSec === 'number') ? last.durationSec : null,
-          country: last.country || c.country || '',
-          countryCode: last.countryCode || c.countryCode || ''
+          country: contactWasCaller ? (last.country || c.country || '') : (c.country || ''),
+          countryCode: contactWasCaller ? (last.countryCode || c.countryCode || '') : (c.countryCode || '')
         };
       }
       return c;
-    }).sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
+    }).sort(function (a, b) {
+      // Trie par activite recente (dernier appel en premier), puis par nom.
+      var ta = (a.lastCall && a.lastCall.at) ? String(a.lastCall.at) : '';
+      var tb = (b.lastCall && b.lastCall.at) ? String(b.lastCall.at) : '';
+      if (ta && tb && ta !== tb) return tb.localeCompare(ta);
+      if (ta && !tb) return -1;
+      if (!ta && tb) return 1;
+      return String(a.name).localeCompare(String(b.name));
+    });
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate' });
     res.end(JSON.stringify({ ok: true, contacts: allContacts }));
     return;
