@@ -66,6 +66,10 @@ button{font-family:inherit}
 .conv-name{font-size:13.5px;font-weight:600;color:rgb(var(--mgt-foreground));display:flex;align-items:center;gap:6px}
 .conv-name .status-dot{width:7px;height:7px;border-radius:50%;background:rgb(var(--mgt-muted-foreground));flex-shrink:0}
 .conv-name .status-dot.on{background:rgb(var(--mgt-success))}
+.conv-origin{font-size:11px;color:rgb(var(--mgt-muted-foreground));margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.conv-origin .flag{font-size:13px;line-height:1}
+.conv-origin .dur{color:rgb(var(--mgt-primary-700));font-weight:600}
+.conv-origin .missed{color:rgb(var(--mgt-accent));font-weight:600}
 .conv-last{font-size:12px;color:rgb(var(--mgt-muted-foreground));margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .conv-time{font-size:11px;color:rgb(var(--mgt-muted-foreground));flex-shrink:0}
 .conv-unread{min-width:18px;height:18px;border-radius:999px;background:rgb(var(--mgt-accent));color:#fff;font-size:10.5px;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 5px}
@@ -181,7 +185,7 @@ button{font-family:inherit}
       });
     }
     function initials(name) {
-      var parts = (name || '').trim().split(/s+/);
+      var parts = (name || '').trim().split(/\s+/);
       var a = (parts[0] || '?').charAt(0);
       var b = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
       return (a + b).toUpperCase();
@@ -196,6 +200,40 @@ button{font-family:inherit}
         if (isNaN(d.getTime())) d = new Date();
         return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
       } catch (e) { return nowTime(); }
+    }
+    function fmtDayTime(iso) {
+      try {
+        var d = iso ? new Date(iso) : null;
+        if (!d || isNaN(d.getTime())) return '';
+        var hh = String(d.getHours()).padStart(2, '0');
+        var mm = String(d.getMinutes()).padStart(2, '0');
+        var dd = String(d.getDate()).padStart(2, '0');
+        var mo = String(d.getMonth() + 1).padStart(2, '0');
+        return dd + '/' + mo + ' ' + hh + ':' + mm;
+      } catch (e) { return ''; }
+    }
+    function fmtDuration(sec) {
+      if (sec == null || isNaN(sec) || sec < 0) return '';
+      sec = Math.round(sec);
+      var m = Math.floor(sec / 60);
+      var s = sec % 60;
+      if (m > 0) return m + ' min ' + String(s).padStart(2, '0') + ' s';
+      return s + ' s';
+    }
+    function countryFlag(code) {
+      if (!code || code.length !== 2) return '';
+      var A = 0x1F1E6, base = 'A'.charCodeAt(0);
+      var a = code.charCodeAt(0) - base;
+      var b = code.charCodeAt(1) - base;
+      if (a < 0 || a > 25 || b < 0 || b > 25) return '';
+      try { return String.fromCodePoint(A + a) + String.fromCodePoint(A + b); } catch (e) { return ''; }
+    }
+    function callStatusLabel(status) {
+      if (status === 'missed') return 'Appel manqué';
+      if (status === 'answered' || status === 'ended') return '';
+      if (status === 'rejected') return 'Appel refusé';
+      if (status === 'ringing') return 'En sonnerie';
+      return '';
     }
 
     var user = null;
@@ -262,7 +300,30 @@ button{font-family:inherit}
       el.style.color = online ? 'rgb(var(--mgt-primary-700))' : '';
     }
 
-    function buildConversation(name, peerId) {
+    function originLine(contact) {
+      var lc = contact && contact.lastCall;
+      var country = (lc && lc.country) || (contact && contact.country) || '';
+      var code = (lc && lc.countryCode) || (contact && contact.countryCode) || '';
+      var at = (lc && lc.at) ? fmtDayTime(lc.at) : '';
+      var status = (lc && lc.status) ? lc.status : '';
+      var durSec = lc ? lc.durationSec : null;
+      var parts = [];
+      if (country) {
+        var flag = countryFlag(code);
+        parts.push((flag ? '<span class="flag">' + flag + '</span> ' : '') + '<span>' + esc(country) + '</span>');
+      }
+      if (at) parts.push('<span>' + esc(at) + '</span>');
+      if (durSec != null && !isNaN(durSec) && durSec >= 0 && (status === 'answered' || status === 'ended')) {
+        parts.push('<span class="dur">' + esc(fmtDuration(durSec)) + '</span>');
+      } else if (status) {
+        var lbl = callStatusLabel(status);
+        if (lbl) parts.push('<span class="missed">' + esc(lbl) + '</span>');
+      }
+      if (!parts.length) return '';
+      return '<div class="conv-origin">' + parts.join('') + '</div>';
+    }
+
+    function buildConversation(name, peerId, contact) {
       var list = document.getElementById('conv-list');
       var empty = list.querySelector('.conv-empty');
       if (empty) empty.remove();
@@ -274,6 +335,7 @@ button{font-family:inherit}
         '<div class="conv-avatar">' + esc(initials(name || peerId || '?')) + '</div>' +
         '<div class="conv-meta">' +
           '<div class="conv-name"><span class="status-dot"></span>' + esc(name || peerId || 'Contact') + '</div>' +
+          originLine(contact) +
           '<div class="conv-last"></div>' +
         '</div>' +
         '<span class="conv-unread" data-unread></span>' +
@@ -283,9 +345,9 @@ button{font-family:inherit}
       return conv;
     }
 
-    function ensureConversation(name, peerId) {
+    function ensureConversation(name, peerId, contact) {
       var conv = peerId ? findConv(peerId) : null;
-      if (!conv) conv = buildConversation(name, peerId);
+      if (!conv) conv = buildConversation(name, peerId, contact);
       else if (peerId && !conv.getAttribute('data-peer-id')) conv.setAttribute('data-peer-id', peerId);
       return conv;
     }
@@ -375,7 +437,7 @@ button{font-family:inherit}
         d.contacts.forEach(function (c) {
           var role = String(c.role || '').toLowerCase();
           if (role !== 'client' && role !== 'cliente') return;
-          ensureConversation(c.name || c.routingId || c.id, c.routingId || c.id);
+          ensureConversation(c.name || c.routingId || c.id, c.routingId || c.id, c);
         });
         var empty = list.querySelector('.conv-empty');
         if (empty && list.querySelector('.conv')) empty.remove();
