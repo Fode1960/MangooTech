@@ -247,13 +247,10 @@ function isOnline(id) {
   return onlineSockets(id).length > 0;
 }
 
-// Page de messagerie : seule une connexion ouverte depuis chat.html (client),
-// dashboard-messages.html (professionnel) ou la console Support rend l'utilisateur
-// « joignable en temps réel ». Une socket ouverte ailleurs (accueil, carte, live,
-// fiche...) via autoRegisterClient ne doit PAS supprimer la notification push.
-// La console Support (page 'support') affiche les messages entrants via le
-// mini-chat auto-ouvert : le support y est donc « en ligne » et ne doit pas
-// recevoir de notification Web Push redondante.
+// Page de messagerie : seule une connexion ouverte depuis chat.html (client)
+// ou dashboard-messages.html (professionnel) rend l'utilisateur « joignable en
+// temps réel ». Une socket ouverte ailleurs (accueil, carte, live, fiche...)
+// via autoRegisterClient ne doit PAS supprimer la notification push.
 function isMessagingPage(page) {
   return page === 'chat' || page === 'dashboard' || page === 'support';
 }
@@ -554,6 +551,19 @@ function saveCallLog() {
   if (Array.isArray(arr)) callLog = arr;
 })();
 
+// ---- Persistance des rendez-vous ----
+// Le flux temps réel (client -> pro) vit en mémoire, mais on le journalise dans
+// data/appointments.json pour que l'historique survive à un redémarrage et reste
+// consultable depuis l'onglet Rendez-vous du dashboard, sur n'importe quel appareil.
+const APPOINTMENTS_FILE = 'appointments.json';
+function saveAppointments() {
+  writeJsonAtomic(APPOINTMENTS_FILE, appointmentLog);
+}
+(function loadAppointments() {
+  const arr = readJsonFile(APPOINTMENTS_FILE, []);
+  if (Array.isArray(arr)) appointmentLog.splice(0, appointmentLog.length, ...arr);
+})();
+
 // Retourne true si un chemin ne doit JAMAIS être servi comme fichier statique
 // (données applicatives, secrets, code serveur, certificats, fichiers temporaires).
 function isSensitiveFile(filePath) {
@@ -646,6 +656,60 @@ function userByRoutingId(rid) {
   // (ex. pro-41cafa4bcb31 <-> ven-e9e831ccf698) : on compare sur la forme
   // canonique des deux identifiants, pas sur la valeur brute.
   return users.find((u) => u && (canonicalRoutingId(u.id) === id || canonicalRoutingId(u.vendorId) === id)) || null;
+}
+
+// Normalise un texte pour la comparaison de noms : minuscules, sans accents,
+// espaces multiples réduits à un seul. Permet de retrouver « Dida » même si le
+// compte est enregistré « Dida Diallo » ou « Didá Diallo ».
+function normalizeNameForMatch(s) {
+  return String(s == null ? '' : s)
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Recherche un compte CLIENT à partir d'un texte libre (nom complet, prénom,
+// email ou téléphone). Priorité : nom exact, puis email/téléphone, puis
+// correspondance partielle. Retourne l'objet utilisateur ou null.
+function findClientByText(text) {
+  const raw = String(text == null ? '' : text).trim();
+  if (!raw) return null;
+  const t = normalizeNameForMatch(raw);
+  const tl = raw.toLowerCase();
+  const clients = users.filter(function (x) {
+    if (!x) return false;
+    const role = String(x.role || '').toLowerCase();
+    return role === 'client' || role === 'cliente';
+  });
+  const pool = clients.length ? clients : users;
+  function nameOf(x) { return x.name || x.fullName || x.enseigne || ''; }
+  // 1) nom complet exact
+  let found = pool.find(function (x) { return normalizeNameForMatch(nameOf(x)) === t; });
+  if (found) return found;
+  // 2) email ou téléphone exact
+  found = pool.find(function (x) {
+    return String(x.email || '').toLowerCase() === tl || String(x.phone || '') === raw;
+  });
+  if (found) return found;
+  // 3) correspondance partielle (« Dida » retrouve « Dida Diallo »)
+  found = pool.find(function (x) {
+    const n = normalizeNameForMatch(nameOf(x));
+    if (!n || n.length < 2) return false;
+    return n.indexOf(t) >= 0 || (t.length >= 2 && t.indexOf(n) >= 0);
+  });
+  return found || null;
+}
+
+// Résout l'identifiant d'un client à partir d'un id explicite ou d'un texte
+// (nom/email/téléphone). Retourne '' si introuvable.
+function resolveClientId(clientId, clientName) {
+  if (clientId) {
+    const u = users.find(function (x) { return x && (x.id === clientId || x.vendorId === clientId); });
+    return u ? u.id : String(clientId);
+  }
+  const u = findClientByText(clientName);
+  return u ? u.id : '';
 }
 
 function applyVapidDetails() {
@@ -1272,6 +1336,10 @@ function seedVendorConfig() {
         codes: [],
         campaigns: []
       },
+      team: {
+        members: [],
+        commission: { base: 10, bonus: 5, seuilCa: 500000 }
+      },
       decouverte: {
         public: true,
         rayonKm: 25,
@@ -1414,6 +1482,10 @@ function blankVendorConfig(vendorId) {
       codes: [],
       campaigns: []
     },
+    team: {
+      members: [],
+      commission: { base: 10, bonus: 5, seuilCa: 500000 }
+    },
     decouverte: {
       public: false,
       rayonKm: 25,
@@ -1497,7 +1569,7 @@ function sanitizeVendorConfig(config) {
     c.parrainage = Object.assign({}, c.parrainage || {}, { invited: 0, earned: 0 });
     c.rapports = Object.assign({}, c.rapports || {}, { revenue: 0, orders: 0, views: 0, conversion: 0, generated: 0, downloads: 0, scheduled: 0, storage: '0 Ko', lastExportAt: '', periods: { '7j': { orders: 0, revenue: 0 }, '30j': { orders: 0, revenue: 0 }, '90j': { orders: 0, revenue: 0 } } });
     c.support = Object.assign({}, c.support || {}, { openTickets: 0, resolvedTickets: 0, avgResponseHours: 0, articles: 0, tickets: [] });
-    c.promotions = Object.assign({}, c.promotions || {}, { ca: 0, codes: [], campaigns: [] });
+    c.promotions = Object.assign({}, c.promotions || {}, { ca: 0 });
     if (c.decouverte) {
       c.decouverte.impressions = 0;
       c.decouverte.clics = 0;
@@ -1508,8 +1580,8 @@ function sanitizeVendorConfig(config) {
       }
     }
     if (c.horsLigne) {
-      c.horsLigne.carte = '0 Ko';
-      c.horsLigne.ficheFavoris = '0 Ko';
+      if (!c.horsLigne.carte) c.horsLigne.carte = '0 Ko';
+      if (!c.horsLigne.ficheFavoris) c.horsLigne.ficheFavoris = '0 Ko';
     }
   });
   return config;
@@ -1861,6 +1933,79 @@ function ensureSupportAccount() {
       '============================================================',
       ''
     ].join('\n'));
+  }
+}
+
+// Suppression ciblée d'un compte prestataire/boutique (nettoyage de doublon ou de
+// compte de test). Retire le compte de users.json, son document vendor-config, ainsi
+// que toute donnée liée (catalogue, prestations, inventaire, galerie, boosters,
+// essais, portefeuilles, offres du jour). Idempotent : ne fait rien si le compte
+// n'existe plus, et ne touche jamais aux autres comptes.
+function reconcileRemoveVendor(vendorIds) {
+  const targets = (Array.isArray(vendorIds) ? vendorIds : [vendorIds])
+    .map(function (id) { return canonicalRoutingId(id); })
+    .filter(Boolean);
+  if (!targets.length) return;
+
+  let changed = false;
+
+  const before = users.length;
+  users = users.filter(function (u) {
+    if (!u) return false;
+    const hit = targets.indexOf(canonicalRoutingId(u.vendorId)) >= 0
+      || targets.indexOf(canonicalRoutingId(u.id)) >= 0;
+    if (hit) changed = true;
+    return !hit;
+  });
+  if (users.length !== before) {
+    console.log('[Nettoyage] compte(s) vendeur retiré(s) de users.json : ' + targets.join(', '));
+  }
+
+  targets.forEach(function (tid) {
+    Object.keys(vendorConfig).forEach(function (key) {
+      if (key === tid || canonicalRoutingId(key) === tid) {
+        delete vendorConfig[key];
+        changed = true;
+      }
+    });
+  });
+
+  function strip(list, fields) {
+    const prev = list.length;
+    const next = list.filter(function (item) {
+      if (!item || typeof item !== 'object') return true;
+      return !fields.some(function (f) {
+        const v = item[f];
+        if (v == null) return false;
+        const c = canonicalRoutingId(v);
+        return !!c && targets.indexOf(c) >= 0;
+      });
+    });
+    if (next.length !== prev) changed = true;
+    return next;
+  }
+
+  catalogue = strip(catalogue, ['vendorId', 'vendor', 'ownerId']);
+  prestations = strip(prestations, ['vendorId', 'vendor', 'ownerId']);
+  inventaire = strip(inventaire, ['vendorId', 'vendor', 'ownerId']);
+  galerie = strip(galerie, ['vendorId', 'vendor', 'ownerId']);
+  boosters = strip(boosters, ['vendorId', 'vendor', 'ownerId']);
+  trials = strip(trials, ['vendorId', 'vendor', 'ownerId']);
+  wallets = strip(wallets, ['vendorId', 'vendor', 'ownerId', 'userId']);
+  offresJour = strip(offresJour, ['vendorId', 'vendor', 'ownerId']);
+
+  if (changed) {
+    saveUsers();
+    saveVendorConfig();
+    saveCatalogue();
+    savePrestations();
+    saveInventaire();
+    saveGalerie();
+    saveBoosters();
+    saveTrials();
+    saveWallets();
+    saveOffresJour();
+    console.log('[Nettoyage] suppression du compte vendeur terminée : ' + targets.join(', '));
   }
 }
 
@@ -4155,7 +4300,7 @@ function handleRegister(ws, msg) {
 // identifiants sont ramenés à leur forme canonique (ex. ven-e9e831ccf698 →
 // pro-41cafa4bcb31) pour que l'historique soit cohérent quel que soit le
 // compte dupliqué utilisé pour émettre/recevoir l'appel.
-function recordCall(callId, callerId, calleeId, mode, status, callerName) {
+function recordCall(callId, callerId, calleeId, mode, status, callerName, country, countryCode) {
   const ccaller = canonicalRoutingId(callerId);
   const ccallee = canonicalRoutingId(calleeId);
   const callee = userByRoutingId(ccallee);
@@ -4167,6 +4312,8 @@ function recordCall(callId, callerId, calleeId, mode, status, callerName) {
     calleeName: callee ? displayNameForUser(callee) : '',
     mode: mode || 'audio',
     status: status || 'ringing',
+    country: country || '',
+    countryCode: countryCode || '',
     at: nowIso()
   };
   callLog.push(entry);
@@ -4177,6 +4324,19 @@ function updateCall(callId, patch) {
   const e = callLog.find(function (x) { return x && x.callId === callId; });
   if (e) { Object.assign(e, patch); saveCallLog(); }
   return e;
+}
+
+// Calcule la durée réelle d'un appel décroché (entre `answeredAt` et la fin) et
+// la persiste dans l'historique. Si l'appel n'a jamais été décroché (manqué /
+// refusé), on laisse durationSec absent : l'interface affichera « — ».
+function finalizeCallDuration(callId) {
+  const e = callLog.find(function (x) { return x && x.callId === callId; });
+  if (!e || !e.answeredAt) return;
+  const started = Date.parse(e.answeredAt);
+  const ended = Date.now();
+  if (isNaN(started) || ended <= started) return;
+  e.durationSec = Math.max(0, Math.round((ended - started) / 1000));
+  saveCallLog();
 }
 
 // Compte « Support MangooTech » : identité partagée par plusieurs membres de
@@ -4204,11 +4364,12 @@ async function handleCallOffer(ws, msg) {
   const callMode = msg.mode || 'audio';
   const callerName = (ws.meta && ws.meta.name) || 'Quelqu\'un';
 
-  // Pays de l'appelant : donnée client d'abord, sinon résolution par IP (attente
-  // bornée ~1,5 s, dédupliquée + mise en cache). Garantit que le pays est connu
-  // AVANT d'envoyer le push / la sonnerie, donc présent dans le landing.
-  let callerGeo = effectiveCallerCountry(ws, msg);
-  if (!callerGeo.country && ws.meta && ws.meta.ip) {
+  // Pays de l'appelant : résolution par IP d'abord (fiable), avec repli sur la
+  // donnée client (fuseau/langue) puis le profil si l'IP échoue (IP privée,
+  // timeout, service indisponible). Garantit que le pays est connu AVANT
+  // d'envoyer le push / la sonnerie, donc présent dans le landing.
+  let callerGeo = { country: '', countryCode: '' };
+  if (ws.meta && ws.meta.ip) {
     try {
       const resolved = await resolveIpCountry(ws.meta.ip);
       if (resolved && resolved.country) {
@@ -4219,6 +4380,9 @@ async function handleCallOffer(ws, msg) {
         }
       }
     } catch (e) { /* ignore */ }
+  }
+  if (!callerGeo.country) {
+    callerGeo = effectiveCallerCountry(ws, msg);
   }
   const callerCountry = callerGeo.country;
   const callerCountryCode = callerGeo.countryCode;
@@ -4239,7 +4403,7 @@ async function handleCallOffer(ws, msg) {
         requireInteraction: true,
         data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode, country: callerCountry, countryCode: callerCountryCode }
       });
-      recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName);
+      recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName, callerCountry, callerCountryCode);
       send(ws, { type: 'call-error', callId, reason: 'offline', pushed: pushed });
       return;
     }
@@ -4252,7 +4416,7 @@ async function handleCallOffer(ws, msg) {
       mode: callMode,
       iceBuffer: []
     });
-    recordCall(callId, ws.meta.id, cto, callMode, 'ringing', callerName);
+    recordCall(callId, ws.meta.id, cto, callMode, 'ringing', callerName, callerCountry, callerCountryCode);
     candidates.forEach(function (cand) {
       send(cand.ws, {
         type: 'call-ring', callId,
@@ -4276,7 +4440,7 @@ async function handleCallOffer(ws, msg) {
       requireInteraction: true,
       data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode, country: callerCountry, countryCode: callerCountryCode }
     });
-    recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName);
+    recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName, callerCountry, callerCountryCode);
     send(ws, { type: 'call-error', callId, reason: 'offline', pushed: pushed });
     return;
   }
@@ -4285,7 +4449,7 @@ async function handleCallOffer(ws, msg) {
     callerWs: ws, calleeWs: target.ws,
     mode: callMode
   });
-  recordCall(callId, ws.meta.id, cto, callMode, 'ringing', callerName);
+  recordCall(callId, ws.meta.id, cto, callMode, 'ringing', callerName, callerCountry, callerCountryCode);
   send(target.ws, {
     type: 'call-ring', callId,
     from: ws.meta.id, fromName: ws.meta.name,
@@ -4300,7 +4464,7 @@ function handleCallAnswer(ws, msg) {
   if (c.group) {
     if (c.answeredWs) return; // un autre agent a déjà décroché
     c.answeredWs = ws;
-    updateCall(msg.callId, { status: 'answered' });
+    updateCall(msg.callId, { status: 'answered', answeredAt: nowIso() });
     // Relayer au répondant les candidats ICE de l'appelant reçus pendant la
     // sonnerie (sinon perdus : aucun agent n'était encore désigné à ce moment).
     (c.iceBuffer || []).forEach(function (m) {
@@ -4315,7 +4479,7 @@ function handleCallAnswer(ws, msg) {
     });
     return;
   }
-  updateCall(msg.callId, { status: 'answered' });
+  updateCall(msg.callId, { status: 'answered', answeredAt: nowIso() });
   send(c.callerWs, { type: 'call-accepted', callId: msg.callId, sdp: msg.sdp, name: ws.meta.name });
 }
 
@@ -4341,6 +4505,7 @@ function handleCallReject(ws, msg) {
 function handleCallEnd(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
+  finalizeCallDuration(msg.callId);
   updateCall(msg.callId, { status: 'ended' });
   if (c.group) {
     // L'appelant raccroche : on arrête la sonnerie partout. Un agent raccroche :
@@ -4685,6 +4850,7 @@ function handleApptRequest(ws, msg) {
     status: 'requested', createdAt: nowIso()
   };
   appointmentLog.push(appt);
+  saveAppointments();
   broadcastToPeer(to, {
     type: 'appointment-new', apptId: appt.apptId,
     from: appt.from, fromName: appt.fromName,
@@ -4698,6 +4864,7 @@ function handleApptReply(ws, msg) {
   if (!appt) return;
   const accepted = msg.type === 'appointment-confirm';
   appt.status = accepted ? 'confirmed' : 'declined';
+  saveAppointments();
   broadcastToPeer(appt.from, {
     type: accepted ? 'appointment-accepted' : 'appointment-declined',
     apptId: appt.apptId, name: ws.meta.name
@@ -5372,7 +5539,7 @@ function handleHttp(req, res) {
     // tous les comptes non-admin (clients, prestataires, boutiques, livreurs)
     // à l'exception de l'utilisateur courant. Le statut en ligne est déduit de
     // la présence temps réel (clients map), clé par id ou vendorId.
-    const token = tokenFromReq(req);
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
     const user = userByToken(token);
     if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
     if (req.method !== 'GET') {
@@ -5382,7 +5549,7 @@ function handleHttp(req, res) {
     }
     const myId = routingIdForUser(user);
     const contacts = users
-      .filter(function (u) { return u && u.role !== 'admin' && canonicalRoutingId(routingIdForUser(u)) !== canonicalRoutingId(myId); })
+      .filter(function (u) { return u && u.role !== 'admin' && canonicalRoutingId(u.id) !== canonicalRoutingId(user.id); })
       .map(function (u) {
         return {
           id: u.id,
@@ -5394,6 +5561,7 @@ function handleHttp(req, res) {
           phone: u.phone || '',
           email: u.email || '',
           city: u.city || '',
+          country: u.country || '',
           logo: u.logo || '',
           category: u.category || '',
           online: isOnline(u.id) || isOnline(u.vendorId),
@@ -5402,26 +5570,28 @@ function handleHttp(req, res) {
         };
       });
     // Enrichit l'annuaire avec les pairs réellement rencontrés (conversations
-    // et appels passés), même si leur compte n'est pas dans `users`. Ainsi un
-    // professionnel voit tous ses interlocuteurs passés dans sa liste de contacts.
+    // et appels), même si leur compte n'est pas dans `users` (clients mobile
+    // créés à la volée). Le professionnel voit ainsi tous ses interlocuteurs passés.
+    const derived = [];
     const peerSeen = {};
-    contacts.forEach(function (c) { peerSeen[canonicalRoutingId(c.routingId || c.vendorId || c.id || '')] = true; });
-    function addDerived(peerId, name) {
+    contacts.forEach(function (c) { peerSeen[canonicalRoutingId(c.vendorId || c.id || '')] = true; });
+    function addDerived(peerId, name, role, extra) {
       if (!peerId) return;
       const cid = canonicalRoutingId(peerId);
-      if (!cid || cid === canonicalRoutingId(myId) || peerSeen[cid]) return;
+      if (!cid || cid === myId || peerSeen[cid]) return;
       peerSeen[cid] = true;
-      const known = userByRoutingId(cid);
-      contacts.push({
+      const known = users.find(function (u) { return u && canonicalRoutingId(routingIdForUser(u)) === cid; });
+      derived.push({
         id: known ? known.id : peerId,
         vendorId: known ? (known.vendorId || known.id) : peerId,
         routingId: cid,
-        role: known ? known.role : 'client',
+        role: known ? known.role : (role || 'client'),
         name: known ? (displayNameForUser(known) || 'Contact') : (name || peerId),
         enseigne: known ? (known.enseigne || '') : '',
-        phone: known ? (known.phone || '') : '',
+        phone: known ? (known.phone || '') : (extra && extra.phone ? extra.phone : ''),
         email: known ? (known.email || '') : '',
         city: known ? (known.city || '') : '',
+        country: known ? (known.country || '') : (extra && extra.country ? extra.country : ''),
         logo: known ? (known.logo || '') : '',
         category: known ? (known.category || '') : '',
         online: known ? (isOnline(known.id) || isOnline(known.vendorId)) : false,
@@ -5433,19 +5603,41 @@ function handleHttp(req, res) {
       if (!m) return;
       const cf = canonicalRoutingId(m.from);
       const ct = canonicalRoutingId(m.to);
-      if (cf === canonicalRoutingId(myId)) addDerived(m.to);
-      else if (ct === canonicalRoutingId(myId)) addDerived(m.from);
+      if (cf === myId) addDerived(m.to, m.toName || null, 'client', null);
+      else if (ct === myId) addDerived(m.from, m.fromName || null, 'client', null);
     });
     callLog.forEach(function (c) {
       if (!c) return;
       const cf = canonicalRoutingId(c.callerId);
       const ct = canonicalRoutingId(c.calleeId);
-      if (cf === canonicalRoutingId(myId)) addDerived(c.calleeId, c.calleeName);
-      else if (ct === canonicalRoutingId(myId)) addDerived(c.callerId, c.callerName);
+      if (cf === myId) addDerived(c.calleeId, c.calleeName || null, 'client', { phone: c.calleePhone, country: c.country, countryCode: c.countryCode });
+      else if (ct === myId) addDerived(c.callerId, c.callerName || null, 'client', { phone: c.callerPhone, country: c.country, countryCode: c.countryCode });
     });
-    contacts.sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
+    // Enrichit chaque contact avec son dernier appel connu (pays, date/heure,
+    // durée, statut) pour que l'équipe support identifie d'où vient un appelant
+    // — y compris un « Visiteur » anonyme — et sache à quel moment il a appelé.
+    const allContacts = contacts.concat(derived).map(function (c) {
+      const cid = canonicalRoutingId(c.vendorId || c.id || '');
+      let last = null;
+      callLog.forEach(function (e) {
+        if (!e) return;
+        if (canonicalRoutingId(e.callerId) === cid || canonicalRoutingId(e.calleeId) === cid) {
+          if (!last || String(e.at || '') > String(last.at || '')) last = e;
+        }
+      });
+      if (last) {
+        c.lastCall = {
+          at: last.at || '',
+          status: last.status || '',
+          durationSec: (typeof last.durationSec === 'number') ? last.durationSec : null,
+          country: last.country || c.country || '',
+          countryCode: last.countryCode || c.countryCode || ''
+        };
+      }
+      return c;
+    }).sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate' });
-    res.end(JSON.stringify({ ok: true, contacts: contacts }));
+    res.end(JSON.stringify({ ok: true, contacts: allContacts }));
     return;
   }
   if (urlPath === '/api/messages') {
@@ -5455,7 +5647,7 @@ function handleHttp(req, res) {
     // messagerie via une notification (dashboard fermé) voie bien le message qui
     // a déclenché la notification : le chatLog vit en mémoire du processus et
     // n'est pas persisté, il faut donc le relire à l'ouverture de la page.
-    const token = tokenFromReq(req);
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
     const user = userByToken(token);
     if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
     if (req.method !== 'GET') {
@@ -5498,7 +5690,7 @@ function handleHttp(req, res) {
     // confondues (vue « Messages enregistrés » du Dashboard). Repli REST au canal
     // temps réel `chat-saved-list` : garantit l'affichage même si le WebSocket
     // n'est pas encore enregistré au moment du clic sur « Enregistrés ».
-    const token = tokenFromReq(req);
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
     const user = userByToken(token);
     if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
     if (req.method !== 'GET') {
@@ -5523,7 +5715,7 @@ function handleHttp(req, res) {
     // Persisté dans data/calls.json : il survit au redémarrage du serveur et
     // est partagé entre les appareils du même compte (PC + mobile). Comparé sous
     // forme canonique (alias de comptes pro dupliqués réconciliés).
-    const token = tokenFromReq(req);
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
     const user = userByToken(token);
     if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
     if (req.method !== 'GET') {
@@ -6614,6 +6806,12 @@ function handleHttp(req, res) {
         } else if (action === 'reopen') {
           targetDoc.admin = Object.assign({}, targetDoc.admin || {}, { status: 'active', updatedAt: new Date().toISOString() });
           pushHistory(targetDoc, 'reopen', 'Boutique rouverte', by);
+        } else if (action === 'delete') {
+          // Suppression définitive du compte boutique et de toutes ses données.
+          reconcileRemoveVendor([targetId]);
+          res.writeHead(200, JSON_HEADERS);
+          res.end(JSON.stringify({ ok: true, deleted: true, vendorId: targetId }));
+          return;
         } else {
           res.writeHead(400, JSON_HEADERS);
           res.end(JSON.stringify({ ok: false, error: 'action inconnue' }));
@@ -6748,6 +6946,12 @@ function handleHttp(req, res) {
         } else if (action === 'reopen') {
           targetDoc.admin = Object.assign({}, targetDoc.admin || {}, { status: 'active', updatedAt: new Date().toISOString() });
           pushPrestaHistory(targetDoc, 'reopen', 'Prestataire rouvert', by);
+        } else if (action === 'delete') {
+          // Suppression définitive du compte prestataire et de toutes ses données.
+          reconcileRemoveVendor([targetId]);
+          res.writeHead(200, JSON_HEADERS);
+          res.end(JSON.stringify({ ok: true, deleted: true, vendorId: targetId }));
+          return;
         } else {
           res.writeHead(400, JSON_HEADERS);
           res.end(JSON.stringify({ ok: false, error: 'action inconnue' }));
@@ -6959,6 +7163,222 @@ function handleHttp(req, res) {
     }
 
     res.writeHead(405, JSON_HEADERS);
+    res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' }));
+    return;
+  }
+
+  if (urlPath === '/api/team') {
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || cookieFromReq(req, 'mgt_session');
+    const authedUser = userByToken(token);
+    const vendor = canonicalRoutingId(queryParam(req, 'vendor') || (authedUser && authedUser.vendorId) || 'pro-41cafa4bcb31') || 'pro-41cafa4bcb31';
+    const doc = vendorConfigFor(vendor);
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: true, team: doc.team || { members: [], commission: {} } }));
+      return;
+    }
+    if (req.method === 'POST') {
+      readJsonBody(req, function (err, body) {
+        if (err) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+        const team = doc.team || (doc.team = { members: [], commission: { base: 10, bonus: 5, seuilCa: 500000 } });
+        const action = body.action;
+        const members = Array.isArray(team.members) ? team.members : (team.members = []);
+        const now = new Date().toISOString();
+
+        if (action === 'add') {
+          const name = String(body.name || '').trim();
+          const role = String(body.role || 'Coiffeuse').trim();
+          if (!name) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Nom requis' })); return; }
+          const member = {
+            id: 'mem-' + crypto.randomBytes(6).toString('hex'),
+            name: name,
+            email: String(body.email || '').trim(),
+            role: role,
+            active: true,
+            commission: Number(body.commission) || 0,
+            planning: String(body.planning || '').trim(),
+            prestations: 0,
+            ca: 0,
+            createdAt: now
+          };
+          members.push(member);
+          doc.updatedAt = now;
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, team: team }));
+          return;
+        }
+        if (action === 'update') {
+          const id = String(body.id || '');
+          const m = members.find(function (x) { return x && x.id === id; });
+          if (!m) { res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Membre introuvable' })); return; }
+          if (body.role !== undefined) m.role = String(body.role || '').trim();
+          if (body.email !== undefined) m.email = String(body.email || '').trim();
+          if (body.name !== undefined) m.name = String(body.name || '').trim();
+          if (body.commission !== undefined) m.commission = Number(body.commission) || 0;
+          if (body.planning !== undefined) m.planning = String(body.planning || '').trim();
+          doc.updatedAt = now;
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, team: team }));
+          return;
+        }
+        if (action === 'toggle') {
+          const id = String(body.id || '');
+          const m = members.find(function (x) { return x && x.id === id; });
+          if (!m) { res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Membre introuvable' })); return; }
+          m.active = body.active !== undefined ? !!body.active : !m.active;
+          doc.updatedAt = now;
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, team: team }));
+          return;
+        }
+        if (action === 'remove') {
+          const id = String(body.id || '');
+          const before = members.length;
+          team.members = members.filter(function (x) { return x && x.id !== id; });
+          doc.updatedAt = now;
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, team: team, removed: before - team.members.length }));
+          return;
+        }
+        if (action === 'set-commission') {
+          team.commission = Object.assign({}, team.commission || {}, {
+            base: Number(body.base) || 0,
+            bonus: Number(body.bonus) || 0,
+            seuilCa: Number(body.seuilCa) || 0
+          });
+          doc.updatedAt = now;
+          saveVendorConfig();
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, team: team }));
+          return;
+        }
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, error: 'action inconnue' }));
+      });
+      return;
+    }
+    res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' }));
+    return;
+  }
+
+  if (urlPath === '/api/appointments') {
+    const token = queryParam(req, 'token') || (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || cookieFromReq(req, 'mgt_session');
+    const authedUser = userByToken(token);
+    const vendor = canonicalRoutingId(queryParam(req, 'vendor') || (authedUser && authedUser.vendorId) || 'pro-41cafa4bcb31') || 'pro-41cafa4bcb31';
+    const now = new Date().toISOString();
+
+    if (req.method === 'GET') {
+      const list = appointmentLog
+        .filter(function (a) { return a && (canonicalRoutingId(a.to) === vendor || canonicalRoutingId(a.from) === vendor); })
+        .map(function (a) { return Object.assign({}, a, { from: canonicalRoutingId(a.from), to: canonicalRoutingId(a.to) }); })
+        .sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); });
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: true, appointments: list }));
+      return;
+    }
+
+    if (req.method === 'POST') {
+      readJsonBody(req, function (err, body) {
+        if (err) { res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+        const action = body.action;
+
+        // Recherche d'un client par nom/email/téléphone pour l'indicateur
+        // « client reconnu / introuvable » du formulaire de création.
+        if (action === 'lookup') {
+          const name = String(body.clientName || body.name || '').trim();
+          const u = findClientByText(name);
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({
+            ok: true,
+            found: !!u,
+            client: u ? { id: u.id, name: u.name || u.fullName || u.enseigne || name } : null
+          }));
+          return;
+        }
+
+        // Création d'un RDV par le prestataire + notification au client.
+        if (action === 'create') {
+          const service = String(body.service || '').trim();
+          const day = String(body.day || '').trim();
+          const time = String(body.time || '').trim();
+          const clientName = String(body.clientName || '').trim();
+          if (!service || !day || !time) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ ok: false, error: 'Prestation, jour et heure requis' }));
+            return;
+          }
+          const clientId = resolveClientId(body.clientId, clientName);
+          const appt = {
+            apptId: rand(),
+            from: vendor,
+            fromName: (authedUser && displayNameForUser(authedUser)) || vendor,
+            to: clientId || '',
+            clientName: clientName,
+            service: service,
+            day: day,
+            time: time,
+            note: String(body.note || ''),
+            status: 'requested',
+            createdByVendor: true,
+            deliveryPending: !clientId,
+            createdAt: now
+          };
+          appointmentLog.push(appt);
+          saveAppointments();
+          if (clientId) {
+            broadcastToPeer(clientId, {
+              type: 'appointment-new', apptId: appt.apptId,
+              from: appt.from, fromName: appt.fromName,
+              service: service, day: day, time: time, note: appt.note
+            });
+            // Si le client n'est pas actuellement sur sa messagerie (application
+            // fermée ou page quelconque ouverte), on déclenche une notification
+            // Web Push native pour que la demande de rendez-vous lui parvienne
+            // quand même. C'est le correctif du cas « Dida n'a rien reçu ».
+            if (!isOnMessaging(clientId)) {
+              sendPush(clientId, {
+                title: 'Nouveau rendez-vous',
+                body: (appt.fromName || vendor) + ' vous propose un rendez-vous : ' + service + ' le ' + day + ' à ' + time,
+                url: pushLandingUrl({ routingId: clientId, kind: 'message', from: vendor, fromName: appt.fromName, convId: '' }),
+                tag: 'appt-' + appt.apptId,
+                data: { kind: 'appointment', apptId: appt.apptId, from: vendor, fromName: appt.fromName }
+              });
+            }
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, appointment: appt, notified: !!clientId }));
+          return;
+        }
+
+        // Réponse du prestataire à une demande (confirmer / refuser).
+        if (action === 'reply') {
+          const appt = appointmentLog.find(function (a) { return a && a.apptId === body.apptId; });
+          if (!appt) { res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ ok: false, error: 'Rendez-vous introuvable' })); return; }
+          const accepted = body.accept !== false;
+          appt.status = accepted ? 'confirmed' : 'declined';
+          appt.updatedAt = now;
+          saveAppointments();
+          broadcastToPeer(appt.from, {
+            type: accepted ? 'appointment-accepted' : 'appointment-declined',
+            apptId: appt.apptId,
+            name: (authedUser && displayNameForUser(authedUser)) || vendor
+          });
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, appointment: appt }));
+          return;
+        }
+
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, error: 'action inconnue' }));
+      });
+      return;
+    }
+    res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' }));
     return;
   }
@@ -7177,6 +7597,52 @@ function handleHttp(req, res) {
    *  déclenche le checkout redirect. Le settlement (kind boutique-order)
    *  marquera la commande « payee », décrémentera le stock et créditera
    *  le vendeur au retour du webhook / du polling. */
+  // Résout et valide la remise d'une commande (code promo ou parrainage).
+  // Source de vérité du montant facturé : le serveur recalcule le total à
+  // partir du sous-total reçu et de la remise validée, et refuse un code de
+  // parrainage déjà utilisé (réservé à la première commande du client).
+  function resolveOrderDiscount(opts) {
+    const vendorId = String((opts && opts.vendorId) || '');
+    const raw = String((opts && opts.code) || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const type = String((opts && opts.codeType) || '').trim();
+    const subtotal = Math.max(0, Math.round(Number((opts && opts.subtotal) || 0)));
+    if (!raw) return { code: '', codeType: '', percent: 0, amount: 0, label: '' };
+
+    const cfg = vendorConfigFor(vendorId) || {};
+    const referral = (cfg.parrainage && cfg.parrainage.code) ? String(cfg.parrainage.code).toUpperCase() : '';
+    const promos = (cfg.promotions && Array.isArray(cfg.promotions.codes)) ? cfg.promotions.codes : [];
+
+    // Code de parrainage (déclaré ou reconnu) : remise fixe de 10 %.
+    if (type === 'parrainage' || (raw === referral && type !== 'promo')) {
+      if (raw !== referral) return { error: 'Code de parrainage invalide.' };
+      const clientId = (opts && opts.user) ? opts.user.id : '';
+      // Un code de parrainage exige un compte : sans identité, impossible de
+      // garantir la règle « première commande ».
+      if (!clientId) return { error: 'Connectez-vous pour utiliser un code de parrainage.' };
+      const phone = normalizePhone((opts && opts.phone) || '');
+      const deviceId = String((opts && opts.deviceId) || '').trim();
+      const already = boutiqueOrders.some(function (o) {
+        if (!o || o.vendorId !== vendorId) return false;
+        if (!(o.status === 'payee' || o.paidAt)) return false;
+        if (o.clientId === clientId) return true;
+        if (phone && normalizePhone(o.clientPhone || '') === phone) return true;
+        if (deviceId && o.deviceId === deviceId) return true;
+        return false;
+      });
+      if (already) return { error: 'Ce code de parrainage est réservé à votre 1ère commande ici.' };
+      return { code: raw, codeType: 'parrainage', percent: 10, amount: Math.round(subtotal * 10 / 100), label: 'Parrainage (' + raw + ')' };
+    }
+
+    // Code promo actif du module Promotions.
+    const promo = promos.find(function (p) { return p && String(p.code || '').toUpperCase() === raw && p.status === 'active'; });
+    if (promo) {
+      const percent = Math.max(0, Math.min(100, Number(promo.discount) || 0));
+      return { code: raw, codeType: 'promo', percent: percent, amount: Math.round(subtotal * percent / 100), label: 'Remise promo (' + raw + ')' };
+    }
+
+    return { error: 'Code invalide ou expiré.' };
+  }
+
   if (urlPath === '/api/boutique/order') {
     if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
     readJsonBody(req, function (err, body) {
@@ -7201,9 +7667,12 @@ function handleHttp(req, res) {
       const subtotal = items.reduce(function (s, it) { return s + it.lineTotal; }, 0);
       const fulfillment = String(body.fulfillment || '').trim() === 'livraison' ? 'livraison' : 'retrait';
       const deliveryFee = fulfillment === 'livraison' ? Math.max(0, Math.round(Number(body.deliveryFee) || 500)) : 0;
-      const total = subtotal + deliveryFee;
 
       const vendorId = canonicalRoutingId(String(body.vendorId || ''));
+      const discountResult = resolveOrderDiscount({ vendorId: vendorId, user: user, code: body.code, codeType: body.codeType, subtotal: subtotal, phone: body.clientPhone, deviceId: body.deviceId });
+      if (discountResult.error) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: discountResult.error, codeError: true })); return; }
+      const discount = { code: discountResult.code || '', codeType: discountResult.codeType || '', percent: discountResult.percent || 0, amount: discountResult.amount || 0, label: discountResult.label || '' };
+      const total = Math.max(0, subtotal + deliveryFee - discount.amount);
       const vendorName = String(body.vendorName || '').trim() || 'Boutique';
       const orderNo = 'CMD-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
       const order = {
@@ -7214,12 +7683,14 @@ function handleHttp(req, res) {
         clientId: user ? user.id : '',
         clientName: String(body.clientName || '').trim() || 'Client',
         clientPhone: String(body.clientPhone || '').trim(),
+        deviceId: String(body.deviceId || '').trim(),
         clientEmail: String(body.clientEmail || '').trim(),
         clientCity: String(body.clientCity || '').trim(),
         items: items,
         subtotal: subtotal,
         deliveryFee: deliveryFee,
         total: total,
+        discount: discount,
         fulfillment: fulfillment,
         address: String(body.address || '').trim(),
         status: 'en_attente',
@@ -7278,7 +7749,7 @@ function handleHttp(req, res) {
         txn.instructions = sim.instructions;
         saveTransactions();
         res.writeHead(200, JSON_HEADERS);
-        res.end(JSON.stringify({ ok: true, orderId: order.id, orderNo: orderNo, transactionId: txn.id, checkoutUrl: sim.checkoutUrl, paymentMode: 'live' }));
+        res.end(JSON.stringify({ ok: true, orderId: order.id, orderNo: orderNo, transactionId: txn.id, checkoutUrl: sim.checkoutUrl, paymentMode: 'live', total: total, subtotal: subtotal, deliveryFee: deliveryFee, discount: discount }));
       }).catch(function (e) {
         txn.status = 'failed';
         txn.failedReason = 'Initiation ' + op.label + ' impossible : ' + e.message;
@@ -8687,6 +9158,7 @@ loadVendorConfig();
 loadUsers();
 ensureSeedVendorUsers();
 ensureSupportAccount();
+reconcileRemoveVendor(['ven-f9d9419fcc11']);
 loadSessions();
 normalizeVendorCities();
 loadPaymentMethods();
@@ -8819,7 +9291,7 @@ function resolveIpCountry(ip) {
         try {
           const data = JSON.parse(body);
           if (data && data.success !== false && data.country) {
-            const country = String(data.country || '').trim();
+            const country = countryLabelFr(String(data.country || '').trim());
             const countryCode = String(data.country_code || '').trim().toUpperCase();
             cacheIpCountry(key, country, countryCode);
             console.log('[IP] pays résolu', { ip: key, country: country, countryCode: countryCode });
