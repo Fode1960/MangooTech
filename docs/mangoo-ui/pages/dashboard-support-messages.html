@@ -64,7 +64,8 @@ button{font-family:inherit}
 .conv-name .status-dot{width:7px;height:7px;border-radius:50%;background:rgb(var(--mgt-muted-foreground));flex-shrink:0}
 .conv-name .status-dot.on{background:rgb(var(--mgt-success))}
 .conv-origin{font-size:11px;color:rgb(var(--mgt-muted-foreground));margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.conv-origin .flag{font-size:13px;line-height:1}
+.conv-origin .flag{display:inline-flex;align-items:center;line-height:1}
+.conv-origin .flag img{width:20px;height:15px;object-fit:cover;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.15);vertical-align:-2px}
 .conv-origin .dur{color:rgb(var(--mgt-primary-700));font-weight:600}
 .conv-origin .missed{color:rgb(var(--mgt-accent));font-weight:600}
 .conv-last{font-size:12px;color:rgb(var(--mgt-muted-foreground));margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -228,12 +229,9 @@ button{font-family:inherit}
       return s + ' s';
     }
     function countryFlag(code) {
-      if (!code || code.length !== 2) return '';
-      var A = 0x1F1E6, base = 'A'.charCodeAt(0);
-      var a = code.charCodeAt(0) - base;
-      var b = code.charCodeAt(1) - base;
-      if (a < 0 || a > 25 || b < 0 || b > 25) return '';
-      try { return String.fromCodePoint(A + a) + String.fromCodePoint(A + b); } catch (e) { return ''; }
+      code = String(code || '').trim().toUpperCase();
+      if (code.length !== 2) return '';
+      return '<span class="flag"><img src="https://flagcdn.com/w40/' + code.toLowerCase() + '.png" alt="' + code + '" onerror="this.parentNode.remove()"></span>';
     }
     function callStatusLabel(status) {
       if (status === 'missed') return 'Appel manqué';
