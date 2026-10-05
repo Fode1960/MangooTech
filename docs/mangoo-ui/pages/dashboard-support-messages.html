@@ -192,6 +192,16 @@ button{font-family:inherit}
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
       });
     }
+    // Nom lisible pour un pair anonyme : « guest-<ts>-<id> » devient « Visiteur <id> ».
+    function friendlyPeer(name, id) {
+      var n = String(name == null ? '' : name).trim();
+      if (n && !/^guest-/i.test(n)) return n;
+      var gid = String(id == null ? '' : id).trim();
+      var m = /^guest-.*-(\d+)$/i.exec(gid);
+      if (m) return 'Visiteur ' + m[1];
+      if (/^guest-/i.test(gid)) return 'Visiteur';
+      return n || gid || 'Contact';
+    }
     function initials(name) {
       var parts = (name || '').trim().split(/\s+/);
       var a = (parts[0] || '?').charAt(0);
@@ -329,6 +339,7 @@ button{font-family:inherit}
     }
 
     function buildConversation(name, peerId, contact) {
+      name = friendlyPeer(name, peerId);
       var list = document.getElementById('conv-list');
       var empty = list.querySelector('.conv-empty');
       if (empty) empty.remove();

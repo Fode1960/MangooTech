@@ -772,6 +772,18 @@ function displayNameForUser(u) {
   return u.enseigne || u.name || u.fullName || u.email || u.phone || '';
 }
 
+// Nom lisible pour un pair anonyme : transforme l'identifiant technique
+// « guest-<timestamp>-<id> » en « Visiteur <id> » pour l'affichage.
+function friendlyPeerName(name, id) {
+  const n = String(name == null ? '' : name).trim();
+  if (n && !/^guest-/i.test(n)) return n;
+  const gid = String(id == null ? '' : id).trim();
+  const m = /^guest-.*-(\d+)$/i.exec(gid);
+  if (m) return 'Visiteur ' + m[1];
+  if (/^guest-/i.test(gid)) return 'Visiteur';
+  return n || gid || '';
+}
+
 function userByRoutingId(rid) {
   if (!rid) return null;
   const id = canonicalRoutingId(rid);
@@ -5772,7 +5784,7 @@ function handleHttp(req, res) {
         vendorId: known ? (known.vendorId || known.id) : peerId,
         routingId: cid,
         role: known ? known.role : (role || 'client'),
-        name: known ? (displayNameForUser(known) || 'Contact') : (name || peerId),
+        name: known ? (displayNameForUser(known) || 'Contact') : friendlyPeerName(name, peerId),
         enseigne: known ? (known.enseigne || '') : '',
         phone: known ? (known.phone || '') : (extra && extra.phone ? extra.phone : ''),
         email: known ? (known.email || '') : '',

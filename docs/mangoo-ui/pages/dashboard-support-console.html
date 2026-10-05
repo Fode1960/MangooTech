@@ -322,6 +322,17 @@ a{text-decoration:none;color:inherit}
       });
     }
 
+    // Nom lisible pour un pair anonyme : « guest-<ts>-<id> » devient « Visiteur <id> ».
+    function friendlyPeer(name, id) {
+      var n = String(name == null ? '' : name).trim();
+      if (n && !/^guest-/i.test(n)) return n;
+      var gid = String(id == null ? '' : id).trim();
+      var m = /^guest-.*-(\d+)$/i.exec(gid);
+      if (m) return 'Visiteur ' + m[1];
+      if (/^guest-/i.test(gid)) return 'Visiteur';
+      return n || gid || 'Inconnu';
+    }
+
     // Drapeau image (Windows ne rend pas les emoji-drapeaux dans Chrome/Edge).
     function flagHtml(cc) {
       cc = String(cc || '').trim().toUpperCase();
@@ -370,7 +381,7 @@ a{text-decoration:none;color:inherit}
           var dir = c.direction === 'out' ? 'out' : 'in';
           var meta = callStatusMeta(c.status);
           var peerId = dir === 'out' ? (c.calleeId || '') : (c.callerId || '');
-          var peer = dir === 'out' ? (c.calleeName || c.calleeId || 'Inconnu') : (c.callerName || c.callerId || 'Inconnu');
+          var peer = friendlyPeer(dir === 'out' ? c.calleeName : c.callerName, dir === 'out' ? c.calleeId : c.callerId);
           // Le pays stocke est celui de l'appelant : il ne s'affiche que pour
           // un appel entrant (le correspondant est l'appelant). Pour un appel
           // sortant, ce serait le pays du support, donc on ne l'affiche pas.
