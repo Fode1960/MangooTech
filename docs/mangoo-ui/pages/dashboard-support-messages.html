@@ -77,6 +77,12 @@ button{font-family:inherit}
 .thread-meta{flex:1;min-width:0}
 .thread-name{font-size:14px;font-weight:700;color:rgb(var(--mgt-foreground))}
 .thread-status{font-size:12px;color:rgb(var(--mgt-muted-foreground))}
+.typing-indicator{display:flex;align-items:center;gap:8px;padding:8px 16px;background:rgb(var(--mgt-muted));color:rgb(var(--mgt-muted-foreground));font-size:12px;border-top:1px solid rgb(var(--mgt-border))}
+.typing-indicator .typing-dots{display:inline-flex;gap:3px}
+.typing-indicator .typing-dots i{width:5px;height:5px;border-radius:50%;background:rgb(var(--mgt-muted-foreground));display:inline-block;animation:typingBlink 1.2s infinite ease-in-out}
+.typing-indicator .typing-dots i:nth-child(2){animation-delay:.15s}
+.typing-indicator .typing-dots i:nth-child(3){animation-delay:.3s}
+@keyframes typingBlink{0%,60%,100%{opacity:.35}30%{opacity:1}}
 .back-btn{display:none;align-items:center;gap:4px;padding:7px 10px;border:1px solid rgb(var(--mgt-border));border-radius:8px;background:transparent;color:rgb(var(--mgt-foreground));font-size:13px;font-weight:600;cursor:pointer}
 @media(max-width:760px){.back-btn{display:inline-flex}.list-pane.hidden-mobile{display:none}.thread-pane.hidden-mobile{display:none}}
 .thread{flex:1;overflow-y:auto;min-height:0;padding:16px;display:flex;flex-direction:column;gap:8px}
@@ -162,6 +168,10 @@ button{font-family:inherit}
             <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <span>Sélectionnez une conversation pour lire et répondre.</span>
           </div>
+        </div>
+        <div class="typing-indicator" id="typing-indicator" style="display:none;">
+          <span class="typing-dots"><i></i><i></i><i></i></span>
+          <span id="typing-name">est en train d'écrire…</span>
         </div>
         <div class="composer" id="composer" style="display:none;">
           <input id="msg-input" type="text" placeholder="Écrire un message…" autocomplete="off">
@@ -313,6 +323,52 @@ button{font-family:inherit}
       livePeers.forEach(function (p) { if (String(p.id) === peerId) online = true; });
       el.textContent = online ? 'En ligne' : 'Hors ligne';
       el.style.color = online ? 'rgb(var(--mgt-primary-700))' : '';
+    }
+
+    var peerTypingTimers = {};
+    var myTypingTimer = null;
+    var myTypingSentAt = 0;
+    function showTypingFor(name) {
+      var el = document.getElementById('typing-indicator');
+      var nameEl = document.getElementById('typing-name');
+      if (el) el.style.display = 'flex';
+      if (nameEl) nameEl.textContent = (name || 'Quelqu\'un') + ' est en train d\'écrire…';
+    }
+    function hideTyping() {
+      var el = document.getElementById('typing-indicator');
+      if (el) el.style.display = 'none';
+    }
+    function receiveTyping(t) {
+      var from = t && t.from ? String(t.from) : '';
+      var isTyping = !!t.isTyping;
+      if (peerTypingTimers[from]) { clearTimeout(peerTypingTimers[from]); delete peerTypingTimers[from]; }
+      var activePeer = currentConv ? (currentConv.getAttribute('data-peer-id') || '') : '';
+      if (isTyping) {
+        if (from === activePeer) {
+          var nm = (currentConv && currentConv.getAttribute('data-name')) || t.fromName || 'Quelqu\'un';
+          showTypingFor(nm);
+        }
+        peerTypingTimers[from] = setTimeout(function () {
+          delete peerTypingTimers[from];
+          if (from === activePeer) hideTyping();
+        }, 3000);
+      } else {
+        if (from === activePeer) hideTyping();
+      }
+    }
+    function onUserTyping() {
+      if (!currentConv) return;
+      var peerId = currentConv.getAttribute('data-peer-id') || '';
+      if (!peerId) return;
+      if (myTypingTimer) { clearTimeout(myTypingTimer); myTypingTimer = null; }
+      var now = Date.now();
+      if (now - myTypingSentAt > 2000 && RT && typeof RT.sendTyping === 'function') {
+        myTypingSentAt = now;
+        RT.sendTyping(peerId, true);
+      }
+      myTypingTimer = setTimeout(function () {
+        if (RT && typeof RT.sendTyping === 'function' && currentConv) RT.sendTyping(currentConv.getAttribute('data-peer-id') || peerId, false);
+      }, 2500);
     }
 
     function originLine(contact) {
@@ -563,6 +619,7 @@ button{font-family:inherit}
           RT.onPresence(function (peers) { livePeers = peers || []; syncPresence(); });
         }
         RT.onMessage(function (m) { if (m) showIncoming(m); });
+        RT.onTyping(function (t) { receiveTyping(t); });
         RT.onIncomingCall(function (c) {
           var badge = document.getElementById('ring-badge');
           var txt = document.getElementById('ring-text');
@@ -585,6 +642,7 @@ button{font-family:inherit}
       if (sendBtn) sendBtn.addEventListener('click', sendMessage);
       if (input) {
         input.addEventListener('keydown', function (e) { if (e.key === 'Enter') sendMessage(); });
+        input.addEventListener('input', onUserTyping);
       }
       var backBtn = document.getElementById('back-btn');
       if (backBtn) {
