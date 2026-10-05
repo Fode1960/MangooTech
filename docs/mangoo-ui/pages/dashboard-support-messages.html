@@ -205,7 +205,7 @@ button{font-family:inherit}
     // Nom lisible pour un pair anonyme : « guest-<ts>-<id> » devient « Visiteur <id> ».
     function friendlyPeer(name, id) {
       var n = String(name == null ? '' : name).trim();
-      if (n && !/^guest-/i.test(n)) return n;
+      if (n && !/^guest-/i.test(n) && n.toLowerCase() !== 'visiteur') return n;
       var gid = String(id == null ? '' : id).trim();
       var m = /^guest-.*-(\d+)$/i.exec(gid);
       if (m) return 'Visiteur ' + m[1];

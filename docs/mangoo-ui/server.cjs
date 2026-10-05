@@ -776,7 +776,7 @@ function displayNameForUser(u) {
 // « guest-<timestamp>-<id> » en « Visiteur <id> » pour l'affichage.
 function friendlyPeerName(name, id) {
   const n = String(name == null ? '' : name).trim();
-  if (n && !/^guest-/i.test(n)) return n;
+  if (n && !/^guest-/i.test(n) && n.toLowerCase() !== 'visiteur') return n;
   const gid = String(id == null ? '' : id).trim();
   const m = /^guest-.*-(\d+)$/i.exec(gid);
   if (m) return 'Visiteur ' + m[1];
