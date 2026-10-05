@@ -961,6 +961,21 @@ html.dark {
         return 'Client';
       }
       function contactSnippet(c) {
+        var parts = [];
+        var flag = countryFlag(c.countryCode || (c.lastCall && c.lastCall.countryCode));
+        var country = c.country || (c.lastCall && c.lastCall.country) || '';
+        if (country) parts.push((flag ? flag + ' ' : '') + country);
+        var lc = c.lastCall;
+        if (lc && lc.at) {
+          var t = fmtCallTime(lc.at);
+          if (t) {
+            var sub = t;
+            if (lc.durationSec != null && !isNaN(lc.durationSec) && lc.durationSec >= 0 && (lc.status === 'answered' || lc.status === 'ended')) sub += ' · ' + fmtDuration(lc.durationSec);
+            else if (lc.status === 'missed' || lc.status === 'rejected') sub += ' · ' + callStatusLabel(lc.status);
+            parts.push(sub);
+          }
+        }
+        if (parts.length) return parts.join(' · ');
         if (c.city) return c.city;
         if (c.phone) return c.phone;
         return roleLabel(c.role);
@@ -2884,6 +2899,22 @@ html.dark {
         if (status === 'ringing') return 'En sonnerie';
         return '';
       }
+      function countryFlag(code) {
+        if (!code || String(code).length !== 2) return '';
+        var A = 0x1F1E6, base = 'A'.charCodeAt(0);
+        var a = String(code).charCodeAt(0) - base;
+        var b = String(code).charCodeAt(1) - base;
+        if (a < 0 || a > 25 || b < 0 || b > 25) return '';
+        try { return String.fromCodePoint(A + a) + String.fromCodePoint(A + b); } catch (e) { return ''; }
+      }
+      function fmtDuration(sec) {
+        if (sec == null || isNaN(sec) || sec < 0) return '';
+        sec = Math.round(sec);
+        var m = Math.floor(sec / 60);
+        var s = sec % 60;
+        if (m > 0) return m + ' min ' + ('0' + s).slice(-2) + ' s';
+        return s + ' s';
+      }
       function renderCalls(list) {
         if (!callListEl) return;
         callListEl.querySelectorAll('.msg-call-item').forEach(function (n) { if (n.parentNode) n.parentNode.removeChild(n); });
@@ -2900,6 +2931,18 @@ html.dark {
           var peerId = isOut ? (c.calleeId || '') : (c.callerId || '');
           var icon = (c.status === 'missed') ? 'phone-missed' : (isOut ? 'phone-outgoing' : 'phone-incoming');
           var iconColor = (c.status === 'missed') ? 'rgb(var(--mgt-error))' : 'rgb(var(--mgt-muted-foreground))';
+          var flag = countryFlag(c.countryCode);
+          var countryTxt = String(c.country || '').trim();
+          var missed = (c.status === 'missed' || c.status === 'rejected');
+          var durTxt = (c.durationSec != null && !isNaN(c.durationSec) && c.durationSec >= 0 && (c.status === 'answered' || c.status === 'ended')) ? fmtDuration(c.durationSec) : '';
+          var statusTxt = callStatusLabel(c.status);
+          var meta = [];
+          if (flag) meta.push('<span>' + flag + '</span>');
+          if (countryTxt) meta.push(esc(countryTxt));
+          meta.push(isOut ? 'Sortant' : 'Entrant');
+          if (c.mode === 'video') meta.push('Vidéo');
+          if (statusTxt) meta.push('<span' + (missed ? ' style="color:rgb(var(--mgt-error));font-weight:600"' : '') + '>' + esc(statusTxt) + '</span>');
+          if (durTxt) meta.push('<span style="color:rgb(var(--mgt-primary-700));font-weight:600">' + esc(durTxt) + '</span>');
           var item = document.createElement('div');
           item.className = 'msg-call-item flex items-center gap-3 px-4 py-3 hover:bg-[rgb(var(--mgt-muted))] cursor-pointer';
           item.innerHTML =
@@ -2908,7 +2951,7 @@ html.dark {
             '</div>' +
             '<div class="flex-1 min-w-0">' +
               '<p class="text-sm font-semibold truncate" style="color:rgb(var(--mgt-foreground));">' + esc(peerName) + '</p>' +
-              '<p class="text-xs" style="color:rgb(var(--mgt-muted-foreground));">' + (isOut ? 'Sortant' : 'Entrant') + (c.mode === 'video' ? ' · Vidéo' : '') + (c.status ? ' · ' + callStatusLabel(c.status) : '') + '</p>' +
+              '<p class="text-xs" style="color:rgb(var(--mgt-muted-foreground));">' + meta.join(' <span style="opacity:.45">·</span> ') + '</p>' +
             '</div>' +
             '<span class="text-xs shrink-0" style="color:rgb(var(--mgt-muted-foreground));">' + fmtCallTime(c.at) + '</span>' +
             '<button type="button" class="msg-call-back shrink-0 w-9 h-9 rounded-full flex items-center justify-center" title="Rappeler" aria-label="Rappeler ' + esc(peerName) + '" style="background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary));border:none;cursor:pointer;">' +

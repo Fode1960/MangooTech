@@ -4439,7 +4439,7 @@ function handleRegister(ws, msg) {
 // identifiants sont ramenés à leur forme canonique (ex. ven-e9e831ccf698 →
 // pro-41cafa4bcb31) pour que l'historique soit cohérent quel que soit le
 // compte dupliqué utilisé pour émettre/recevoir l'appel.
-function recordCall(callId, callerId, calleeId, mode, status, callerName) {
+function recordCall(callId, callerId, calleeId, mode, status, callerName, country, countryCode) {
   const ccaller = canonicalRoutingId(callerId);
   const ccallee = canonicalRoutingId(calleeId);
   const callee = userByRoutingId(ccallee);
@@ -4451,6 +4451,8 @@ function recordCall(callId, callerId, calleeId, mode, status, callerName) {
     calleeName: callee ? displayNameForUser(callee) : '',
     mode: mode || 'audio',
     status: status || 'ringing',
+    country: country || '',
+    countryCode: countryCode || '',
     at: nowIso()
   };
   callLog.push(entry);
@@ -4461,6 +4463,19 @@ function updateCall(callId, patch) {
   const e = callLog.find(function (x) { return x && x.callId === callId; });
   if (e) { Object.assign(e, patch); saveCallLog(); }
   return e;
+}
+
+// Calcule la durée réelle d'un appel décroché (entre `answeredAt` et la fin) et
+// la persiste dans l'historique. Si l'appel n'a jamais été décroché (manqué /
+// refusé), on laisse durationSec absent : l'interface affichera « — ».
+function finalizeCallDuration(callId) {
+  const e = callLog.find(function (x) { return x && x.callId === callId; });
+  if (!e || !e.answeredAt) return;
+  const started = Date.parse(e.answeredAt);
+  const ended = Date.now();
+  if (isNaN(started) || ended <= started) return;
+  e.durationSec = Math.max(0, Math.round((ended - started) / 1000));
+  saveCallLog();
 }
 
 // Compte « Support MangooTech » : identité partagée par plusieurs membres de
@@ -4531,7 +4546,7 @@ async function handleCallOffer(ws, msg) {
         requireInteraction: true,
         data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode, country: callerCountry, countryCode: callerCountryCode }
       });
-      recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName);
+      recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName, callerCountry, callerCountryCode);
       send(ws, { type: 'call-error', callId, reason: 'offline', pushed: pushed });
       return;
     }
@@ -4544,7 +4559,7 @@ async function handleCallOffer(ws, msg) {
       mode: callMode,
       iceBuffer: []
     });
-    recordCall(callId, ws.meta.id, cto, callMode, 'ringing', callerName);
+    recordCall(callId, ws.meta.id, cto, callMode, 'ringing', callerName, callerCountry, callerCountryCode);
     candidates.forEach(function (cand) {
       send(cand.ws, {
         type: 'call-ring', callId,
@@ -4578,7 +4593,7 @@ async function handleCallOffer(ws, msg) {
       requireInteraction: true,
       data: { kind: 'call', callId: callId, from: ws.meta.id, fromName: ws.meta.name, mode: callMode, country: callerCountry, countryCode: callerCountryCode }
     });
-    recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName);
+    recordCall(callId, ws.meta.id, cto, callMode, 'missed', callerName, callerCountry, callerCountryCode);
     send(ws, { type: 'call-error', callId, reason: 'offline', pushed: pushed });
     return;
   }
@@ -4587,7 +4602,7 @@ async function handleCallOffer(ws, msg) {
     callerWs: ws, calleeWs: target.ws,
     mode: callMode
   });
-  recordCall(callId, ws.meta.id, cto, callMode, 'ringing', callerName);
+  recordCall(callId, ws.meta.id, cto, callMode, 'ringing', callerName, callerCountry, callerCountryCode);
   send(target.ws, {
     type: 'call-ring', callId,
     from: ws.meta.id, fromName: ws.meta.name,
@@ -4602,7 +4617,7 @@ function handleCallAnswer(ws, msg) {
   if (c.group) {
     if (c.answeredWs) return; // un autre agent a déjà décroché
     c.answeredWs = ws;
-    updateCall(msg.callId, { status: 'answered' });
+    updateCall(msg.callId, { status: 'answered', answeredAt: nowIso() });
     // Relayer au répondant les candidats ICE de l'appelant reçus pendant la
     // sonnerie (sinon perdus : aucun agent n'était encore désigné à ce moment).
     (c.iceBuffer || []).forEach(function (m) {
@@ -4617,7 +4632,7 @@ function handleCallAnswer(ws, msg) {
     });
     return;
   }
-  updateCall(msg.callId, { status: 'answered' });
+  updateCall(msg.callId, { status: 'answered', answeredAt: nowIso() });
   send(c.callerWs, { type: 'call-accepted', callId: msg.callId, sdp: msg.sdp, name: ws.meta.name });
 }
 
@@ -4643,6 +4658,7 @@ function handleCallReject(ws, msg) {
 function handleCallEnd(ws, msg) {
   const c = calls.get(msg.callId);
   if (!c) return;
+  finalizeCallDuration(msg.callId);
   updateCall(msg.callId, { status: 'ended' });
   if (c.group) {
     // L'appelant raccroche : on arrête la sonnerie partout. Un agent raccroche :
@@ -5730,6 +5746,8 @@ function handleHttp(req, res) {
           phone: u.phone || '',
           email: u.email || '',
           city: u.city || '',
+          country: u.country || '',
+          countryCode: u.countryCode || '',
           logo: u.logo || '',
           category: u.category || '',
           online: isOnline(u.id) || isOnline(u.vendorId),
@@ -5759,6 +5777,8 @@ function handleHttp(req, res) {
         phone: known ? (known.phone || '') : (extra && extra.phone ? extra.phone : ''),
         email: known ? (known.email || '') : '',
         city: known ? (known.city || '') : '',
+        country: known ? (known.country || '') : (extra && extra.country ? extra.country : ''),
+        countryCode: known ? (known.countryCode || '') : (extra && extra.countryCode ? extra.countryCode : ''),
         logo: known ? (known.logo || '') : '',
         category: known ? (known.category || '') : '',
         online: known ? (isOnline(known.id) || isOnline(known.vendorId)) : false,
@@ -5777,10 +5797,29 @@ function handleHttp(req, res) {
       if (!c) return;
       const cf = canonicalRoutingId(c.callerId);
       const ct = canonicalRoutingId(c.calleeId);
-      if (cf === myId) addDerived(c.calleeId, c.calleeName || null, 'client', { phone: c.calleePhone });
-      else if (ct === myId) addDerived(c.callerId, c.callerName || null, 'client', { phone: c.callerPhone });
+      if (cf === myId) addDerived(c.calleeId, c.calleeName || null, 'client', { phone: c.calleePhone, country: c.country, countryCode: c.countryCode });
+      else if (ct === myId) addDerived(c.callerId, c.callerName || null, 'client', { phone: c.callerPhone, country: c.country, countryCode: c.countryCode });
     });
-    const allContacts = contacts.concat(derived).sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
+    const allContacts = contacts.concat(derived).map(function (c) {
+      const cid = canonicalRoutingId(c.vendorId || c.id || '');
+      let last = null;
+      callLog.forEach(function (e) {
+        if (!e) return;
+        if (canonicalRoutingId(e.callerId) === cid || canonicalRoutingId(e.calleeId) === cid) {
+          if (!last || String(e.at || '') > String(last.at || '')) last = e;
+        }
+      });
+      if (last) {
+        c.lastCall = {
+          at: last.at || '',
+          status: last.status || '',
+          durationSec: (typeof last.durationSec === 'number') ? last.durationSec : null,
+          country: last.country || c.country || '',
+          countryCode: last.countryCode || c.countryCode || ''
+        };
+      }
+      return c;
+    }).sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate' });
     res.end(JSON.stringify({ ok: true, contacts: allContacts }));
     return;
