@@ -5,12 +5,10 @@
  * Détecte la session courante dans cet ordre :
  *   1. mgt_user            — session réelle (client / prestataire / vendeur / …)
  *   2. mgt_vendor_identity_v1 — identité prestataire synchronisée à la connexion
- *   3. ?demo=prestataire|boutique — aperçu public sans session (mode démo)
  * --------------------------------------------------------------------------
  * Toute balise <a data-nav-auth> est réécrite :
  *   - client           → « Mon espace »     → client-dashboard.html
  *   - prestataire/…    → « Mon dashboard »  → dashboard-overview.html
- *   - démo             → « Mon dashboard »  → dashboard-overview.html?demo=…
  *   - sinon            → « Connexion »      → auth.html
  * ========================================================================== */
 (function (global) {
@@ -29,19 +27,14 @@
     return r;
   }
 
-  function demoRole() {
-    try {
-      var m = /[?&]demo=(prestataire|boutique|vendeur|1)\b/.exec(location.search);
-      if (!m) return '';
-      var r = m[1];
-      return (r === 'vendeur' || r === '1') ? 'boutique' : r;
-    } catch (e) { return ''; }
-  }
-
   function isClient() { var r = role(); return r === 'client' || r === 'cliente'; }
   function isPro() {
     var r = role();
     return r === 'prestataire' || r === 'vendeur' || r === 'livreur';
+  }
+  function isSupport() {
+    var u = readJSON('mgt_user');
+    return !!(u && (u.vendorId === 'support-mangoo' || u.id === 'pro-support-mangoo' || u.id === 'support-mangoo'));
   }
 
   function apply() {
@@ -51,29 +44,29 @@
       var href, label;
       if (isClient()) {
         href = './client-dashboard.html'; label = 'Mon espace';
+      } else if (isSupport()) {
+        href = './dashboard-support-console.html'; label = 'Console support';
       } else if (isPro()) {
-        href = './dashboard-overview.html'; label = 'Mon dashboard';
+        if (role() === 'livreur') { href = './livreur.html'; label = 'Mon espace livreur'; }
+        else { href = './dashboard-overview.html'; label = 'Mon dashboard'; }
       } else {
-        var d = demoRole();
-        if (d) {
-          href = './dashboard-overview.html?demo=' + d; label = 'Mon dashboard';
-        } else {
-          href = './auth.html'; label = 'Connexion';
-        }
+        href = './auth.html'; label = 'Connexion';
       }
       b.setAttribute('href', href);
       b.textContent = label;
     }
 
     // Bouton « Retour au dashboard » : affiché uniquement pour un professionnel
-    // connecté (ou en mode démo pro), à côté de la navigation principale.
+    // connecté, à côté de la navigation principale.
     var backs = document.querySelectorAll('[data-nav-back-dashboard]');
-    var showBack = isPro() || !!demoRole();
+    var showBack = isPro();
     for (var k = 0; k < backs.length; k++) {
       var bk = backs[k];
       bk.style.display = showBack ? '' : 'none';
       if (showBack && isClient()) bk.setAttribute('href', './client-dashboard.html');
-      else if (showBack) bk.setAttribute('href', './dashboard-overview.html' + (demoRole() ? '?demo=' + demoRole() : ''));
+      else if (showBack && isSupport()) bk.setAttribute('href', './dashboard-support-console.html');
+      else if (showBack && role() === 'livreur') bk.setAttribute('href', './livreur.html');
+      else if (showBack) bk.setAttribute('href', './dashboard-overview.html');
     }
   }
 

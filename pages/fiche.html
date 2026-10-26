@@ -288,8 +288,25 @@ html.dark {
         mask-position: center;
         background-color: currentColor;
       }
-    </style>
+    <!-- SEO -->
+    <meta name="description" content="Découvrez ce prestataire sur MangooTech : services, horaires, avis et réservation en ligne.">
+    <link rel="canonical" href="./fiche.html">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#1a5c2a">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="MangooTech">
+    <meta property="og:title" content="Fiche Prestataire · MangooTech">
+    <meta property="og:description" content="Découvrez ce prestataire sur MangooTech : services, horaires, avis et réservation en ligne.">
+    <meta property="og:image" content="/assets/icon-512.png">
+    <meta property="og:url" content="./fiche.html">
+    <meta property="og:locale" content="fr_FR">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Fiche Prestataire · MangooTech">
+    <meta name="twitter:description" content="Découvrez ce prestataire sur MangooTech : services, horaires, avis et réservation en ligne.">
+    <meta name="twitter:image" content="/assets/icon-512.png">
+    <script type="application/ld+json" id="seo-jsonld">{"@context":"https://schema.org","@type":"ProfessionalService","name":"Fiche Prestataire","url":"./fiche.html","image":"/assets/icon-512.png"}</script>
 </head>
+
 <body class="min-h-screen font-sans antialiased" style="background-color: rgb(var(--mgt-background));">
 
 <!-- ===== HEADER / NAVIGATION ===== -->
@@ -630,8 +647,6 @@ html.dark {
         <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Plateforme</h4>
         <ul class="space-y-2.5">
           <li><a href="carte.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Carte interactive</a></li>
-          <li><a href="./dashboard-overview.html?demo=prestataire" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Dashboard prestataire</a></li>
-          <li><a href="./dashboard-overview.html?demo=boutique" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Dashboard boutique</a></li>
           <li><a href="./live-shopping.html" data-dom-id="link-live-shopping" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Live Shopping</a></li>
           <li><a href="./paiements.html" data-dom-id="link-paiements" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Paiements</a></li>
         </ul>
@@ -772,7 +787,8 @@ html.dark {
 <script src="../assets/mangoo-prestations.js"></script>
 <script src="../assets/mangoo-connect-plus.js"></script>
 <script src="../assets/mangoo-client-data.js"></script>
-<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-payment.js"></script>
 <script>
 (function () {
   // Contexte prestataire — relié à Mangoo Connect+ (WebRTC).
@@ -822,14 +838,50 @@ html.dark {
   function priceLabel(service) {
     return (window.MangooPrestations ? MangooPrestations.formatPrice(service.price) : service.price) + ' FCFA';
   }
-  function clientWalletBalance() {
-    return (window.MangooClient && typeof window.MangooClient.getBalance === 'function') ? window.MangooClient.getBalance() : 0;
+  function fmtMgt(n) {
+    return Number(n || 0).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ');
+  }
+
+  // Politique de réservation du prestataire (règle produit : acompte réglé
+  // exclusivement en mobile money, jamais en espèces). Le montant est
+  // recalculé côté serveur à la création : cette valeur ne sert qu'à afficher
+  // l'acompte attendu au client.
+  function reservationPolicy() {
+    var r = (window._mcpVendor && window._mcpVendor.reservation) || {};
+    return {
+      enabled: r.enabled !== false,
+      acomptePercent: Math.max(0, Math.min(100, Number(r.acomptePercent) || 0)),
+      acompteMin: Math.max(0, Math.round(Number(r.acompteMin) || 0))
+    };
+  }
+  function acompteForPrice(price, policy) {
+    if (!policy || !policy.enabled || policy.acomptePercent <= 0) return 0;
+    var a = Math.round((Number(price) || 0) * policy.acomptePercent / 100);
+    if (policy.acompteMin > 0 && a < policy.acompteMin) a = policy.acompteMin;
+    return a > 0 ? a : 0;
+  }
+  function postJSON(url, body) {
+    var headers = (window.MangooPayment && MangooPayment.authHeaders) ? MangooPayment.authHeaders() : { 'Content-Type': 'application/json' };
+    return fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(body || {}) })
+      .then(function (r) { return r.json(); })
+      .catch(function () { return { ok: false, error: 'Réseau indisponible.' }; });
+  }
+
+  // Récupère la politique de réservation du prestataire si elle n'est pas déjà
+  // connue (chargement direct de la fiche) : garantit l'affichage du bon
+  // acompte avant l'ouverture de la modale.
+  function loadReservationPolicy() {
+    if (window._mcpVendor.reservation) return Promise.resolve();
+    return fetch('/api/vendor-config?vendor=' + encodeURIComponent(window._mcpVendor.vendorId || ''), { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (d && d.config && d.config.reservation) window._mcpVendor.reservation = d.config.reservation; })
+      .catch(function () {});
   }
 
   function bookService(service) {
     var vendor = window._mcpVendor;
     if (!vendor) return;
-    openBookingModal(service);
+    loadReservationPolicy().then(function () { openBookingModal(service); });
   }
 
   function openBookingModal(service) {
@@ -837,9 +889,40 @@ html.dark {
     var old = document.getElementById('booking-modal');
     if (old) old.remove();
 
+    var policy = reservationPolicy();
+    if (!policy.enabled) {
+      showBookingToast('Ce prestataire n\'accepte pas les réservations en ligne pour le moment.');
+      return;
+    }
+
     var price = priceLabel(service);
+    var numericPrice = Number(service.price) || 0;
     var duration = window.MangooPrestations ? MangooPrestations.formatDuration(service.duration) : (service.duration ? service.duration + ' min' : '');
-    var balance = clientWalletBalance();
+    var acompte = acompteForPrice(numericPrice, policy);
+    var solde = Math.max(0, numericPrice - acompte);
+
+    // Bloc acompte : aucune option « espèces » n'existe — l'acompte est réglé
+    // en mobile money, le solde sur place (hors plateforme).
+    var acompteBlock;
+    if (acompte > 0) {
+      acompteBlock =
+        '<div style="padding:12px;border:1px solid rgb(var(--mgt-border));border-radius:12px;margin-bottom:12px;background:rgb(var(--mgt-primary-50));">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+            '<span style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));">Acompte de réservation</span>' +
+            '<span style="font-size:16px;font-weight:700;color:rgb(var(--mgt-primary));">' + fmtMgt(acompte) + ' FCFA</span>' +
+          '</div>' +
+          '<p style="font-size:12px;color:rgb(var(--mgt-muted-foreground));margin:6px 0 0;">À régler maintenant par Mobile Money (' + policy.acomptePercent + ' % du prix). Le solde de ' + fmtMgt(solde) + ' FCFA se règle sur place.</p>' +
+          '<p style="font-size:11px;color:rgb(var(--mgt-primary-700));margin:6px 0 0;font-weight:600;">Paiement digital uniquement — aucune espèce n\'est acceptée.</p>' +
+        '</div>';
+    } else {
+      acompteBlock =
+        '<div style="padding:12px;border:1px solid rgb(var(--mgt-border));border-radius:12px;margin-bottom:12px;background:rgb(var(--mgt-muted));">' +
+          '<p style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));margin:0;">Aucun acompte demandé</p>' +
+          '<p style="font-size:12px;color:rgb(var(--mgt-muted-foreground));margin:6px 0 0;">Le montant total de ' + esc(price) + ' se règle sur place auprès du prestataire.</p>' +
+        '</div>';
+    }
+
+    var baseLabel = acompte > 0 ? ('Payer ' + fmtMgt(acompte) + ' FCFA et réserver') : 'Confirmer la réservation';
 
     var modal = document.createElement('div');
     modal.id = 'booking-modal';
@@ -860,15 +943,11 @@ html.dark {
         '<input id="booking-date" type="date" style="width:100%;height:44px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;box-sizing:border-box;margin-bottom:12px;">' +
         '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Heure</label>' +
         '<input id="booking-time" type="time" style="width:100%;height:44px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;">' +
-        '<p style="font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Mode de paiement</p>' +
-        '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">' +
-          '<label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgb(var(--mgt-border));border-radius:10px;cursor:pointer;"><input type="radio" name="booking-pay" value="surplace" checked style="accent-color:rgb(var(--mgt-primary));"><span style="font-size:13px;color:rgb(var(--mgt-foreground));">Payer sur place</span></label>' +
-          '<label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgb(var(--mgt-border));border-radius:10px;cursor:pointer;"><input type="radio" name="booking-pay" value="wallet" style="accent-color:rgb(var(--mgt-primary));"><span style="font-size:13px;color:rgb(var(--mgt-foreground));">Solde client</span><span style="margin-left:auto;font-size:12px;color:rgb(var(--mgt-muted-foreground));">' + balance.toLocaleString('fr-FR').replace(/\u202f/g, ' ') + ' FCFA</span></label>' +
-        '</div>' +
+        acompteBlock +
         '<p id="booking-error" style="font-size:12px;color:rgb(var(--mgt-error));min-height:16px;margin:0 0 8px;"></p>' +
         '<div style="display:flex;gap:10px;">' +
           '<button id="booking-cancel" style="flex:1;height:44px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>' +
-          '<button id="booking-confirm" style="flex:1;height:44px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Confirmer</button>' +
+          '<button id="booking-confirm" style="flex:1;height:44px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">' + esc(baseLabel) + '</button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(modal);
@@ -884,35 +963,89 @@ html.dark {
     dateInput.min = todayIso;
     dateInput.value = todayIso;
 
-    modal.querySelector('#booking-confirm').onclick = function () {
-      var err = modal.querySelector('#booking-error');
+    var errEl = modal.querySelector('#booking-error');
+    var confirmBtn = modal.querySelector('#booking-confirm');
+    function resetConfirm() { confirmBtn.disabled = false; confirmBtn.textContent = baseLabel; }
+
+    confirmBtn.onclick = function () {
       var d = dateInput.value;
       var t = modal.querySelector('#booking-time').value;
-      if (!d) { err.textContent = 'Veuillez choisir une date.'; return; }
-      if (!t) { err.textContent = 'Veuillez choisir une heure.'; return; }
-      var payMode = (modal.querySelector('input[name="booking-pay"]:checked') || {}).value || 'surplace';
-      var paymentLabel = payMode === 'wallet' ? 'Solde client' : 'Sur place';
-      var numericPrice = Number(service.price) || 0;
+      if (!d) { errEl.textContent = 'Veuillez choisir une date.'; return; }
+      if (!t) { errEl.textContent = 'Veuillez choisir une heure.'; return; }
+      errEl.textContent = '';
 
-      if (payMode === 'wallet') {
-        if (!window.MangooClient || typeof window.MangooClient.debitWallet !== 'function') {
-          err.textContent = 'Portefeuille client indisponible.'; return;
-        }
-        if (clientWalletBalance() < numericPrice) {
-          err.textContent = 'Solde client insuffisant.'; return;
-        }
-        if (!window.MangooClient.debitWallet(numericPrice)) {
-          err.textContent = 'Impossible de débiter le solde.'; return;
-        }
+      if (acompte <= 0) {
+        confirmBtn.disabled = true;
+        submitBooking(service, d, t, '', 0)
+          .then(function () { close(); showBookingToast('Réservation envoyée pour « ' + service.name + ' » le ' + d + '.'); })
+          .catch(function (e) { errEl.textContent = (e && e.message) || 'Réservation impossible.'; resetConfirm(); });
+        return;
       }
 
-      createBookingOrder(service, d, t, paymentLabel);
-      close();
-      showBookingToast('Réservation confirmée pour « ' + service.name + ' » le ' + d + '.');
+      // Acompte > 0 : règlement mobile money obligatoire (aucune espèce).
+      if (!window.MangooPayment || typeof MangooPayment.collect !== 'function') {
+        errEl.textContent = 'Paiement mobile indisponible pour le moment.';
+        return;
+      }
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Paiement…';
+      window.MangooPayment.collect({
+        amount: acompte,
+        title: 'Acompte de réservation',
+        subtitle: service.name,
+        kind: 'appointment-acompte',
+        onCancel: resetConfirm
+      }).then(function (pay) {
+        return postJSON('/api/payment/mobile-money/initiate', {
+          operator: pay.operator,
+          phone: pay.phone,
+          amount: acompte,
+          kind: 'appointment-acompte',
+          description: 'Acompte — ' + service.name,
+          reference: vendor.vendorId || ''
+        }).then(function (init) {
+          if (!init || !init.ok || !init.transaction) throw new Error((init && init.error) || 'Paiement indisponible.');
+          return postJSON('/api/payment/mobile-money/confirm', { transactionId: init.transaction.id, otp: pay.otp })
+            .then(function (cf) {
+              if (!cf || !cf.ok || !cf.success) throw new Error((cf && cf.error) || 'Paiement refusé.');
+              return init.transaction.id;
+            });
+        });
+      }).then(function (txnId) {
+        return submitBooking(service, d, t, txnId, acompte);
+      }).then(function () {
+        close();
+        showBookingToast('Réservation confirmée — acompte de ' + fmtMgt(acompte) + ' FCFA réglé.');
+      }).catch(function (e) {
+        errEl.textContent = (e && e.message) || 'Le paiement a échoué.';
+        resetConfirm();
+      });
     };
   }
 
-  function createBookingOrder(service, date, time, paymentLabel) {
+  // Enregistre la réservation côté serveur (source de vérité) puis duplique le
+  // ticket dans l'historique local du client.
+  function submitBooking(service, date, time, transactionId, acompteAmount) {
+    var vendor = window._mcpVendor;
+    var user = (window.MangooClient && MangooClient.getUser && MangooClient.getUser()) || {};
+    var clientName = user.fullName || user.name || 'Client';
+    return postJSON('/api/appointments', {
+      action: 'book',
+      vendorId: vendor.vendorId || '',
+      serviceId: service.id || '',
+      day: date,
+      time: time,
+      clientName: clientName,
+      clientPhone: user.phone || '',
+      transactionId: transactionId || ''
+    }).then(function (res) {
+      if (!res || !res.ok) throw new Error((res && res.error) || 'Réservation impossible.');
+      recordLocalBooking(service, date, time, acompteAmount);
+      return res.appointment;
+    });
+  }
+
+  function recordLocalBooking(service, date, time, acompteAmount) {
     var vendor = window._mcpVendor;
     if (!window.MangooClient || typeof window.MangooClient.addOrder !== 'function') return;
     var orderId = 'CMD-' + Date.now().toString(36).toUpperCase();
@@ -929,7 +1062,7 @@ html.dark {
       amount: (window.MangooPrestations ? MangooPrestations.formatPrice(price) : price) + ' FCFA',
       date: dateLabel,
       status: 'en-cours',
-      payment: paymentLabel,
+      payment: acompteAmount > 0 ? 'Acompte mobile money' : 'Sur place',
       vendorId: vendor.vendorId || 'pro-41cafa4bcb31',
       kind: 'salon',
       bookingDate: date,
@@ -939,10 +1072,10 @@ html.dark {
       clientPhone: user.phone || ''
     });
 
-    // Crédite le prestataire (DAN Boutique) uniquement si le client a réglé via
-    // le solde client (paiement en ligne). « Sur place » reste un paiement hors-ligne.
-    if (paymentLabel === 'Solde client' && window.MangooVendor && window.MangooVendor.creditVendor) {
-      window.MangooVendor.creditVendor(vendor.vendorId || 'pro-41cafa4bcb31', price, 'Réservation ' + orderId);
+    // L'acompte a été encaissé en ligne : il est crédité au prestataire. Le
+    // solde reste réglé sur place, hors plateforme.
+    if (acompteAmount > 0 && window.MangooVendor && window.MangooVendor.creditVendor) {
+      window.MangooVendor.creditVendor(vendor.vendorId || 'pro-41cafa4bcb31', acompteAmount, 'Acompte réservation ' + orderId);
     }
   }
 
@@ -1052,7 +1185,52 @@ html.dark {
     }
   }
 
+  function seoOrigin() {
+    return (window.location && window.location.origin) || '';
+  }
+  function seoAbsUrl(src) {
+    if (!src) return seoOrigin() + '/assets/icon-512.png';
+    if (/^https?:\/\//i.test(src)) return src;
+    if (src.charAt(0) === '/') return seoOrigin() + src;
+    return src;
+  }
+  function seoSetMeta(attr, name, content) {
+    var el = document.querySelector('meta[' + attr + '="' + name + '"]');
+    if (el) el.setAttribute('content', content);
+  }
+  function seoSetCanonical(url) {
+    var el = document.querySelector('link[rel="canonical"]');
+    if (el) el.setAttribute('href', url);
+  }
+  function seoSetJsonLd(obj) {
+    var el = document.getElementById('seo-jsonld');
+    if (el) el.textContent = JSON.stringify(obj);
+  }
+  function applySeo(match) {
+    if (!match) return;
+    var name = match.name || '';
+    var desc = (match.desc || '').replace(/\s+/g, ' ').trim() || ('Découvrez ' + name + ' sur MangooTech.');
+    var title = name ? (name + ' · Prestataire · MangooTech') : 'Prestataire · MangooTech';
+    var vid = match.vendorId || (window._mcpVendor && window._mcpVendor.vendorId) || '';
+    var url = seoOrigin() + '/pages/fiche.html' + (vid ? ('?vendorId=' + encodeURIComponent(vid)) : '');
+    var img = seoOrigin() + '/og/' + (vid ? encodeURIComponent(vid) : 'default') + '.png';
+    document.title = title;
+    seoSetMeta('name', 'description', desc);
+    seoSetMeta('property', 'og:title', title);
+    seoSetMeta('property', 'og:description', desc);
+    seoSetMeta('property', 'og:image', img);
+    seoSetMeta('property', 'og:url', url);
+    seoSetMeta('name', 'twitter:title', title);
+    seoSetMeta('name', 'twitter:description', desc);
+    seoSetMeta('name', 'twitter:image', img);
+    seoSetCanonical(url);
+    var obj = { '@context': 'https://schema.org', '@type': 'ProfessionalService', name: name, description: desc, url: url, image: img };
+    if (match.phone) obj.telephone = match.phone;
+    if (match.city || match.country) obj.address = { '@type': 'PostalAddress', addressLocality: match.city, addressCountry: match.country };
+    seoSetJsonLd(obj);
+  }
   function applyVendor(match) {
+
     if (!match) return;
     var meta = categoryMeta(match.category);
     window._mcpVendor.id = match.id || window._mcpVendor.id;
@@ -1076,7 +1254,7 @@ html.dark {
     if (match.rating != null) setText(document.getElementById('vendor-rating'), String(match.rating));
     setText(document.getElementById('vendor-city'), (match.city || '') + (match.country ? ', ' + match.country : ''));
     setText(document.getElementById('vendor-description'), match.desc);
-    if (match.name && document.title) document.title = match.name + ' · Prestataire · MangooTech';
+    applySeo(match);
 
     initReviews(match.rating);
     if (window.lucide) window.lucide.createIcons();
@@ -1100,6 +1278,7 @@ html.dark {
     .then(function (data) {
       var c = data && data.config;
       if (!c) return;
+      if (c.reservation) window._mcpVendor.reservation = c.reservation;
       var p = c.profile || {};
       setText(document.getElementById('vendor-title'), p.enseigne || c.vendorName);
       setText(document.getElementById('vendor-description'), p.description);
@@ -1286,7 +1465,22 @@ html.dark {
     new: 'Nouveau chez nous : découvrez nos dernières offres et nouveautés du moment.'
   };
   var BADGE_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-eb10536cd12d';
+  function hydrateBadges() {
+    if (!window.MangooWelcomeAudio || !window.MangooWelcomeAudio.hydrateBadge) return;
+    fetch('/api/vendor-config?vendor=' + encodeURIComponent(BADGE_VENDOR), { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var c = d && d.config;
+        var ba = c && c.badgeAudio;
+        if (ba) {
+          window.MangooWelcomeAudio.hydrateBadge(BADGE_VENDOR, 'promo', ba.promo || null);
+          window.MangooWelcomeAudio.hydrateBadge(BADGE_VENDOR, 'new', ba.new || null);
+        }
+      })
+      .catch(function () {});
+  }
   function bind() {
+    hydrateBadges();
     var els = document.querySelectorAll('[data-badge-audio]');
     for (var i = 0; i < els.length; i++) {
       (function (el) {

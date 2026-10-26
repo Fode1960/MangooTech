@@ -336,6 +336,18 @@ html.dark {
               </a>
             </li>
             <li>
+              <a href="./chat.html" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--mgt-radius-md); color: rgba(255,255,255,0.70); text-decoration: none; font-size: 14px; font-weight: 400; transition: background 0.15s;">
+                <i data-lucide="message-circle" style="width: 20px; height: 20px;"></i>
+                Messagerie
+              </a>
+            </li>
+            <li>
+              <a href="./chat.html#rdv" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--mgt-radius-md); color: rgba(255,255,255,0.70); text-decoration: none; font-size: 14px; font-weight: 400; transition: background 0.15s;">
+                <i data-lucide="calendar-days" style="width: 20px; height: 20px;"></i>
+                Mes rendez-vous
+              </a>
+            </li>
+            <li>
               <a href="./carte.html" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--mgt-radius-md); color: rgba(255,255,255,0.70); text-decoration: none; font-size: 14px; font-weight: 400; transition: background 0.15s;">
                 <i data-lucide="store" style="width: 20px; height: 20px;"></i>
                 Boutiques &amp; Prestataires
@@ -544,6 +556,8 @@ html.dark {
           <select id="recharge-operator" style="width:100%; box-sizing:border-box; height:42px; padding:0 12px; border:1px solid rgb(var(--mgt-input)); border-radius:var(--mgt-radius-md); background:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground)); font-size:14px; font-family:var(--mgt-font-sans); margin-bottom:16px; appearance:none;">
             <option value="wave" selected>Wave</option>
             <option value="orange">Orange Money</option>
+            <option value="mtn">MTN Mobile Money</option>
+            <option value="moov">Moov Money</option>
             <option value="free">Free Mobile Sénégal</option>
           </select>
 
@@ -887,14 +901,21 @@ html.dark {
       ? '<img src="' + escHtml(logo) + '" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:var(--mgt-radius-sm);display:block;">'
       : '<div style="width:44px;height:44px;border-radius:var(--mgt-radius-sm);background:rgb(var(--mgt-primary));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;">' + escHtml(String(v.name || '?').charAt(0).toUpperCase()) + '</div>';
     var rating = (v.rating != null && v.rating !== '') ? String(v.rating) : '—';
-    return '<div class="favorites-card" data-vendor-id="' + escHtml(v.vendorId) + '" ' +
+    return '<div class="favorites-card" data-vendor-id="' + escHtml(v.vendorId) + '" data-vendor-name="' + escHtml(v.name) + '" ' +
       'style="width:100%;min-width:0;display:flex;flex-direction:column;gap:12px;padding:16px;background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:var(--mgt-radius-md);box-shadow:var(--mgt-shadow-sm);color:rgb(var(--mgt-foreground));">' +
       '<div style="display:flex;align-items:center;gap:12px;">' + avatar +
         '<div style="min-width:0;"><h3 style="margin:0;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(v.name) + '</h3>' +
         '<div class="caption" style="color:rgb(var(--mgt-muted-foreground));">' + label + (v.city ? ' &middot; ' + escHtml(v.city) : '') + '</div></div>' +
       '</div>' +
       '<div style="display:flex;flex-direction:column;gap:8px;margin-top:auto;">' +
-        '<button type="button" data-action="contact" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;background:rgb(var(--mgt-accent));color:#fff;border:none;border-radius:var(--mgt-radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--mgt-font-sans);">Contacter</button>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button type="button" data-action="message" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgb(var(--mgt-primary));color:rgb(var(--mgt-primary-foreground));border:none;border-radius:var(--mgt-radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--mgt-font-sans);">' +
+            '<i data-lucide="message-circle" style="width:16px;height:16px;"></i>Message' +
+          '</button>' +
+          '<button type="button" data-action="appeler" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:transparent;color:rgb(var(--mgt-primary));border:1px solid rgb(var(--mgt-primary));border-radius:var(--mgt-radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--mgt-font-sans);">' +
+            '<i data-lucide="phone" style="width:16px;height:16px;"></i>Appeler' +
+          '</button>' +
+        '</div>' +
         '<a href="./' + href + '" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;font-size:12px;font-weight:600;color:rgb(var(--mgt-primary));">' +
           '<span>' + cta + '</span><span style="color:rgb(var(--mgt-muted-foreground));">&#9733; ' + escHtml(rating) + '</span>' +
         '</a>' +
@@ -921,12 +942,23 @@ html.dark {
   // attachement par bouton après chaque re-rendu.
   document.addEventListener('click', function (e) {
     var t = e.target;
-    var btn = (t && t.closest) ? t.closest('[data-action="contact"]') : null;
+    var btn = (t && t.closest) ? t.closest('[data-action="message"], [data-action="appeler"]') : null;
     if (!btn) return;
     e.preventDefault();
+    var action = btn.getAttribute('data-action');
     var card = btn.closest('.favorites-card');
     var vid = card ? card.getAttribute('data-vendor-id') : '';
-    location.href = './chat.html' + (vid ? '?vendorId=' + encodeURIComponent(vid) : '');
+    var name = card ? card.getAttribute('data-vendor-name') : '';
+    var peer = { vendorId: vid, name: name || 'Professionnel' };
+    if (action === 'appeler') {
+      if (window.MangooConnect && typeof window.MangooConnect.call === 'function') {
+        window.MangooConnect.call(peer, { mode: 'audio' });
+      }
+    } else if (window.MangooConnect && typeof window.MangooConnect.chat === 'function') {
+      window.MangooConnect.chat(peer);
+    } else {
+      location.href = './chat.html' + (vid ? '?vendorId=' + encodeURIComponent(vid) : '');
+    }
   });
 
   syncStoreKpis();
@@ -973,9 +1005,9 @@ html.dark {
     ['client-dashboard.html','home','Accueil'],
     ['chat.html','message-circle','Messagerie'],
     ['chat.html#rdv','calendar-days','Mes rendez-vous','rdv'],
+    ['carte.html','map','Boutiques &amp; Prestataires'],
     ['client-orders.html','shopping-bag','Mes commandes'],
     ['client-favorites.html','heart','Mes favoris'],
-    ['carte.html','map','Explorer la carte'],
     ['client-profile.html','user','Mon profil']
   ];
   var BOTTOM=[
@@ -1012,6 +1044,10 @@ html.dark {
   list.querySelectorAll('a').forEach(function(a){a.addEventListener('click',close);});
   drawer.querySelector('.mgt-nav-foot a').addEventListener('click',close);
 
+  // À l'atterrissage sur client-dashboard.html#menu (mobile), ouvre d'emblée le
+  // tiroir de navigation pour afficher la colonne des modules.
+  if (location.hash === '#menu' && window.innerWidth <= 768) { open(); }
+
   var topbar=document.querySelector('.client-header')||document.querySelector('header.topbar')||document.querySelector('header.sticky')||document.querySelector('header');
   if(topbar&&!topbar.querySelector('.mgt-nav-btn')){
     var btn=document.createElement('button');btn.className='mgt-nav-btn';
@@ -1023,5 +1059,6 @@ html.dark {
 </script>
 <script src="../assets/mangoo-client-shell.js"></script>
 <script src="../assets/mangoo-connect-plus.js"></script>
+<script src="../assets/mangoo-support-widget.js"></script>
 </body>
 </html>

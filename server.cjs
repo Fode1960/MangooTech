@@ -42,7 +42,7 @@ try {
 
 // Module d'intégration paiement Wave (checkout redirect). Chargé de façon
 // défensive : si wave-payment.cjs est absent ou si les clés manquent, le
-// paiement réel Wave est simplement désactivé (le mode démo reste actif).
+// paiement Wave est simplement indisponible (les paiements sont refusés).
 let wavePayment = null;
 try {
   wavePayment = require('./wave-payment.cjs');
@@ -52,12 +52,22 @@ try {
 
 // Module d'intégration Orange Money (Web Payment, redirect). Chargé de façon
 // défensive : si orange-money.cjs est absent ou si les clés manquent, Orange
-// Money reste en démo (le mode démo reste actif).
+// Money est indisponible (les paiements sont refusés).
 let orangeMoney = null;
 try {
   orangeMoney = require('./orange-money.cjs');
 } catch (e) {
   console.warn('[Paiement] module orange-money.cjs indisponible — Orange Money désactivé :', e.message);
+}
+
+// Module d'envoi de SMS (passerelle eSMS Africa). Chargé de façon défensive :
+// sans clé API (ESMS_API_KEY), aucun appel réseau n'est effectué et le code de
+// vérification reste journalisé côté serveur (repli de développement).
+let sms = null;
+try {
+  sms = require('./sms.cjs');
+} catch (e) {
+  console.warn('[SMS] module sms.cjs indisponible — envoi SMS désactivé :', e.message);
 }
 
 const ROOT = __dirname;
@@ -108,7 +118,7 @@ const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8' };
  * ------------------------------------------------------------------ *
  *  Aucun mot de passe admin n'est codé en dur. Le compte administrateur
  *  initial est configuré via les variables d'environnement :
- *    ADMIN_EMAIL    (défaut : admin@mangootech.com)
+ *    ADMIN_EMAIL    (défaut : admin@mangoo.tech)
  *    ADMIN_PASSWORD (sinon généré aléatoirement et affiché une fois)
  *    ADMIN_PIN      (sinon généré aléatoirement et affiché une fois)
  *  Le forçage HTTPS de l'espace admin est actif par défaut dès que
@@ -120,7 +130,7 @@ const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8' };
  *  Ces variables sont à usage unique : appliquées au démarrage, puis à retirer.
  *  Pour un changement normal, préférez l'endpoint /api/auth/change-password.
  * ------------------------------------------------------------------ */
-const ADMIN_SEED_EMAIL = process.env.ADMIN_EMAIL || 'admin@mangootech.com';
+const ADMIN_SEED_EMAIL = process.env.ADMIN_EMAIL || 'admin@mangoo.tech';
 const ADMIN_SEED_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const ADMIN_SEED_PIN = process.env.ADMIN_PIN || '';
 const ADMIN_PASSWORD_RESET = process.env.ADMIN_PASSWORD_RESET || '';
@@ -727,7 +737,7 @@ function ensureVapidKeys() {
   if (!webpush) return null;
   const publicKey = process.env.VAPID_PUBLIC_KEY || '';
   const privateKey = process.env.VAPID_PRIVATE_KEY || '';
-  const subject = process.env.VAPID_SUBJECT || 'mailto:contact@mangootech.com';
+  const subject = process.env.VAPID_SUBJECT || 'mailto:contact@mangoo.tech';
   if (publicKey && privateKey) {
     pushVapid = { publicKey, privateKey, subject };
   } else {
@@ -1237,7 +1247,7 @@ function seedVendorConfig() {
         dimanche: { open: false, openTime: '', closeTime: '' }
       },
       paiements: {
-        methods: ['wave', 'orange_money', 'mtn_momo', 'moov_money', 'free_mobile', 'cash'],
+        methods: ['wave', 'orange_money', 'mtn_momo', 'moov_money', 'free_mobile'],
         acceptOnline: true
       },
       notifications: {
@@ -1388,8 +1398,19 @@ function blankVendorConfig(vendorId) {
       dimanche: { open: false, openTime: '', closeTime: '' }
     },
     paiements: {
-      methods: ['wave', 'orange_money', 'mtn_momo', 'moov_money', 'free_mobile', 'cash'],
+      methods: ['wave', 'orange_money', 'mtn_momo', 'moov_money', 'free_mobile'],
       acceptOnline: true
+    },
+    // Réservation + acompte. Réglé PAR PRESTATAIRE (voir dashboard-agenda /
+    // paramètres). Règle produit non négociable : l'acompte de réservation est
+    // toujours réglé en mobile money — jamais en espèces, pour supprimer toute
+    // tentation de détournement (aucune circulation d'argent liquide sur la
+    // plateforme). Le solde est réglé sur place, hors plateforme.
+    reservation: {
+      enabled: true,       // accepte la prise de rendez-vous en ligne
+      acomptePercent: 0,   // % du prix de la prestation exigé à la réservation (0 = aucun acompte)
+      acompteMin: 0,       // plancher de l'acompte en FCFA (0 = aucun plancher)
+      digitalOnly: true    // figé : acompte mobile money uniquement
     },
     notifications: {
       email: true, sms: true, push: true,
@@ -1522,6 +1543,31 @@ function planCommissionFor(vendorId) {
   return Number(plan.commission) || 0;
 }
 
+// Politique de réservation d'un prestataire (paramétrée par prestataire).
+// `digitalOnly` reste toujours vrai : l'acompte est obligatoirement réglé en
+// mobile money, aucune option espèces n'existe (règle produit).
+function reservationPolicyFor(vendorId) {
+  const cfg = vendorConfigFor(vendorId) || {};
+  const r = cfg.reservation || {};
+  return {
+    enabled: r.enabled !== false,
+    acomptePercent: Math.max(0, Math.min(100, Number(r.acomptePercent) || 0)),
+    acompteMin: Math.max(0, Math.round(Number(r.acompteMin) || 0)),
+    digitalOnly: true
+  };
+}
+
+// Montant de l'acompte exigible pour une prestation donnée. Toujours recalculé
+// côté serveur à partir de la config du prestataire : le montant envoyé par le
+// client n'est jamais utilisé (anti-manipulation).
+function acompteForService(vendorId, price) {
+  const p = reservationPolicyFor(vendorId);
+  if (!p.enabled || p.acomptePercent <= 0) return 0;
+  let amount = Math.round((Number(price) || 0) * p.acomptePercent / 100);
+  if (p.acompteMin > 0 && amount < p.acompteMin) amount = p.acompteMin;
+  return amount > 0 ? amount : 0;
+}
+
 // Logo du vendeur : priorité au logo du compte (users.json, data URL), sinon
 // au profil de la boutique (vendor-config.json), sinon chaîne vide. Permet au
 // spectateur d'un live d'afficher la photo du vendeur plutôt qu'une initiale.
@@ -1540,8 +1586,8 @@ function vendorLogoFor(vendorId) {
 // « certifié », stats de découverte…) tout en conservant leur identité réelle
 // (enseigne, adresse, géolocalisation, logo, horaires).
 function sanitizeVendorConfig(config) {
-  const DEMO_IDS = ['pro-41cafa4bcb31', 'pro-eb10536cd12d'];
-  DEMO_IDS.forEach(function (vid) {
+  const REAL_VENDOR_IDS = ['pro-41cafa4bcb31', 'pro-eb10536cd12d'];
+  REAL_VENDOR_IDS.forEach(function (vid) {
     const c = config[vid];
     if (!c) return;
     const fix = knownVendorFix(vid);
@@ -1623,8 +1669,56 @@ const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 let users = [];
 let sessions = {};   // token -> userId
-let pinResets = {};  // phone -> { code, userId, expiresAt }
+let pinResets = {};  // phone -> { code, userId, expiresAt, attempts }
 let twoFactorCodes = {}; // userId -> { code, expiresAt, scope }
+const rateLimitHits = {}; // clé (« phone:… » / « ip:… ») -> [horodatages]
+
+/* ------------------------------------------------------------------ *
+ *  Envoi des codes de vérification (passerelle SMS eSMS Africa)
+ * ------------------------------------------------------------------ *
+ *  Tant qu'aucune clé API SMS (ESMS_API_KEY) n'est renseignée, le code est
+ *  journalisé côté serveur pour que l'équipe support puisse le communiquer :
+ *  c'est le repli de développement, à remplacer par l'envoi réel en production.
+ *  Le code lui-même n'est JAMAIS renvoyé au client dès qu'une passerelle est
+ *  configurée, même si AUTH_SHOW_CODES=1 (voir codesVisibleToClient). */
+function sendVerificationCode(kind, phone, code) {
+  const to = sms ? sms.toE164(phone) : String(phone || '');
+  if (sms && sms.configured()) {
+    sms.sendSms({ to: to, message: sms.buildCodeMessage(code, kind) })
+      .then(function (r) {
+        if (r && r.ok) {
+          console.log('[SMS] code ' + kind + ' envoyé à ' + to + ' (' + (r.sandbox ? 'bac à sable' : 'production') + ', id ' + (r.id || '—') + ')');
+        } else {
+          console.warn('[SMS] envoi du code ' + kind + ' à ' + to + ' échoué : ' + ((r && r.error) || 'raison inconnue'));
+        }
+      })
+      .catch(function (e) {
+        console.warn('[SMS] envoi du code ' + kind + ' à ' + to + ' échoué : ' + (e && e.message ? e.message : e));
+      });
+    return;
+  }
+  console.log('[SMS:non configuré] code ' + kind + ' pour ' + to + ' : ' + code + ' (valable 10 min)');
+}
+
+// Expose le code de vérification dans la réponse HTTP uniquement en
+// DÉVELOPPEMENT et tant qu'aucune passerelle SMS n'est configurée : dès qu'un
+// envoi réel est possible, le code ne doit plus jamais quitter le serveur.
+function codesVisibleToClient() {
+  return process.env.AUTH_SHOW_CODES === '1' && !(sms && sms.configured());
+}
+
+// Limitation de débit en mémoire : renvoie true si la clé a atteint `max`
+// tentatives sur la fenêtre glissante `windowMs`.
+function isRateLimited(key, max, windowMs) {
+  const now = Date.now();
+  const hits = (rateLimitHits[key] || []).filter((t) => now - t < windowMs);
+  rateLimitHits[key] = hits;
+  return hits.length >= max;
+}
+
+function recordRateLimitHit(key) {
+  (rateLimitHits[key] = rateLimitHits[key] || []).push(Date.now());
+}
 
 function hashSecret(secret, salt) {
   const s = salt || crypto.randomBytes(16).toString('hex');
@@ -2431,9 +2525,9 @@ function vendorConfigView(vendorId) {
 // l'annuaire public. En revanche, le compte « Support MangooTech » est une
 // identité interne non commerçante : il doit rester joignable via l'appel in-app
 // mais NE PAS apparaître sur la carte ni dans les listes publiques.
-const DEMO_VENDOR_IDS = new Set(['support-mangoo']);
-function isDemoVendor(id) {
-  return !!(id && DEMO_VENDOR_IDS.has(id));
+const INTERNAL_VENDOR_IDS = new Set(['support-mangoo']);
+function isInternalVendor(id) {
+  return !!(id && INTERNAL_VENDOR_IDS.has(id));
 }
 
 function carteVendors() {
@@ -2443,7 +2537,7 @@ function carteVendors() {
   reconcileBoosters();
   const list = [];
   const eligible = users.filter(function (u) {
-    return u && (u.role === 'prestataire' || u.role === 'vendeur') && !isDemoVendor(u.vendorId || u.id);
+    return u && (u.role === 'prestataire' || u.role === 'vendeur') && !isInternalVendor(u.vendorId || u.id);
   });
   eligible.sort(function (a, b) {
     return String(a.enseigne || a.name || '').localeCompare(String(b.enseigne || b.name || ''));
@@ -2898,10 +2992,9 @@ function saveBoosterStats() {
  * ------------------------------------------------------------------ *
  *  - Connecteur opérateurs mobile money : Orange Money, Wave, MTN MoMo,
  *    Moov Money et Free Mobile Sénégal.
- *  - Sans clés API (fichier .env), chaque opérateur bascule en mode
- *    « sandbox » : initier → confirmer est simulé, mais les frais, le
- *    portefeuille Vendeur+Client et les Offres du jour restent réels et
- *    persistants.
+ *  - Sans clés API (fichier .env) ou sans PAYMENT_MODE=live, aucune
+ *    passerelle n'est disponible : le tunnel REFUSE la transaction et
+ *    n'encaisse rien. Aucune simulation n'existe plus.
  *  - L'Offre du jour est un achat séparé à durée limitée, facturé par
  *    palier (24 h / 3 j / 7 j), totalement indépendant des Boosters.
  * ------------------------------------------------------------------ */
@@ -3748,20 +3841,22 @@ function operatorConfigured(id) {
   return op.configKeys.some(function (k) { return process.env[k] && String(process.env[k]).trim() !== ''; });
 }
 
-// Mode de paiement global. Par défaut « demo » : aucun appel réel à un
-// opérateur de Mobile Money n'est effectué. Le passage en production réelle
-// exige PAYMENT_MODE=live ET les clés API validées de l'opérateur.
-const PAYMENT_MODE = String(process.env.PAYMENT_MODE || 'demo').toLowerCase();
+// Interrupteur maître du paiement. Tant que PAYMENT_MODE n'est pas « live »,
+// AUCUN paiement n'est possible : le tunnel refuse la transaction au lieu de
+// la simuler. Il n'existe plus de mode démonstration. Le passage en production
+// exige donc PAYMENT_MODE=live ET les clés API de l'opérateur.
+const PAYMENT_MODE = String(process.env.PAYMENT_MODE || '').toLowerCase();
 
 function paymentModeActive() {
-  return PAYMENT_MODE === 'live' ? 'live' : 'demo';
+  return PAYMENT_MODE === 'live' ? 'live' : 'unavailable';
 }
 
-// Mode d'un opérateur donné. En démonstration, il est toujours « demo »,
-// même si des clés sont présentes par erreur (aucune somme n'est débitée).
+// Mode d'un opérateur donné. Deux états seulement : « live » (mode global live
+// ET clés API présentes) ou « unavailable » — auquel cas tout paiement est
+// refusé, jamais simulé.
 function operatorMode(id) {
-  if (paymentModeActive() !== 'live') return 'demo';
-  return operatorConfigured(id) ? 'live' : 'demo';
+  if (paymentModeActive() !== 'live') return 'unavailable';
+  return operatorConfigured(id) ? 'live' : 'unavailable';
 }
 
 function tierById(id) {
@@ -3788,48 +3883,29 @@ function walletFor(userId) {
  * ------------------------------------------------------------------ *
  *  Le reste de l'application ne dépend JAMAIS d'un opérateur précis :
  *    Commande / Recharge -> PaymentService -> PaymentProvider
- *  Aujourd'hui, seul DemoPaymentProvider est actif : « initier » puis
- *  « confirmer » simule un débit, sans AUCUN appel réel à Orange Money,
- *  Wave, MTN MoMo, Moov Money ou Free Mobile.
+ *  Il n'existe AUCUN provider de démonstration. Si un opérateur n'a pas de
+ *  passerelle réelle configurée, `paymentProviderFor` renvoie `null` et
+ *  l'appelant DOIT refuser la transaction : on ne simule jamais un débit.
  *
- *  Quand les vraies API seront validées, on ajoutera (sans inventer
- *  d'API) : OrangeMoneyProvider, WaveProvider, MTNMoMoProvider,
- *  MoovProvider, FreeMoneyProvider — il suffira de remplacer le provider
- *  actif, sans refaire toute l'application.
+ *  Passerelles réelles branchées (checkout redirect) : Wave et Orange Money.
+ *  Restent à ajouter (sans inventer d'API) : MTNMoMoProvider, MoovProvider,
+ *  FreeMoneyProvider — il suffira de compléter `paymentProviderFor`.
  * ------------------------------------------------------------------ */
-const DemoPaymentProvider = {
-  id: 'demo',
-  label: 'Paiement démonstration',
-  // Aucun appel réseau : on prépare simplement les métadonnées de simulation.
-  initiate() {
-    return {
-      mode: 'demo',
-      operatorRef: null,
-      instructions: 'Paiement en mode démonstration — aucune somme réelle n\'est débitée. Confirmez pour simuler la transaction.'
-    };
-  },
-  // Simule la réussite du paiement. Ne contacte aucun opérateur.
-  confirm(txn) {
-    txn.status = 'completed';
-    txn.mode = 'demo';
-    txn.paidAt = new Date().toISOString();
-    txn.providerRef = 'DEMO-' + crypto.randomBytes(4).toString('hex').toUpperCase();
-    return { success: true };
-  }
-};
 
-// Provider actif (point de bascule unique vers les opérateurs réels).
-const activePaymentProvider = DemoPaymentProvider;
-
-// Sélection du provider par opérateur. En mode démo, on conserve toujours le
-// DemoPaymentProvider (aucun appel réel). En mode live, Wave et Orange Money
-// sont branchés en réel (checkout redirect) ; les autres opérateurs (MTN, Moov,
-// Free) restent en démo tant que leur provider n'est pas implémenté.
+// Sélection du provider par opérateur. Renvoie `null` quand l'opérateur n'a
+// pas de passerelle réelle : MTN, Moov et Free n'ont pas encore de provider et
+// sont donc indisponibles (jamais simulés).
 function paymentProviderFor(op) {
-  if (paymentModeActive() !== 'live') return DemoPaymentProvider;
-  if (op && op.id === 'wave' && wavePayment && wavePayment.configured()) return wavePayment.WavePaymentProvider;
-  if (op && op.id === 'orange' && orangeMoney && orangeMoney.configured()) return orangeMoney.OrangeMoneyProvider;
-  return DemoPaymentProvider;
+  if (!op || paymentModeActive() !== 'live') return null;
+  if (op.id === 'wave' && wavePayment && wavePayment.configured()) return wavePayment.WavePaymentProvider;
+  if (op.id === 'orange' && orangeMoney && orangeMoney.configured()) return orangeMoney.OrangeMoneyProvider;
+  return null;
+}
+
+// Message de refus unique, réutilisé par tous les points d'entrée du paiement.
+function paymentUnavailableError(op) {
+  return 'Paiement indisponible : aucune passerelle Mobile Money n\'est configurée'
+    + (op && op.label ? ' pour ' + op.label : '') + '. Aucune somme n\'a été débitée.';
 }
 
 function recordTransaction(fields) {
@@ -3843,7 +3919,7 @@ function recordTransaction(fields) {
     amount: 0,
     feeAmount: 0,
     total: 0,
-    mode: 'demo'
+    mode: 'manual'
   }, fields || {});
   t.total = Math.round((Number(t.amount) || 0) + (Number(t.feeAmount) || 0));
   transactions.unshift(t);
@@ -3857,9 +3933,12 @@ function initiateMobilePayment(opts) {
   if (!op) return { ok: false, error: 'Opérateur inconnu : ' + opts.operator };
   const amount = Math.round(Number(opts.amount) || 0);
   if (amount <= 0) return { ok: false, error: 'Montant invalide.' };
+  // Aucune passerelle réelle disponible -> on refuse, on n'enregistre aucune
+  // transaction et on ne simule jamais un débit.
+  const provider = paymentProviderFor(op);
+  if (!provider) return { ok: false, error: paymentUnavailableError(op), paymentUnavailable: true };
   const mode = operatorMode(op.id);
   const feeAmount = Math.round(amount * op.fee);
-  const sim = activePaymentProvider.initiate(op);
   const txn = recordTransaction({
     userId: String(opts.userId || ''),
     userType: opts.userType || 'client',
@@ -3873,9 +3952,7 @@ function initiateMobilePayment(opts) {
     description: String(opts.description || ''),
     reference: String(opts.reference || ''),
     mode: mode,
-    status: 'pending',
-    operatorRef: sim.operatorRef,
-    instructions: sim.instructions
+    status: 'pending'
   });
   return { ok: true, transaction: txn, paymentMode: mode, operator: { id: op.id, label: op.label, mode: mode, fee: op.fee, feeLabel: op.feeLabel } };
 }
@@ -3884,18 +3961,13 @@ function confirmMobilePayment(txnId, opts) {
   const txn = transactions.find(function (t) { return t.id === txnId; });
   if (!txn) return { ok: false, error: 'Transaction introuvable.' };
   if (txn.status !== 'pending' && txn.status !== 'initiated') return { ok: false, error: 'Transaction déjà traitée (' + txn.status + ').' };
-  const fail = opts && (opts.fail === true || String(opts.otp || '') === '0000');
+  const op = operatorById(txn.operator);
+  const provider = paymentProviderFor(op);
+  if (!provider) return { ok: false, error: paymentUnavailableError(op), paymentUnavailable: true };
   txn.updatedAt = new Date().toISOString();
-  if (fail) {
-    txn.status = 'failed';
-    txn.mode = 'demo';
-    txn.failedReason = 'Confirmation refusée (code invalide).';
-    saveTransactions();
-    return { ok: true, transaction: txn, success: false, paymentMode: 'demo' };
-  }
-  const result = activePaymentProvider.confirm(txn);
+  const result = provider.confirm(txn);
   saveTransactions();
-  return { ok: true, transaction: txn, success: result.success, paymentMode: txn.mode || 'demo' };
+  return { ok: true, transaction: txn, success: result.success, paymentMode: txn.mode || 'manual' };
 }
 
 /* ------------------------------------------------------------------ *
@@ -3905,9 +3977,9 @@ function confirmMobilePayment(txnId, opts) {
  *  « completed » mais n'applique AUCUN effet de bord métier. Cette
  *  fonction applique ces effets une seule fois (idempotente, gardée par
  *  `txn.settled`), que la notification arrive via le webhook serveur ou
- *  via le polling /checkout/status. Chaque `kind` rejoue l'effet déjà
- *  réalisé en mode démo (portefeuille, offres du jour, boosters,
- *  négociation), sans toucher au flux démo existant.
+ *  via le polling /checkout/status. Chaque `kind` applique l'effet métier
+ *  correspondant (portefeuille, offres du jour, boosters, négociation,
+ *  commande boutique).
  * ------------------------------------------------------------------ */
 function settleTransaction(txn) {
   if (!txn) return { ok: false, reason: 'missing' };
@@ -4051,6 +4123,26 @@ function settleTransaction(txn) {
       order.commissionAmount = commission;
       order.settlementAmount = net;
       saveBoutiqueOrders();
+      // Notifie le prestataire en temps réel : la commande est soldée.
+      const vendorWs = vendorSockets.get(String(order.vendorId || ''));
+      if (vendorWs && vendorWs.readyState === 1) {
+        try {
+          vendorWs.send(JSON.stringify({
+            type: 'boutique-order-paid',
+            order: {
+              id: order.id,
+              orderNo: order.orderNo,
+              vendorId: order.vendorId,
+              fulfillment: order.fulfillment,
+              paymentTiming: order.paymentTiming || 'maintenant',
+              total: order.total,
+              settlementAmount: order.settlementAmount,
+              paidAt: order.paidAt
+            }
+          }));
+        } catch (e) {}
+      }
+      console.log('[Boutique] commande soldée :', order.orderNo, '—', order.vendorName, '(' + net + ' FCFA nets)');
     }
   }
 
@@ -5317,7 +5409,11 @@ function readJsonBody(req, cb) {
   });
   req.on('end', function () {
     if (!data) return cb(null, {});
-    try { cb(null, JSON.parse(data)); } catch (e) { cb(new Error('JSON invalide')); }
+    // Le parsing est isolé du rappel : une exception levée DANS le handler ne
+    // doit jamais être transformée en « JSON invalide » (diagnostic trompeur).
+    let parsed;
+    try { parsed = JSON.parse(data); } catch (e) { return cb(new Error('JSON invalide')); }
+    cb(null, parsed);
   });
   req.on('error', function (e) { cb(e); });
 }
@@ -5770,7 +5866,7 @@ function handleHttp(req, res) {
   if (urlPath === '/prestations') {
     if (req.method === 'GET') {
       const vendor = queryParam(req, 'vendor');
-      const list = vendor ? prestations.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; }) : prestations.filter(function (p) { return !isDemoVendor(p.vendorId); });
+      const list = vendor ? prestations.filter(function (p) { return p.vendorId === vendor || p.vendorName === vendor; }) : prestations.filter(function (p) { return !isInternalVendor(p.vendorId); });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ prestations: list }));
       return;
@@ -5827,7 +5923,7 @@ function handleHttp(req, res) {
       const category = queryParam(req, 'category');
       let list = catalogue;
       if (vendor) { const vcanon = canonicalRoutingId(vendor); list = list.filter(function (p) { return canonicalRoutingId(p.vendorId) === vcanon || p.vendorName === vendor; }); }
-      else list = list.filter(function (p) { return !isDemoVendor(p.vendorId); });
+      else list = list.filter(function (p) { return !isInternalVendor(p.vendorId); });
       if (category && category !== 'all') list = list.filter(function (p) { return p.category === category; });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ catalogue: list.map(publicProduct) }));
@@ -5995,7 +6091,7 @@ function handleHttp(req, res) {
       const category = queryParam(req, 'category');
       let list = galerie;
       if (vendor) { const vcanon = canonicalRoutingId(vendor); list = list.filter(function (p) { return canonicalRoutingId(p.vendorId) === vcanon || p.vendorName === vendor; }); }
-      else list = list.filter(function (p) { return !isDemoVendor(p.vendorId); });
+      else list = list.filter(function (p) { return !isInternalVendor(p.vendorId); });
       if (category && category !== 'all') list = list.filter(function (p) { return p.category === category; });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ galerie: list }));
@@ -6335,8 +6431,11 @@ function handleHttp(req, res) {
       if (user.twoFactorEnabled) {
         const code = String(Math.floor(100000 + Math.random() * 900000));
         twoFactorCodes[user.id] = { code, expiresAt: Date.now() + 10 * 60 * 1000, scope: 'login' };
+        sendVerificationCode('connexion', user.phone, code);
+        const payload = { ok: true, twoFactor: true, userId: user.id, expiresIn: 600, email: user.email || '' };
+        if (codesVisibleToClient()) payload.demoCode = code;
         res.writeHead(200, JSON_HEADERS);
-        res.end(JSON.stringify({ ok: true, twoFactor: true, userId: user.id, demoCode: code, expiresIn: 600, email: user.email || '' }));
+        res.end(JSON.stringify(payload));
         return;
       }
 
@@ -6552,9 +6651,11 @@ function handleHttp(req, res) {
     return;
   }
 
-  // --- Authentification à deux facteurs par code email (6 chiffres) ---
-  // En l'absence de serveur d'email, le code est renvoyé dans `demoCode` ;
-  // il est néanmoins stocké, vérifié et expiré comme un vrai code.
+  // --- Authentification à deux facteurs par code SMS (6 chiffres) ---
+  // Le code part par SMS (passerelle eSMS Africa). Sans clé API configurée,
+  // il est journalisé côté serveur ; il est néanmoins stocké, vérifié et
+  // expiré comme un vrai code. AUTH_SHOW_CODES=1 (développement uniquement)
+  // le renvoie aussi au client, tant qu'aucune passerelle SMS n'est active.
   if (urlPath === '/api/auth/verify-2fa') {
     if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
     readJsonBody(req, function (err, body) {
@@ -6587,8 +6688,11 @@ function handleHttp(req, res) {
     if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
     const code = String(Math.floor(100000 + Math.random() * 900000));
     twoFactorCodes[user.id] = { code, expiresAt: Date.now() + 10 * 60 * 1000, scope: 'enable' };
+    sendVerificationCode('activation', user.phone, code);
+    const payload = { ok: true, expiresIn: 600, email: user.email || '' };
+    if (codesVisibleToClient()) payload.demoCode = code;
     res.writeHead(200, JSON_HEADERS);
-    res.end(JSON.stringify({ ok: true, demoCode: code, expiresIn: 600, email: user.email || '' }));
+    res.end(JSON.stringify(payload));
     return;
   }
 
@@ -6646,16 +6750,29 @@ function handleHttp(req, res) {
       const phone = normalizePhone(body.phone);
       if (!phone) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Renseignez votre numéro de téléphone.' })); return; }
 
-      const user = users.find((u) => normalizePhone(u.phone) === phone);
-      // Ne révèle pas l'existence d'un compte : réponse identique si introuvable.
-      if (!user) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Aucun compte trouvé pour ce numéro.' })); return; }
+      // Limitation de débit : 3 demandes / 15 min par numéro, 10 / 15 min par IP.
+      const ip = remoteIp(req);
+      if (isRateLimited('pinreset-phone:' + phone, 3, 15 * 60 * 1000) ||
+          isRateLimited('pinreset-ip:' + ip, 10, 15 * 60 * 1000)) {
+        res.writeHead(429, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: 'Trop de demandes. Réessayez dans quelques minutes.' }));
+        return;
+      }
+      recordRateLimitHit('pinreset-phone:' + phone);
+      if (ip) recordRateLimitHit('pinreset-ip:' + ip);
 
-      const code = String(Math.floor(100000 + Math.random() * 900000)); // 6 chiffres
-      pinResets[phone] = { code, userId: user.id, expiresAt: Date.now() + 10 * 60 * 1000 };
-      // En production, le code serait envoyé par SMS. En démo, on le renvoie
-      // directement pour que l'utilisateur puisse terminer le parcours.
+      const user = users.find((u) => normalizePhone(u.phone) === phone);
+      // Anti-énumération : la réponse est identique que le compte existe ou non.
+      // Le code n'est jamais renvoyé dans la réponse HTTP : il part par SMS.
+      const payload = { ok: true, expiresIn: 600 };
+      if (user) {
+        const code = String(Math.floor(100000 + Math.random() * 900000)); // 6 chiffres
+        pinResets[phone] = { code, userId: user.id, expiresAt: Date.now() + 10 * 60 * 1000, attempts: 0 };
+        sendVerificationCode('reinitialisation', phone, code);
+        if (codesVisibleToClient()) payload.demoCode = code;
+      }
       res.writeHead(200, JSON_HEADERS);
-      res.end(JSON.stringify({ ok: true, demoCode: code, expiresIn: 600 }));
+      res.end(JSON.stringify(payload));
     });
     return;
   }
@@ -6675,7 +6792,19 @@ function handleHttp(req, res) {
       const rec = pinResets[phone];
       if (!rec) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Aucune demande de réinitialisation en cours.' })); return; }
       if (rec.expiresAt < Date.now()) { delete pinResets[phone]; res.writeHead(410, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Ce code a expiré. Demandez-en un nouveau.' })); return; }
-      if (rec.code !== code) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Code de vérification incorrect.' })); return; }
+      if (rec.code !== code) {
+        rec.attempts = (rec.attempts || 0) + 1;
+        // 5 essais maximum : au-delà, le code est invalidé (anti-force brute).
+        if (rec.attempts >= 5) {
+          delete pinResets[phone];
+          res.writeHead(429, JSON_HEADERS);
+          res.end(JSON.stringify({ ok: false, error: 'Trop de tentatives. Demandez un nouveau code.' }));
+          return;
+        }
+        res.writeHead(401, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: 'Code de vérification incorrect.' }));
+        return;
+      }
 
       const user = users.find((u) => u.id === rec.userId);
       if (!user) { delete pinResets[phone]; res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Compte introuvable.' })); return; }
@@ -7357,6 +7486,124 @@ function handleHttp(req, res) {
           return;
         }
 
+        // Réservation initiée par le CLIENT depuis la fiche du prestataire.
+        // Règle produit : l'acompte est OBLIGATOIREMENT réglé en mobile money
+        // (aucune circulation d'espèces) ; le solde se règle sur place, hors
+        // plateforme. Le montant de l'acompte est recalculé côté serveur depuis
+        // la configuration du prestataire — jamais depuis la valeur envoyée par
+        // le client.
+        if (action === 'book') {
+          const serviceId = String(body.serviceId || '').trim();
+          const day = String(body.day || '').trim();
+          const time = String(body.time || '').trim();
+          const clientName = String(body.clientName || '').trim();
+          const clientPhone = String(body.clientPhone || '').trim();
+          if (!serviceId || !day || !time) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ ok: false, error: 'Prestation, jour et heure requis' }));
+            return;
+          }
+          const targetVendor = canonicalRoutingId(body.vendorId || body.vendor || vendor) || vendor;
+          const service = prestations.find(function (p) {
+            return p && p.id === serviceId && canonicalRoutingId(p.vendorId) === targetVendor;
+          });
+          if (!service) {
+            res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ ok: false, error: 'Prestation introuvable.' }));
+            return;
+          }
+          const policy = reservationPolicyFor(targetVendor);
+          if (!policy.enabled) {
+            res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ ok: false, error: 'Ce prestataire n\'accepte pas les réservations en ligne.' }));
+            return;
+          }
+          const price = Number(service.price) || 0;
+          const acompteAmount = acompteForService(targetVendor, price);
+          const clientUser = userFromReq(req);
+          const clientId = resolveClientId((clientUser && clientUser.id) || body.clientId, clientName);
+
+          const appt = {
+            apptId: rand(),
+            from: clientId || '',
+            fromName: clientName || (clientUser && displayNameForUser(clientUser)) || 'Client',
+            fromPhone: clientPhone || (clientUser && clientUser.phone) || '',
+            to: targetVendor,
+            clientName: clientName,
+            serviceId: service.id,
+            service: service.name,
+            price: price,
+            day: day,
+            time: time,
+            note: String(body.note || ''),
+            status: 'requested',          // le prestataire confirme depuis l'agenda
+            createdByClient: true,
+            acompte: { required: acompteAmount > 0, amount: acompteAmount, status: 'none', transactionId: '', paidAt: null },
+            createdAt: now
+          };
+
+          // Acompte exigé => exiger un paiement mobile money complété, du bon
+          // montant et non déjà consommé par une autre réservation.
+          if (acompteAmount > 0) {
+            const txnId = String(body.transactionId || '');
+            const txn = transactions.find(function (t) { return t && t.id === txnId; });
+            if (!txn) {
+              res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+              res.end(JSON.stringify({ ok: false, error: 'Acompte non réglé : aucun paiement trouvé.' }));
+              return;
+            }
+            if (txn.status !== 'completed') {
+              res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+              res.end(JSON.stringify({ ok: false, error: 'Acompte non confirmé par l\'opérateur.' }));
+              return;
+            }
+            if (txn.appointmentId) {
+              res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+              res.end(JSON.stringify({ ok: false, error: 'Ce paiement a déjà servi à une réservation.' }));
+              return;
+            }
+            if (Math.round(Number(txn.amount) || 0) < acompteAmount) {
+              res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+              res.end(JSON.stringify({ ok: false, error: 'Montant de l\'acompte insuffisant.' }));
+              return;
+            }
+            txn.appointmentId = appt.apptId;
+            txn.updatedAt = now;
+            saveTransactions();
+            appt.acompte = { required: true, amount: acompteAmount, status: 'paid', transactionId: txn.id, paidAt: now };
+          }
+
+          appointmentLog.push(appt);
+          saveAppointments();
+
+          // Notifie le prestataire en temps réel ; s'il n'est pas sur sa
+          // messagerie, on déclenche une notification Web Push native.
+          broadcastToPeer(targetVendor, {
+            type: 'appointment-new',
+            apptId: appt.apptId,
+            from: clientId,
+            fromName: appt.fromName,
+            service: appt.service,
+            day: day,
+            time: time,
+            note: appt.note,
+            acompte: appt.acompte
+          });
+          if (!isOnMessaging(targetVendor)) {
+            sendPush(targetVendor, {
+              title: 'Nouvelle réservation',
+              body: appt.fromName + ' a réservé « ' + appt.service + ' » le ' + day + ' à ' + time +
+                (appt.acompte.amount > 0 ? ' (acompte réglé)' : ''),
+              url: pushLandingUrl({ routingId: targetVendor, kind: 'appointment', from: clientId, fromName: appt.fromName, convId: '' }),
+              tag: 'appt-' + appt.apptId,
+              data: { kind: 'appointment', apptId: appt.apptId, from: clientId, fromName: appt.fromName }
+            });
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, appointment: appt }));
+          return;
+        }
+
         // Réponse du prestataire à une demande (confirmer / refuser).
         if (action === 'reply') {
           const appt = appointmentLog.find(function (a) { return a && a.apptId === body.apptId; });
@@ -7651,11 +7898,21 @@ function handleHttp(req, res) {
       if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
       body = body || {};
       const user = userFromReq(req);
-      const opId = String(body.operator || '').toLowerCase();
-      const op = operatorById(opId);
-      if (!op) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Opérateur inconnu : ' + opId })); return; }
-      const provider = paymentProviderFor(op);
-      if (provider.id !== op.id) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Paiement ' + op.label + ' non disponible (clés ou mode live manquants).' })); return; }
+      // Moment du règlement : « maintenant » (Mobile Money immédiat) ou
+      // « livraison » (commande enregistrée en attente « a_regler », réglée
+      // plus tard par le client depuis son suivi de commande).
+      // Dans les deux cas le règlement est EXCLUSIVEMENT en Mobile Money :
+      // aucun mode « espèces » n'existe dans le tunnel.
+      const paymentTiming = String(body.paymentTiming || '').toLowerCase() === 'livraison' ? 'livraison' : 'maintenant';
+      let op = null;
+      let provider = null;
+      if (paymentTiming === 'maintenant') {
+        const opId = String(body.operator || '').toLowerCase();
+        op = operatorById(opId);
+        if (!op) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Opérateur inconnu : ' + opId })); return; }
+        provider = paymentProviderFor(op);
+        if (!provider) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: paymentUnavailableError(op), paymentUnavailable: true })); return; }
+      }
 
       const rawItems = Array.isArray(body.items) ? body.items : [];
       const items = rawItems.map(function (it) {
@@ -7695,9 +7952,10 @@ function handleHttp(req, res) {
         discount: discount,
         fulfillment: fulfillment,
         address: String(body.address || '').trim(),
-        status: 'en_attente',
-        operator: op.id,
-        operatorLabel: op.label,
+        status: paymentTiming === 'livraison' ? 'a_regler' : 'en_attente',
+        paymentTiming: paymentTiming,
+        operator: op ? op.id : '',
+        operatorLabel: op ? op.label : '',
         createdAt: nowIso(),
         updatedAt: nowIso(),
         paidAt: null,
@@ -7706,6 +7964,18 @@ function handleHttp(req, res) {
         commissionAmount: null,
         settlementAmount: null
       };
+
+      boutiqueOrders.unshift(order);
+      saveBoutiqueOrders();
+
+      // Paiement à la livraison / sur place : la commande existe désormais
+      // côté serveur SANS transaction ni opérateur (aucun débit à ce stade).
+      // Le client la réglera par Mobile Money depuis son suivi de commande.
+      if (paymentTiming === 'livraison') {
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, orderId: order.id, orderNo: orderNo, total: total, subtotal: subtotal, deliveryFee: deliveryFee, discount: discount, status: order.status, paymentTiming: 'livraison' }));
+        return;
+      }
 
       const reference = String(body.reference || ('MGO-' + orderNo + '-' + Date.now()));
       const txn = recordTransaction({
@@ -7733,7 +8003,6 @@ function handleHttp(req, res) {
         status: 'initiated'
       });
       order.transactionId = txn.id;
-      boutiqueOrders.unshift(order);
       saveBoutiqueOrders();
 
       const returnUrl = String(body.returnUrl || siteBase(req) + '/pages/fiche-boutique.html?vendorId=' + encodeURIComponent(vendorId) + '&mgt_checkout=1');
@@ -7763,6 +8032,86 @@ function handleHttp(req, res) {
     return;
   }
 
+  /* -------- Règlement d'une commande « à régler » (livraison / sur place) --------
+   * Déclenché par le CLIENT depuis son suivi de commande. Aucun paiement en
+   * espèces n'est possible : seul le Mobile Money est accepté. Le settlement
+   * (kind « boutique-order ») marque la commande « payee », décrémente le
+   * stock, crédite le prestataire et le notifie en temps réel. */
+  if (urlPath === '/api/boutique/order/pay') {
+    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
+    readJsonBody(req, function (err, body) {
+      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
+      body = body || {};
+      const order = boutiqueOrderForId(body.orderId || body.orderNo);
+      if (!order) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Commande introuvable.' })); return; }
+      if (order.status === 'payee') { res.writeHead(200, JSON_HEADERS); res.end(JSON.stringify({ ok: true, alreadyPaid: true, orderNo: order.orderNo, total: order.total, status: 'payee' })); return; }
+      if (order.status !== 'a_regler') { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Cette commande n\'est pas réglable à la remise.' })); return; }
+      const user = userFromReq(req);
+      if (order.clientId && user && user.id !== order.clientId) { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Commande non autorisée.' })); return; }
+
+      const opId = String(body.operator || '').toLowerCase();
+      const op = operatorById(opId);
+      if (!op) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Opérateur inconnu : ' + opId })); return; }
+      const provider = paymentProviderFor(op);
+      // Aucune passerelle réelle : on refuse le règlement, on ne simule rien.
+      if (!provider) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: paymentUnavailableError(op), paymentUnavailable: true })); return; }
+      const total = Math.round(Number(order.total) || 0);
+      const reference = 'MGO-' + order.orderNo + '-REG-' + Date.now();
+      const txn = recordTransaction({
+        userId: order.clientId || (user ? user.id : ''),
+        userType: 'client',
+        kind: 'boutique-order',
+        operator: op.id,
+        operatorLabel: op.label,
+        phone: String(body.phone || '').trim(),
+        amount: total,
+        feeAmount: Math.round(total * op.fee),
+        description: 'Règlement ' + order.orderNo + ' - ' + order.vendorName,
+        reference: reference,
+        meta: {
+          orderId: order.id,
+          orderNo: order.orderNo,
+          vendorId: order.vendorId,
+          vendorName: order.vendorName,
+          items: order.items,
+          total: total,
+          fulfillment: order.fulfillment,
+          address: order.address
+        },
+        mode: 'live',
+        status: 'initiated'
+      });
+      order.transactionId = txn.id;
+      order.updatedAt = nowIso();
+      saveBoutiqueOrders();
+
+      const returnUrl = String(body.returnUrl || siteBase(req) + '/pages/client-orders.html?mgt_pay=1');
+      provider.initiate({
+        amount: total,
+        reference: reference,
+        returnUrl: returnUrl,
+        cancelUrl: returnUrl,
+        notifUrl: siteBase(req) + '/api/payment/orange/webhook',
+        successUrl: returnUrl,
+        errorUrl: returnUrl
+      }).then(function (sim) {
+        txn.operatorRef = sim.operatorRef;
+        txn.checkoutUrl = sim.checkoutUrl;
+        txn.instructions = sim.instructions;
+        saveTransactions();
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, paymentMode: 'live', orderNo: order.orderNo, total: total, transactionId: txn.id, checkoutUrl: sim.checkoutUrl }));
+      }).catch(function (e) {
+        txn.status = 'failed';
+        txn.failedReason = 'Initiation ' + op.label + ' impossible : ' + e.message;
+        saveTransactions();
+        res.writeHead(502, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: e.message }));
+      });
+    });
+    return;
+  }
+
   /* -------- Paiement Wave (checkout redirect, mode live) -------- */
   if (urlPath === '/api/payment/wave/session') {
     if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
@@ -7770,7 +8119,7 @@ function handleHttp(req, res) {
       if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
       body = body || {};
       const provider = paymentProviderFor({ id: 'wave' });
-      if (provider.id !== 'wave') { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Paiement Wave non disponible (clés ou mode live manquants).' })); return; }
+      if (!provider) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: paymentUnavailableError(operatorById('wave')), paymentUnavailable: true })); return; }
       const user = userFromReq(req);
       const amount = Math.round(Number(body.amount) || 0);
       if (amount <= 0) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Montant invalide.' })); return; }
@@ -7874,7 +8223,7 @@ function handleHttp(req, res) {
       const op = operatorById(opId);
       if (!op) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Opérateur inconnu : ' + opId })); return; }
       const provider = paymentProviderFor(op);
-      if (provider.id !== op.id) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Paiement ' + op.label + ' non disponible (clés ou mode live manquants).' })); return; }
+      if (!provider) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: paymentUnavailableError(op), paymentUnavailable: true })); return; }
       const user = userFromReq(req);
       const amount = Math.round(Number(body.amount) || 0);
       if (amount <= 0) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Montant invalide.' })); return; }
@@ -7928,7 +8277,9 @@ function handleHttp(req, res) {
     if (!txn) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Transaction introuvable.' })); return; }
     const op = operatorById(txn.operator);
     const provider = paymentProviderFor(op);
-    if (provider.id !== op.id) { res.writeHead(200, JSON_HEADERS); res.end(JSON.stringify({ ok: true, status: txn.status, completed: txn.status === 'completed', transaction: txn })); return; }
+    // Sans passerelle réelle, on se contente de renvoyer l'état courant : rien
+    // à confirmer, et surtout aucun débit simulé.
+    if (!provider) { res.writeHead(200, JSON_HEADERS); res.end(JSON.stringify({ ok: true, status: txn.status, completed: txn.status === 'completed', transaction: txn })); return; }
     provider.confirm(txn).then(function (outcome) {
       if (outcome && outcome.success) { saveTransactions(); if (txn.status === 'completed') settleTransaction(txn); }
       res.writeHead(200, JSON_HEADERS);
@@ -8530,7 +8881,9 @@ function handleHttp(req, res) {
       w.updatedAt = nowIso();
       const txn = recordTransaction({
         userId: user.id, userType: 'livreur', kind: 'courier-withdrawal',
-        amount: amount, feeAmount: 0, status: 'completed', mode: 'demo',
+        // Retrait interne au portefeuille livreur (pas de passerelle de
+        // décaissement) : enregistré « manual », jamais « demo ».
+        amount: amount, feeAmount: 0, status: 'completed', mode: 'manual',
         operator: operator, operatorLabel: (operatorById(operator) || {}).label || operator,
         phone: phone, description: 'Retrait gains livreur', paidAt: nowIso()
       });
@@ -9017,7 +9370,7 @@ function handleHttp(req, res) {
   }
   if (urlPath === '/robots.txt') {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=86400' });
-    res.end('User-agent: *\nAllow: /\nDisallow: /pages/auth.html\nDisallow: /pages/dashboard-\nDisallow: /pages/client-\nDisallow: /pages/admin\nDisallow: /pages/checkout.html\nDisallow: /pages/chat.html\nDisallow: /pages/livreur.html\nDisallow: /pages/live-vendor.html\nDisallow: /pages/live-client.html\nDisallow: /api/\n\nSitemap: ' + siteBase(req) + '/sitemap.xml\n');
+    res.end('User-agent: *\nAllow: /\nDisallow: /pages/auth.html\nDisallow: /pages/dashboard-\nDisallow: /pages/client-\nDisallow: /pages/admin\nDisallow: /pages/chat.html\nDisallow: /pages/livreur.html\nDisallow: /pages/live-vendor.html\nDisallow: /pages/live-client.html\nDisallow: /api/\n\nSitemap: ' + siteBase(req) + '/sitemap.xml\n');
     return;
   }
   if (urlPath === '/sitemap.xml') {
@@ -9070,10 +9423,10 @@ function handleHttp(req, res) {
   function sanitizeRuntimeData() {
     const changes = {};
 
-    // Transactions : ne conserver que les paiements réels (hors modes démo).
+    // Transactions : ne conserver que les paiements réels (hors simulation).
     if (Array.isArray(transactions) && transactions.length) {
       const kept = transactions.filter(function (t) {
-        return t && !['sandbox', 'wallet', 'internal'].includes(t.mode);
+        return t && !['demo', 'sandbox', 'wallet', 'internal'].includes(t.mode);
       });
       if (kept.length !== transactions.length) {
         transactions = kept;
@@ -9516,7 +9869,10 @@ httpServer.listen(HTTP_PORT, HOST, () => {
   console.log('  Port HTTP     : ' + HTTP_PORT);
   console.log('  DATA_DIR      : ' + DATA_DIR);
   console.log('  Stockage      : ' + (fs.existsSync(DATA_DIR) ? 'OK (' + DATA_DIR + ')' : 'INDISPONIBLE'));
-  console.log('  Paiement      : ' + (paymentModeActive() === 'live' ? 'LIVE' : 'DEMO (simulation, aucun débit réel)'));
+  console.log('  Paiement      : ' + (paymentModeActive() === 'live' ? 'LIVE (opérateur connecté)' : 'INDISPONIBLE (aucune passerelle — les paiements sont refusés)'));
+  console.log('  SMS           : ' + (sms && sms.configured()
+    ? (sms.sandbox() ? 'eSMS Africa (bac à sable — livraison simulée)' : 'eSMS Africa (production)')
+    : 'non configuré — codes journalisés côté serveur'));
   console.log('  WebSocket     : /webrtc-ws (présence/chat/rendez-vous/live) + /delivery-ws (Express+)');
   console.log('  HTTP          : http://localhost:' + HTTP_PORT);
   lanIps().forEach((ip) => console.log('  LAN           : http://' + ip + ':' + HTTP_PORT));

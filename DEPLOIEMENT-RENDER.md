@@ -2,7 +2,7 @@
 
 Projet : **Mangoo Connect+** (`docs/mangoo-ui`)
 Date : 2026-08-25
-Statut : **prêt à déployer** (persistance, sauvegarde, WebSocket, paiement DEMO, sécurité et health check validés).
+Statut : **prêt à déployer** (persistance, sauvegarde, WebSocket, paiement fail-closed, sécurité et health check validés).
 
 Ce document décrit la configuration exacte de déploiement sur **Render Web Service**. Il complète `RAPPORT-COMPATIBILITE-RENDER.md` (analyse) et reflète l'état réel du code après les corrections de sécurisation.
 
@@ -33,18 +33,21 @@ Le serveur écoute sur `0.0.0.0`. Il ne démarre le HTTPS interne (`8443`) que s
 | `PORT` | `8080` | Port HTTP exposé par Render |
 | `NODE_ENV` | `development` | Mettre `production` |
 | `DATA_DIR` | `./data` | **`/app/data`** (Persistent Disk) |
-| `ADMIN_EMAIL` | `admin@mangootech.com` | Email du compte admin initial |
+| `SITE_URL` | *(vide)* | **`https://mangoo.tech`** en production. Domaine absolu utilisé pour les URLs SEO (sitemap, canonical, `og:image`, `og:url`). Si absent, déduit de la requête via `X-Forwarded-Host`/`Host`. |
+| `ADMIN_EMAIL` | `admin@mangoo.tech` | Email du compte admin initial |
 | `ADMIN_PASSWORD` | *(vide)* | **Obligatoire en production.** Mot de passe admin (jamais généré ni écrit sur disque en prod) |
 | `ADMIN_PIN` | *(vide)* | **Obligatoire en production.** PIN admin 4 chiffres |
 | `ADMIN_PASSWORD_RESET` | *(vide)* | Rotation d'urgence du mot de passe (usage unique) |
 | `ADMIN_PIN_RESET` | *(vide)* | Rotation d'urgence du PIN (usage unique) |
+| `SUPPORT_EMAIL` | `support@mangoo.tech` | Email du compte « Support MangooTech » (équipe interne, appel in-app) |
+| `SUPPORT_PIN` | *(vide)* | PIN 4 chiffres du compte support. La connexion se fait par **email** (`SUPPORT_EMAIL`) **ou** ce PIN. À définir sur Render comme `ADMIN_PIN` |
 | `FORCE_HTTPS_ADMIN` | `true` | Forçage HTTPS espace admin (peut rester `true`, `X-Forwarded-Proto` est reconnu) |
 | `BACKUP_ENABLED` | `false` | Mettre `true` en production |
 | `BACKUP_DIR` | `<DATA_DIR>/backups` | Dossier des archives (par défaut sur le Persistent Disk) |
 | `BACKUP_RETENTION_DAYS` | `7` | Conservation des archives locales |
-| `PAYMENT_MODE` | `demo` | **Laisser `demo`** (aucun opérateur réel n'est intégré) |
+| `PAYMENT_MODE` | *(vide)* | **Laisser vide** tant que les comptes marchands ne sont pas ouverts : le paiement est alors indisponible et **refuse** toute transaction (aucune simulation). Passer à `live` uniquement avec les clés Wave/Orange. |
 
-Clés opérateurs (optionnelles, non utilisées tant que `PAYMENT_MODE=demo`) : `ORANGE_MONEY_API_KEY`, `WAVE_API_KEY`, `MTN_MOMO_API_KEY`, `MOOV_API_KEY`, `FREE_MOBILE_API_KEY`, etc. Ne les renseigner qu'avec des API validées.
+Clés opérateurs (requises pour passer en `live`) : `WAVE_API_KEY` (+ `WAVE_WEBHOOK_SECRET`), `ORANGE_MONEY_CLIENT_ID`, `ORANGE_MONEY_CLIENT_SECRET`, `ORANGE_MONEY_MERCHANT_KEY` (+ `ORANGE_MONEY_NOTIF_TOKEN`). Sans clé, l'opérateur reste **indisponible** (refus, jamais de démo).
 
 ---
 
@@ -102,13 +105,14 @@ Implémentation actuelle : `backup-data.cjs` (script autonome, aucune dépendanc
 
 ## E. Paiement
 
-**Le paiement est actuellement en mode DEMO / SIMULATION.**
+**Aucun encaissement simulé : le tunnel est fail-closed.**
 
-- `PAYMENT_MODE=demo` par défaut : **aucune somme réelle n'est débitée**.
-- Aucun appel réseau aux opérateurs (Orange Money, Wave, MTN MoMo, Moov Money, Free Mobile) n'est effectué.
-- L'abstraction `PaymentProvider` isole le reste de l'application : `Commande → PaymentService → PaymentProvider`. Aujourd'hui, seul `DemoPaymentProvider` est actif.
-- Les transactions portent `mode: "demo"` et l'interface affiche : **« Paiement en mode démonstration — aucune somme réelle n'est débitée. »**
-- Le passage en production réelle exigera d'implémenter les providers (`OrangeMoneyProvider`, `WaveProvider`, etc.) avec des API validées, puis `PAYMENT_MODE=live` — sans refaire l'application.
+- `PAYMENT_MODE` n'a qu'une valeur active : **`live`**. Toute autre valeur (dont `demo`, désormais sans effet) place le paiement en **indisponible**.
+- En indisponible, le tunnel **refuse** la transaction : « Paiement indisponible : aucune passerelle Mobile Money n'est configurée pour … Aucune somme n'a été débitée. » Il n'existe plus de provider de démonstration.
+- Deux providers réels existent : **Wave** et **Orange Money** (checkout redirect). Un opérateur n'est `live` que si `PAYMENT_MODE=live` **et** ses clés sont présentes.
+- Les transactions ne portent plus jamais `mode: "demo"` (`live` ou `manual`).
+- Le passage en production réelle exige les **comptes marchands** Wave/Orange et leurs clés, puis `PAYMENT_MODE=live` — voir `RUNBOOK-DEPLOIEMENT-RESTAURATION.md`.
+- ⚠️ **Avant tout encaissement réel** : traiter le point de conformité BCEAO (ne pas stocker de solde wallet en v1 — voir guide de lancement, pré-requis n°9).
 
 ---
 
@@ -140,7 +144,7 @@ Implémentation actuelle : `backup-data.cjs` (script autonome, aucune dépendanc
 |---|---|
 | `VAPID_PUBLIC_KEY` | Clé publique VAPID (base64url) |
 | `VAPID_PRIVATE_KEY` | Clé privée VAPID (base64url) |
-| `VAPID_SUBJECT` | `mailto:contact@mangootech.com` (défaut) |
+| `VAPID_SUBJECT` | `mailto:contact@mangoo.tech` (défaut) |
 
 Générer une paire une fois : `node -e "console.log(require('web-push').generateVAPIDKeys())"`, puis copier les deux valeurs. Si ces variables sont définies, elles priment sur `vapid.json`.
 
@@ -149,6 +153,17 @@ Générer une paire une fois : `node -e "console.log(require('web-push').generat
 - Fiable lorsque le navigateur tourne (onglet fermé ou en arrière-plan).
 - iOS : nécessite l'app installée en PWA (Safari iOS 16.4+) ; pas de notification si l'app native est totalement quittée.
 - L'appel entrant est éphémère : la notification « réveille » l'utilisateur et ouvre son espace ; la sonnerie WebRTC ne se poursuit que si l'appelant rappelle ou que l'onglet est rouvert assez vite.
+
+---
+
+## F3. Images de partage (Open Graph) 1200×630
+
+Les fiches servent une **image de partage dédiée** via `/og/<vendorId>.png` et `/og/default.png`, générée à la volée (SVG → PNG) avec `@resvg/resvg-js` (ajouté à `package.json`, installé par `npm install --omit=dev`).
+
+- Police Poppins embarquée (`assets/fonts/`), aucune dépendance réseau au rendu.
+- Cache dans `DATA_DIR/og-cache` (sur le Persistent Disk), indexé par contenu — régénéré automatiquement si la fiche change.
+- Si `@resvg/resvg-js` est indisponible, l'endpoint répond `404` sans casser le reste du serveur.
+- Le dossier `data/og-cache/` et le fichier `package-lock.json` sont ignorés par Git.
 
 ---
 

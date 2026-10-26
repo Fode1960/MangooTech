@@ -2,7 +2,7 @@
    MangooTech — Couche de données client partagée (côté client)
    Stocke dans localStorage les adresses de livraison du client
    connecté, et les expose via window.MangooClient.
-   Utilisée par : client-profile.html, fiche-boutique.html, checkout.html
+   Utilisée par : client-profile.html, fiche-boutique.html
    ============================================================= */
 (function (global) {
   'use strict';
@@ -315,7 +315,11 @@
     return list;
   }
   function getOrders() {
-    return ensureOrdersSeeded();
+    return ensureOrdersSeeded().filter(function (o) {
+      // Exclut la commande de démonstration fantôme (même règle que côté vendeur).
+      if (!o) return false;
+      return String(o.id || '').toUpperCase() !== 'CMD-2026-4931';
+    });
   }
   function getOrder(id) {
     return getOrders().find(function (o) { return o.id === id; }) || null;

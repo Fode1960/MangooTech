@@ -66,6 +66,22 @@
     }
   }
 
+  // Hydrate l'enregistrement d'un badge (Promotion / Nouveau) depuis le serveur.
+  // Même clé que badgeKey(vendorId, badgeType) afin que playBadge le retrouve.
+  function hydrateBadge(vendorId, badgeType, recording) {
+    var key = badgeKey(vendorId, badgeType);
+    if (recording && (recording.dataUrl || recording.text)) {
+      serverStore[key] = {
+        dataUrl: recording.dataUrl || '',
+        mime: recording.mime || 'audio/webm',
+        text: recording.text || '',
+        updatedAt: recording.updatedAt || null
+      };
+    } else {
+      delete serverStore[key];
+    }
+  }
+
   function supported() {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
   }
@@ -249,6 +265,7 @@
     getRecording: getRecording,
     getTranscript: getTranscript,
     hydrate: hydrate,
+    hydrateBadge: hydrateBadge,
     saveRecording: saveRecording,
     removeRecording: removeRecording,
     migrate: migrate,

@@ -22,7 +22,7 @@ function genPin() {
   return String(Math.floor(1000 + Math.random() * 9000));
 }
 
-const email = process.env.ADMIN_EMAIL || 'admin@mangootech.com';
+const email = process.env.ADMIN_EMAIL || 'admin@mangoo.tech';
 const password = process.env.ADMIN_PASSWORD || genPassword();
 const pin = process.env.ADMIN_PIN || genPin();
 

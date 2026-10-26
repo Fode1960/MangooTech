@@ -2,13 +2,15 @@
  * MangooPayment — Interface de paiement mobile money (Mangoo Pay+)
  * ------------------------------------------------------------
  * Module réutilisable branché sur le backend `server.cjs` :
- *   GET  /api/payment/operators   (liste des opérateurs + frais + mode sandbox/live)
+ *   GET  /api/payment/operators   (liste des opérateurs + frais + disponibilité)
  *   GET  /api/payment/methods     (méthodes + devise)
  *   POST /api/payment/mobile-money/initiate
  *   POST /api/payment/mobile-money/confirm
  *
- * Flux en 3 étapes : 1) choix de l'opérateur, 2) numéro, 3) OTP.
- * En mode sandbox (aucune clé API fournie), l'OTP simule la validation.
+ * Flux : choix de l'opérateur, puis numéro (et OTP pour les opérateurs
+ * historiques). Aucune simulation : seuls les opérateurs dont la passerelle
+ * réelle est configurée (mode « live ») sont proposés ; sans clé marchande,
+ * le tunnel refuse le paiement.
  *
  * Expose :
  *   MangooPayment.getOperators()            -> Promise<operateurs>
@@ -163,9 +165,7 @@
     card.appendChild(dot);
     card.appendChild(info);
 
-    var modeBadge = op.mode === 'sandbox'
-      ? el('span', { style: { padding: '2px 8px', borderRadius: '9999px', fontSize: '10px', fontWeight: '700', background: 'rgb(var(--mgt-warning)/0.18)', color: 'rgb(var(--mgt-accent-700))' } }, 'TEST')
-      : el('span', { style: { padding: '2px 8px', borderRadius: '9999px', fontSize: '10px', fontWeight: '700', background: 'rgb(var(--mgt-success)/0.18)', color: 'rgb(var(--mgt-primary-700))' } }, 'LIVE');
+    var modeBadge = el('span', { style: { padding: '2px 8px', borderRadius: '9999px', fontSize: '10px', fontWeight: '700', background: 'rgb(var(--mgt-success)/0.18)', color: 'rgb(var(--mgt-primary-700))' } }, 'LIVE');
     card.appendChild(modeBadge);
 
     var radio = el('span', { style: {
@@ -187,8 +187,14 @@
 
     return new Promise(function (resolve, reject) {
       getOperators().then(function (operators) {
-        var mobileOperators = operators.filter(function (o) { return o; });
-        if (!mobileOperators.length) mobileOperators = seedFallbackOperators();
+        // Seuls les opérateurs dont la passerelle réelle est disponible
+        // (mode « live ») peuvent être proposés. Sans clés marchands, la
+        // liste est vide et on refuse d'ouvrir le tunnel : aucune simulation.
+        var mobileOperators = operators.filter(function (o) { return o && o.mode === 'live'; });
+        if (!mobileOperators.length) {
+          reject(new Error('Paiement indisponible : aucune passerelle Mobile Money n\'est configurée. Aucune somme n\'a été débitée.'));
+          return;
+        }
 
         var state = { operator: mobileOperators[0] && mobileOperators[0].id, phone: '', otp: '' };
         var overlay = el('div', { style: baseStyle() });
@@ -260,6 +266,89 @@
           return mobileOperators[0];
         }
 
+        // Un opérateur en mode « live » (Wave, Orange Money) se règle par une
+        // redirection vers sa page hébergée, et non par la modale OTP.
+        function isRedirectOperator(op) {
+          return !!op && op.mode === 'live';
+        }
+
+        function beginRedirect(op) {
+          var returnUrl = location.href.split('#')[0];
+          returnUrl += (returnUrl.indexOf('?') >= 0 ? '&' : '?') + 'mgt_checkout=1';
+          close();
+          var isOrder = !!(opts.order && typeof opts.order === 'object');
+          // Règlement d'une commande déjà enregistrée (« à régler » à la remise) :
+          // le serveur ne crée aucune commande, il solde celle qui existe.
+          // Mobile Money uniquement, jamais d'espèces.
+          var payOrder = (opts.payOrder && typeof opts.payOrder === 'object') ? opts.payOrder : null;
+          var endpoint = payOrder ? '/api/boutique/order/pay' : (isOrder ? '/api/boutique/order' : (BASE + '/checkout/session'));
+          var payload = payOrder
+            ? {
+                orderId: String(payOrder.orderId || ''),
+                orderNo: String(payOrder.orderNo || ''),
+                operator: op.id,
+                phone: String(payOrder.phone || state.phone || ''),
+                returnUrl: returnUrl
+              }
+            : isOrder
+            ? Object.assign({}, opts.order, { operator: op.id, amount: amount, returnUrl: returnUrl })
+            : {
+                operator: op.id,
+                amount: amount,
+                kind: opts.kind || 'mobile-money-payment',
+                reference: opts.reference || '',
+                description: opts.subtitle || '',
+                meta: opts.meta || {},
+                returnUrl: returnUrl
+              };
+          fetch(endpoint, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify(payload)
+          }).then(function (r) { return r.json(); })
+            .then(function (d) {
+              if (d && d.ok && d.checkoutUrl) {
+                try {
+                  sessionStorage.setItem('mgt_pending_txn', d.transactionId);
+                  if (payOrder) {
+                    sessionStorage.setItem('mgt_pending_order', JSON.stringify({
+                      orderNo: d.orderNo || String(payOrder.orderNo || ''),
+                      orderId: String(payOrder.orderId || ''),
+                      transactionId: d.transactionId || '',
+                      total: Number(d.total || amount || 0),
+                      payOnly: true,
+                      operatorLabel: String(op && op.label || 'Mobile money')
+                    }));
+                  } else if (isOrder) {
+                    var soItems = (opts.order.items || []).map(function (it) {
+                      return { productId: String(it && it.productId || ''), name: String(it && it.name || 'Article'), price: Number(it && it.price || 0), qty: Number(it && it.qty || 1) };
+                    });
+                    var soSubtotal = soItems.reduce(function (s, it) { return s + it.price * it.qty; }, 0);
+                    sessionStorage.setItem('mgt_pending_order', JSON.stringify({
+                      orderNo: d.orderNo || '',
+                      orderId: d.orderId || '',
+                      transactionId: d.transactionId || '',
+                      items: soItems,
+                      subtotal: soSubtotal,
+                      deliveryFee: Number(opts.order.deliveryFee || 0),
+                      total: Number(amount || 0),
+                      fulfillment: String(opts.order.fulfillment || 'retrait'),
+                      vendorId: String(opts.order.vendorId || ''),
+                      vendorName: String(opts.order.vendorName || ''),
+                      address: String(opts.order.address || ''),
+                      operatorLabel: String(op && op.label || 'Mobile money')
+                    }));
+                  }
+                } catch (e) {}
+                window.location.href = d.checkoutUrl;
+              } else {
+                reject(new Error((d && d.error) || 'Paiement indisponible.'));
+              }
+            }).catch(function (e) {
+              reject(e);
+            });
+        }
+
         function feeSummary() {
           var op = selectedOperator();
           var fee = feeFor(op, amount);
@@ -288,14 +377,16 @@
             grid.appendChild(c);
           });
           body.appendChild(grid);
-          var sandbox = el('p', { style: { margin: '12px 0 0', fontSize: '11px', color: 'rgb(var(--mgt-accent-700))', background: 'rgb(var(--mgt-warning)/0.12)', padding: '8px 10px', borderRadius: '8px' } }, 'Mode démonstration : aucune clé API fournie, le paiement est simulé.');
-          body.appendChild(sandbox);
 
           clearFooter();
           var back = secondaryBtn('Annuler');
           back.onclick = close;
           var next = primaryBtn('Continuer');
-          next.onclick = renderStep2;
+          next.onclick = function () {
+            var op = selectedOperator();
+            if (isRedirectOperator(op)) { beginRedirect(op); return; }
+            renderStep2();
+          };
           footer.appendChild(back);
           footer.appendChild(next);
         }
@@ -334,7 +425,6 @@
         function renderStep3() {
           clearBody();
           renderSteps(3);
-          var op = selectedOperator();
           body.appendChild(el('p', { style: { margin: '0 0 12px', fontSize: '13px', color: 'rgb(var(--mgt-muted-foreground))' } }, 'Un code de confirmation a été envoyé au ' + esc(state.phone) + '. Saisissez-le pour valider le débit.'));
 
           var otpLbl = el('label', { style: labelStyle() }, 'Code OTP');
@@ -346,10 +436,7 @@
           body.appendChild(otpInput);
           body.appendChild(errEl);
 
-          var hint = (op && op.mode === 'sandbox')
-            ? 'Mode test : saisissez un code quelconque (sauf 0000 qui simule un refus).'
-            : 'Validez la demande sur votre téléphone (USSD / push).';
-          body.appendChild(el('p', { style: { margin: '4px 0 0', fontSize: '11px', color: 'rgb(var(--mgt-muted-foreground))' } }, hint));
+          body.appendChild(el('p', { style: { margin: '4px 0 0', fontSize: '11px', color: 'rgb(var(--mgt-muted-foreground))' } }, 'Validez la demande sur votre téléphone (USSD / push).'));
 
           clearFooter();
           var back = secondaryBtn('Retour');
@@ -376,14 +463,142 @@
     });
   }
 
-  function seedFallbackOperators() {
-    return [
-      { id: 'orange', label: 'Orange Money', code: 'OM', fee: 0.01, feeLabel: '1 %', mode: 'sandbox' },
-      { id: 'wave', label: 'Wave', code: 'WAVE', fee: 0.01, feeLabel: '1 %', mode: 'sandbox' },
-      { id: 'mtn', label: 'MTN Mobile Money', code: 'MOMO', fee: 0.015, feeLabel: '1,5 %', mode: 'sandbox' },
-      { id: 'moov', label: 'Moov Money', code: 'MOOV', fee: 0.015, feeLabel: '1,5 %', mode: 'sandbox' },
-      { id: 'free', label: 'Free Mobile Sénégal', code: 'FREE', fee: 0.01, feeLabel: '1 %', mode: 'sandbox' }
-    ];
+  function toast(msg) {
+    try {
+      var t = document.createElement('div');
+      t.textContent = msg;
+      t.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgb(15,23,42);color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 8px 30px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);';
+      document.body.appendChild(t);
+      setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 4000);
+    } catch (e) {}
+  }
+
+  // Injecte l'animation de rotation du spinner une seule fois.
+  function ensureSpinnerKeyframes() {
+    try {
+      if (document.getElementById('mgt-spin-keyframes')) return;
+      var s = document.createElement('style');
+      s.id = 'mgt-spin-keyframes';
+      s.textContent = '@keyframes mgt-spin { to { transform: rotate(360deg); } }';
+      document.head.appendChild(s);
+    } catch (e) {}
+  }
+
+  // Récap visuel « en attente de confirmation » affiché pendant le polling du
+  // retour live (remplace le simple toast). Se ferme à la confirmation, reste
+  // affiché (avec note mise à jour) en cas de timeout, et reste fermable.
+  function showPendingRecap(orderInfo) {
+    try {
+      ensureSpinnerKeyframes();
+      var overlay = el('div', { style: baseStyle() });
+      overlay.style.zIndex = '9600';
+      var card = el('div', { style: cardStyle() });
+      card.style.maxWidth = '400px';
+
+      var spinner = el('div', { style: {
+        width: '44px', height: '44px', margin: '0 auto 16px', borderRadius: '50%',
+        border: '4px solid rgb(var(--mgt-muted))', borderTopColor: 'rgb(var(--mgt-primary))',
+        animation: 'mgt-spin 0.8s linear infinite'
+      } });
+      card.appendChild(spinner);
+
+      var title = el('h3', { style: { margin: '0 0 6px', fontSize: '16px', fontWeight: '700', textAlign: 'center', color: 'rgb(var(--mgt-foreground))' } }, 'Vérification du paiement…');
+      card.appendChild(title);
+
+      var note = el('p', { style: { margin: '0 0 16px', fontSize: '13px', textAlign: 'center', color: 'rgb(var(--mgt-muted-foreground))' } }, 'Nous confirmons votre paiement auprès de l\'opérateur.');
+      card.appendChild(note);
+
+      var hasDetail = orderInfo && (orderInfo.orderNo || typeof orderInfo.total === 'number' || orderInfo.operatorLabel);
+      if (hasDetail) {
+        var box = el('div', { style: { background: 'rgb(var(--mgt-muted))', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' } });
+        function row(label, value, strong) {
+          var r = el('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', padding: '4px 0' } });
+          r.appendChild(el('span', { style: { fontSize: '12px', color: 'rgb(var(--mgt-muted-foreground))' } }, label));
+          r.appendChild(el('span', { style: { fontSize: '13px', fontWeight: strong ? '700' : '600', color: strong ? 'rgb(var(--mgt-primary))' : 'rgb(var(--mgt-foreground))', textAlign: 'right' } }, value));
+          return r;
+        }
+        if (orderInfo.orderNo) box.appendChild(row('Commande', String(orderInfo.orderNo), false));
+        if (typeof orderInfo.total === 'number') box.appendChild(row('Montant', fmt(orderInfo.total) + ' FCFA', true));
+        if (orderInfo.operatorLabel) box.appendChild(row('Opérateur', String(orderInfo.operatorLabel), false));
+        card.appendChild(box);
+      }
+
+      var closeBtn = el('button', { type: 'button', style: {
+        width: '100%', height: '44px', border: '1px solid rgb(var(--mgt-border))', borderRadius: '10px',
+        background: 'transparent', color: 'rgb(var(--mgt-muted-foreground))', fontSize: '14px', fontWeight: '600', cursor: 'pointer'
+      } }, 'Fermer');
+      card.appendChild(closeBtn);
+
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      var closed = false;
+      function close() {
+        if (closed) return;
+        closed = true;
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      }
+      closeBtn.onclick = close;
+
+      return { close: close, note: note, title: title };
+    } catch (e) { return null; }
+  }
+
+  // Après redirection, interroge le statut, affiche le récap d'attente, puis
+  // confirme (ou bascule en note d'attente) selon le résultat du polling.
+  function pollCheckout(txnId) {
+    var orderInfo = null;
+    try { orderInfo = JSON.parse(sessionStorage.getItem('mgt_pending_order') || 'null'); } catch (e) {}
+    var recap = showPendingRecap(orderInfo);
+    var attempts = 0;
+    var MAX = 6;
+
+    function step() {
+      fetch(BASE + '/checkout/status?txn=' + encodeURIComponent(txnId), { headers: authHeaders(), cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.completed) {
+            if (recap && recap.close) recap.close();
+            if (orderInfo && orderInfo.orderNo) {
+              try { sessionStorage.setItem('mgt_pending_confirmed', '1'); } catch (e) {}
+              try { document.dispatchEvent(new CustomEvent('mgt:checkout:success', { detail: orderInfo })); } catch (e) {}
+            } else {
+              toast('Paiement confirmé. Merci !');
+            }
+            return;
+          }
+          attempts++;
+          if (attempts < MAX) {
+            setTimeout(step, 2000);
+          } else {
+            if (recap) {
+              if (recap.title) recap.title.textContent = 'Paiement en attente de confirmation';
+              if (recap.note) recap.note.textContent = 'Votre paiement est encore en cours de validation. Vous serez notifié dès qu\'il sera confirmé.';
+            }
+            toast('Paiement en attente de confirmation.');
+          }
+        })
+        .catch(function () {
+          if (recap && recap.note) recap.note.textContent = 'Impossible de vérifier le paiement pour le moment. Réessayez plus tard.';
+          toast('Impossible de vérifier le paiement.');
+        });
+    }
+    step();
+  }
+
+  function handleCheckoutReturn() {
+    try {
+      if (location.search.indexOf('mgt_checkout') < 0) return;
+      var txnId = sessionStorage.getItem('mgt_pending_txn');
+      if (!txnId) return;
+      sessionStorage.removeItem('mgt_pending_txn');
+      pollCheckout(txnId);
+    } catch (e) {}
+  }
+
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', handleCheckoutReturn);
+    else handleCheckoutReturn();
   }
 
   global.MangooPayment = {

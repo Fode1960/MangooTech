@@ -29,47 +29,6 @@
     plan: 'decouverte'
   };
 
-  // Identités de démonstration publiques (aperçu via ?demo=prestataire|boutique).
-  // Permet d'explorer les DEUX rôles sans session : prestataire de service
-  // (DAN Coiffure) et vendeur / boutique (DAN Boutique).
-  // Les coordonnées de contact (téléphone/email) restent vides : elles sont
-  // fournies par la source serveur (vendor-config / session) en production,
-  // jamais par un seed fictif.
-  var DEMO_VENDORS = {
-    prestataire: {
-      vendorId: 'pro-eb10536cd12d',
-      name: 'DAN Coiffure',
-      role: 'prestataire',
-      category: 'salon',
-      phone: '',
-      email: '',
-      city: 'Paris',
-      rating: '—',
-      verified: false,
-      plan: 'decouverte'
-    },
-    boutique: {
-      vendorId: 'pro-41cafa4bcb31',
-      name: 'DAN Boutique',
-      role: 'vendeur',
-      category: 'commerce',
-      phone: '',
-      email: '',
-      city: 'Paris',
-      rating: '—',
-      verified: false,
-      plan: 'decouverte'
-    }
-  };
-
-  function demoRoleFromUrl() {
-    try {
-      var m = /[?&]demo=(prestataire|boutique|vendeur)\b/.exec(location.search);
-      if (!m) return null;
-      return m[1] === 'vendeur' ? 'boutique' : m[1];
-    } catch (e) { return null; }
-  }
-
   function read() {
     try {
       var raw = localStorage.getItem(KEY);
@@ -117,12 +76,6 @@
   }
 
   function current() {
-    // Aperçu démo public (?demo=prestataire|boutique) : identité fixe, lue sans
-    // écrire dans le localStorage (ne pollue pas la vraie session mgt_user).
-    // La détection passe par MangooDemo quand il est présent (rôle conservé en
-    // sessionStorage lors de la navigation entre pages du dashboard).
-    var demo = (global.MangooDemo && global.MangooDemo.role()) || demoRoleFromUrl();
-    if (demo && DEMO_VENDORS[demo]) return normalize(DEMO_VENDORS[demo]);
     // Priorité à la session réelle (mgt_user) : elle est la source de vérité
     // pour l'identité connectée (DAN Boutique → pro-41cafa4bcb31).
     var fromUser = identityFromUser(readUser());
@@ -194,7 +147,14 @@
       var raw = localStorage.getItem(ORDERS_KEY);
       if (!raw) return [];
       var list = JSON.parse(raw);
-      return Array.isArray(list) ? list : [];
+      if (!Array.isArray(list)) return [];
+      // Exclut la commande de démonstration persistée côté client : elle
+      // n’est pas réelle et ne doit jamais apparaître dans les indicateurs.
+      return list.filter(function (o) {
+        if (!o) return false;
+        var id = String(o.id || '').toUpperCase();
+        return id !== 'CMD-2026-4931';
+      });
     } catch (e) { return []; }
   }
 
@@ -209,8 +169,6 @@
       if (vid && o.vendorId === vid) return true;
       // Correspondance par enseigne/nom du professionnel (seed orders).
       if (nameLc && o.provider && String(o.provider).toLowerCase() === nameLc) return true;
-      // Correspondance par catégorie de rôle.
-      if (vid === 'pro-41cafa4bcb31' && o.kind === 'commerce') return true;
       return false;
     });
   }

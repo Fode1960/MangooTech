@@ -288,8 +288,25 @@ html.dark {
         mask-position: center;
         background-color: currentColor;
       }
-    </style>
+    <!-- SEO -->
+    <meta name="description" content="Découvrez cette boutique sur MangooTech : produits, horaires, contact et commande en ligne.">
+    <link rel="canonical" href="./fiche-boutique.html">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#1a5c2a">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="MangooTech">
+    <meta property="og:title" content="Fiche Boutique · MangooTech">
+    <meta property="og:description" content="Découvrez cette boutique sur MangooTech : produits, horaires, contact et commande en ligne.">
+    <meta property="og:image" content="/assets/icon-512.png">
+    <meta property="og:url" content="./fiche-boutique.html">
+    <meta property="og:locale" content="fr_FR">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Fiche Boutique · MangooTech">
+    <meta name="twitter:description" content="Découvrez cette boutique sur MangooTech : produits, horaires, contact et commande en ligne.">
+    <meta name="twitter:image" content="/assets/icon-512.png">
+    <script type="application/ld+json" id="seo-jsonld">{"@context":"https://schema.org","@type":"Store","name":"Fiche Boutique","url":"./fiche-boutique.html","image":"/assets/icon-512.png"}</script>
 </head>
+
 <body class="min-h-screen font-sans antialiased">
 
 <!-- ===== HEADER / NAVIGATION ===== -->
@@ -348,12 +365,12 @@ html.dark {
           <div class="flex flex-wrap items-center gap-3">
             <h1 id="vendor-title" class="h1" style="color: rgb(var(--mgt-primary-foreground));">DAN Boutique</h1>
             <span id="vendor-badge" class="inline-block rounded-full px-3 py-1 text-xs font-semibold" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">Boutique</span>
-            <button id="boost-badge-hero" type="button" data-badge-audio="promo" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:brightness-110" style="background-color: rgb(var(--mgt-primary-100)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); border: 1px solid rgb(var(--mgt-primary-200));">
+            <button id="boost-badge-hero" type="button" data-badge-audio="promo" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:brightness-110" style="display:none; background-color: rgb(var(--mgt-primary-100)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans); border: 1px solid rgb(var(--mgt-primary-200));">
               <i data-lucide="tag" class="h-3.5 w-3.5"></i>
               <span>Promotion</span>
               <i data-lucide="volume-2" class="h-3.5 w-3.5"></i>
             </button>
-            <button id="boost-badge-new" type="button" data-badge-audio="new" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:brightness-110" style="background-color: rgb(var(--mgt-primary-300)); color: rgb(var(--mgt-primary-900)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
+            <button id="boost-badge-new" type="button" data-badge-audio="new" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:brightness-110" style="display:none; background-color: rgb(var(--mgt-primary-300)); color: rgb(var(--mgt-primary-900)); border-radius: var(--mgt-radius-full); font-family: var(--mgt-font-sans);">
               <i data-lucide="sparkles" class="h-3.5 w-3.5"></i>
               <span>Nouveau</span>
               <i data-lucide="volume-2" class="h-3.5 w-3.5"></i>
@@ -595,7 +612,7 @@ html.dark {
                 <div class="flex flex-col items-center gap-3">
                   <i data-lucide="map" class="h-12 w-12" style="color: rgb(var(--mgt-primary-300));"></i>
                   <span id="vendor-locality" class="caption" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Paris, France</span>
-                  <a id="vendor-map-link" href="/carte.html#ville=Paris" class="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold no-underline" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
+                  <a id="vendor-map-link" href="./carte.html#ville=Paris" class="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold no-underline" style="background-color: rgb(var(--mgt-primary)); color: rgb(var(--mgt-primary-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">
                     <i data-lucide="map-pin" class="h-3 w-3"></i>Voir sur la carte
                   </a>
                 </div>
@@ -645,8 +662,6 @@ html.dark {
         <h4 class="mb-4 text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Plateforme</h4>
         <ul class="space-y-2.5">
           <li><a href="carte.html" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Carte interactive</a></li>
-          <li><a href="./dashboard-overview.html?demo=prestataire" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Dashboard prestataire</a></li>
-          <li><a href="./dashboard-overview.html?demo=boutique" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Dashboard boutique</a></li>
           <li><a href="./live-shopping.html" data-dom-id="link-live-shopping" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Live Shopping</a></li>
           <li><a href="./paiements.html" data-dom-id="link-paiements" class="caption transition-colors hover:opacity-80" style="color: rgb(var(--mgt-muted-foreground));">Paiements</a></li>
         </ul>
@@ -739,8 +754,8 @@ html.dark {
 
 <!-- ===== MODALE COMMANDE ===== -->
 <div id="checkout-modal" data-dom-id="checkout-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
-  <div class="absolute inset-0" style="background-color: rgba(15,23,42,.55);" onclick="document.getElementById('checkout-modal').classList.add('hidden'); document.getElementById('checkout-modal').classList.remove('flex');"></div>
-  <div id="checkout-card" class="relative z-10 w-full max-w-md rounded-lg shadow-2xl" style="background-color: rgb(var(--mgt-background)); border-radius: var(--mgt-radius-lg); box-shadow: var(--mgt-shadow-lg); max-height: calc(100vh - 2rem); overflow-y: auto; overflow-x: hidden;">
+  <div class="absolute inset-0" style="background-color: rgba(15,23,42,.55);" onclick="document.getElementById('checkout-modal').classList.add('hidden'); document.getElementById('checkout-modal').classList.remove('flex'); document.body.style.overflow=''; document.documentElement.style.overflow='';"></div>
+  <div id="checkout-card" class="relative z-10 flex w-full max-w-md flex-col overflow-hidden rounded-lg shadow-2xl" style="background-color: rgb(var(--mgt-background)); border-radius: var(--mgt-radius-lg); box-shadow: var(--mgt-shadow-lg); max-height: calc(100vh - 2rem); max-height: calc(100dvh - 2rem); max-height: calc(100svh - 2rem);">
     <!-- Contenu injecté dynamiquement -->
   </div>
 </div>
@@ -759,9 +774,9 @@ html.dark {
 </button>
 
 <!-- ===== MODALE SUIVI DE COMMANDE ===== -->
-<div id="tracking-modal" data-dom-id="tracking-modal" class="fixed inset-0 z-[105] hidden items-center justify-center p-4">
+<div id="tracking-modal" data-dom-id="tracking-modal" class="fixed inset-0 z-[105] hidden items-start justify-center p-4">
   <div class="absolute inset-0" style="background-color: rgba(15,23,42,.55);"></div>
-  <div class="relative z-10 w-full max-w-md overflow-hidden rounded-lg shadow-2xl" style="background-color: rgb(var(--mgt-background)); border-radius: var(--mgt-radius-lg); box-shadow: var(--mgt-shadow-lg);">
+  <div class="relative z-10 my-auto w-full max-w-md rounded-lg shadow-2xl" style="background-color: rgb(var(--mgt-background)); border-radius: var(--mgt-radius-lg); box-shadow: var(--mgt-shadow-lg); max-height: calc(100vh - 2rem); max-height: calc(100dvh - 2rem); max-height: calc(100svh - 2rem); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
     <div class="border-b px-6 py-5" style="border-color: rgb(var(--mgt-border));">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -775,6 +790,7 @@ html.dark {
       <div id="tracking-header" class="mb-5"></div>
       <div id="tracking-timeline" class="space-y-0"></div>
       <div id="tracking-eta" class="mt-5 rounded-md p-3" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md);"></div>
+      <div id="tracking-pay" class="mt-4 hidden"></div>
     </div>
   </div>
 </div>
@@ -809,6 +825,7 @@ window.__mgtInitBoutique = function () {
       price: priceEl ? priceFromText(priceEl.textContent) : 0,
       category: badge ? badge.textContent.trim() : 'Produit',
       catId: card.getAttribute('data-category') || '',
+      id: card.getAttribute('data-id') || '',
       stock: stock,
       sold: 0
     };
@@ -879,11 +896,17 @@ window.__mgtInitBoutique = function () {
   var trackingHeader = document.getElementById('tracking-header');
   var trackingTimeline = document.getElementById('tracking-timeline');
   var trackingEta = document.getElementById('tracking-eta');
+  var trackingPay = document.getElementById('tracking-pay');
 
   var lastOrder = null;
   var trackingTimer = null;
   var pendingPaymentLabel = '';
+  var pendingAddress = '';
   var pendingPaymentMethod = 'payplus'; // 'payplus' (mobile money) ou 'wallet' (solde client)
+  var pendingPaymentTiming = 'maintenant'; // 'maintenant' ou 'livraison' (règlement à la remise)
+  var pendingOrderId = '';
+  var pendingOrderNo = '';
+  var pendingPaymentDue = false;
   var OP_LABELS = {
     orange: 'Orange Money',
     wave: 'Wave',
@@ -932,6 +955,34 @@ window.__mgtInitBoutique = function () {
         if (dot) { dot.style.borderColor = 'rgb(var(--mgt-border))'; dot.innerHTML = ''; }
       }
     });
+  }
+
+  // Moment du règlement : « maintenant » (Mangoo Pay+ / solde client) ou
+  // « livraison » (règlement à la remise, Mobile Money uniquement — jamais
+  // d'espèces, conformément à la règle produit).
+  function setPaymentTiming(timing) {
+    pendingPaymentTiming = timing === 'livraison' ? 'livraison' : 'maintenant';
+    var options = document.querySelectorAll('.checkout-timing-option');
+    options.forEach(function (opt) {
+      var selected = opt.getAttribute('data-timing') === pendingPaymentTiming;
+      var dot = opt.querySelector('.checkout-timing-dot');
+      if (selected) {
+        opt.style.borderColor = 'rgb(var(--mgt-primary))';
+        opt.style.backgroundColor = 'rgb(var(--mgt-primary-50))';
+        if (dot) { dot.style.borderColor = 'rgb(var(--mgt-primary))'; dot.innerHTML = '<span style="width:8px;height:8px;border-radius:9999px;background:rgb(var(--mgt-primary));display:block;"></span>'; }
+      } else {
+        opt.style.borderColor = 'rgb(var(--mgt-border))';
+        opt.style.backgroundColor = '';
+        if (dot) { dot.style.borderColor = 'rgb(var(--mgt-border))'; dot.innerHTML = ''; }
+      }
+    });
+    var methodBlock = document.getElementById('checkout-method-block');
+    var laterBlock = document.getElementById('checkout-later-block');
+    var later = pendingPaymentTiming === 'livraison';
+    if (methodBlock) methodBlock.classList.toggle('hidden', later);
+    if (laterBlock) laterBlock.classList.toggle('hidden', !later);
+    var confirmBtn = document.getElementById('checkout-confirm');
+    if (confirmBtn) confirmBtn.textContent = later ? 'Commander — règlement à la remise' : 'Confirmer la commande';
   }
 
   function showToast(msg) {
@@ -1054,8 +1105,13 @@ window.__mgtInitBoutique = function () {
     if (it.product) renderStock(it.product);
   }
 
-  function openDrawer() { if (!drawer) return; drawer.classList.remove('translate-x-full'); overlay.classList.remove('hidden'); }
-  function closeDrawer() { if (!drawer) return; drawer.classList.add('translate-x-full'); overlay.classList.add('hidden'); }
+  function setScrollLock(locked) {
+    var s = locked ? 'hidden' : '';
+    document.body.style.overflow = s;
+    document.documentElement.style.overflow = s;
+  }
+  function openDrawer() { if (!drawer) return; drawer.classList.remove('translate-x-full'); overlay.classList.remove('hidden'); setScrollLock(true); }
+  function closeDrawer() { if (!drawer) return; drawer.classList.add('translate-x-full'); overlay.classList.add('hidden'); setScrollLock(false); }
 
   function openCheckout() {
     if (cart.items.length === 0) return;
@@ -1063,10 +1119,12 @@ window.__mgtInitBoutique = function () {
     renderCheckout('form');
     checkoutModal.classList.remove('hidden');
     checkoutModal.classList.add('flex');
+    setScrollLock(true);
   }
   function closeCheckout() {
     checkoutModal.classList.add('hidden');
     checkoutModal.classList.remove('flex');
+    setScrollLock(false);
   }
 
   function renderTrackFab() {
@@ -1074,16 +1132,17 @@ window.__mgtInitBoutique = function () {
     if (!lastOrder) { trackFab.classList.add('hidden'); trackFab.classList.remove('flex'); return; }
     var steps = ORDER_STEPS[lastOrder.fulfillment] || ORDER_STEPS.livraison;
     var done = lastOrder.statusIndex >= steps.length - 1;
-    if (done) {
-      // Commande livrée / récupérée : le suivi est terminé, on retire le bouton flottant.
+    var due = !!lastOrder.paymentDue;
+    if (done && !due) {
+      // Commande livrée / récupérée et soldée : le suivi est terminé, on retire le bouton flottant.
       trackFab.classList.add('hidden');
       trackFab.classList.remove('flex');
       return;
     }
     trackFab.classList.remove('hidden');
     trackFab.classList.add('flex');
-    trackFabLabel.textContent = 'Suivre ma commande';
-    if (trackFabDot) trackFabDot.style.backgroundColor = 'rgb(var(--mgt-warning))';
+    trackFabLabel.textContent = due ? 'Régler ma commande' : 'Suivre ma commande';
+    if (trackFabDot) trackFabDot.style.backgroundColor = due ? 'rgb(var(--mgt-accent))' : 'rgb(var(--mgt-warning))';
   }
 
   function openTracking() {
@@ -1091,7 +1150,9 @@ window.__mgtInitBoutique = function () {
     // Livraison → carte GPS temps réel (Mangoo Express+) : on sort la carte
     // plein écran avec la prise du colis, le suivi GPS, le QR/photo et la
     // signature (page delivery-track.html). Retrait en boutique → suivi textuel.
-    if (lastOrder.fulfillment === 'livraison') {
+    // Commande encore à régler → le suivi textuel, qui porte le bouton de
+    // règlement Mobile Money.
+    if (lastOrder.fulfillment === 'livraison' && !lastOrder.paymentDue) {
       window.location.href = './delivery-track.html';
       return;
     }
@@ -1099,11 +1160,59 @@ window.__mgtInitBoutique = function () {
     renderTracking();
     trackingModal.classList.remove('hidden');
     trackingModal.classList.add('flex');
+    setScrollLock(true);
   }
   function closeTracking() {
     if (trackingTimer) { clearInterval(trackingTimer); trackingTimer = null; }
     trackingModal.classList.add('hidden');
     trackingModal.classList.remove('flex');
+    setScrollLock(false);
+  }
+
+  // Règlement à la remise : déclenché par le CLIENT depuis son suivi.
+  // Mobile Money uniquement — aucune option espèces, ni sur place ni à la
+  // livraison. Le serveur solde la commande, décrémente le stock, crédite le
+  // prestataire et le notifie en temps réel.
+  function startOrderPayment() {
+    if (!lastOrder || !lastOrder.paymentDue) return;
+    if (!lastOrder.orderId) { showToast('Commande non reconnue par le serveur.'); return; }
+    if (!(window.MangooPayment && typeof window.MangooPayment.collect === 'function')) {
+      showToast('Paiement Mobile Money indisponible.');
+      return;
+    }
+    var opLabel = 'Mobile Money';
+    window.MangooPayment.collect({
+      amount: Number(lastOrder.total) || 0,
+      title: 'Règlement à la remise',
+      subtitle: 'Commande ' + lastOrder.orderNo,
+      payOrder: { orderId: lastOrder.orderId, orderNo: lastOrder.orderNo }
+    }).then(function (res) {
+      opLabel = OP_LABELS[(res && res.operator)] || 'Mobile Money';
+      var tk = '';
+      try { tk = localStorage.getItem('mgt_token') || ''; } catch (e) {}
+      return fetch('/api/boutique/order/pay', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, tk ? { Authorization: 'Bearer ' + tk } : {}),
+        body: JSON.stringify({
+          orderId: lastOrder.orderId,
+          orderNo: lastOrder.orderNo,
+          operator: (res && res.operator) || '',
+          phone: (res && res.phone) || ''
+        })
+      }).then(function (r) { return r.json(); });
+    }).then(function (d) {
+      if (!d || !d.ok) { showToast((d && d.error) || 'Règlement impossible.'); return; }
+      // Opérateur en mode live : redirection vers sa page de paiement.
+      if (d.checkoutUrl) { window.location.href = d.checkoutUrl; return; }
+      lastOrder.paymentDue = false;
+      lastOrder.payment = opLabel;
+      saveOrder();
+      renderTracking();
+      renderTrackFab();
+      showToast('Commande ' + lastOrder.orderNo + ' réglée. Merci !');
+    }).catch(function () {
+      showToast('Règlement impossible pour le moment.');
+    });
   }
 
   function orderStepTime(i) {
@@ -1165,6 +1274,22 @@ window.__mgtInitBoutique = function () {
         '</div>';
       }
     }
+    if (trackingPay) {
+      if (lastOrder.paymentDue) {
+        trackingPay.classList.remove('hidden');
+        trackingPay.innerHTML =
+          '<div class="border p-3" style="border-color: rgb(var(--mgt-primary-200)); background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-md);">' +
+            '<p class="text-sm font-semibold mb-1" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Montant à régler : ' + formatFCFA(lastOrder.total) + '</p>' +
+            '<p class="caption mb-3" style="color: rgb(var(--mgt-muted-foreground));">Règlement par Mobile Money uniquement — aucun paiement en espèces.</p>' +
+            '<button id="tracking-pay-btn" class="w-full rounded-md px-4 py-2.5 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Régler par Mobile Money</button>' +
+          '</div>';
+        var payBtn = document.getElementById('tracking-pay-btn');
+        if (payBtn) payBtn.addEventListener('click', function () { startOrderPayment(); });
+      } else {
+        trackingPay.classList.add('hidden');
+        trackingPay.innerHTML = '';
+      }
+    }
     if (window.lucide) window.lucide.createIcons();
     renderTrackFab();
   }
@@ -1204,7 +1329,7 @@ window.__mgtInitBoutique = function () {
     } catch (e) {}
   }
 
-  function renderCheckout(state) {
+  function renderCheckout(state, pending) {
     if (!checkoutCard) return;
     if (state === 'success') {
       // Assure une session client minimale pour accéder à l'historique des commandes.
@@ -1214,18 +1339,26 @@ window.__mgtInitBoutique = function () {
           localStorage.setItem('mgt_user', JSON.stringify({ role: 'client', name: 'Client invité', email: '' }));
         }
       } catch (e) {}
-      var orderNo = 'CMD-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
-      var orderItems = cart.items.map(function (it) {
+      // En retour de paiement live (mgt_checkout=1), le panier en mémoire a été
+      // perdu au rechargement : on restaure la commande depuis `pending` (fourni
+      // par mangoo-payment.js à partir de la réponse /api/boutique/order).
+      var liveSettlement = !!(pending && pending.live);
+      var orderNo = (pending && pending.orderNo) || pendingOrderNo || ('CMD-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000));
+      var orderItems = (pending && pending.items) ? pending.items : cart.items.map(function (it) {
         return { name: it.name, price: it.price, qty: it.qty };
       });
+      var orderTotal = (pending && typeof pending.total === 'number') ? pending.total : total();
+      var orderFulfillment = (pending && pending.fulfillment) || cart.fulfillment;
       lastOrder = {
         orderNo: orderNo,
+        orderId: pendingOrderId || '',
         items: orderItems,
-        total: total(),
-        fulfillment: cart.fulfillment,
+        total: orderTotal,
+        fulfillment: orderFulfillment,
         statusIndex: 0,
         createdAt: Date.now(),
-        payment: pendingPaymentLabel || 'Orange Money'
+        payment: pendingPaymentLabel || 'Orange Money',
+        paymentDue: !!pendingPaymentDue
       };
       saveOrder();
 
@@ -1253,17 +1386,19 @@ window.__mgtInitBoutique = function () {
       if (window.MangooClient && window.MangooClient.addOrder) {
         window.MangooClient.addOrder({
           id: orderNo,
+          orderId: pendingOrderId || '',
           provider: vendorName,
           initials: 'DB',
           service: serviceLabel,
-          amount: formatFCFA(total()),
+          amount: formatFCFA(orderTotal),
           date: '',
           status: 'en-cours',
           payment: lastOrder.payment,
+          paymentDue: !!pendingPaymentDue,
           vendorId: vendorId,
           kind: 'commerce',
           items: orderItems,
-          fulfillment: cart.fulfillment,
+          fulfillment: orderFulfillment,
           createdAt: lastOrder.createdAt,
           clientName: clientName,
           clientPhone: clientPhone,
@@ -1275,7 +1410,10 @@ window.__mgtInitBoutique = function () {
       }
 
       // Crédite le solde du vendeur (DAN Boutique) au paiement de la commande.
-      if (window.MangooVendor && window.MangooVendor.creditVendor) {
+      // En live, ce crédit est déjà appliqué côté serveur par le settlement
+      // (net de commission) : on évite un double-crédit local. Une commande
+      // « à régler à la remise » n'est créditée qu'après son règlement.
+      if (!liveSettlement && !pendingPaymentDue && window.MangooVendor && window.MangooVendor.creditVendor) {
         window.MangooVendor.creditVendor(vendorId, Number(lastOrder.total) || 0, 'Commande ' + orderNo);
       }
 
@@ -1283,16 +1421,19 @@ window.__mgtInitBoutique = function () {
         '<div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full" style="background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-full);">' +
           '<i data-lucide="check-circle-2" class="h-9 w-9" style="color: rgb(var(--mgt-primary));"></i>' +
         '</div>' +
-        '<h3 class="h3 mb-2" style="color: rgb(var(--mgt-foreground));">Commande confirmée !</h3>' +
+        '<h3 class="h3 mb-2" style="color: rgb(var(--mgt-foreground));">' + (pendingPaymentDue ? 'Commande enregistrée' : 'Commande confirmée !') + '</h3>' +
         '<p class="body mb-1" style="color: rgb(var(--mgt-muted-foreground));">Merci pour votre commande chez ' + (window._mcpVendor && window._mcpVendor.name ? window._mcpVendor.name : 'cette boutique') + '.</p>' +
         '<p class="body font-semibold mb-4" style="color: rgb(var(--mgt-primary)); font-family: var(--mgt-font-sans);">' + orderNo + '</p>' +
         '<div class="mb-6 rounded-md p-3 text-left" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md);">' +
           '<p class="caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">' + (lastOrder.fulfillment === 'retrait' ? 'Retrait en boutique' : 'Livraison à domicile') + '</p>' +
           '<p class="caption mb-1" style="color: rgb(var(--mgt-muted-foreground));">' + orderItems.length + ' article(s) — Total : ' + formatFCFA(lastOrder.total) + '</p>' +
-          '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Délai estimé : ' + (lastOrder.fulfillment === 'retrait' ? '20-30 min' : '35-50 min') + '</p>' +
+          (pendingPaymentDue
+            ? '<p class="caption font-semibold" style="color: rgb(var(--mgt-accent-600));">À régler à la remise, par Mobile Money uniquement. Aucun paiement en espèces.</p>'
+            : '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Délai estimé : ' + (lastOrder.fulfillment === 'retrait' ? '20-30 min' : '35-50 min') + '</p>') +
         '</div>' +
         '<div class="space-y-2">' +
-          '<button id="checkout-track" class="w-full rounded-md px-6 py-3 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">Suivre la livraison</button>' +
+          (pendingPaymentDue ? '<button id="checkout-paynow" class="w-full rounded-md px-6 py-3 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">Régler par Mobile Money</button>' : '') +
+          '<button id="checkout-track" class="w-full rounded-md px-6 py-3 text-sm font-semibold transition-all hover:brightness-110" style="background-color: ' + (pendingPaymentDue ? 'rgb(var(--mgt-primary))' : 'rgb(var(--mgt-accent))') + '; color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">' + (pendingPaymentDue ? 'Suivre ma commande' : 'Suivre la livraison') + '</button>' +
           '<button id="checkout-done" class="w-full rounded-md px-6 py-3 text-sm font-semibold transition-all hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Terminer</button>' +
           '<button id="checkout-orders" class="w-full rounded-md px-6 py-3 text-sm font-semibold transition-all hover:opacity-80" style="background-color: rgb(var(--mgt-primary-50)); color: rgb(var(--mgt-primary-700)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans);">Voir mes commandes</button>' +
         '</div>' +
@@ -1322,6 +1463,8 @@ window.__mgtInitBoutique = function () {
       if (ordersBtn) ordersBtn.addEventListener('click', function () {
         window.location.href = './client-orders.html';
       });
+      var payNow = document.getElementById('checkout-paynow');
+      if (payNow) payNow.addEventListener('click', function () { startOrderPayment(); });
       startTracking();
       renderTrackFab();
       return;
@@ -1356,39 +1499,72 @@ window.__mgtInitBoutique = function () {
         '</div>'
       : '';
 
-    checkoutCard.innerHTML = '<div class="border-b px-6 py-5" style="border-color: rgb(var(--mgt-border)); position: sticky; top: 0; background: rgb(var(--mgt-background)); z-index: 5;">' +
+    checkoutCard.innerHTML = '<div class="border-b px-6 py-5" style="border-color: rgb(var(--mgt-border)); background: rgb(var(--mgt-background)); flex-shrink: 0;">' +
       '<div class="flex items-center justify-between">' +
         '<h3 class="h3" style="color: rgb(var(--mgt-foreground));">Confirmer la commande</h3>' +
         '<button id="checkout-close" class="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:opacity-80" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md); color: rgb(var(--mgt-muted-foreground));"><i data-lucide="x" class="h-4 w-4"></i></button>' +
       '</div>' +
     '</div>' +
-    '<div class="px-6 py-5">' +
+    '<div class="px-6 pt-5" style="flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;">' +
       '<div class="mb-4 space-y-2 rounded-md p-3" style="background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md);">' + itemsHtml + '</div>' +
       '<div class="mb-4 space-y-1.5">' +
         '<div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);"><span style="color: rgb(var(--mgt-muted-foreground));">Sous-total</span><span class="tabular-nums font-medium" style="color: rgb(var(--mgt-foreground));">' + formatFCFA(subtotal()) + '</span></div>' +
         '<div class="flex items-center justify-between text-sm" style="font-family: var(--mgt-font-sans);"><span style="color: rgb(var(--mgt-muted-foreground));">' + (cart.fulfillment === 'retrait' ? 'Retrait' : 'Livraison') + '</span><span class="tabular-nums font-medium" style="color: rgb(var(--mgt-foreground));">' + (deliveryFee() === 0 ? 'Gratuit' : formatFCFA(deliveryFee())) + '</span></div>' +
-        '<div class="flex items-center justify-between border-t pt-2 text-sm font-semibold" style="border-color: rgb(var(--mgt-border)); color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);"><span>Total</span><span class="tabular-nums text-base" style="color: rgb(var(--mgt-primary));">' + formatFCFA(total()) + '</span></div>' +
       '</div>' +
       addressHtml +
-      '<p class="caption mb-2 font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Mode de paiement</p>' +
-      '<div class="mb-2 flex items-center gap-3 rounded-md border p-3 cursor-pointer checkout-pay-option" data-pay="payplus" style="border-color: rgb(var(--mgt-primary)); background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-md);">' +
-        '<span class="checkout-pay-dot" style="width:18px;height:18px;border-radius:9999px;border:2px solid rgb(var(--mgt-primary));display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="width:8px;height:8px;border-radius:9999px;background:rgb(var(--mgt-primary));"></span></span>' +
-        '<i data-lucide="smartphone" class="h-5 w-5 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
-        '<div class="min-w-0 flex-1">' +
-          '<p class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Mangoo Pay+</p>' +
-          '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Orange Money · Wave · MTN MoMo · Moov · Free</p>' +
+      '<p class="caption mb-2 font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Quand souhaitez-vous payer ?</p>' +
+      '<div id="checkout-timing" class="mb-4 flex flex-col gap-2">' +
+        '<div class="checkout-timing-option flex items-center gap-3 rounded-md border p-3 cursor-pointer" data-timing="maintenant" style="border-color: rgb(var(--mgt-primary)); background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-md);">' +
+          '<span class="checkout-timing-dot" style="width:18px;height:18px;border-radius:9999px;border:2px solid rgb(var(--mgt-primary));display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="width:8px;height:8px;border-radius:9999px;background:rgb(var(--mgt-primary));"></span></span>' +
+          '<i data-lucide="zap" class="h-5 w-5 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
+          '<div class="min-w-0 flex-1">' +
+            '<p class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Payer maintenant</p>' +
+            '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Par Mobile Money ou avec votre solde client</p>' +
+          '</div>' +
         '</div>' +
-        '<i data-lucide="shield-check" class="h-4 w-4 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
-      '</div>' +
-      '<div class="mb-5 flex items-center gap-3 rounded-md border p-3 cursor-pointer checkout-pay-option" data-pay="wallet" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md);">' +
-        '<span class="checkout-pay-dot" style="width:18px;height:18px;border-radius:9999px;border:2px solid rgb(var(--mgt-border));display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"></span>' +
-        '<i data-lucide="wallet" class="h-5 w-5 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
-        '<div class="min-w-0 flex-1">' +
-          '<p class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Solde client</p>' +
-          '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Disponible : ' + formatFCFA(clientWalletBalance()) + '</p>' +
+        '<div class="checkout-timing-option flex items-center gap-3 rounded-md border p-3 cursor-pointer" data-timing="livraison" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md);">' +
+          '<span class="checkout-timing-dot" style="width:18px;height:18px;border-radius:9999px;border:2px solid rgb(var(--mgt-border));display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"></span>' +
+          '<i data-lucide="truck" class="h-5 w-5 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
+          '<div class="min-w-0 flex-1">' +
+            '<p class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Payer à la livraison ou au retrait</p>' +
+            '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Mobile Money uniquement — jamais en espèces</p>' +
+          '</div>' +
         '</div>' +
-        '<i data-lucide="check-circle-2" class="h-4 w-4 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
       '</div>' +
+      '<div id="checkout-method-block">' +
+        '<p class="caption mb-2 font-semibold" style="color: rgb(var(--mgt-muted-foreground)); font-family: var(--mgt-font-sans);">Mode de paiement</p>' +
+        '<div class="mb-2 flex items-center gap-3 rounded-md border p-3 cursor-pointer checkout-pay-option" data-pay="payplus" style="border-color: rgb(var(--mgt-primary)); background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-md);">' +
+          '<span class="checkout-pay-dot" style="width:18px;height:18px;border-radius:9999px;border:2px solid rgb(var(--mgt-primary));display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="width:8px;height:8px;border-radius:9999px;background:rgb(var(--mgt-primary));"></span></span>' +
+          '<i data-lucide="smartphone" class="h-5 w-5 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
+          '<div class="min-w-0 flex-1">' +
+            '<p class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Mangoo Pay+</p>' +
+            '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Orange Money · Wave · MTN MoMo · Moov · Free</p>' +
+          '</div>' +
+          '<i data-lucide="shield-check" class="h-4 w-4 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
+        '</div>' +
+        '<div class="mb-5 flex items-center gap-3 rounded-md border p-3 cursor-pointer checkout-pay-option" data-pay="wallet" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md);">' +
+          '<span class="checkout-pay-dot" style="width:18px;height:18px;border-radius:9999px;border:2px solid rgb(var(--mgt-border));display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"></span>' +
+          '<i data-lucide="wallet" class="h-5 w-5 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
+          '<div class="min-w-0 flex-1">' +
+            '<p class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Solde client</p>' +
+            '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Disponible : ' + formatFCFA(clientWalletBalance()) + '</p>' +
+          '</div>' +
+          '<i data-lucide="check-circle-2" class="h-4 w-4 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
+        '</div>' +
+      '</div>' +
+      '<div id="checkout-later-block" class="mb-5 hidden rounded-md border p-3" style="border-color: rgb(var(--mgt-border)); background-color: rgb(var(--mgt-muted)); border-radius: var(--mgt-radius-md);">' +
+        '<div class="flex items-start gap-3">' +
+          '<i data-lucide="smartphone" class="h-5 w-5 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
+          '<div class="min-w-0">' +
+            '<p class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Règlement à la remise</p>' +
+            '<p class="caption mt-1" style="color: rgb(var(--mgt-muted-foreground));">Vous réglerez depuis le suivi de votre commande, par Mobile Money uniquement (Orange Money · Wave · MTN MoMo · Moov · Free).</p>' +
+            '<p class="caption mt-2 font-semibold" style="color: rgb(var(--mgt-accent-600));">Aucun paiement en espèces n\'est accepté, sur place comme à la livraison.</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="border-t px-6 py-4" style="border-color: rgb(var(--mgt-border)); background: rgb(var(--mgt-background)); flex-shrink: 0;">' +
+      '<div class="mb-3 flex items-center justify-between text-sm font-semibold" style="font-family: var(--mgt-font-sans);"><span style="color: rgb(var(--mgt-foreground));">Total</span><span class="tabular-nums text-lg font-bold" style="color: rgb(var(--mgt-primary));">' + formatFCFA(total()) + '</span></div>' +
       '<button id="checkout-confirm" class="w-full rounded-md px-6 py-3.5 text-sm font-semibold transition-all hover:brightness-110" style="background-color: rgb(var(--mgt-accent)); color: rgb(var(--mgt-accent-foreground)); border-radius: var(--mgt-radius-md); font-family: var(--mgt-font-sans); box-shadow: 0 4px 14px rgba(232,97,12,.35);">Confirmer la commande</button>' +
     '</div>';
 
@@ -1402,6 +1578,15 @@ window.__mgtInitBoutique = function () {
       });
     });
     setPaymentMethod(pendingPaymentMethod || 'payplus');
+
+    // Sélection du moment du règlement (maintenant ou à la remise).
+    var timingOptions = document.querySelectorAll('.checkout-timing-option');
+    timingOptions.forEach(function (opt) {
+      opt.addEventListener('click', function () {
+        setPaymentTiming(opt.getAttribute('data-timing'));
+      });
+    });
+    setPaymentTiming(pendingPaymentTiming || 'maintenant');
 
     var closeBtn = document.getElementById('checkout-close');
     if (closeBtn) closeBtn.addEventListener('click', closeCheckout);
@@ -1445,6 +1630,62 @@ window.__mgtInitBoutique = function () {
         renderCheckout('success');
       };
 
+      pendingPaymentDue = false;
+      pendingOrderId = '';
+      pendingOrderNo = '';
+
+      // Cas 1 : règlement à la livraison / au retrait. La commande est
+      // enregistrée côté serveur (statut « a_regler ») sans aucun débit ; le
+      // client la réglera par Mobile Money depuis son suivi de commande.
+      // Aucun paiement en espèces n'est proposé, ni sur place ni à la remise.
+      if (pendingPaymentTiming === 'livraison') {
+        confirmBtn.disabled = true;
+        pendingAddress = (cart.fulfillment === 'livraison' && addr && addr.value) ? addr.value.trim() : '';
+        var lvVendorId = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
+        var lvName = 'Client', lvPhone = '', lvEmail = '', lvCity = '';
+        try {
+          if (window.MangooClient && window.MangooClient.getUser) {
+            var _lu = window.MangooClient.getUser();
+            lvName = _lu.fullName || _lu.name || 'Client';
+            lvPhone = _lu.phone || '';
+            lvEmail = _lu.email || '';
+            lvCity = _lu.city || _lu.clientCity || '';
+          }
+        } catch (e) {}
+        var lvToken = '';
+        try { lvToken = localStorage.getItem('mgt_token') || ''; } catch (e) {}
+        fetch('/api/boutique/order', {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, lvToken ? { Authorization: 'Bearer ' + lvToken } : {}),
+          body: JSON.stringify({
+            paymentTiming: 'livraison',
+            vendorId: lvVendorId,
+            vendorName: vendorName,
+            items: cart.items.map(function (it) {
+              return { productId: (it.product && it.product.id) || '', name: it.name, price: it.price, qty: it.qty };
+            }),
+            fulfillment: cart.fulfillment,
+            deliveryFee: deliveryFee(),
+            address: pendingAddress,
+            clientName: lvName,
+            clientPhone: lvPhone,
+            clientEmail: lvEmail,
+            clientCity: lvCity
+          })
+        }).then(function (r) { return r.json(); }).then(function (d) {
+          confirmBtn.disabled = false;
+          if (!d || !d.ok) { showToast((d && d.error) || 'Impossible d\'enregistrer la commande.'); return; }
+          pendingPaymentDue = true;
+          pendingOrderId = d.orderId || '';
+          pendingOrderNo = d.orderNo || '';
+          confirmOrder('À régler à la remise');
+        }).catch(function () {
+          confirmBtn.disabled = false;
+          showToast('Réseau indisponible : impossible d\'enregistrer la commande.');
+        });
+        return;
+      }
+
       // Paiement par « Solde client » : débit du portefeuille local du client.
       if (pendingPaymentMethod === 'wallet') {
         var bal = clientWalletBalance();
@@ -1465,13 +1706,40 @@ window.__mgtInitBoutique = function () {
         return;
       }
 
-      // Paiement via Mangoo Pay+ (mobile money) : opérateur → numéro → OTP.
+      // Paiement via Mangoo Pay+ (mobile money) : redirection vers une commande
+      // serveur (endpoint /api/boutique/order) dont le settlement enregistrera
+      // l'effet de bord. Sans passerelle configurée, le tunnel refuse d'encaisser.
       if (window.MangooPayment && typeof window.MangooPayment.collect === 'function') {
         confirmBtn.disabled = true;
+        var orderVendorId = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
+        var clientName = 'Client', clientPhone = '', clientEmail = '', clientCity = '';
+        try {
+          if (window.MangooClient && window.MangooClient.getUser) {
+            var _cu = window.MangooClient.getUser();
+            clientName = _cu.fullName || _cu.name || 'Client';
+            clientPhone = _cu.phone || '';
+            clientEmail = _cu.email || '';
+            clientCity = _cu.city || _cu.clientCity || '';
+          }
+        } catch (e) {}
         window.MangooPayment.collect({
           amount: total(),
           title: 'Mangoo Pay+',
           subtitle: 'Paiement de votre commande chez ' + vendorName,
+          order: {
+            vendorId: orderVendorId,
+            vendorName: vendorName,
+            items: cart.items.map(function (it) {
+              return { productId: (it.product && it.product.id) || '', name: it.name, price: it.price, qty: it.qty };
+            }),
+            fulfillment: cart.fulfillment,
+            deliveryFee: deliveryFee(),
+            address: (cart.fulfillment === 'livraison' && addr && addr.value) ? addr.value.trim() : '',
+            clientName: clientName,
+            clientPhone: clientPhone,
+            clientEmail: clientEmail,
+            clientCity: clientCity
+          },
           onCancel: function () { confirmBtn.disabled = false; }
         }).then(function (res) {
           confirmBtn.disabled = false;
@@ -1485,6 +1753,48 @@ window.__mgtInitBoutique = function () {
       }
     });
   }
+
+  // Retour de paiement live (mgt_checkout=1) : reconstruit la confirmation de
+  // commande à partir de la commande serveur (numéro + montant réels), sans
+  // double-créditer le vendeur (déjà fait côté serveur par le settlement).
+  function __handleLiveOrderSuccess(detail) {
+    try { sessionStorage.removeItem('mgt_pending_order'); sessionStorage.removeItem('mgt_pending_confirmed'); } catch (e) {}
+    if (!detail) return;
+    // Retour d'un règlement « à la remise » payé via la page de l'opérateur
+    // (opérateur en mode live) : la commande est soldée côté serveur.
+    if (detail.payOnly) {
+      if (lastOrder && (!detail.orderNo || lastOrder.orderNo === detail.orderNo)) {
+        lastOrder.paymentDue = false;
+        lastOrder.payment = detail.operatorLabel || 'Mobile Money';
+        saveOrder();
+      }
+      closeCheckout();
+      renderTracking();
+      renderTrackFab();
+      showToast('Commande ' + (detail.orderNo || '') + ' réglée. Merci !');
+      return;
+    }
+    if (!detail.orderNo) return;
+    pendingPaymentLabel = detail.operatorLabel || 'Mobile money';
+    if (detail.address) pendingAddress = detail.address;
+    renderCheckout('success', {
+      orderNo: detail.orderNo,
+      items: detail.items || [],
+      total: typeof detail.total === 'number' ? detail.total : 0,
+      fulfillment: detail.fulfillment || 'retrait',
+      live: true
+    });
+    // Affiche la modale (fermée au rechargement post-redirection).
+    if (checkoutModal) { checkoutModal.classList.remove('hidden'); checkoutModal.classList.add('flex'); setScrollLock(true); }
+  }
+  document.addEventListener('mgt:checkout:success', function (e) { __handleLiveOrderSuccess(e && e.detail); });
+  // Filet de sécurité : si le paiement s'est confirmé avant l'enregistrement du
+  // listener (catalogue lent), on relit la commande confirmée depuis sessionStorage.
+  try {
+    if (sessionStorage.getItem('mgt_pending_confirmed') === '1') {
+      __handleLiveOrderSuccess(JSON.parse(sessionStorage.getItem('mgt_pending_order') || 'null'));
+    }
+  } catch (e) {}
 
   /* ==== Liaisons ==== */
   products.forEach(function (p) {
@@ -1563,7 +1873,7 @@ window.__mgtInitBoutique = function () {
 <script src="../assets/mangoo-payment.js"></script>
 <script src="../assets/mangoo-negotiation.js"></script>
 <script src="../assets/mangoo-client-data.js"></script>
-<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-vendor.js"></script>
 <script src="../assets/mangoo-catalogue.js"></script>
 <script>
 (function () {
@@ -1620,7 +1930,67 @@ window.__mgtInitBoutique = function () {
     return map[category] || { label: category || 'Boutique', icon: 'shopping-bag' };
   }
 
+  function applyBoostBadges(boosts, trialBoosts) {
+    var active = {};
+    (boosts || []).forEach(function (t) { active[t] = true; });
+    (trialBoosts || []).forEach(function (t) { active[t] = true; });
+    var promo = document.getElementById('boost-badge-hero');
+    var nouveau = document.getElementById('boost-badge-new');
+    if (promo) promo.style.display = active.promo ? '' : 'none';
+    if (nouveau) nouveau.style.display = active.nouveau ? '' : 'none';
+  }
+
+  function updateMapLink(city) {
+    var link = document.getElementById('vendor-map-link');
+    if (link && city) link.setAttribute('href', './carte.html#ville=' + encodeURIComponent(city));
+  }
+
+  function seoOrigin() {
+    return (window.location && window.location.origin) || '';
+  }
+  function seoAbsUrl(src) {
+    if (!src) return seoOrigin() + '/assets/icon-512.png';
+    if (/^https?:\/\//i.test(src)) return src;
+    if (src.charAt(0) === '/') return seoOrigin() + src;
+    return src;
+  }
+  function seoSetMeta(attr, name, content) {
+    var el = document.querySelector('meta[' + attr + '="' + name + '"]');
+    if (el) el.setAttribute('content', content);
+  }
+  function seoSetCanonical(url) {
+    var el = document.querySelector('link[rel="canonical"]');
+    if (el) el.setAttribute('href', url);
+  }
+  function seoSetJsonLd(obj) {
+    var el = document.getElementById('seo-jsonld');
+    if (el) el.textContent = JSON.stringify(obj);
+  }
+  function applySeo(match) {
+    if (!match) return;
+    var name = match.name || '';
+    var desc = (match.desc || '').replace(/\s+/g, ' ').trim() || ('Découvrez ' + name + ' sur MangooTech.');
+    var title = name ? (name + ' · Boutique · MangooTech') : 'Boutique · MangooTech';
+    var vid = match.vendorId || (window._mcpVendor && window._mcpVendor.vendorId) || '';
+    var url = seoOrigin() + '/pages/fiche-boutique.html' + (vid ? ('?vendorId=' + encodeURIComponent(vid)) : '');
+    var img = seoOrigin() + '/og/' + (vid ? encodeURIComponent(vid) : 'default') + '.png';
+    document.title = title;
+    seoSetMeta('name', 'description', desc);
+    seoSetMeta('property', 'og:title', title);
+    seoSetMeta('property', 'og:description', desc);
+    seoSetMeta('property', 'og:image', img);
+    seoSetMeta('property', 'og:url', url);
+    seoSetMeta('name', 'twitter:title', title);
+    seoSetMeta('name', 'twitter:description', desc);
+    seoSetMeta('name', 'twitter:image', img);
+    seoSetCanonical(url);
+    var obj = { '@context': 'https://schema.org', '@type': 'Store', name: name, description: desc, url: url, image: img };
+    if (match.phone) obj.telephone = match.phone;
+    if (match.city || match.country) obj.address = { '@type': 'PostalAddress', addressLocality: match.city, addressCountry: match.country };
+    seoSetJsonLd(obj);
+  }
   function applyVendor(match) {
+
     if (!match) return;
     var meta = categoryMeta(match.category);
     window._mcpVendor.id = match.id || window._mcpVendor.id;
@@ -1644,7 +2014,9 @@ window.__mgtInitBoutique = function () {
     if (match.rating != null) setText(document.getElementById('vendor-rating'), String(match.rating));
     setText(document.getElementById('vendor-city'), (match.city || '') + (match.country ? ', ' + match.country : ''));
     setText(document.getElementById('vendor-description'), match.desc);
-    if (match.name && document.title) document.title = match.name + ' · Boutique · MangooTech';
+    applyBoostBadges(match.boosts, match.trialBoosts);
+    updateMapLink(match.city);
+    applySeo(match);
     if (window.lucide) window.lucide.createIcons();
   }
 
@@ -1666,11 +2038,19 @@ window.__mgtInitBoutique = function () {
       var c = data && data.config;
       if (!c) return;
       var p = c.profile || {};
+      var cfgLogo = p.logo || p.cover;
+      if (cfgLogo) {
+        var cfgAvatarImg = document.getElementById('vendor-avatar-img');
+        var cfgAvatarIcon = document.getElementById('vendor-avatar-icon');
+        if (cfgAvatarImg) { cfgAvatarImg.src = cfgLogo; cfgAvatarImg.style.display = 'block'; }
+        if (cfgAvatarIcon) cfgAvatarIcon.style.display = 'none';
+      }
       setText(document.getElementById('vendor-title'), p.enseigne || c.vendorName);
       setText(document.getElementById('vendor-description'), p.description);
       if (p.city) setText(document.getElementById('vendor-city'), p.city + (p.country ? ', ' + p.country : ''));
       if (p.city) {
         setText(document.getElementById('vendor-locality'), p.city + (p.country ? ', ' + p.country : ''));
+        updateMapLink(p.city);
         var villes = (c.decouverte && c.decouverte.villes) || [];
         var rayon = (c.decouverte && c.decouverte.rayonKm) ? ' (+' + c.decouverte.rayonKm + ' km)' : '';
         var zone = (villes.length ? villes[0] : p.city) + ' et ses environs' + rayon;
@@ -1939,7 +2319,22 @@ window.__mgtInitBoutique = function () {
     offre: 'Offre du jour : profitez de notre promotion du moment, dans la limite de la durée indiquée.'
   };
   var BADGE_VENDOR = (window._mcpVendor && window._mcpVendor.vendorId) || 'pro-41cafa4bcb31';
+  function hydrateBadges() {
+    if (!window.MangooWelcomeAudio || !window.MangooWelcomeAudio.hydrateBadge) return;
+    fetch('/api/vendor-config?vendor=' + encodeURIComponent(BADGE_VENDOR), { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var c = d && d.config;
+        var ba = c && c.badgeAudio;
+        if (ba) {
+          window.MangooWelcomeAudio.hydrateBadge(BADGE_VENDOR, 'promo', ba.promo || null);
+          window.MangooWelcomeAudio.hydrateBadge(BADGE_VENDOR, 'new', ba.new || null);
+        }
+      })
+      .catch(function () {});
+  }
   function bind() {
+    hydrateBadges();
     var els = document.querySelectorAll('[data-badge-audio]');
     for (var i = 0; i < els.length; i++) {
       (function (el) {

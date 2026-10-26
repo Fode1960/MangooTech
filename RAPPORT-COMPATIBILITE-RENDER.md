@@ -73,7 +73,7 @@ Ce modèle `noServer + upgrade` est **le pattern standard compatible Render** (R
 |---|---|---|
 | `PORT` | `8080` | Port HTTP |
 | `HTTPS_PORT` | `8443` | Port HTTPS interne (inutilisé sur Render) |
-| `ADMIN_EMAIL` | `admin@mangootech.com` | Email du compte admin initial |
+| `ADMIN_EMAIL` | `admin@mangoo.tech` | Email du compte admin initial |
 | `ADMIN_PASSWORD` | *(vide)* | Mot de passe admin initial (vide = généré aléatoirement, affiché une fois) |
 | `ADMIN_PIN` | *(vide)* | PIN admin à 4 chiffres (vide = généré une fois) |
 | `ADMIN_PASSWORD_RESET` | *(vide)* | Rotation d'urgence (usage unique) : force un nouveau mot de passe au démarrage |

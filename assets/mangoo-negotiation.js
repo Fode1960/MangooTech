@@ -512,6 +512,8 @@
         amount: amount,
         title: 'Mangoo Pay+',
         subtitle: product.name || '',
+        kind: 'negotiation-payment',
+        meta: { negotiationId: nego.id },
         onCancel: restore
       }).then(function (r) {
         restore();

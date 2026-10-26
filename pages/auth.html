@@ -516,8 +516,7 @@ html.dark {
             <div id="login-step-2fa" style="display:none;">
               <div class="auth-input-group">
                 <label class="auth-label">Vérification en deux étapes</label>
-                <p class="caption" style="color:rgb(var(--mgt-muted-foreground));margin-bottom:10px;">Un code à 6 chiffres a été envoyé à votre adresse email.</p>
-                <p id="login-2fa-demo" class="caption" style="color:rgb(var(--mgt-accent));font-weight:600;margin-bottom:12px;"></p>
+                <p class="caption" style="color:rgb(var(--mgt-muted-foreground));margin-bottom:10px;">Un code à 6 chiffres vous a été envoyé par SMS sur le numéro associé à votre compte.</p>
               </div>
               <div class="auth-input-group auth-input-icon-wrap">
                 <label class="auth-label" for="login-2fa-code">Code à 6 chiffres</label>
@@ -1005,13 +1004,11 @@ html.dark {
       // ===== Connexion « l'un ou l'autre » (téléphone OU PIN) =====
       var twoFactorUserId = null;
 
-      function showTwoFactorStep(demoCode) {
+      function showTwoFactorStep() {
         hideMessage('login');
         hideMessage('login-2fa');
         document.getElementById('login-step-creds').style.display = 'none';
         document.getElementById('login-step-2fa').style.display = 'block';
-        var demo = document.getElementById('login-2fa-demo');
-        if (demo) demo.textContent = demoCode ? ('Code de vérification (démo) : ' + demoCode) : '';
         var codeInput = document.getElementById('login-2fa-code');
         if (codeInput) { codeInput.value = ''; setTimeout(function () { codeInput.focus(); }, 50); }
       }
@@ -1028,7 +1025,7 @@ html.dark {
       document.getElementById('login-2fa-submit-btn').addEventListener('click', function () {
         hideMessage('login-2fa');
         var code = document.getElementById('login-2fa-code').value.trim();
-        if (!/^\d{6}$/.test(code)) { showMessage('login-2fa', 'Entrez le code à 6 chiffres reçu par email.', true); return; }
+        if (!/^\d{6}$/.test(code)) { showMessage('login-2fa', 'Entrez le code à 6 chiffres reçu par SMS.', true); return; }
         setBusy('login-2fa', true);
         api('/api/auth/verify-2fa', { userId: twoFactorUserId, code: code }).then(function (res) {
           setBusy('login-2fa', false);
@@ -1056,7 +1053,7 @@ html.dark {
           if (res.ok && res.data.ok) {
             if (res.data.twoFactor) {
               twoFactorUserId = res.data.userId;
-              showTwoFactorStep(res.data.demoCode);
+              showTwoFactorStep();
             } else {
               saveSession(res.data.token, res.data.user);
               showMessage('login', 'Connexion réussie. Redirection…', false);

@@ -719,8 +719,9 @@ html.dark {
 })();
 </script>
 
-<script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+<script src="../assets/mangoo-vendor.js"></script>
 <script src="../assets/mangoo-welcome-audio.js"></script>
+<script src="../assets/mangoo-vendor-config.js"></script>
 <script src="../assets/mangoo-boosters.js"></script>
 <script src="../assets/mangoo-payment.js"></script>
 <script src="../assets/mangoo-dashboard-shell.js"></script>
@@ -990,11 +991,11 @@ html.dark {
     }
 
     // Flux de paiement mobile money (opérateur → numéro → OTP) avant activation.
-    // En mode démo, l'OTP simule le débit ; l'activation ne se fait qu'après
-    // confirmation, ce qui rend la carte active réellement « payante ».
+    // L'activation ne se fait qu'après confirmation réelle du paiement. Sans
+    // passerelle configurée, le tunnel refuse la transaction (aucune simulation).
     var MP = window.MangooPayment;
     if (MP && typeof MP.collect === 'function') {
-      MP.collect({ amount: amount, title: title, subtitle: 'Boosters' }).then(function (payment) {
+      MP.collect({ amount: amount, title: title, subtitle: 'Boosters', kind: 'booster', meta: { boosterId: offerId, vendorId: state.vendorId, vendorName: state.vendorName } }).then(function (payment) {
         doActivate(payment || null);
       }).catch(function (err) {
         if (err) flashError('Paiement annulé : ' + (err.message || err));
@@ -1021,7 +1022,7 @@ html.dark {
     // ne se fait qu'après confirmation du débit (opérateur → numéro → OTP).
     var MP = window.MangooPayment;
     if (MP && typeof MP.collect === 'function' && amount > 0) {
-      MP.collect({ amount: amount, title: 'Renouveler ' + label, subtitle: 'Boosters' }).then(function (payment) {
+      MP.collect({ amount: amount, title: 'Renouveler ' + label, subtitle: 'Boosters', kind: 'booster-renew', meta: { boosterId: (badge && (badge.boosterId || badge.type)) || '', activationId: id, vendorId: state.vendorId, vendorName: state.vendorName } }).then(function (payment) {
         doRenew(payment || null);
       }).catch(function (err) {
         if (err) flashError('Paiement annulé : ' + (err.message || err));
@@ -1243,11 +1244,14 @@ html.dark {
     var rec = WA.recorder(key(type), {
       maxMs: maxMs(),
       onStart: function () { if (mySeq === recSeq) setRecordingUI(card, true); },
-      onSaved: function () {
+      onSaved: function (dataUrl, mime) {
         if (mySeq !== recSeq) return;
         activeRecorder = null; activeCard = null;
         setRecordingUI(card, false);
         render();
+        if (window.MangooVendorConfig && typeof window.MangooVendorConfig.setBadgeAudio === 'function') {
+          window.MangooVendorConfig.setBadgeAudio(type, { dataUrl: dataUrl || '', mime: mime || 'audio/webm' }).catch(function () {});
+        }
       },
       onError: function (err) {
         if (mySeq !== recSeq) return;
@@ -1271,6 +1275,9 @@ html.dark {
     if (!WA) return;
     WA.removeRecording(key(type));
     render();
+    if (window.MangooVendorConfig && typeof window.MangooVendorConfig.setBadgeAudio === 'function') {
+      window.MangooVendorConfig.setBadgeAudio(type, {}).catch(function () {});
+    }
   }
 
   function handleClick(e) {
@@ -1285,8 +1292,24 @@ html.dark {
 
   box.addEventListener('click', handleClick);
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render);
-  else render();
+  // Hydrate l'audio personnalisé des badges depuis la config serveur avant de
+  // calculer l'état « Personnalisé / Par défaut ».
+  function hydrateFromServer() {
+    if (!window.MangooVendorConfig || !window.MangooVendorConfig.get) { render(); return; }
+    window.MangooVendorConfig.get().then(function (res) {
+      var c = res && res.config;
+      var badgeAudio = c && c.badgeAudio;
+      if (badgeAudio && WA && WA.hydrateBadge) {
+        for (var i = 0; i < BADGES.length; i++) {
+          WA.hydrateBadge(VENDOR, BADGES[i].type, badgeAudio[BADGES[i].type] || null);
+        }
+      }
+      render();
+    }).catch(function () { render(); });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hydrateFromServer);
+  else hydrateFromServer();
 })();
 </script>
 </body>

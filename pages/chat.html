@@ -409,6 +409,10 @@ html.dark {
             <span id="chat-video-rec-timer" style="font-size:13px;font-weight:600;color:rgb(var(--mgt-foreground));white-space:nowrap;">0:00 / 0:30</span>
             <span id="chat-video-rec-hint" style="font-size:12px;color:rgb(var(--mgt-muted-foreground));flex:1;">Relâchez pour arrêter</span>
           </div>
+          <!-- Aperçu caméra en direct pendant l'enregistrement -->
+          <div id="chat-video-live" style="display:none;justify-content:center;margin-bottom:8px;">
+            <video data-video-live playsinline muted autoplay style="width:100%;max-width:320px;max-height:240px;border-radius:12px;background:#000;object-fit:cover;transform:scaleX(-1);"></video>
+          </div>
           <!-- Aperçu du message vocal avant envoi -->
           <div id="chat-rec-preview" style="display:none;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgb(var(--mgt-muted));margin-bottom:8px;">
             <button type="button" data-voice-preview-play style="width:34px;height:34px;border-radius:50%;border:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgb(var(--mgt-accent));color:#fff;cursor:pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
@@ -445,8 +449,8 @@ html.dark {
             </button>
 
             <!-- Camera Button -->
-            <button id="btn-cam" type="button" class="w-10 h-10 flex items-center justify-center rounded-full border shrink-0 transition-all hover:opacity-90 active:scale-95" style="background-color: rgb(var(--mgt-card));border-color: rgb(var(--mgt-border));color: rgb(var(--mgt-muted-foreground));touch-action:none;user-select:none;-webkit-user-select:none;" title="Maintenir pour filmer une vidéo">
-              <i data-lucide="video" class="w-5 h-5"></i>
+            <button id="btn-cam" type="button" class="w-10 h-10 flex items-center justify-center rounded-full border shrink-0 transition-all hover:opacity-90 active:scale-95" style="background-color: rgb(var(--mgt-card));border-color: rgb(var(--mgt-border));color: rgb(var(--mgt-muted-foreground));touch-action:none;user-select:none;-webkit-user-select:none;" title="Prendre une photo ou enregistrer un message vidéo">
+              <i data-lucide="camera" class="w-5 h-5"></i>
             </button>
 
             <!-- Send Button -->
@@ -1103,6 +1107,8 @@ html.dark {
   var recPreview = document.getElementById('chat-rec-preview');
   var recTimerEl = document.getElementById('chat-rec-timer');
   var videoPreview = document.getElementById('chat-video-preview');
+  var videoLive = document.getElementById('chat-video-live');
+  var liveVideo = videoLive ? videoLive.querySelector('[data-video-live]') : null;
 
   function pickVideoMime(){
     if (window.MediaRecorder && typeof MediaRecorder.isTypeSupported === 'function'){
@@ -1152,6 +1158,8 @@ html.dark {
     }
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true }).then(function(stream){
       videoStream = stream;
+      if (liveVideo){ try { liveVideo.srcObject = stream; liveVideo.play().catch(function(){}); } catch(e){} }
+      if (videoLive) videoLive.style.display = 'flex';
       var mime = pickVideoMime();
       var mr;
       var recOpts = { videoBitsPerSecond: 1500000 };
@@ -1202,6 +1210,8 @@ html.dark {
   function stopVideoRecord(){
     if (videoRecorder && videoRecorder.state === 'recording'){ try { videoRecorder.stop(); } catch(e){} }
     if (videoTimerId){ clearInterval(videoTimerId); videoTimerId = null; }
+    if (videoLive) videoLive.style.display = 'none';
+    if (liveVideo){ try { liveVideo.pause(); } catch(e){} liveVideo.srcObject = null; }
     if (recBar) recBar.style.display = 'none';
     if (videoRecBar) videoRecBar.style.display = 'none';
   }
@@ -1230,7 +1240,6 @@ html.dark {
     renderThread();
     renderSidebar();
     if (RT && typeof RT.sendVideoMessage === 'function') RT.sendVideoMessage(PEER.id, data.video, data.duration, data.mime, msgId);
-    scheduleAutoReply(ACTIVE, PEER.name);
   }
 
   function setVoicePlaying(btn, playing){
@@ -1340,7 +1349,6 @@ html.dark {
     renderThread();
     renderSidebar();
     if (RT && typeof RT.sendAudioMessage === 'function') RT.sendAudioMessage(PEER.id, data.audio, data.duration, data.mime, msgId);
-    scheduleAutoReply(ACTIVE, PEER.name);
   }
 
   function lastPreviewOf(id){
@@ -1609,40 +1617,6 @@ html.dark {
     renderSidebar();
   }
 
-  // --- Réponse automatique de démonstration ---
-  // Quand le professionnel destinataire n'est pas connecté en temps réel, aucune
-  // vraie réponse ne revient jamais vers le client (Dida) : son message part
-  // bien, mais reste sans accusé visible. Pour que la messagerie reste
-  // démontrable, on simule un « écrit… » puis une réponse automatique quelques
-  // instants après l'envoi, UNIQUEMENT si le pair est hors ligne (aucun risque
-  // de doublon avec une vraie réponse) et une seule fois par conversation.
-  var autoReplyPending = {};   // vendorId -> timeout id
-  function hasAutoReply(id){
-    var t = threadOf(id);
-    for (var i=0;i<t.length;i++) if (t[i].auto) return true;
-    return false;
-  }
-  function scheduleAutoReply(vendorId, peerName){
-    if (!vendorId) return;
-    if (ONLINE[vendorId]) return;           // le pro est connecté : il répondra lui-même
-    if (autoReplyPending[vendorId]) return;
-    var typingName = peerName || 'Le professionnel';
-    showTypingFor(typingName);
-    autoReplyPending[vendorId] = setTimeout(function(){
-      delete autoReplyPending[vendorId];
-      hideTyping();
-      if (!ACTIVE || ACTIVE !== vendorId) return;
-      var replies = [
-        'Merci pour votre message ! Nous sommes actuellement indisponibles, mais nous vous répondrons dès que possible. Vous pouvez aussi réserver un créneau directement depuis notre page Boutique.',
-        'Bien reçu ✅. Un conseiller revient vers vous très vite. En attendant, vous pouvez prendre rendez-vous depuis notre page Boutique.'
-      ];
-      var reply = replies[Math.floor(Math.random() * replies.length)];
-      pushMsg(vendorId, { dir:'in', text:reply, time:nowTime(), name: typingName, msgId: genMsgId(), auto: true });
-      renderThread();
-      renderSidebar();
-    }, 1600);
-  }
-
   // --- Envoi ---
   function send(){
     var text = input && input.value.trim();
@@ -1661,7 +1635,6 @@ html.dark {
     renderThread();
     renderSidebar();
     if (RT && typeof RT.sendMessage === 'function') RT.sendMessage(PEER.id, text, msgId);
-    scheduleAutoReply(ACTIVE, PEER.name);
   }
 
   if (sendBtn) sendBtn.addEventListener('click', send);
@@ -2035,7 +2008,7 @@ html.dark {
     RT.onIncomingCall(function(c){
       var from = c.from || '';
       if (from && convById(from) && from !== ACTIVE) selectConversation(from);
-      sysMsg('Appel entrant de ' + (c.fromName || c.from));
+      sysMsg('Appel entrant de ' + (c.fromName || c.from) + (c.country ? ' · ' + c.country : ''));
     });
     RT.onAppointment(function(a){
       var from = a.from || '';
@@ -2121,7 +2094,7 @@ html.dark {
     if (initial) {
       selectConversation(initial);
       if (qp.get('kind') === 'call') {
-        showCallPushOverlay(qp.get('fromName') || wantName || 'Professionnel', qp.get('mode') || 'audio');
+        showCallPushOverlay(qp.get('fromName') || wantName || 'Professionnel', qp.get('mode') || 'audio', qp.get('country') || '');
       }
     } else {
       renderHeader();
@@ -2188,9 +2161,9 @@ html.dark {
     <a href="./client-dashboard.html" class="client-nav-link"><i data-lucide="home" class="w-4 h-4"></i><span>Accueil</span></a>
     <a href="./chat.html" class="client-nav-link active"><i data-lucide="message-circle" class="w-4 h-4"></i><span>Messagerie</span></a>
     <a href="#" class="client-nav-link" id="drawer-nav-agenda"><i data-lucide="calendar-days" class="w-4 h-4"></i><span>Mes rendez-vous</span></a>
+    <a href="./carte.html" class="client-nav-link"><i data-lucide="map" class="w-4 h-4"></i><span>Boutiques &amp; Prestataires</span></a>
     <a href="./client-orders.html" class="client-nav-link"><i data-lucide="package" class="w-4 h-4"></i><span>Mes commandes</span></a>
     <a href="./client-favorites.html" class="client-nav-link"><i data-lucide="heart" class="w-4 h-4"></i><span>Mes favoris</span></a>
-    <a href="./carte.html" class="client-nav-link"><i data-lucide="map" class="w-4 h-4"></i><span>Explorer la carte</span></a>
     <a href="./client-profile.html" class="client-nav-link"><i data-lucide="user" class="w-4 h-4"></i><span>Mon profil</span></a>
   </nav>
   <div class="client-nav-footer">

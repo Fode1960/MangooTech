@@ -422,6 +422,15 @@ html.dark {
   <!-- ===== CONTENU CARTE ===== -->
   <div id="map-container" class="w-full h-full" style="min-height: calc(100vh - 64px); min-height: calc(100svh - 64px); min-height: calc(100dvh - 64px);"></div>
 
+  <!-- ===== BANNIERE HORS-LIGNE ===== -->
+  <!-- Visible uniquement en vue Carte hors-ligne : la carte interactive (tuiles
+       OSM) a besoin du réseau. Les données des commerces, elles, sont pré-cachées
+       et restent consultables via la vue Liste. -->
+  <div id="offline-banner" class="hidden absolute top-3 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 px-4 py-2 rounded-full border shadow-md max-w-[92vw]" style="background-color: rgb(var(--mgt-card)); border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-full); box-shadow: var(--mgt-shadow-md); font-family: var(--mgt-font-sans);">
+    <i data-lucide="wifi-off" class="h-4 w-4 flex-shrink-0" style="color: rgb(var(--mgt-warning));"></i>
+    <span class="text-xs font-semibold truncate" style="color: rgb(var(--mgt-foreground));">Hors-ligne — carte interactive indisponible, utilisez la Liste</span>
+  </div>
+
   <!-- ===== CONTROLES CARTE PERSO ===== -->
   <div class="absolute bottom-6 right-4 z-[1000] flex flex-col gap-2" id="map-controls">
     <button id="btn-zoom-in" class="w-10 h-10 rounded-md flex items-center justify-center shadow-sm transition-all hover:brightness-110 cursor-pointer border-0" style="background-color: rgb(var(--mgt-card)); color: rgb(var(--mgt-foreground)); border-radius: var(--mgt-radius-md); box-shadow: var(--mgt-shadow-sm);" title="Zoom avant" aria-label="Zoom avant">
@@ -561,8 +570,15 @@ html.dark {
       var canon = (v.city && CITIES[v.city]) ? CITIES[v.city] : null;
       if (canon && typeof canon.lat === 'number' && typeof canon.lng === 'number' &&
           isFinite(canon.lat) && isFinite(canon.lng)) {
-        v.lat = canon.lat;
-        v.lng = canon.lng;
+        // Préserve une position GPS réelle proche du centre (≤ 50 km) ; ne
+        // recale sur le centre que si les coordonnées sont absentes ou
+        // incohérentes (ex. ville « Paris » avec des coordonnées à Dakar).
+        var hasReal = typeof v.lat === 'number' && typeof v.lng === 'number' && isFinite(v.lat) && isFinite(v.lng);
+        var closeEnough = hasReal && haversineKm(v.lat, v.lng, canon.lat, canon.lng) <= 50;
+        if (!closeEnough) {
+          v.lat = canon.lat;
+          v.lng = canon.lng;
+        }
         if (canon.country) v.country = canon.country;
       }
     });
@@ -632,7 +648,7 @@ html.dark {
     if (userCity) {
       // Un compte « other » (ancienne option « Autre ») ou sans ville n'a pas
       // de ville de rattachement : on le rattache par proximité GPS au lieu de
-      // l'exclure (il est géolocalisé par défaut sur Paris).
+      // l'exclure (il est géolocalisé par défaut sur Dakar).
       var cityKey = normalizeText(v.city);
       var cityKnown = cityKey !== '' && cityKey !== 'other' && cityKey !== 'autre';
       // Comparaison insensible à la casse/aux accents pour éviter tout faux
@@ -856,31 +872,30 @@ html.dark {
   function hasBoost(vendor, type) {
     return vendorBoosts(vendor).indexOf(type) !== -1;
   }
+  function vendorTrials(vendor) {
+    return (vendor && vendor.trialBoosts) ? vendor.trialBoosts.slice() : [];
+  }
+  function isTrialBoost(vendor, type) {
+    return vendorTrials(vendor).indexOf(type) !== -1;
+  }
   function topBoost(vendor) {
     return vendorBoosts(vendor)[0] || null;
   }
-  // vendorId du professionnel connecté (session `mgt_user`), ou '' si invité.
-  // L'« Offre du jour » Local+ est un emplacement payé : quand un vendeur est
-  // connecté, on n'affiche que SES offres (jamais celles d'un autre vendeur).
-  function connectedVendorId() {
-    try {
-      var raw = localStorage.getItem('mgt_user');
-      if (!raw) return '';
-      var u = JSON.parse(raw);
-      if (!u) return '';
-      var role = u.role || '';
-      if (role !== 'prestataire' && role !== 'vendeur') return '';
-      return u.vendorId || u.id || '';
-    } catch (e) { return ''; }
+  // Canonise le vendorId des offres (ven-... -> pro-...) pour aligner
+  // l'affichage sur la même identité que renvoie /api/carte.
+  function canonicalLocalVendorId(vid) {
+    if (vid === 'ven-e9e831ccf698') return 'pro-41cafa4bcb31';
+    return vid;
   }
   // Offres du jour actives rattachées à un vendeur (par vendorId).
+  // L'« Offre du jour » Local+ est un emplacement payé PUBLIC : elle doit être
+  // visible par tous les visiteurs de la carte (clients, invités, autres
+  // vendeurs), et non uniquement par le vendeur qui l'a publiée.
   function offresDuJourFor(vendor) {
-    var myVendorId = connectedVendorId();
     var list = offresJourByVendor[vendor.vendorId] || [];
     return list.filter(function (o) {
       if (!o || o.status !== 'active') return false;
       if (new Date(o.endsAt).getTime() <= Date.now()) return false;
-      if (myVendorId && o.vendorId !== myVendorId) return false;
       return true;
     });
   }
@@ -907,9 +922,18 @@ html.dark {
     var mi = String(d.getMinutes()).padStart(2, '0');
     return dd + '/' + mm + ' ' + hh + ':' + mi;
   }
-  function offreCardHtml(offre) {
+  // Badge de localité (Local+) réutilisable : pastille « map-pin + ville ».
+  // Utilisée dans la barre des offres, la fiche vendeur et les marqueurs de la
+  // carte afin de renforcer la notion « chaque localité a ses propres offres ».
+  function localityBadgeHtml(vendor) {
+    if (!vendor || !vendor.city) return '';
+    return '<span class="inline-flex items-center gap-1 text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded-full" style="background:rgb(var(--mgt-primary-100));color:rgb(var(--mgt-primary-700));border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);"><i data-lucide="map-pin" class="h-3 w-3"></i>' + escapeHtml(vendor.city) + '</span>';
+  }
+  function offreCardHtml(offre, vendor) {
     var startText = formatOffreDate(offre.startsAt);
     var endText = formatOffreDate(offre.endsAt);
+    var localityBadge = localityBadgeHtml(vendor);
+    var badgeText = [(offre.title || ''), (offre.description || '')].filter(Boolean).join('. ');
     var period = (startText || endText)
       ? '<div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 pt-2" style="border-top:1px solid rgb(var(--mgt-primary-100));">' +
           (startText ? '<span class="inline-flex items-center gap-1 text-[11px] font-medium" style="color:rgb(var(--mgt-muted-foreground));font-family:var(--mgt-font-sans);"><i data-lucide="clock" class="h-3 w-3"></i> Début : ' + startText + '</span>' : '') +
@@ -918,9 +942,10 @@ html.dark {
       : '';
     return '<div style="border:1px solid rgb(var(--mgt-primary-100));background:rgb(var(--mgt-primary-50));border-radius:var(--mgt-radius-md);padding:12px;">' +
       '<div class="flex items-center justify-between mb-1.5">' +
-        '<span class="inline-flex items-center gap-1.5 text-xs font-semibold" style="color:rgb(var(--mgt-primary-700));font-family:var(--mgt-font-sans);"><i data-lucide="badge-percent" class="h-3.5 w-3.5"></i> Offre du jour</span>' +
+        '<span data-badge-audio="offre" data-badge-vendor="' + escapeHtml(vendor.vendorId || '') + '" data-badge-text="' + escapeHtml(badgeText) + '" class="inline-flex items-center gap-1.5 text-xs font-semibold" style="color:rgb(var(--mgt-primary-700));font-family:var(--mgt-font-sans);"><i data-lucide="badge-percent" class="h-3.5 w-3.5"></i> Offre du jour' + (offre.mode === 'essai' ? ' · Essai' : '') + '<i data-lucide="volume-2" class="h-3.5 w-3.5"></i></span>' +
         '<span class="text-xs font-semibold tabular-nums" style="color:rgb(var(--mgt-primary-700));font-family:var(--mgt-font-sans);">' + offreCountdownText(offre) + '</span>' +
       '</div>' +
+      (localityBadge ? '<div class="flex items-center gap-1.5 mb-1">' + localityBadge + '</div>' : '') +
       '<p class="text-sm font-semibold" style="color:rgb(var(--mgt-foreground));font-family:var(--mgt-font-sans);">' + escapeHtml(offre.title) + '</p>' +
       (offre.description ? '<p class="text-xs mt-0.5" style="color:rgb(var(--mgt-muted-foreground));font-family:var(--mgt-font-sans);">' + escapeHtml(offre.description) + '</p>' : '') +
       period +
@@ -1061,30 +1086,34 @@ html.dark {
       ? '<span style="position:absolute;bottom:-4px;right:-4px;min-width:16px;height:16px;padding:0 3px;border-radius:9999px;background:' + grad + ';color:#fff;font-size:9px;font-weight:700;line-height:16px;text-align:center;border:2px solid #fff;box-sizing:content-box;">' + count + '</span>'
       : '';
     var initial = '<span style="font-weight:700;font-size:14px;line-height:1;color:#fff;">' + (vendor.name ? vendor.name.charAt(0) : '?') + '</span>';
+    // Nom complet du vendeur sous l'épingle : permet de reconnaître une boutique
+    // ou un prestataire sans devoir ouvrir la fiche (au lieu de la seule initiale).
+    var nameLabel = '<span style="display:block;max-width:150px;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,.92);color:#0f172a;font-size:11px;font-weight:600;line-height:1.3;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 3px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);">' + escapeHtml(vendor.name) + '</span>';
     // Badges nommés sous l'épingle : boost payant + « Live » (local). Ils sont
     // empilés verticalement, chacun nommé et clignotant pour rester lisible.
     var labels = [];
+    if (vendor.city) {
+      labels.push('<span class="mgt-badge-blink" style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:9999px;background:rgba(255,255,255,.92);color:#0f172a;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);"><i data-lucide="map-pin" style="width:10px;height:10px;"></i>' + escapeHtml(vendor.city) + '</span>');
+    }
     if (boost) {
-      var boostText = boostLabel(top) + (count > 1 ? ' +' + (count - 1) : '');
-      labels.push('<span class="mgt-badge-blink" style="display:block;padding:2px 7px;border-radius:9999px;background:' + grad + ';color:#fff;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);">' + boostText + '</span>');
+      var boostText = boostLabel(top) + (isTrialBoost(vendor, top) ? ' · Essai' : '') + (count > 1 ? ' +' + (count - 1) : '');
+      labels.push('<span' + ((top === 'promo' || top === 'nouveau') ? ' data-badge-audio="' + top + '" data-badge-vendor="' + escapeHtml(vendor.vendorId || '') + '"' : '') + ' class="mgt-badge-blink" style="display:block;padding:2px 7px;border-radius:9999px;background:' + grad + ';color:#fff;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);">' + boostText + '</span>');
     }
     if (vendor.live) {
       labels.push('<span class="mgt-badge-blink" style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:9999px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);"><span class="mgt-live-dot" style="width:6px;height:6px;border-radius:50%;background:#fff;"></span>Live</span>');
     }
     if (offresDuJourFor(vendor).length) {
-      labels.push('<span class="mgt-badge-blink" style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:9999px;background:rgb(var(--mgt-primary));color:#fff;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);"><i data-lucide="badge-percent" style="width:10px;height:10px;"></i>Offre du jour</span>');
+      labels.push('<span data-badge-audio="offre" data-badge-vendor="' + escapeHtml(vendor.vendorId || '') + '" class="mgt-badge-blink" style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:9999px;background:rgb(var(--mgt-primary));color:#fff;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);font-family:var(--mgt-font-sans);"><i data-lucide="badge-percent" style="width:10px;height:10px;"></i>Offre du jour</span>');
     }
     var labelsHtml = labels.join('');
     var circle = '<div style="position:relative;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:' + tcol + ';box-shadow:' + shadow + ';border:' + border + ';cursor:pointer;">' + initial + liveDot + countBadge + '</div>';
-    var html = labelsHtml
-      ? '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:max-content;">' + circle + labelsHtml + '</div>'
-      : circle;
+    var html = '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:160px;">' + circle + nameLabel + labelsHtml + '</div>';
     var labelCount = labels.length;
     return L.divIcon({
       className: 'custom-marker',
       html: html,
-      iconSize: [40, 40 + labelCount * 20],
-      iconAnchor: [20, 20],
+      iconSize: [160, 40 + 3 + 18 + (labelCount ? 3 + labelCount * 20 : 0)],
+      iconAnchor: [80, 20],
       popupAnchor: [0, -22]
     });
   }
@@ -1112,7 +1141,7 @@ html.dark {
     var typeBadge = '<span class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full" style="background:' + typeColor(vendor.type) + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);">' + typeLabel(vendor.type) + '</span>';
     var catBadge = '<span class="inline-block text-xs font-medium px-2.5 py-1 rounded-full" style="background:' + categoryColor(vendor.category) + ';color:white;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);">' + categoryLabel(vendor.category) + '</span>';
     var boostBadge = vendorBoosts(vendor).map(function(b) {
-      return '<span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full" style="background:' + boostGradient(b) + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);box-shadow:var(--mgt-shadow-sm);"><i data-lucide="sparkles" class="h-3.5 w-3.5"></i> ' + boostLabel(b) + (b === 'promo' ? promoEndText(vendor) : '') + '</span>';
+      return '<span' + ((b === 'promo' || b === 'nouveau') ? ' data-badge-audio="' + b + '" data-badge-vendor="' + escapeHtml(vendor.vendorId || '') + '"' : '') + ' class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full" style="background:' + boostGradient(b) + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);box-shadow:var(--mgt-shadow-sm);"><i data-lucide="sparkles" class="h-3.5 w-3.5"></i> ' + boostLabel(b) + (isTrialBoost(vendor, b) ? ' · Essai' : '') + (b === 'promo' ? promoEndText(vendor) : '') + ((b === 'promo' || b === 'nouveau') ? '<i data-lucide="volume-2" class="h-3.5 w-3.5"></i>' : '') + '</span>';
     }).join('');
     var liveBadge = vendor.live
       ? '<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full" style="background:#ef4444;color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);box-shadow:var(--mgt-shadow-sm);"><span class="w-1.5 h-1.5 rounded-full" style="background:#fff;animation:mgt-pulse 1.6s infinite;"></span> En direct</span>'
@@ -1133,7 +1162,7 @@ html.dark {
           '<p class="text-xs flex items-center gap-1" style="color:rgb(var(--mgt-muted-foreground));"><i data-lucide="map-pin" class="h-3.5 w-3.5"></i> ' + vendor.city + ' &middot; a ' + distanceLabel(vendorDistanceKm(vendor)) + ' &middot; ' + vendor.price + '</p>',
         '</div>',
         '<p class="text-sm leading-relaxed" style="color:rgb(var(--mgt-muted-foreground));">' + vendor.desc + '</p>',
-        (offres.length ? '<div class="flex flex-col gap-2">' + offres.map(offreCardHtml).join('') + '</div>' : ''),
+        (offres.length ? '<div class="flex flex-col gap-2">' + offres.map(function(o) { return offreCardHtml(o, vendor); }).join('') + '</div>' : ''),
         '<div class="flex items-center gap-2 flex-wrap">' + (window.MangooExpress ? window.MangooExpress.badge(window.MangooExpress.fromCategory(vendor.category)) : '') + '</div>',
         '<div class="flex flex-col gap-2.5">',
           (vendor.live ? '<a href="live-client.html" class="flex items-center justify-center gap-2 w-full py-3 px-4 text-sm font-bold rounded-md transition-all hover:brightness-110 no-underline" style="background:#ef4444;color:#fff;border-radius:var(--mgt-radius-md);font-family:var(--mgt-font-sans);box-shadow:var(--mgt-shadow-sm);"><span class="w-2 h-2 rounded-full" style="background:#fff;animation:mgt-pulse 1.6s infinite;"></span> Rejoindre le live</a>' : ''),
@@ -1168,10 +1197,10 @@ html.dark {
 
   function buildPopupContent(vendor) {
     var boostBadge = vendorBoosts(vendor).map(function(b) {
-      return '<span style="display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:9999px;background:' + boostColor(b) + ';color:#fff;margin-top:2px;margin-right:4px;">' + boostLabel(b) + '</span>';
+      return '<span' + ((b === 'promo' || b === 'nouveau') ? ' data-badge-audio="' + b + '" data-badge-vendor="' + escapeHtml(vendor.vendorId || '') + '"' : '') + ' style="display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:9999px;background:' + boostColor(b) + ';color:#fff;margin-top:2px;margin-right:4px;">' + boostLabel(b) + (isTrialBoost(vendor, b) ? ' · Essai' : '') + '</span>';
     }).join('');
     var liveBadge = vendor.live ? '<span style="display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:9999px;background:#ef4444;color:#fff;margin-top:2px;">En direct</span>' : '';
-    var offreBadge = offresDuJourFor(vendor).length ? '<span style="display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:9999px;background:rgb(var(--mgt-primary));color:#fff;margin-top:2px;margin-right:4px;">Offre du jour</span>' : '';
+    var offreBadge = offresDuJourFor(vendor).length ? '<span data-badge-audio="offre" data-badge-vendor="' + escapeHtml(vendor.vendorId || '') + '" style="display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:9999px;background:rgb(var(--mgt-primary));color:#fff;margin-top:2px;margin-right:4px;">Offre du jour</span>' : '';
     return [
       '<div style="font-family:var(--mgt-font-sans);min-width:200px;">',
         '<div style="display:flex;align-items:start;gap:10px;">',
@@ -1431,11 +1460,14 @@ html.dark {
   document.getElementById('drawer-overlay').addEventListener('click', closeDrawer);
 
   /* ===== OFFRES DU JOUR (barre horizontale Local+) =====
-     Affiche les offres actives du vendeur connecté : titre, description,
-     début (startsAt) et fin (endsAt). */
+     Affiche les offres actives de la zone courante : même ville en mode
+     « nearby », tout le pays en mode « country ». L'offre est publique (visible
+     de tous), mais limitée au même périmètre géographique que la carte Local+ :
+     elle suit la visibilité du vendeur, jamais « le monde entier ». */
   function visibleOffresJour() {
     var out = [];
     vendors.forEach(function(v) {
+      if (!matchesScopeFor(v)) return;
       offresDuJourFor(v).forEach(function(o) {
         out.push({ vendor: v, offre: o });
       });
@@ -1461,8 +1493,10 @@ html.dark {
       var cd = offreCountdownText(o);
       var startText = formatOffreDate(o.startsAt);
       var endText = formatOffreDate(o.endsAt);
+      var localityBadge = localityBadgeHtml(v);
       html += '<button data-offre-vendor="' + escapeHtml(v.vendorId) + '" data-offre-ends="' + escapeHtml(o.endsAt) + '" class="promo-item flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-full border flex-shrink-0 cursor-pointer transition-all hover:brightness-105" style="background:rgb(var(--mgt-accent-50)); border-color:rgb(var(--mgt-accent-200)); border-radius:var(--mgt-radius-full); font-family:var(--mgt-font-sans);">' +
         '<img src="' + v.img + '" alt="' + escapeHtml(v.name) + '" class="w-6 h-6 rounded-full object-cover" style="border-radius:var(--mgt-radius-full);" onerror="this.style.display=\'none\'">' +
+        localityBadge +
         '<span class="text-xs font-semibold whitespace-nowrap" style="color:rgb(var(--mgt-foreground));">' + escapeHtml(o.title) + '</span>' +
         (startText && endText ? '<span class="text-[10px] font-medium whitespace-nowrap" style="color:rgb(var(--mgt-muted-foreground));">' + startText + ' → ' + endText + '</span>' : '') +
         '<span class="promo-countdown text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded-full" style="background:rgb(var(--mgt-accent-600)); color:#fff; border-radius:var(--mgt-radius-full);">' + cd + '</span>' +
@@ -1502,6 +1536,31 @@ html.dark {
     }
   }
 
+  // Fait défiler automatiquement la barre « Offres du jour » horizontalement,
+  // pour que toutes les offres soient visibles à tour de rôle (au lieu de
+  // laisser la première figée en permanence). Se met en pause au survol et au
+  // toucher, puis reprend dès que l'utilisateur relâche.
+  var promoAutoScrollTimer = null;
+  function stopPromoAutoScroll() {
+    if (promoAutoScrollTimer) { clearInterval(promoAutoScrollTimer); promoAutoScrollTimer = null; }
+  }
+  function startPromoAutoScroll() {
+    var list = document.getElementById('promo-list');
+    if (!list) return;
+    stopPromoAutoScroll();
+    promoAutoScrollTimer = setInterval(function() {
+      var max = list.scrollWidth - list.clientWidth;
+      if (max <= 2) return; // pas de débordement : une seule offre, rien à défiler
+      if (list.scrollLeft >= max - 2) {
+        // Fin de liste : retour en douceur au début.
+        list.scrollTo({ left: 0, behavior: 'smooth' });
+        return;
+      }
+      var item = list.querySelector('.promo-item');
+      var step = item ? (item.offsetWidth + 8) : Math.min(240, max);
+      list.scrollBy({ left: step, behavior: 'smooth' });
+    }, 3800);
+  }
   var promoBanner = document.getElementById('promo-banner');
   var promoDismiss = document.getElementById('promo-dismiss');
   if (promoDismiss) {
@@ -1511,6 +1570,14 @@ html.dark {
   }
   renderPromos();
   setInterval(tickPromos, 1000);
+  startPromoAutoScroll();
+  var promoListEl = document.getElementById('promo-list');
+  if (promoListEl) {
+    promoListEl.addEventListener('mouseenter', stopPromoAutoScroll);
+    promoListEl.addEventListener('mouseleave', startPromoAutoScroll);
+    promoListEl.addEventListener('touchstart', stopPromoAutoScroll, { passive: true });
+    promoListEl.addEventListener('touchend', function() { setTimeout(startPromoAutoScroll, 2500); }, { passive: true });
+  }
 
   /* ===== VUE LISTE ===== */
   var viewMapBtn = document.getElementById('view-map');
@@ -1553,7 +1620,7 @@ html.dark {
     scoped.forEach(function(v) {
       var typeBadge = '<span class="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:' + typeColor(v.type) + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);">' + typeLabel(v.type) + '</span>';
       var boostBadge = vendorBoosts(v).map(function(b) {
-        return '<span class="inline-flex items-center gap-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:' + boostGradient(b) + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);"><i data-lucide="sparkles" class="h-3 w-3"></i> ' + boostLabel(b) + '</span>';
+        return '<span' + ((b === 'promo' || b === 'nouveau') ? ' data-badge-audio="' + b + '" data-badge-vendor="' + escapeHtml(v.vendorId || '') + '"' : '') + ' class="inline-flex items-center gap-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:' + boostGradient(b) + ';color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);"><i data-lucide="sparkles" class="h-3 w-3"></i> ' + boostLabel(b) + '</span>';
       }).join('');
       var liveBadge = v.live
         ? '<span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:#ef4444;color:#fff;border-radius:var(--mgt-radius-full);font-family:var(--mgt-font-sans);"><span class="w-1.5 h-1.5 rounded-full" style="background:#fff;animation:mgt-pulse 1.6s infinite;"></span> En direct</span>'
@@ -1564,10 +1631,10 @@ html.dark {
           '<img src="' + v.img + '" alt="' + v.name + '" class="w-16 h-16 rounded-md object-cover flex-shrink-0" style="border-radius: var(--mgt-radius-md);" onerror="this.src=\'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop\'">',
           '<div class="flex-1 min-w-0">',
             '<div class="flex items-center gap-2 mb-1 flex-wrap">',
-              '<span class="font-semibold text-sm truncate" style="color: rgb(var(--mgt-foreground));">' + v.name + '</span>',
+              '<span class="font-semibold text-sm" style="color: rgb(var(--mgt-foreground)); word-break: break-word;">' + v.name + '</span>',
               pinLabel ? '<span class="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded" style="background:rgb(var(--mgt-primary-50));color:rgb(var(--mgt-primary));border-radius:var(--mgt-radius-sm);">' + pinLabel + '</span>' : '',
             '</div>',
-            '<div class="flex items-center gap-1.5 mb-1.5 flex-wrap">' + typeBadge + boostBadge + liveBadge + '</div>',
+            '<div class="flex items-center gap-1.5 mb-1.5 flex-wrap">' + typeBadge + boostBadge + liveBadge + localityBadgeHtml(v) + '</div>',
             '<div class="flex items-center gap-1 text-xs" style="color: rgb(var(--mgt-muted-foreground));">' + renderStars(v.rating) + ' <span class="font-medium ml-0.5" style="color:rgb(var(--mgt-foreground));">' + v.rating + '</span> <span class="mx-1">&middot;</span> <span class="truncate">' + v.city + '</span> <span class="mx-1">&middot;</span> <span class="whitespace-nowrap">a ' + distanceLabel(vendorDistanceKm(v)) + '</span> <span class="mx-1">&middot;</span> ' + v.price + '</div>',
           '</div>',
           '<i data-lucide="chevron-right" class="h-5 w-5 flex-shrink-0" style="color:rgb(var(--mgt-muted-foreground));"></i>',
@@ -1627,6 +1694,29 @@ html.dark {
   viewListBtn.addEventListener('click', showListView);
   listClose.addEventListener('click', showMapView);
 
+  /* ===== HORS-LIGNE : banniere + bascule auto vers la Liste ===== */
+  // La carte interactive s'appuie sur des tuiles OSM servies par le réseau et ne
+  // peut pas être pré-cachée à grande échelle. Hors-ligne, on bascule donc
+  // automatiquement vers la vue Liste (dont les données commerces sont pré-cachées)
+  // et on affiche une bannière explicative en vue Carte.
+  var offlineBanner = document.getElementById('offline-banner');
+  var wasOffline = false;
+  function updateOfflineState() {
+    var offline = !navigator.onLine;
+    if (offlineBanner) {
+      if (offline) offlineBanner.classList.remove('hidden');
+      else offlineBanner.classList.add('hidden');
+    }
+    if (offline && !wasOffline) {
+      if (typeof showListView === 'function' && listView && listView.classList.contains('hidden')) {
+        showListView();
+      }
+    }
+    wasOffline = offline;
+  }
+  window.addEventListener('online', updateOfflineState);
+  window.addEventListener('offline', updateOfflineState);
+
   /* ===== CONTROLES CARTE ===== */
   document.getElementById('btn-zoom-in').addEventListener('click', function() { map.zoomIn(); });
   document.getElementById('btn-zoom-out').addEventListener('click', function() { map.zoomOut(); });
@@ -1654,7 +1744,7 @@ html.dark {
           userCountry = detected.country;
         }
         // Si aucune ville connue n'est proche, on conserve la ville déjà
-        // sélectionnée (ou aucune) plutôt que de basculer le sélecteur
+        // sélectionnée (Dakar par défaut) plutôt que de basculer le sélecteur
         // sur « Ma position (GPS) » et de perdre le contexte de l'utilisateur.
         lpScopeMode = 'nearby';
         resetRadiusToStart();
@@ -1677,7 +1767,7 @@ html.dark {
       },
       function() {
         if (!opts.silent) alert('Geolocalisation indisponible. Veuillez autoriser l\u2019acces a votre position.');
-        // Invite l'utilisateur à choisir sa ville pour ne pas rester sans localisation.
+        // Invite l'utilisateur à choisir sa ville pour ne pas rester sur Dakar.
         showRadiusNotice('Position introuvable — choisissez votre ville pour afficher les commerces autour.');
         if (citySelect) {
           citySelect.classList.remove('hidden'); // ouvre le sélecteur de ville
@@ -1739,7 +1829,7 @@ html.dark {
 
   // Recadre la carte pour faire apparaître un ensemble de marqueurs (utilisé
   // lors d'une recherche : le résultat peut se trouver hors du viewport courant,
-  // par ex. une boutique à Paris alors que la carte est centrée sur une autre ville).
+  // par ex. une boutique à Paris alors que la carte est centrée sur Dakar).
   function fitMapToMarkers(items) {
     if (!items || !items.length) return;
     var latlngs = items.map(function (it) { return [it.vendor.lat, it.vendor.lng]; });
@@ -1775,8 +1865,8 @@ html.dark {
       var matchesPrice = !priceValue || v.price === priceValue;
 
       // La recherche est globale : on ignore le scope ville/rayon pour qu'un
-      // commerce situé dans une autre ville (ex. DAN à Paris, carte sur une
-      // autre ville) apparaisse dès qu'on le cherche par son nom.
+      // commerce situé dans une autre ville (ex. DAN à Paris, carte sur Dakar)
+      // apparaisse dès qu'on le cherche par son nom.
       var passesScope = searchTerm ? true : inScope;
 
       if (passesScope && matchesSearch && matchesCategory && matchesType && matchesLive && matchesRating && matchesPrice) {
@@ -1829,6 +1919,10 @@ html.dark {
       emptyState.classList.add('hidden');
       emptyState.classList.remove('flex');
     }
+
+    // La barre « Offres du jour » suit le même périmètre que la carte : on la
+    // re-rend pour refléter tout changement de ville, de rayon ou de pays.
+    renderPromos();
   }
 
   searchInput.addEventListener('input', applyFilters);
@@ -1998,7 +2092,7 @@ html.dark {
     });
   }
 
-  /* ===== SELECTEUR DE VILLE (scope Paris / Abidjan / ...) ===== */
+  /* ===== SELECTEUR DE VILLE (scope Dakar / Libreville / ...) ===== */
   var citySelect = document.getElementById('city-select');
   var cityToggle = document.getElementById('city-toggle');
   var cityToggleLabel = document.getElementById('city-toggle-label');
@@ -2129,7 +2223,7 @@ html.dark {
 
     // Au chargement : applique un éventuel lien profond (#ville=, #rayon=, #live),
     // sinon restaure la dernière ville choisie, sinon géolocalise automatiquement.
-    // En cas d'échec du GPS on reste sur Paris et l'utilisateur peut choisir sa ville.
+    // En cas d'échec du GPS on reste sur Dakar et l'utilisateur peut choisir sa ville.
     function parseDeepLink() {
       var hash = location.hash || '';
       if (hash === '#live') {
@@ -2200,8 +2294,9 @@ html.dark {
         var offres = (data && data.offres) ? data.offres : [];
         offres.forEach(function(o) {
           if (!o || !o.vendorId) return;
-          if (!offresJourByVendor[o.vendorId]) offresJourByVendor[o.vendorId] = [];
-          offresJourByVendor[o.vendorId].push(o);
+          var vid = canonicalLocalVendorId(o.vendorId);
+          if (!offresJourByVendor[vid]) offresJourByVendor[vid] = [];
+          offresJourByVendor[vid].push(o);
         });
       })
       .catch(function() { offresJourByVendor = {}; });
@@ -2228,10 +2323,11 @@ html.dark {
     loadOffresJour(),
     loadCities()
   ])
-    .then(function(results) { initCarte(results[0]); })
+    .then(function(results) { initCarte(results[0]); updateOfflineState(); })
     .catch(function(err) {
       console.warn('[Carte] chargement des profils impossible :', err.message);
       initCarte({ vendors: [] });
+      updateOfflineState();
     });
 
   /* ===== MOBILE FILTERS ===== */
@@ -2383,21 +2479,55 @@ html.dark {
 </style>
 <script>
 (function(){
+  // Profil : lien role-aware. Un professionnel (vendeur/prestataire) doit
+  // atterrir sur ses « Parametres », pas sur le profil client qui le renvoie
+  // vers la « Vue d'ensemble » du Dashboard.
+  var profileTarget = (function(){
+    try {
+      var _u = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+      var _r = _u && String(_u.role || '').toLowerCase();
+      return (_r === 'vendeur' || _r === 'prestataire') ? 'dashboard-settings.html' : 'client-profile.html';
+    } catch (e) { return 'client-profile.html'; }
+  })();
+  var homeTarget = (function(){
+    try {
+      var _h = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+      var _hr = _h && String(_h.role || '').toLowerCase();
+      return (_hr === 'vendeur' || _hr === 'prestataire') ? 'dashboard-overview.html#menu' : 'client-dashboard.html#menu';
+    } catch (e) { return 'client-dashboard.html#menu'; }
+  })();
+  var rdvTarget = (function(){
+    try {
+      var _rv = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+      var _rr = _rv && String(_rv.role || '').toLowerCase();
+      // « Rendez-vous » (dashboard-agenda.html) est TRANSVERSE : vendeur (boutique)
+      // et prestataire y accèdent tous deux. Seul le client passe par chat.html#rdv.
+      return (_rr === 'vendeur' || _rr === 'prestataire') ? 'dashboard-agenda.html' : 'chat.html#rdv';
+    } catch (e) { return 'chat.html#rdv'; }
+  })();
+  var rdvFlag = (rdvTarget.indexOf('#rdv') >= 0) ? 'rdv' : '';
+  var msgTarget = (function(){
+    try {
+      var _m = JSON.parse(localStorage.getItem('mgt_user') || 'null');
+      var _mr = _m && String(_m.role || '').toLowerCase();
+      return (_mr === 'vendeur' || _mr === 'prestataire') ? 'dashboard-messages.html' : 'chat.html';
+    } catch (e) { return 'chat.html'; }
+  })();
   var DRAWER=[
-    ['client-dashboard.html','home','Accueil'],
-    ['chat.html','message-circle','Messagerie'],
-    ['chat.html#rdv','calendar-days','Mes rendez-vous','rdv'],
+    [homeTarget,'home','Accueil'],
+    [msgTarget,'message-circle','Messagerie'],
+    [rdvTarget,'calendar-days','Mes rendez-vous',rdvFlag],
+    ['carte.html','map','Boutiques &amp; Prestataires'],
     ['client-orders.html','shopping-bag','Mes commandes'],
     ['client-favorites.html','heart','Mes favoris'],
-    ['carte.html','map','Boutique &amp; Prestataires'],
-    ['client-profile.html','user','Mon profil']
+    [profileTarget,'user','Mon profil']
   ];
   var BOTTOM=[
-    ['client-dashboard.html','home','Accueil'],
-    ['chat.html','message-circle','Messages'],
+    [homeTarget,'home','Accueil'],
+    [msgTarget,'message-circle','Messages'],
     ['carte.html','map','Boutiques'],
-    ['chat.html#rdv','calendar-days','RDV','rdv'],
-    ['client-profile.html','user','Profil']
+    [rdvTarget,'calendar-days','RDV',rdvFlag],
+    [profileTarget,'user','Profil']
   ];
   var path=location.pathname.toLowerCase();
   function isActive(h){var f=h.split('/').pop().toLowerCase();return path.indexOf(f)!==-1;}
@@ -2433,5 +2563,46 @@ html.dark {
 </script>
 <script src="../assets/mangoo-nav-session.js"></script>
 <script src="../assets/mangoo-connect-plus.js"></script>
+<script src="../assets/mangoo-welcome-audio.js"></script>
+<script>
+(function () {
+  var BADGE_TEXTS = {
+    promo: 'Promotion en cours : profitez de remises sur une sélection de nos produits, dans la limite des stocks disponibles.',
+    nouveau: 'Nouveau chez nous : découvrez nos dernières nouveautés et offres du moment.',
+    offre: 'Offre du jour : profitez de cette promotion à durée limitée.'
+  };
+  // Délégation en phase de capture : le badge est lu AVANT que le clic
+  // n'ouvre la fiche, le popup ou la liste (les badges sont imbriqués dans
+  // des boutons / marqueurs Leaflet). Destiné aux utilisateurs peu lettrés.
+  document.addEventListener('click', function (e) {
+    var el = (e.target && e.target.closest) ? e.target.closest('[data-badge-audio]') : null;
+    if (!el) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var type = el.getAttribute('data-badge-audio');
+    var text = el.getAttribute('data-badge-text') || BADGE_TEXTS[type] || '';
+    var vendorId = el.getAttribute('data-badge-vendor') || (window._mcpVendor && window._mcpVendor.vendorId) || '';
+    var WA = window.MangooWelcomeAudio;
+    if (!WA) return;
+    var playNow = function () { WA.playBadge(vendorId, type, text); };
+    // « nouveau » côté carte correspond au badge « new » côté serveur.
+    var serverType = type === 'nouveau' ? 'new' : type;
+    var isBadge = type === 'promo' || type === 'nouveau';
+    if (!isBadge) { playNow(); return; }
+    // Enregistrement déjà hydraté (même session) → lecture immédiate.
+    if (WA.hasRecording(WA.badgeKey(vendorId, type))) { playNow(); return; }
+    // Sinon on hydrate l'audio personnalisé depuis la config publique avant de lire.
+    fetch('/api/vendor-config?vendor=' + encodeURIComponent(vendorId), { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var c = d && d.config;
+        var ba = c && c.badgeAudio;
+        if (ba && WA.hydrateBadge) WA.hydrateBadge(vendorId, type, ba[serverType] || null);
+        playNow();
+      })
+      .catch(function () { playNow(); });
+  }, true);
+})();
+</script>
 </body>
 </html>

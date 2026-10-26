@@ -101,12 +101,6 @@
     } catch (e) { /* ignore */ }
   }
   function requireRole(role) {
-    // Aperçu démo depuis les liens publics (ex. footer « Dashboard prestataire ») :
-    // affiche le dashboard prestataire de démonstration sans exiger de session
-    // ni rediriger vers l'espace client. Le rôle démo est conservé en session
-    // (via MangooDemo) lors de la navigation entre pages du dashboard.
-    if (window.MangooDemo && window.MangooDemo.inDemo()) return true;
-    if (/[?&]demo=(prestataire|boutique|vendeur|1)\b/.test(location.search)) return true;
     var s = readSession();
     // L'annuaire est un prototype consultable même sans session (aperçu canvas /
     // iframe) : il ne doit pas rediriger, sinon la liste apparaît « vide ».

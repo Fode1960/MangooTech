@@ -239,8 +239,13 @@
   // contrôle, pour appliquer la correction immédiatement sans vider le cache à la main.
   if ('serviceWorker' in navigator) {
     try {
-      navigator.serviceWorker.getRegistration('/sw.js').then(function (reg) {
-        if (!reg) return;
+      // Enregistre (ou récupère) le service worker de façon inconditionnelle.
+      // Au-delà du Web Push, le SW porte désormais le repli hors-ligne
+      // (fetch réseau-d'abord → cache). Il doit donc être installé dès le
+      // premier chargement du dashboard, pas seulement lors de l'abonnement
+      // aux notifications (sinon, sans permission accordée, aucune page ne
+      // peut être servie hors-ligne).
+      navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).then(function (reg) {
         reg.update().catch(function () { /* ignore */ });
         if (reg.waiting) { try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) { /* ignore */ } }
       }).catch(function () { /* ignore */ });
@@ -675,7 +680,7 @@
     btn.type = 'button';
     btn.id = 'mgt-install-button';
     btn.setAttribute('aria-label', 'Installer l\'application MangooTech');
-    btn.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483600;display:flex;align-items:center;gap:8px;' +
+    btn.style.cssText = 'position:fixed;right:16px;bottom:84px;z-index:2147483600;display:flex;align-items:center;gap:8px;' +
       'background:#16a34a;color:#fff;border:0;border-radius:999px;padding:12px 16px;font-size:13.5px;font-weight:700;' +
       'cursor:pointer;box-shadow:0 12px 36px rgba(0,0,0,.35);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;';
 
@@ -840,7 +845,7 @@
   function maybeRedirectFromLanding() {
     var path = (location.pathname || '').toLowerCase();
     var isEntry = path === '/' || /(^|\/)(index|accueil)\.html$/.test(path);
-    if (!isEntry) { clearAppBadge(); return; }
+    if (!isEntry) { clearAppBadge(); postClearNotifications(); return; }
     if (global.__mgtLandingRedirected) return;
 
     readLastLanding().then(function (landing) {
@@ -860,13 +865,17 @@
         clearLastLandingCache();
         return;
       }
-      // Cohérence du rôle : un client va vers chat.html, un pro vers sa messagerie.
+      // Cohérence du rôle : un client va vers chat.html, un pro vers sa messagerie,
+      // le compte Support vers sa console dédiée.
       var u = readUser();
       var role = u ? String(u.role || '').toLowerCase() : '';
       var isPro = (role === 'vendeur' || role === 'prestataire' || role === 'livreur');
       var isClient = (role === 'client' || role === 'cliente');
+      var isSupport = !!(u && (u.vendorId === 'support-mangoo' || u.id === 'pro-support-mangoo' || u.id === 'support-mangoo'));
       if (/chat\.html/.test(tp) && !isClient) { clearLastLandingCache(); return; }
       if (/dashboard-messages\.html/.test(tp) && !isPro) { clearLastLandingCache(); return; }
+      if (/dashboard-support-console\.html/.test(tp) && !isSupport) { clearLastLandingCache(); return; }
+      if (/dashboard-support-messages\.html/.test(tp) && !isSupport) { clearLastLandingCache(); return; }
 
       global.__mgtLandingRedirected = true;
       clearLastLandingCache();

@@ -41,7 +41,7 @@ Variables reconnues :
 |---------------------|-------------------------|------|
 | `PORT`              | `8080`                  | Port HTTP (pages publiques + WebRTC) |
 | `HTTPS_PORT`        | `8443`                  | Port HTTPS |
-| `ADMIN_EMAIL`       | `admin@mangootech.com`  | E-mail du compte admin initial |
+| `ADMIN_EMAIL`       | `admin@mangoo.tech`     | E-mail du compte admin initial |
 | `ADMIN_PASSWORD`    | *(vide)*                | Mot de passe admin ; vide = génération aléatoire affichée une fois |
 | `ADMIN_PIN`         | *(vide)*                | PIN admin à 4 chiffres ; vide = génération aléatoire affichée une fois |
 | `FORCE_HTTPS_ADMIN` | `true`                  | Force le HTTPS sur l'espace admin |

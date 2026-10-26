@@ -79,6 +79,18 @@
     });
   }
 
+  // Persiste l'audio personnalisé d'un badge (Promotion / Nouveau).
+  function setBadgeAudio(badgeType, recording) {
+    var r = recording || {};
+    return post({
+      action: 'set-badge-audio',
+      vendorId: vendorId(),
+      badgeType: badgeType || '',
+      dataUrl: r.dataUrl || '',
+      mime: r.mime || 'audio/webm'
+    });
+  }
+
   // Calcule le taux de complétude du profil (pour le Classement / la Découverte).
   function completeness(config) {
     var checks = [];
@@ -125,6 +137,7 @@
     setVendorVerification: setVendorVerification,
     toggleOnline: toggleOnline,
     setWelcomeAudio: setWelcomeAudio,
+    setBadgeAudio: setBadgeAudio,
     completeness: completeness,
     planLabel: planLabel,
     verifLabel: verifLabel

@@ -590,10 +590,24 @@ html.dark {
             </div>
             <div class="flex items-center justify-between py-3">
               <div class="flex flex-col gap-0.5">
-                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Espèces</span>
-                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Paiement à la livraison</span>
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">MTN Mobile Money</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Paiement mobile MTN</span>
               </div>
-              <button type="button" class="mgt-switch on" data-payment="cash" aria-pressed="true"></button>
+              <button type="button" class="mgt-switch on" data-payment="mtn_momo" aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between py-3">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Moov Money</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Paiement mobile Moov</span>
+              </div>
+              <button type="button" class="mgt-switch on" data-payment="moov_money" aria-pressed="true"></button>
+            </div>
+            <div class="flex items-center justify-between py-3">
+              <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Free Mobile Sénégal</span>
+                <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Paiement mobile Free</span>
+              </div>
+              <button type="button" class="mgt-switch on" data-payment="free_mobile" aria-pressed="true"></button>
             </div>
             <div class="flex items-center justify-between py-3">
               <div class="flex flex-col gap-0.5">
@@ -603,6 +617,43 @@ html.dark {
               <button type="button" class="mgt-switch" data-payment="card" aria-pressed="false"></button>
             </div>
           </div>
+        </section>
+
+        <!-- Réservation & acompte -->
+        <section class="bg-[rgb(var(--mgt-card))] border border-[rgb(var(--mgt-border))] rounded-xl p-6 shadow-[var(--mgt-shadow-sm)]">
+          <div class="flex items-center gap-2.5 mb-4">
+            <i data-lucide="calendar-check" class="w-5 h-5 text-[rgb(var(--mgt-primary))]"></i>
+            <h3 class="h3 text-[rgb(var(--mgt-foreground))]">Réservation &amp; acompte</h3>
+          </div>
+          <div class="flex items-center justify-between py-1 mb-4">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Accepter les réservations en ligne</span>
+              <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Vos clients peuvent réserver depuis votre fiche</span>
+            </div>
+            <button type="button" class="mgt-switch on" data-resa-toggle aria-pressed="true"></button>
+          </div>
+          <div class="flex flex-wrap items-end gap-6">
+            <div class="flex flex-col gap-1.5">
+              <label for="mgt-acompte-percent" class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Acompte de réservation</label>
+              <div class="flex items-center gap-2">
+                <input type="number" id="mgt-acompte-percent" class="mgt-input" style="width:90px;text-align:center;" value="0" min="0" max="100">
+                <span class="text-sm text-[rgb(var(--mgt-muted-foreground))]">% du prix</span>
+              </div>
+              <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">0 % = aucun acompte demandé</span>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label for="mgt-acompte-min" class="text-sm font-medium text-[rgb(var(--mgt-foreground))]">Acompte minimum</label>
+              <div class="flex items-center gap-2">
+                <input type="number" id="mgt-acompte-min" class="mgt-input" style="width:110px;text-align:center;" value="0" min="0" step="100">
+                <span class="text-sm text-[rgb(var(--mgt-muted-foreground))]">FCFA</span>
+              </div>
+              <span class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Plancher si le pourcentage donne moins</span>
+            </div>
+          </div>
+          <p class="text-xs text-[rgb(var(--mgt-muted-foreground))] mt-4 flex items-start gap-2">
+            <i data-lucide="shield-check" class="w-4 h-4 text-[rgb(var(--mgt-primary))] flex-shrink-0 mt-0.5"></i>
+            <span>L'acompte est toujours réglé par Mobile Money. Aucune circulation d'espèces : le solde se règle sur place, hors plateforme.</span>
+          </p>
         </section>
 
         <!-- Notifications -->
@@ -707,13 +758,13 @@ html.dark {
       else __mgtSidebarScrollFix();
     })();
     </script>
-    <script src="../assets/mangoo-demo-sandbox.js"></script><script src="../assets/mangoo-vendor.js"></script>
+    <script src="../assets/mangoo-vendor.js"></script>
     <script src="../assets/mangoo-vendor-config.js"></script>
     <script src="../assets/mangoo-dashboard-shell.js"></script>
     <script>
     (function(){
       var JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
-      var METHODS = ['orange_money', 'wave', 'cash', 'card'];
+      var METHODS = ['orange_money', 'wave', 'mtn_momo', 'moov_money', 'free_mobile', 'card'];
       var NOTIFS = ['newOrder', 'messages', 'avis', 'promotions'];
       var currentConfig = null;
       var pendingLogo = '';
@@ -807,6 +858,39 @@ html.dark {
         });
       }
 
+      // Persiste immédiatement un logo uploadé dans les 3 couches : profil de la
+      // boutique (source de la carte/fiche), identité de session locale et compte
+      // utilisateur (users.json). Garantit que le logo ne disparaît plus au rechargement.
+      function persistLogoNow(dataUrl) {
+        MangooVendorConfig.patch('profile', { logo: dataUrl }).catch(function () {});
+        try {
+          var raw = localStorage.getItem('mgt_user');
+          var user = raw ? JSON.parse(raw) : null;
+          if (user && (user.role === 'vendeur' || user.role === 'prestataire')) {
+            user.logo = dataUrl;
+            localStorage.setItem('mgt_user', JSON.stringify(user));
+          }
+        } catch (e) { /* ignore */ }
+        if (window.MangooVendor && window.MangooVendor.save) {
+          try { window.MangooVendor.save({ logo: dataUrl }); } catch (e) { /* ignore */ }
+        }
+        var token = null;
+        try { token = localStorage.getItem('mgt_token'); } catch (e) {}
+        if (token) {
+          fetch('/api/auth/me', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ logo: dataUrl })
+          }).catch(function () { /* l'identité locale reste le repli */ });
+        }
+        var circles = document.querySelectorAll('[data-vendor-initials]');
+        circles.forEach(function (c) {
+          c.style.overflow = 'hidden';
+          c.innerHTML = '<img src="' + dataUrl + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
+        });
+        showToast('Logo enregistré');
+      }
+
       function hydrate(res) {
         currentConfig = res.config || {};
         var p = currentConfig.profile || {};
@@ -857,6 +941,13 @@ html.dark {
         var radius = document.getElementById('mgt-rayon');
         if (radius && currentConfig.decouverte) radius.value = currentConfig.decouverte.rayonKm;
 
+        var resa = currentConfig.reservation || {};
+        setSwitchState(document.querySelector('[data-resa-toggle]'), resa.enabled !== false);
+        var acPct = document.getElementById('mgt-acompte-percent');
+        if (acPct) acPct.value = Number(resa.acomptePercent) || 0;
+        var acMin = document.getElementById('mgt-acompte-min');
+        if (acMin) acMin.value = Number(resa.acompteMin) || 0;
+
         renderCities();
       }
 
@@ -900,6 +991,17 @@ html.dark {
 
         var radius = document.getElementById('mgt-rayon');
         if (radius && currentConfig.decouverte) currentConfig.decouverte.rayonKm = parseInt(radius.value, 10) || 25;
+
+        // Réservation & acompte : l'acompte est paramétré par prestataire.
+        // `digitalOnly` reste forcé à vrai (aucune circulation d'espèces).
+        currentConfig.reservation = currentConfig.reservation || {};
+        var resaSw = document.querySelector('[data-resa-toggle]');
+        currentConfig.reservation.enabled = resaSw ? resaSw.classList.contains('on') : true;
+        var acPctEl = document.getElementById('mgt-acompte-percent');
+        currentConfig.reservation.acomptePercent = acPctEl ? Math.max(0, Math.min(100, parseInt(acPctEl.value, 10) || 0)) : 0;
+        var acMinEl = document.getElementById('mgt-acompte-min');
+        currentConfig.reservation.acompteMin = acMinEl ? Math.max(0, parseInt(acMinEl.value, 10) || 0) : 0;
+        currentConfig.reservation.digitalOnly = true;
 
         MangooVendorConfig.save(currentConfig).then(function () {
           syncIdentity();
@@ -1107,7 +1209,7 @@ html.dark {
             currentConfig = currentConfig || {};
             currentConfig.profile = currentConfig.profile || {};
             currentConfig.profile.logo = dataUrl;
-            showToast('Photo mise à jour — pensez à enregistrer');
+            persistLogoNow(dataUrl);
           }).catch(function () { showToast('Impossible de lire l\'image'); });
           logoInput.value = '';
         });
@@ -1121,6 +1223,12 @@ html.dark {
       }
 
       currentConfig = {};
+
+      // Charge la config réelle du prestataire (profil, logo, horaires…) au
+      // démarrage pour que les champs et l'aperçu reflètent les données persistées.
+      MangooVendorConfig.get().then(function (res) {
+        if (res && res.config) { pendingLogo = ''; hydrate(res); }
+      }).catch(function () { /* reste sur l'état vide */ });
 
       loadCitySuggestions();
     })();

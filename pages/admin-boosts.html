@@ -381,7 +381,7 @@ html.dark {
                                 <i data-lucide="banknote" class="w-4 h-4" style="color: rgb(var(--mgt-primary));"></i>
                             </span>
                         </div>
-                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));">426K FCFA</div>
+                        <div class="text-2xl font-bold tabular-nums" style="color: rgb(var(--mgt-primary));">—</div>
                         <div class="text-xs text-muted-foreground">sur 30 jours</div>
                     </div>
                 </div>
@@ -473,11 +473,7 @@ html.dark {
 
       var BOOSTS_KEY = 'mgt_admin_boosts_v1';
       var boosts = [];
-      var BOOSTS_SEED = [
-        { id: 'boost-sponsorise', type: 'sponsorise', title: 'Sponsorisé', duration: '24h', durationKey: '24h', price: 2000, status: 'actif' },
-        { id: 'boost-promo', type: 'promo', title: 'En Promo', duration: '3 jours', durationKey: '24h', price: 3000, status: 'actif' },
-        { id: 'boost-nouveau', type: 'nouveau', title: 'Nouveau', duration: '48h', durationKey: '48h', price: 1000, status: 'actif' }
-      ];
+      var BOOSTS_SEED = [];
 
       function adminToken() {
         try { return localStorage.getItem('mgt_token'); } catch (e) { return null; }
