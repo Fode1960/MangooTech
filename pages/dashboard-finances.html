@@ -462,16 +462,12 @@ html.dark {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div class="lg:col-span-1 bg-[rgb(var(--mgt-primary))] rounded-xl p-6 shadow-[var(--mgt-shadow-md)] text-[rgb(var(--mgt-primary-foreground))]">
             <div class="flex items-center justify-between mb-4">
-              <p class="text-sm text-white/70">Solde disponible</p>
+              <p class="text-sm text-white/70">Gains à encaisser</p>
               <span class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center"><i data-lucide="wallet" class="w-4.5 h-4.5"></i></span>
             </div>
             <p class="text-3xl font-bold tracking-tight tabular-nums"><span id="balance-amount">0</span> <span class="text-lg font-semibold text-white/70">FCFA</span></p>
             <p class="text-xs text-white/60 mt-2">Prochain versement : <span id="payout-date">—</span></p>
             <div class="mt-5 flex flex-col gap-2">
-              <button id="btn-recharge" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white/15 text-white text-sm font-semibold hover:bg-white/25 transition-colors border border-white/20">
-                <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                Recharger
-              </button>
               <button id="btn-withdraw" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white text-sm font-semibold hover:bg-[rgb(var(--mgt-accent-600))] transition-colors">
                 <i data-lucide="banknote" class="w-4 h-4"></i>
                 Demander un retrait
@@ -629,9 +625,8 @@ html.dark {
     <script>lucide.createIcons();</script>
     <script>
     (function () {
-      // Comportement de production du portefeuille : demande de retrait réelle.
-      // Le solde se met à jour et une nouvelle transaction est ajoutée en tête
-      // de l'historique. (En production, ce serait validé côté backend.)
+      // Demande de retrait réelle : le disponible est dérivé du journal de
+      // transactions (aucun solde stocké, conformité BCEAO).
       var DEFAULT_BALANCE = 0;
       // Identifiant du professionnel réellement connecté (session mgt_user), avec
       // repli sur l'identité locale. Évite tout ID codé en dur : le rechargement
@@ -645,13 +640,7 @@ html.dark {
         }
         return (mv.current && mv.current().vendorId) || '';
       }
-      function localVendorBalance() {
-        if (window.MangooVendor && typeof window.MangooVendor.getVendorBalance === 'function') {
-          return window.MangooVendor.getVendorBalance(currentVendorId());
-        }
-        return DEFAULT_BALANCE;
-      }
-      function currentBalance() { return (typeof window.__mgtBalance === 'number') ? window.__mgtBalance : localVendorBalance(); }
+      function currentBalance() { return (typeof window.__mgtBalance === 'number') ? window.__mgtBalance : DEFAULT_BALANCE; }
       function fmt(n) { return n.toLocaleString('fr-FR').replace(/\u202f/g, ' '); }
 
       function toast(msg) {
@@ -678,7 +667,7 @@ html.dark {
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
           '<h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));">Demander un retrait</h3>' +
           '<button id="wd-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:20px;cursor:pointer;">&times;</button></div>' +
-          '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));margin-bottom:12px;">Solde disponible : <strong style="color:rgb(var(--mgt-foreground));">' + fmt(currentBalance()) + ' FCFA</strong></p>' +
+          '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));margin-bottom:12px;">Gains à encaisser : <strong style="color:rgb(var(--mgt-foreground));">' + fmt(currentBalance()) + ' FCFA</strong></p>' +
           '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Montant (FCFA)</label>' +
           '<input id="wd-amount" type="number" min="1000" step="500" placeholder="Ex. 25 000" style="width:100%;height:44px;padding:0 12px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:15px;outline:none;margin-bottom:8px;">' +
           '<p id="wd-error" style="font-size:12px;color:rgb(var(--mgt-error));min-height:16px;margin-bottom:8px;"></p>' +
@@ -697,13 +686,8 @@ html.dark {
           if (!v || isNaN(v)) { err.textContent = 'Veuillez saisir un montant valide.'; return; }
           if (v < 1000) { err.textContent = 'Le retrait minimum est de 1 000 FCFA.'; return; }
           var bal = currentBalance();
-          if (v > bal) { err.textContent = 'Montant supérieur au solde disponible.'; return; }
+          if (v > bal) { err.textContent = 'Montant supérieur aux gains à encaisser.'; return; }
           window.__mgtBalance = bal - v;
-          // Persiste le retrait dans le portefeuille vendeur local pour que le
-          // solde reste cohérent après rechargement de la page.
-          if (window.MangooVendor && typeof window.MangooVendor.debitVendor === 'function') {
-            window.MangooVendor.debitVendor(currentVendorId(), v, 'Retrait demandé');
-          }
           var balEl = document.getElementById('balance-amount');
           if (balEl) balEl.textContent = fmt(bal - v);
           prependTx(v);
@@ -1068,10 +1052,6 @@ html.dark {
 <script src="../assets/mangoo-dashboard-shell.js"></script>
 <script>
 (function () {
-  // ===== Recharge du portefeuille (Mangoo Pay+) =====
-  // Flux : montant -> choix opérateur -> numéro -> OTP -> POST /api/wallet/topup
-  var PRESETS = [5000, 10000, 25000, 50000];
-
   // Identifiant du professionnel réellement connecté (session mgt_user), avec
   // repli sur l'identité locale. Aucun ID codé en dur : recharge, lecture de
   // solde et historique doivent cibler la boutique/prestataire actuellement ouverte.
@@ -1128,10 +1108,10 @@ html.dark {
     if (el) el.textContent = nextPayoutDate();
   }
 
-  // ===== Historique réel du portefeuille (GET /api/wallet) =====
+  // ===== Journal de transactions (GET /api/wallet) =====
   function txSign(t) {
     var kind = t && t.kind;
-    if (kind === 'topup' || kind === 'commande' || kind === 'vente' || kind === 'versement' || kind === 'remboursement' || kind === 'credit') return 1;
+    if (kind === 'negotiation-settlement' || kind === 'boutique-order-settlement' || kind === 'delivery-earning' || kind === 'commande' || kind === 'vente' || kind === 'versement' || kind === 'remboursement' || kind === 'credit') return 1;
     return -1;
   }
 
@@ -1146,22 +1126,21 @@ html.dark {
   }
 
   function txTitle(t) {
-    if (t.kind === 'topup') return 'Recharge portefeuille';
+    if (t.kind === 'negotiation-settlement') return 'Vente négociée';
+    if (t.kind === 'boutique-order-settlement') return 'Vente boutique';
+    if (t.kind === 'delivery-earning') return 'Gain de livraison';
     if (t.kind === 'offre-jour') return 'Offre du jour';
     if (t.kind === 'offre-jour-renouvellement') return 'Renouvellement offre du jour';
     if (t.kind === 'booster') return 'Badge boosté';
     if (t.kind === 'booster-renew') return 'Renouvellement badge';
-    if (t.kind === 'transfer') return 'Transfert';
-    if (t.kind === 'retrait' || t.kind === 'withdrawal') return 'Retrait';
+    if (t.kind === 'retrait' || t.kind === 'withdrawal' || t.kind === 'courier-withdrawal' || t.kind === 'vendor-withdrawal') return 'Retrait';
     return t.description || t.kind || 'Transaction';
   }
 
   function txSubtitle(t) {
     var op = t.operatorLabel || '';
-    if (t.kind === 'topup') return (op ? op + ' · ' : '') + (t.phone || 'Mangoo Pay+');
     if (t.kind === 'offre-jour' || t.kind === 'offre-jour-renouvellement') return (t.description || '') + (op ? ' · ' + op : '');
     if (t.kind === 'booster' || t.kind === 'booster-renew') return (t.description || '') + (op ? ' · ' + op : '');
-    if (t.mode === 'wallet') return 'Paiement portefeuille';
     return op || '';
   }
 
@@ -1191,134 +1170,25 @@ html.dark {
     }).join('');
   }
 
-  // Synchronise d'abord le solde vendeur local (alimenté par les commandes
-  // passées côté client), puis tente l'API pour l'historique complet.
-  function syncLocalWallet() {
-    if (window.MangooVendor && typeof window.MangooVendor.getVendorBalance === 'function') {
-      window.__mgtBalance = window.MangooVendor.getVendorBalance(currentVendorId());
-      setBalance(window.__mgtBalance);
-    }
-    setPayoutDate();
-  }
-
   function loadWallet() {
-    syncLocalWallet();
+    setPayoutDate();
     if (!window.MangooPayment) return;
     fetch('/api/wallet', { headers: MangooPayment.authHeaders(), cache: 'no-store' })
       .then(function (r) { return r.json(); })
       .then(function (res) {
         if (res && res.ok) {
-          // L'API ne sert ici qu'à charger l'historique des transactions. Le
-          // solde affiché reste celui du portefeuille vendeur local (crédité à
-          // chaque commande passée côté client) : on ne l'écrase PAS avec le
-          // solde serveur, sinon un achat récent serait effacé de l'affichage.
+          // Conformité BCEAO : aucun solde stocké. « Gains à encaisser » = net
+          // dérivé du journal de transactions (commissions dues moins versements).
+          var net = Math.round(Number(res.net) || 0);
+          window.__mgtBalance = net;
+          setBalance(net);
           renderTransactions(res.transactions);
         }
-        // Ré-affiche toujours le solde local + la règle de versement (prioritaires).
-        syncLocalWallet();
       })
       .catch(function () { /* conserve l'état local si aucune session */ });
   }
 
-  function prependRechargeTx(amount, txn) {
-    var tbody = document.querySelector('table tbody');
-    if (!tbody) return;
-    var paidAt = (txn && txn.paidAt) ? new Date(txn.paidAt) : new Date();
-    var months = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
-    var h = paidAt.getHours(), m = paidAt.getMinutes();
-    var dateStr = paidAt.getDate() + ' ' + months[paidAt.getMonth()] + ' · ' + (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
-    var ref = txn && txn.reference ? txn.reference : ('RCH-' + Math.floor(100 + Math.random() * 900));
-    var tr = document.createElement('tr');
-    tr.innerHTML = '<td class="px-4 py-3 text-xs text-[rgb(var(--mgt-muted-foreground))] tabular-nums">' + dateStr + '</td>' +
-      '<td class="px-4 py-3"><p class="font-medium text-[rgb(var(--mgt-foreground))]">Recharge portefeuille</p><p class="text-xs text-[rgb(var(--mgt-muted-foreground))]">Mangoo Pay+ · ' + esc(ref) + '</p></td>' +
-      '<td class="px-4 py-3 text-xs text-[rgb(var(--mgt-muted-foreground))]">' + esc(ref) + '</td>' +
-      '<td class="px-4 py-3 text-right font-semibold tabular-nums text-[rgb(var(--mgt-primary-700))]">+' + fmt(amount) + '</td>';
-    tbody.insertBefore(tr, tbody.firstChild);
-  }
-
-  function submitRecharge(amount) {
-    if (!window.MangooPayment) { toast('Module de paiement indisponible.'); return; }
-    MangooPayment.collect({
-      amount: amount,
-      title: 'Recharger le portefeuille',
-      subtitle: 'Mangoo Pay+',
-      kind: 'topup'
-    }).then(function (pay) {
-      return fetch('/api/wallet/topup', {
-        method: 'POST',
-        headers: MangooPayment.authHeaders(),
-        body: JSON.stringify({ operator: pay.operator, phone: pay.phone, amount: amount, otp: pay.otp })
-      }).then(function (r) { return r.json(); }).then(function (res) {
-        if (res && res.ok) {
-          // Persiste la recharge dans le portefeuille vendeur local pour que le
-          // solde reste cohérent après rechargement de la page.
-          if (window.MangooVendor && typeof window.MangooVendor.creditVendor === 'function') {
-            window.MangooVendor.creditVendor(currentVendorId(), amount, 'Recharge portefeuille');
-            window.__mgtBalance = window.MangooVendor.getVendorBalance(currentVendorId());
-          }
-          setBalance(window.__mgtBalance);
-          prependRechargeTx(amount, res.transaction);
-          toast('Portefeuille rechargé de ' + fmt(amount) + ' FCFA.');
-        } else {
-          toast((res && res.error) || 'Recharge refusée.');
-        }
-      });
-    }).catch(function () { /* modal annulée */ });
-  }
-
-  function openRecharge() {
-    var old = document.getElementById('rc-modal');
-    if (old) old.remove();
-    var modal = document.createElement('div');
-    modal.id = 'rc-modal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;font-family:var(--mgt-font-sans);';
-
-    var presetBtns = PRESETS.map(function (v) {
-      return '<button type="button" data-amt="' + v + '" style="flex:1;height:46px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:13px;font-weight:600;cursor:pointer;">' + fmt(v) + ' <span style="font-size:10px;font-weight:500;opacity:.65;">FCFA</span></button>';
-    }).join('');
-
-    modal.innerHTML =
-      '<div style="background:rgb(var(--mgt-card));border:1px solid rgb(var(--mgt-border));border-radius:16px;width:100%;max-width:440px;padding:24px;">' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><h3 style="font-size:16px;font-weight:600;color:rgb(var(--mgt-foreground));">Recharger le portefeuille</h3><button id="rc-close" style="background:none;border:none;color:rgb(var(--mgt-muted-foreground));font-size:22px;cursor:pointer;line-height:1;">&times;</button></div>' +
-      '<p style="font-size:13px;color:rgb(var(--mgt-muted-foreground));margin:0 0 14px;">Choisissez un montant ou saisissez une valeur personnalisée.</p>' +
-      '<div style="display:flex;gap:8px;margin-bottom:14px;">' + presetBtns + '</div>' +
-      '<label style="display:block;font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Montant personnalisé (FCFA)</label>' +
-      '<input id="rc-amount" type="number" min="500" step="500" placeholder="Ex. 15 000" style="width:100%;height:46px;padding:0 14px;border:1px solid rgb(var(--mgt-input));border-radius:10px;background:rgb(var(--mgt-background));color:rgb(var(--mgt-foreground));font-size:15px;outline:none;box-sizing:border-box;margin-bottom:8px;">' +
-      '<p id="rc-error" style="font-size:12px;color:rgb(var(--mgt-error));min-height:16px;margin:0 0 6px;"></p>' +
-      '<div style="display:flex;gap:10px;"><button id="rc-cancel" style="flex:1;height:46px;border:1px solid rgb(var(--mgt-border));border-radius:10px;background:transparent;color:rgb(var(--mgt-foreground));font-size:14px;font-weight:600;cursor:pointer;">Annuler</button><button id="rc-confirm" style="flex:1;height:46px;border:none;border-radius:10px;background:rgb(var(--mgt-primary));color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Continuer</button></div></div>';
-    document.body.appendChild(modal);
-
-    var input = modal.querySelector('#rc-amount');
-    var err = modal.querySelector('#rc-error');
-    function close() { modal.remove(); }
-    modal.querySelector('#rc-close').onclick = close;
-    modal.querySelector('#rc-cancel').onclick = close;
-    modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
-
-    modal.querySelectorAll('[data-amt]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        input.value = b.getAttribute('data-amt');
-        modal.querySelectorAll('[data-amt]').forEach(function (x) {
-          x.style.borderColor = 'rgb(var(--mgt-border))'; x.style.background = 'rgb(var(--mgt-background))'; x.style.color = 'rgb(var(--mgt-foreground))';
-        });
-        b.style.borderColor = 'rgb(var(--mgt-primary))'; b.style.background = 'rgb(var(--mgt-primary-50))'; b.style.color = 'rgb(var(--mgt-primary-700))';
-      });
-    });
-
-    modal.querySelector('#rc-confirm').onclick = function () {
-      var v = parseInt(input.value, 10);
-      if (!v || isNaN(v) || v <= 0) { err.textContent = 'Veuillez saisir un montant valide.'; input.focus(); return; }
-      if (v < 500) { err.textContent = 'Le montant minimum est de 500 FCFA.'; return; }
-      close();
-      submitRecharge(v);
-    };
-    setTimeout(function () { input.focus(); }, 50);
-  }
-
-  var btn = document.getElementById('btn-recharge');
-  if (btn) btn.addEventListener('click', openRecharge);
-
-  // Charge l'historique réel (recharges + paiements Offre du jour) au démarrage.
+  // Charge l'historique réel au démarrage.
   setPayoutDate();
   loadWallet();
 })();

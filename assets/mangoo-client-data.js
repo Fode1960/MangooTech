@@ -12,7 +12,6 @@
   var KEY_USER = 'mgt_client_user_v1';
   var KEY_FAVORITES = 'mgt_client_favorites_v1';
   var KEY_ORDERS = 'mgt_client_orders_v1';
-  var KEY_WALLET = 'mgt_client_wallet_v1';
 
   function readJSON(key, fallback) {
     try {
@@ -352,47 +351,10 @@
     return updateOrderStatus(id, 'annulee');
   }
 
-  // ---- Portefeuille (Solde client) ----
-  function ensureWalletSeeded() {
-    var w = readJSON(KEY_WALLET, null);
-    if (!w || typeof w.balance !== 'number') {
-      w = { balance: 0, currency: 'XOF' };
-      writeJSON(KEY_WALLET, w);
-    }
-    if (!w.currency) w.currency = 'XOF';
-    return w;
-  }
-  function getWallet() {
-    return ensureWalletSeeded();
-  }
-  function getBalance() {
-    return getWallet().balance;
-  }
-  function setBalance(amount) {
-    var w = getWallet();
-    w.balance = Math.max(0, Math.round(Number(amount) || 0));
-    writeJSON(KEY_WALLET, w);
-    return w;
-  }
-  function creditWallet(amount) {
-    var w = getWallet();
-    w.balance += Math.round(Number(amount) || 0);
-    writeJSON(KEY_WALLET, w);
-    return w;
-  }
-  function debitWallet(amount) {
-    var w = getWallet();
-    var amt = Math.round(Number(amount) || 0);
-    if (amt <= 0) return false;
-    if (w.balance < amt) return false;
-    w.balance -= amt;
-    writeJSON(KEY_WALLET, w);
-    return true;
-  }
-
-  // ---- Portefeuille serveur (source de vérité) ----
-  // Appelle GET /api/wallet avec le token de session et retourne le vrai solde.
-  // Met à jour le cache local puis invoque cb({ ok, wallet, balance, ... }).
+  // ---- Journal de transactions serveur (source de vérité) ----
+  // Conformité BCEAO : aucun solde stocké. GET /api/wallet renvoie le journal
+  // des transactions et un « net » dérivé (commissions/gains dus), pas un solde.
+  // Retourne cb({ ok, net, transactions, devise }).
   function fetchServerWallet(cb) {
     cb = typeof cb === 'function' ? cb : function () {};
     var token = null;
@@ -404,12 +366,8 @@
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       }).then(function (res) {
-        var w = res && res.wallet ? res.wallet : null;
-        if (!w) { cb({ ok: false, error: 'Portefeuille introuvable' }); return; }
-        var balance = Math.round(Number(w.balance) || 0);
-        var wallet = { balance: balance, currency: w.currency || 'XOF' };
-        writeJSON(KEY_WALLET, wallet);
-        cb({ ok: true, wallet: wallet, balance: balance, transactions: res.transactions || [], devise: res.devise || 'XOF' });
+        var net = Math.round(Number(res && res.net) || 0);
+        cb({ ok: true, net: net, transactions: (res && res.transactions) || [], devise: (res && res.devise) || 'XOF' });
       }).catch(function (err) {
         cb({ ok: false, error: (err && err.message) || 'Erreur réseau' });
       });
@@ -445,10 +403,6 @@
     timeLabel: timeLabel,
     amountNumber: amountNumber,
     MONTHS: MONTHS,
-    getWallet: getWallet,
-    getBalance: getBalance,
-    creditWallet: creditWallet,
-    debitWallet: debitWallet,
     fetchServerWallet: fetchServerWallet
   };
 })(window);

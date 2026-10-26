@@ -378,13 +378,6 @@ html.dark {
                 <label class="caption font-semibold text-[rgb(var(--mgt-foreground))] block mb-1.5">Description <span class="text-[rgb(var(--mgt-muted-foreground))] font-normal">(optionnel)</span></label>
                 <textarea id="odj-desc" rows="2" placeholder="Décrivez votre offre…" data-autocorrect class="w-full px-4 py-2.5 text-sm bg-[rgb(var(--mgt-muted))] border border-[rgb(var(--mgt-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(var(--mgt-ring)/0.30)] text-[rgb(var(--mgt-foreground))] placeholder:text-[rgb(var(--mgt-muted-foreground))]"></textarea>
               </div>
-              <div>
-                <label class="caption font-semibold text-[rgb(var(--mgt-foreground))] block mb-1.5">Mode de paiement</label>
-                <div class="grid grid-cols-2 gap-2">
-                  <button id="odj-pay-wallet" type="button" class="odj-pay px-3 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-foreground))] hover:border-[rgb(var(--mgt-primary))] transition-colors">Portefeuille</button>
-                  <button id="odj-pay-mobile" type="button" class="odj-pay px-3 py-2.5 rounded-lg border border-[rgb(var(--mgt-primary))] text-sm font-medium text-[rgb(var(--mgt-primary))] transition-colors">Mangoo Pay+</button>
-                </div>
-              </div>
               <button id="odj-publish" class="w-full py-2.5 rounded-lg bg-[rgb(var(--mgt-accent))] text-white font-semibold text-sm hover:bg-[rgb(var(--mgt-accent-600))] transition-colors">Publier l'offre</button>
             </div>
           </div>
@@ -901,25 +894,21 @@ html.dark {
 
   // ===== Historique des paiements & promotions =====
   function histTxTitle(t) {
-    if (t.kind === 'topup') return 'Recharge portefeuille';
     if (t.kind === 'offre-jour') return 'Offre du jour';
     if (t.kind === 'offre-jour-renouvellement') return 'Renouvellement offre du jour';
-    if (t.kind === 'transfer') return 'Transfert';
     if (t.kind === 'retrait' || t.kind === 'withdrawal') return 'Retrait';
     return t.description || t.kind || 'Transaction';
   }
 
   function histTxSubtitle(t) {
     var op = t.operatorLabel || '';
-    if (t.kind === 'topup') return (op ? op + ' · ' : '') + (t.phone || 'Mangoo Pay+');
     if (t.kind === 'offre-jour' || t.kind === 'offre-jour-renouvellement') return (t.description || '') + (op ? ' · ' + op : '');
-    if (t.mode === 'wallet') return 'Mangoo Pay+';
     return op || '';
   }
 
   function histTxSign(t) {
     var kind = t && t.kind;
-    if (kind === 'topup' || kind === 'commande' || kind === 'vente' || kind === 'versement' || kind === 'remboursement' || kind === 'credit' || kind === 'offre-jour' || kind === 'offre-jour-renouvellement') return 1;
+    if (kind === 'commande' || kind === 'vente' || kind === 'versement' || kind === 'remboursement' || kind === 'credit' || kind === 'offre-jour' || kind === 'offre-jour-renouvellement') return 1;
     return -1;
   }
 
@@ -1045,10 +1034,9 @@ html.dark {
 </script>
 <script>
 (function () {
-  // ===== Offre du jour : publication payante (wallet ou mobile money) =====
+  // ===== Offre du jour : publication payante (Mobile Money direct) =====
   var selectedTierId = null;
   var tiersById = {};
-  var payMode = 'mobile';
 
   function fmt(n) { return Number(n || 0).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' '); }
 
@@ -1113,20 +1101,6 @@ html.dark {
     });
   }
 
-  function setPayMode(mode) {
-    payMode = mode;
-    var walletBtn = document.getElementById('odj-pay-wallet');
-    var mobileBtn = document.getElementById('odj-pay-mobile');
-    function style(btn, active) {
-      if (!btn) return;
-      btn.className = active
-        ? 'odj-pay px-3 py-2.5 rounded-lg border border-[rgb(var(--mgt-primary))] text-sm font-medium text-[rgb(var(--mgt-primary))] transition-colors'
-        : 'odj-pay px-3 py-2.5 rounded-lg border border-[rgb(var(--mgt-border))] text-sm font-medium text-[rgb(var(--mgt-foreground))] hover:border-[rgb(var(--mgt-primary))] transition-colors';
-    }
-    style(walletBtn, mode === 'wallet');
-    style(mobileBtn, mode === 'mobile');
-  }
-
   function postPublish(body) {
     return fetch('/api/offres-jour/publish', {
       method: 'POST',
@@ -1167,20 +1141,16 @@ html.dark {
 
     function onError() { done(); toast('Erreur réseau lors de la publication.'); }
 
-    if (payMode === 'wallet') {
-      postPublish({ tierId: selectedTierId, title: title, description: description, payFromWallet: true }).then(onSuccess).catch(onError);
-    } else {
-      if (!window.MangooPayment) { done(); toast('Module de paiement indisponible.'); return; }
-      MangooPayment.collect({
-        amount: tier.price,
-        title: 'Offre du jour — ' + tier.durationLabel,
-        subtitle: 'Publication · Mangoo Pay+',
-        kind: 'offre-jour',
-        meta: { tierId: selectedTierId, title: title, description: description }
-      }).then(function (pay) {
-        postPublish({ tierId: selectedTierId, title: title, description: description, operator: pay.operator, phone: pay.phone, otp: pay.otp }).then(onSuccess).catch(onError);
-      }).catch(function () { done(); });
-    }
+    if (!window.MangooPayment) { done(); toast('Module de paiement indisponible.'); return; }
+    MangooPayment.collect({
+      amount: tier.price,
+      title: 'Offre du jour — ' + tier.durationLabel,
+      subtitle: 'Publication · Mangoo Pay+',
+      kind: 'offre-jour',
+      meta: { tierId: selectedTierId, title: title, description: description }
+    }).then(function (pay) {
+      postPublish({ tierId: selectedTierId, title: title, description: description, operator: pay.operator, phone: pay.phone, otp: pay.otp }).then(onSuccess).catch(onError);
+    }).catch(function () { done(); });
   }
 
   function loadTiers() {
@@ -1216,7 +1186,7 @@ html.dark {
     }
     var o = active[0];
     var pay = o.payment || {};
-    var payLabel = pay.mode === 'wallet' ? 'Portefeuille' : (pay.operatorLabel || 'Mangoo Pay+');
+    var payLabel = pay.operatorLabel || 'Mangoo Pay+';
     var meta = [o.durationLabel || '', fmt(o.price) + ' FCFA', payLabel].filter(Boolean).join(' · ');
     var rem = remainingLabel(o.endsAt);
     if (rem) meta += ' · ' + rem;
@@ -1241,12 +1211,7 @@ html.dark {
 
   var publishBtn = document.getElementById('odj-publish');
   if (publishBtn) publishBtn.addEventListener('click', publish);
-  var walletBtn = document.getElementById('odj-pay-wallet');
-  var mobileBtn = document.getElementById('odj-pay-mobile');
-  if (walletBtn) walletBtn.addEventListener('click', function () { setPayMode('wallet'); });
-  if (mobileBtn) mobileBtn.addEventListener('click', function () { setPayMode('mobile'); });
 
-  setPayMode('mobile');
   loadTiers();
   loadActiveOffer();
 })();

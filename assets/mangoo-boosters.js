@@ -62,7 +62,6 @@
       if (payment.operator) body.operator = payment.operator;
       if (payment.phone) body.phone = payment.phone;
       if (payment.otp) body.otp = payment.otp;
-      if (payment.payFromWallet === true) body.payFromWallet = true;
     }
     return post(body);
   }
@@ -72,7 +71,6 @@
       if (payment.operator) body.operator = payment.operator;
       if (payment.phone) body.phone = payment.phone;
       if (payment.otp) body.otp = payment.otp;
-      if (payment.payFromWallet === true) body.payFromWallet = true;
     }
     return post(body);
   }

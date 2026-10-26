@@ -168,7 +168,7 @@ Active la copie de chaque archive vers un bucket S3-compatible (upload signé AW
 
 ## 7. Points de vigilance production
 
-**Settlement des effets de bord (résolu).** Le checkout redirect live applique désormais les effets de bord métier via `settleTransaction(txn)` dans `server.cjs`, déclenché depuis `/checkout/status`, le webhook Orange et les endpoints Wave (status + webhook). Branches couvertes : crédit portefeuille (`topup`), publication/renouvellement de l'offre du jour (`offre-jour`, `offre-jour-renouvellement`), paiement de négociation (`negotiation-payment`), activation/renouvellement des boosters (`booster`, `booster-renew`), commande boutique (`boutique-order`). Les appelants transmettent `kind` + `meta` (via `assets/mangoo-payment.js`) et le checkout générique stocke `meta` sur la transaction.
+**Settlement des effets de bord (résolu).** Le checkout redirect live applique désormais les effets de bord métier via `settleTransaction(txn)` dans `server.cjs`, déclenché depuis `/checkout/status`, le webhook Orange et les endpoints Wave (status + webhook). Branches couvertes : publication/renouvellement de l'offre du jour (`offre-jour`, `offre-jour-renouvellement`), paiement de négociation (`negotiation-payment`), activation/renouvellement des boosters (`booster`, `booster-renew`), commande boutique (`boutique-order`, qui enregistre le règlement vendeur net de commission en `boutique-order-settlement`). Les appelants transmettent `kind` + `meta` (via `assets/mangoo-payment.js`) et le checkout générique stocke `meta` sur la transaction.
 
 **Idempotence.** Le settlement est gardé par le flag `txn.settled` : un double webhook ou un double poll ne peut pas entraîner de double crédit ni de double activation.
 

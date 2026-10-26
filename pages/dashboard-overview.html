@@ -763,10 +763,8 @@ html.dark {
       }
 
       var vendorId = vendor.vendorId || 'pro-41cafa4bcb31';
-      var solde = (window.MangooVendor && typeof window.MangooVendor.getVendorBalance === 'function')
-        ? window.MangooVendor.getVendorBalance(vendorId) : 0;
       setKpi('kpi-orders', 'Ventes ce mois', '0', '');
-      setKpi('kpi-revenue', 'Solde disponible', fmtFCFA(solde) + ' <span class="text-sm font-medium text-[rgb(var(--mgt-muted-foreground))]">FCFA</span>', '');
+      setKpi('kpi-revenue', 'Gains à encaisser', '0 <span class="text-sm font-medium text-[rgb(var(--mgt-muted-foreground))]">FCFA</span>', '');
       setKpi('kpi-clients', 'Produits en stock', '0', '');
       setKpi('kpi-messages', 'Commandes à livrer', '0', '');
       swapKpiIcon('kpi-clients', 'package');

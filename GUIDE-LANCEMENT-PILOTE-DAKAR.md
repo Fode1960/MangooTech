@@ -141,9 +141,9 @@ Autres chantiers de la phase 2 :
 | 6 | **Géocodeur** : Nominatim plafonné à ~1 req/s | `geocodeCity()` dans `server.cjs`, note du `README.md` | Moyenne |
 | 7 | **Domaine + HTTPS + e-mails `@mangoo.tech`** (identification de l'expéditeur des push) | `server.cjs` (`SUPPORT_EMAIL`), certificats | Moyenne |
 | 8 | **Sauvegardes automatiques** vérifiées | `backup-data.cjs` | Élevée |
-| 9 | **⚠️ Conformité BCEAO sur le wallet** : `/api/wallet/topup` et `/api/wallet/transfer` créent un solde stocké, ce qui relève de la monnaie électronique et exige un agrément UEMOA | `server.cjs` → `/api/wallet/*` | **Risque d'arrêt d'activité** |
+| 9 | **Conformité BCEAO (résolu)** : aucun solde monétaire stocké. `/api/wallet/topup` et `/api/wallet/transfer` renvoient `410` (retirés) ; `/api/wallet` renvoie un journal de transactions + « net » dérivé à la volée (`ledgerNet`), sans solde persisté. Paiement exclusivement en Mobile Money direct, la plateforme ne prélevant que sa commission. Portefeuille client/vendeur supprimé côté serveur et client. | `server.cjs` → `/api/wallet/*`, `ledgerNet`, `settleTransaction` · pages client/vendeur purgées | **Résolu** |
 
-> **Recommandation sur le point 9** : en v1, ne stocker aucun solde. Paiement direct du client vers le vendeur via Wave/Orange, la plateforme ne prélevant que sa commission. Le wallet ne se rouvre qu'avec un partenariat établissement de monnaie électronique.
+> **Point 9 — mise en œuvre** : aucun solde n'est stocké en v1. Paiement direct du client vers le vendeur via Wave/Orange Money, la plateforme ne prélevant que sa commission. Le wallet ne se rouvrira qu'avec un partenariat établissement de monnaie électronique (BCEAO/UEMOA).
 
 ---
 

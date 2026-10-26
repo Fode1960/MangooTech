@@ -1071,12 +1071,6 @@ html.dark {
       clientName: user.fullName || user.name || 'Client',
       clientPhone: user.phone || ''
     });
-
-    // L'acompte a été encaissé en ligne : il est crédité au prestataire. Le
-    // solde reste réglé sur place, hors plateforme.
-    if (acompteAmount > 0 && window.MangooVendor && window.MangooVendor.creditVendor) {
-      window.MangooVendor.creditVendor(vendor.vendorId || 'pro-41cafa4bcb31', acompteAmount, 'Acompte réservation ' + orderId);
-    }
   }
 
   function showBookingToast(msg) {

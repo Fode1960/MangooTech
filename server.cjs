@@ -2085,7 +2085,6 @@ function reconcileRemoveVendor(vendorIds) {
   galerie = strip(galerie, ['vendorId', 'vendor', 'ownerId']);
   boosters = strip(boosters, ['vendorId', 'vendor', 'ownerId']);
   trials = strip(trials, ['vendorId', 'vendor', 'ownerId']);
-  wallets = strip(wallets, ['vendorId', 'vendor', 'ownerId', 'userId']);
   offresJour = strip(offresJour, ['vendorId', 'vendor', 'ownerId']);
 
   if (changed) {
@@ -2097,7 +2096,6 @@ function reconcileRemoveVendor(vendorIds) {
     saveGalerie();
     saveBoosters();
     saveTrials();
-    saveWallets();
     saveOffresJour();
     console.log('[Nettoyage] suppression du compte vendeur terminée : ' + targets.join(', '));
   }
@@ -2949,19 +2947,11 @@ function userForVendorId(vendorId) {
 /* Valide et trace le paiement d'un badge (activation ou renouvellement).
  * Le débit est enregistré UNIQUEMENT dans l'historique Boosters (via `price`,
  * `createdAt` et `paymentId` sur l'activation), PAS dans les Finances : celles-
- * ci ne gèrent que le portefeuille (recharges, retraits, offres du jour...).
- * En cas de paiement par portefeuille, le solde est débité directement. */
+ * ci ne gèrent que le journal de transactions (aucun solde stocké — BCEAO). */
 function recordBoosterPayment(user, offer, kind, body) {
   body = body || {};
   const amount = Math.round(Number(offer.price) || 0);
   const now = new Date().toISOString();
-  if (body.payFromWallet === true) {
-    const w = walletFor(user.id);
-    if ((Number(w.balance) || 0) < amount) return { ok: false, error: 'Solde portefeuille insuffisant.' };
-    w.balance = Math.round((Number(w.balance) || 0) - amount);
-    w.updatedAt = now;
-    saveWallets();
-  }
   const payment = {
     id: 'BOOST-' + Date.now(),
     amount: amount,
@@ -3000,12 +2990,10 @@ function saveBoosterStats() {
  * ------------------------------------------------------------------ */
 const PAYMENT_METHODS_FILE = path.join(DATA_DIR, 'payment-methods.json');
 const TRANSACTIONS_FILE = path.join(DATA_DIR, 'transactions.json');
-const WALLETS_FILE = path.join(DATA_DIR, 'wallets.json');
 const OFFRES_JOUR_FILE = path.join(DATA_DIR, 'offres-jour.json');
 
 let paymentMethods = [];
 let transactions = [];
-let wallets = [];
 let offresJour = [];
 
 const DEVISE = 'XOF';
@@ -3064,20 +3052,6 @@ function loadTransactions() {
 
 function saveTransactions() {
   writeJsonAtomic('transactions.json', transactions);
-}
-
-function loadWallets() {
-  try {
-    if (fs.existsSync(WALLETS_FILE)) {
-      const data = JSON.parse(fs.readFileSync(WALLETS_FILE, 'utf8'));
-      if (Array.isArray(data)) { wallets = data; console.log('[Paiement] portefeuilles chargés :', wallets.length); return; }
-    }
-  } catch (e) { console.error('[Paiement] portefeuilles illisibles, réinitialisation :', e.message); }
-  wallets = [];
-}
-
-function saveWallets() {
-  writeJsonAtomic('wallets.json', wallets);
 }
 
 function loadOffresJour() {
@@ -3366,11 +3340,6 @@ function settleNegotiationToVendor(nego) {
   const rate = planCommissionFor(nego.vendorId);
   const commission = Math.round(gross * rate / 100);
   const net = gross - commission;
-
-  const w = walletFor(nego.vendorId);
-  w.balance = Math.round((Number(w.balance) || 0) + net);
-  w.updatedAt = nowIso();
-  saveWallets();
 
   const txn = recordTransaction({
     userId: nego.vendorId,
@@ -3866,16 +3835,24 @@ function tierById(id) {
   return null;
 }
 
-function walletFor(userId) {
+/* Conformité BCEAO / UEMOA : la plateforme ne stocke AUCUN solde monétaire
+ * (aucune monnaie électronique). Le « disponible » d'un vendeur ou d'un
+ * livreur est un simple journal de transactions (commissions/gains dus,
+ * diminués des versements déjà effectués), jamais un solde rechargeable ou
+ * transférable. Il est dérivé à la volée depuis `transactions`. */
+const LEDGER_CREDIT_KINDS = ['negotiation-settlement', 'boutique-order-settlement', 'delivery-earning'];
+const LEDGER_DEBIT_KINDS = ['courier-withdrawal', 'vendor-withdrawal'];
+function ledgerNet(userId) {
   const id = String(userId || '');
-  let w = wallets.find(function (x) { return x.userId === id; });
-  if (!w) {
-    const u = users.find(function (x) { return x.id === id; });
-    w = { userId: id, ownerType: (u && u.role) || 'client', balance: 0, pending: 0, currency: DEVISE, updatedAt: new Date().toISOString() };
-    wallets.push(w);
-    saveWallets();
+  let net = 0;
+  for (let i = 0; i < transactions.length; i++) {
+    const t = transactions[i];
+    if (String(t.userId || '') !== id) continue;
+    const a = Math.round(Number(t.amount) || 0);
+    if (LEDGER_CREDIT_KINDS.indexOf(t.kind) >= 0) net += a;
+    else if (LEDGER_DEBIT_KINDS.indexOf(t.kind) >= 0) net -= a;
   }
-  return w;
+  return net;
 }
 
 /* ------------------------------------------------------------------ *
@@ -3978,8 +3955,7 @@ function confirmMobilePayment(txnId, opts) {
  *  fonction applique ces effets une seule fois (idempotente, gardée par
  *  `txn.settled`), que la notification arrive via le webhook serveur ou
  *  via le polling /checkout/status. Chaque `kind` applique l'effet métier
- *  correspondant (portefeuille, offres du jour, boosters, négociation,
- *  commande boutique).
+ *  correspondant (offres du jour, boosters, négociation, commande boutique).
  * ------------------------------------------------------------------ */
 function settleTransaction(txn) {
   if (!txn) return { ok: false, reason: 'missing' };
@@ -3989,15 +3965,7 @@ function settleTransaction(txn) {
   const kind = String(txn.kind || '');
   const now = nowIso();
 
-  if (kind === 'topup') {
-    const amount = Math.round(Number(txn.amount) || 0);
-    if (amount > 0) {
-      const w = walletFor(txn.userId);
-      w.balance = Math.round((Number(w.balance) || 0) + amount);
-      w.updatedAt = now;
-      saveWallets();
-    }
-  } else if (kind === 'offre-jour') {
+  if (kind === 'offre-jour') {
     const tier = tierById(String(meta.tierId || ''));
     const user = users.find(function (u) { return u && u.id === txn.userId; }) || null;
     const vendorId = canonicalRoutingId(user ? (user.vendorId || user.id) : (meta.vendorId || txn.userId));
@@ -4108,17 +4076,29 @@ function settleTransaction(txn) {
         }
       });
       saveCatalogue();
-      // Crédite le vendeur (net de commission) pour la cohérence comptable.
+      // Enregistre le règlement vendeur (net de commission) au journal :
+      // aucun solde stocké — la somme due est tracée en transaction et sera
+      // versée au vendeur en Mobile Money (conformité BCEAO).
       const vendorUser = userByRoutingId(order.vendorId);
       const vendorKey = vendorUser ? vendorUser.id : canonicalRoutingId(order.vendorId);
       const gross = Math.round(Number(order.total) || 0);
       const rate = planCommissionFor(order.vendorId);
       const commission = Math.round(gross * rate / 100);
       const net = gross - commission;
-      const w = walletFor(vendorKey);
-      w.balance = Math.round((Number(w.balance) || 0) + net);
-      w.updatedAt = now;
-      saveWallets();
+      recordTransaction({
+        userId: vendorKey,
+        userType: vendorUser ? vendorUser.role : 'vendeur',
+        kind: 'boutique-order-settlement',
+        operator: null,
+        operatorLabel: null,
+        amount: net,
+        feeAmount: commission,
+        description: 'Vente boutique — ' + (order.orderNo || order.ref || order.id),
+        reference: String(order.id || ''),
+        mode: 'internal',
+        status: 'completed',
+        paidAt: now
+      });
       order.commissionRate = rate;
       order.commissionAmount = commission;
       order.settlementAmount = net;
@@ -8335,66 +8315,29 @@ function handleHttp(req, res) {
     return;
   }
 
-  /* -------- Portefeuille Vendeur + Client -------- */
+  /* -------- Journal de transactions (Vendeur + Client) --------
+   * Conformité BCEAO / UEMOA : la plateforme ne stocke AUCUN solde monétaire.
+   * Cet endpoint renvoie uniquement l'historique des transactions et, pour les
+   * vendeurs/livreurs, le « net » (commissions/gains dus moins versements),
+   * dérivé à la volée. Aucune recharge, aucun transfert P2P, aucun solde. */
   if (urlPath === '/api/wallet') {
     const user = userFromReq(req);
     if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
-    const w = walletFor(user.id);
     const mine = transactions.filter(function (t) { return t.userId === user.id; }).slice(0, 50);
     res.writeHead(200, JSON_HEADERS);
-    res.end(JSON.stringify({ ok: true, wallet: w, transactions: mine, devise: DEVISE }));
+    res.end(JSON.stringify({ ok: true, net: ledgerNet(user.id), transactions: mine, devise: DEVISE }));
     return;
   }
 
   if (urlPath === '/api/wallet/topup') {
-    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
-    readJsonBody(req, function (err, body) {
-      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
-      body = body || {};
-      const user = userFromReq(req);
-      if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
-      const amount = Math.round(Number(body.amount) || 0);
-      if (amount <= 0) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Montant invalide.' })); return; }
-      const operator = String(body.operator || 'wave');
-      const init = initiateMobilePayment({ operator: operator, phone: body.phone || user.phone, amount: amount, userId: user.id, userType: user.role, kind: 'topup', methodId: String(body.methodId || ''), description: 'Recharge portefeuille' });
-      if (!init.ok) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify(init)); return; }
-      const confirmed = confirmMobilePayment(init.transaction.id, { otp: body.otp });
-      if (!confirmed.success) { res.writeHead(402, JSON_HEADERS); res.end(JSON.stringify(confirmed)); return; }
-      const w = walletFor(user.id);
-      w.balance = Math.round((Number(w.balance) || 0) + amount);
-      w.updatedAt = new Date().toISOString();
-      saveWallets();
-      res.writeHead(200, JSON_HEADERS);
-      res.end(JSON.stringify({ ok: true, transaction: confirmed.transaction, wallet: w }));
-    });
+    res.writeHead(410, JSON_HEADERS);
+    res.end(JSON.stringify({ ok: false, error: 'La recharge de portefeuille a été retirée : aucun solde n\'est stocké sur la plateforme (conformité BCEAO). Paiement direct en Mobile Money.' }));
     return;
   }
 
   if (urlPath === '/api/wallet/transfer') {
-    if (req.method !== 'POST') { res.writeHead(405, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'méthode non supportée' })); return; }
-    readJsonBody(req, function (err, body) {
-      if (err) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: err.message })); return; }
-      body = body || {};
-      const user = userFromReq(req);
-      if (!user) { res.writeHead(401, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Session expirée ou invalide.' })); return; }
-      const toUserId = String(body.toUserId || body.to || '');
-      const amount = Math.round(Number(body.amount) || 0);
-      if (amount <= 0) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Montant invalide.' })); return; }
-      if (!toUserId || toUserId === user.id) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Destinataire invalide.' })); return; }
-      const target = users.find(function (u) { return u.id === toUserId; });
-      if (!target) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Destinataire introuvable.' })); return; }
-      const w = walletFor(user.id);
-      if ((Number(w.balance) || 0) < amount) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Solde insuffisant.' })); return; }
-      const wt = walletFor(target.id);
-      w.balance = Math.round((Number(w.balance) || 0) - amount);
-      wt.balance = Math.round((Number(wt.balance) || 0) + amount);
-      w.updatedAt = new Date().toISOString();
-      wt.updatedAt = new Date().toISOString();
-      const txn = recordTransaction({ userId: user.id, userType: user.role, kind: 'transfer', toUserId: target.id, amount: amount, status: 'completed', mode: 'internal', description: 'Transfert vers ' + (target.enseigne || target.name), note: String(body.note || ''), paidAt: new Date().toISOString() });
-      saveWallets();
-      res.writeHead(200, JSON_HEADERS);
-      res.end(JSON.stringify({ ok: true, transaction: txn, wallet: w }));
-    });
+    res.writeHead(410, JSON_HEADERS);
+    res.end(JSON.stringify({ ok: false, error: 'Les transferts entre portefeuilles ont été retirés : aucun solde n\'est stocké sur la plateforme (conformité BCEAO).' }));
     return;
   }
 
@@ -8435,13 +8378,6 @@ function handleHttp(req, res) {
         if (trialUsed(vendorId, 'offre')) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Votre essai gratuit a déjà été utilisé pour l\'offre du jour.' })); return; }
         payment = { id: 'ESSAI-' + crypto.randomBytes(6).toString('hex'), amount: 0, paidAt: new Date().toISOString(), operator: '', phone: '' };
         recordTrial(vendorId, 'offre', null);
-      } else if (body.payFromWallet === true) {
-        const w = walletFor(user.id);
-        if ((Number(w.balance) || 0) < tier.price) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Solde portefeuille insuffisant.' })); return; }
-        w.balance = Math.round((Number(w.balance) || 0) - tier.price);
-        w.updatedAt = new Date().toISOString();
-        saveWallets();
-        payment = recordTransaction({ userId: user.id, userType: user.role, kind: 'offre-jour', amount: tier.price, feeAmount: 0, status: 'completed', mode: 'wallet', description: 'Offre du jour — ' + tier.durationLabel, paidAt: new Date().toISOString() });
       } else {
         const init = initiateMobilePayment({ operator: String(body.operator || 'wave'), phone: body.phone || user.phone, amount: tier.price, userId: user.id, userType: user.role, kind: 'offre-jour', description: 'Offre du jour — ' + tier.durationLabel, reference: 'OFFRE-' + Date.now() });
         if (!init.ok) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify(init)); return; }
@@ -8490,20 +8426,11 @@ function handleHttp(req, res) {
       const tier = tierById(String(body.tierId || offre.tierId || ''));
       if (!tier) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Palier de durée invalide.' })); return; }
       let payment;
-      if (body.payFromWallet === true) {
-        const w = walletFor(user.id);
-        if ((Number(w.balance) || 0) < tier.price) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Solde portefeuille insuffisant.' })); return; }
-        w.balance = Math.round((Number(w.balance) || 0) - tier.price);
-        w.updatedAt = new Date().toISOString();
-        saveWallets();
-        payment = recordTransaction({ userId: user.id, userType: user.role, kind: 'offre-jour-renouvellement', amount: tier.price, feeAmount: 0, status: 'completed', mode: 'wallet', description: 'Renouvellement offre du jour — ' + tier.durationLabel, paidAt: new Date().toISOString() });
-      } else {
-        const init = initiateMobilePayment({ operator: String(body.operator || 'wave'), phone: body.phone || user.phone, amount: tier.price, userId: user.id, userType: user.role, kind: 'offre-jour-renouvellement', description: 'Renouvellement offre du jour — ' + tier.durationLabel, reference: 'OFFRE-' + Date.now() });
-        if (!init.ok) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify(init)); return; }
-        const confirmed = confirmMobilePayment(init.transaction.id, { otp: body.otp });
-        if (!confirmed.success) { res.writeHead(402, JSON_HEADERS); res.end(JSON.stringify(confirmed)); return; }
-        payment = confirmed.transaction;
-      }
+      const init = initiateMobilePayment({ operator: String(body.operator || 'wave'), phone: body.phone || user.phone, amount: tier.price, userId: user.id, userType: user.role, kind: 'offre-jour-renouvellement', description: 'Renouvellement offre du jour — ' + tier.durationLabel, reference: 'OFFRE-' + Date.now() });
+      if (!init.ok) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify(init)); return; }
+      const confirmed = confirmMobilePayment(init.transaction.id, { otp: body.otp });
+      if (!confirmed.success) { res.writeHead(402, JSON_HEADERS); res.end(JSON.stringify(confirmed)); return; }
+      payment = confirmed.transaction;
       const base = offre.status === 'active' && new Date(offre.endsAt).getTime() > Date.now() ? new Date(offre.endsAt) : new Date();
       const endsAt = new Date(base.getTime() + tier.durationHours * 3600 * 1000);
       offre.status = 'active';
@@ -8835,7 +8762,6 @@ function handleHttp(req, res) {
     if (!user || user.role !== 'livreur') { res.writeHead(403, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur requis.' })); return; }
     const c = ensureCourierForUser(user);
     if (!c) { res.writeHead(404, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Profil livreur introuvable.' })); return; }
-    const w = walletFor(user.id);
     const history = transactions.filter(function (t) {
       return t.userId === user.id && (t.kind === 'delivery-earning' || t.kind === 'courier-withdrawal');
     }).slice(0, 100).map(function (t) {
@@ -8851,7 +8777,7 @@ function handleHttp(req, res) {
     res.writeHead(200, JSON_HEADERS);
     res.end(JSON.stringify({
       ok: true,
-      balance: Math.round(Number(w.balance) || 0),
+      balance: Math.round(ledgerNet(user.id)),
       earnings: Math.round(Number(c.earnings) || 0),
       withdrawn: Math.round(withdrawn),
       devise: DEVISE,
@@ -8875,21 +8801,18 @@ function handleHttp(req, res) {
       const operator = operatorRaw || 'wave';
       if (!operatorById(operator)) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Opérateur invalide.' })); return; }
       const phone = String(body.phone || user.phone || '').trim();
-      const w = walletFor(user.id);
-      if ((Number(w.balance) || 0) < amount) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Solde disponible insuffisant.' })); return; }
-      w.balance = Math.round((Number(w.balance) || 0) - amount);
-      w.updatedAt = nowIso();
+      // Aucun solde stocké : le disponible est dérivé du journal de transactions.
+      const available = ledgerNet(user.id);
+      if (available < amount) { res.writeHead(400, JSON_HEADERS); res.end(JSON.stringify({ ok: false, error: 'Gains disponibles insuffisants.' })); return; }
       const txn = recordTransaction({
         userId: user.id, userType: 'livreur', kind: 'courier-withdrawal',
-        // Retrait interne au portefeuille livreur (pas de passerelle de
-        // décaissement) : enregistré « manual », jamais « demo ».
+        // Versement des gains au livreur en Mobile Money (pas de solde interne).
         amount: amount, feeAmount: 0, status: 'completed', mode: 'manual',
         operator: operator, operatorLabel: (operatorById(operator) || {}).label || operator,
         phone: phone, description: 'Retrait gains livreur', paidAt: nowIso()
       });
-      saveWallets();
       res.writeHead(200, JSON_HEADERS);
-      res.end(JSON.stringify({ ok: true, balance: Math.round(Number(w.balance) || 0), transaction: txn }));
+      res.end(JSON.stringify({ ok: true, balance: Math.round(available - amount), transaction: txn }));
     });
     return;
   }
@@ -9138,9 +9061,6 @@ function handleHttp(req, res) {
                 assigned.completedDeliveries = (assigned.completedDeliveries || 0) + 1;
                 // Rémunération du livreur : forfait selon le véhicule requis.
                 const fee = courierFeeForVehicle(delivery.vehicle || assigned.vehicle);
-                const w = walletFor(assigned.userId);
-                w.balance = Math.round((Number(w.balance) || 0) + fee);
-                w.updatedAt = nowIso();
                 assigned.earnings = Math.round((Number(assigned.earnings) || 0) + fee);
                 recordTransaction({
                   userId: assigned.userId, userType: 'livreur', kind: 'delivery-earning',
@@ -9148,7 +9068,6 @@ function handleHttp(req, res) {
                   description: 'Course livrée — ' + (delivery.ref || delivery.id),
                   reference: String(delivery.id || ''), paidAt: nowIso()
                 });
-                saveWallets();
               }
               saveCouriers();
             }
@@ -9416,8 +9335,7 @@ function handleHttp(req, res) {
    * ------------------------------------------------------------------ *
    *  Les comptes réels (DAN Boutique, DAN Coiffure, client, admin) sont
    *  conservés. Seules les INFORMATIONS de test sont retirées : transactions
-   *  sandbox, livraisons, négociations, offres du jour et coursiers fictifs,
-   *  ainsi que les soldes crédités par ces données fictives.
+   *  sandbox, livraisons, négociations, offres du jour et coursiers fictifs.
    *  Appelée APRÈS le chargement de tous les fichiers, avant l'écoute réseau.
    * ------------------------------------------------------------------ */
   function sanitizeRuntimeData() {
@@ -9472,22 +9390,6 @@ function handleHttp(req, res) {
       }
     }
 
-    // Portefeuilles : soldes remis à zéro (crédités par les données fictives).
-    if (Array.isArray(wallets)) {
-      let touched = false;
-      wallets.forEach(function (w) {
-        if (w && (Number(w.balance) > 0 || Number(w.pending) > 0)) {
-          w.balance = 0;
-          w.pending = 0;
-          touched = true;
-        }
-      });
-      if (touched) {
-        saveWallets();
-        changes.wallets = 'remis à zéro';
-      }
-    }
-
     if (Object.keys(changes).length) {
       console.log('[Data] données fictives retirées :', JSON.stringify(changes));
     }
@@ -9518,7 +9420,6 @@ loadSessions();
 normalizeVendorCities();
 loadPaymentMethods();
 loadTransactions();
-loadWallets();
 loadOffresJour();
 loadBoutiqueOrders();
 loadAdminConfig();

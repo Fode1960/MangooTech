@@ -516,13 +516,6 @@ html.dark {
             <p class="kpi-label">Annulées</p>
             <p class="kpi-value">0</p>
           </div>
-          <div class="kpi-card">
-            <div class="kpi-icon" style="background:rgb(232,240,254)">
-              <i data-lucide="wallet" style="width:20px;height:20px;color:rgb(37,99,235)"></i>
-            </div>
-            <p class="kpi-label">Solde client</p>
-            <p class="kpi-value" id="kpi-solde">0 XOF</p>
-          </div>
         </div>
 
         <!-- ===== FILTERS ===== -->
@@ -1226,11 +1219,6 @@ html.dark {
     if (kpis[1]) kpis[1].textContent = String(enCours);
     if (kpis[2]) kpis[2].textContent = String(livrees);
     if (kpis[3]) kpis[3].textContent = String(annulees);
-    if (kpis[4]) {
-      var balance = 0;
-      try { if (window.MangooClient && typeof window.MangooClient.getBalance === 'function') balance = window.MangooClient.getBalance(); } catch (e) {}
-      kpis[4].textContent = fmt(balance) + ' FCFA';
-    }
   }
 
   function activeStatus() {
@@ -1392,34 +1380,9 @@ html.dark {
     if (hdAvatar) applyAvatar(hdAvatar, u.logo, name);
     if (hdName) hdName.textContent = name;
   }
-  function syncWallet() {
-    var el = document.getElementById('kpi-solde');
-    if (!el || !window.MangooClient) return;
-    function apply(balance, currency) {
-      el.textContent = fmt(balance) + ' ' + (currency || 'XOF');
-    }
-    function localWallet() {
-      var w = window.MangooClient.getWallet ? window.MangooClient.getWallet() : null;
-      return { balance: w && typeof w.balance === 'number' ? w.balance : window.MangooClient.getBalance(), currency: (w && w.currency) || 'XOF' };
-    }
-    if (typeof window.MangooClient.fetchServerWallet === 'function') {
-      window.MangooClient.fetchServerWallet(function (res) {
-        if (res && res.ok && typeof res.balance === 'number') {
-          apply(res.balance, (res.wallet && res.wallet.currency) || res.devise || 'XOF');
-        } else {
-          var lw = localWallet();
-          apply(lw.balance, lw.currency);
-        }
-      });
-    } else {
-      var lw = localWallet();
-      apply(lw.balance, lw.currency);
-    }
-  }
 
   render();
   syncIdentity();
-  syncWallet();
 })();
 </script>
 <script src="../assets/mangoo-connect-plus.js"></script>

@@ -966,10 +966,6 @@ window.__mgtInitBoutique = function () {
   function deliveryFee() { return cart.fulfillment === 'retrait' ? 0 : DELIVERY_FEE; }
   function total() { return subtotal() + deliveryFee(); }
 
-  function clientWalletBalance() {
-    return (window.MangooClient && typeof window.MangooClient.getBalance === 'function') ? window.MangooClient.getBalance() : 0;
-  }
-
   function setPaymentMethod(method) {
     pendingPaymentMethod = method;
     var options = document.querySelectorAll('.checkout-pay-option');
@@ -1330,11 +1326,6 @@ window.__mgtInitBoutique = function () {
         });
       }
 
-      // Crédite le solde du vendeur (DAN Boutique) au paiement de la commande.
-      if (window.MangooVendor && window.MangooVendor.creditVendor) {
-        window.MangooVendor.creditVendor(vendorId, Number(lastOrder.total) || 0, 'Commande ' + orderNo);
-      }
-
       checkoutCard.innerHTML = '<div class="px-6 py-10 text-center">' +
         '<div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full" style="background-color: rgb(var(--mgt-primary-50)); border-radius: var(--mgt-radius-full);">' +
           '<i data-lucide="check-circle-2" class="h-9 w-9" style="color: rgb(var(--mgt-primary));"></i>' +
@@ -1435,15 +1426,6 @@ window.__mgtInitBoutique = function () {
         '</div>' +
         '<i data-lucide="shield-check" class="h-4 w-4 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
       '</div>' +
-      '<div class="mb-5 flex items-center gap-3 rounded-md border p-3 cursor-pointer checkout-pay-option" data-pay="wallet" style="border-color: rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md);">' +
-        '<span class="checkout-pay-dot" style="width:18px;height:18px;border-radius:9999px;border:2px solid rgb(var(--mgt-border));display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"></span>' +
-        '<i data-lucide="wallet" class="h-5 w-5 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
-        '<div class="min-w-0 flex-1">' +
-          '<p class="text-sm font-semibold" style="color: rgb(var(--mgt-foreground)); font-family: var(--mgt-font-sans);">Solde client</p>' +
-          '<p class="caption" style="color: rgb(var(--mgt-muted-foreground));">Disponible : ' + formatFCFA(clientWalletBalance()) + '</p>' +
-        '</div>' +
-        '<i data-lucide="check-circle-2" class="h-4 w-4 flex-shrink-0" style="color: rgb(var(--mgt-primary));"></i>' +
-      '</div>' +
     '</div>' +
     '<div class="border-t px-6 py-4" style="border-color: rgb(var(--mgt-border)); background: rgb(var(--mgt-background)); flex-shrink: 0;">' +
       '<div class="mb-3 flex items-center justify-between text-sm font-semibold" style="font-family: var(--mgt-font-sans);"><span style="color: rgb(var(--mgt-foreground));">Total</span><span class="tabular-nums text-lg font-bold" style="color: rgb(var(--mgt-primary));">' + formatFCFA(total()) + '</span></div>' +
@@ -1452,7 +1434,7 @@ window.__mgtInitBoutique = function () {
 
     if (window.lucide) window.lucide.createIcons();
 
-    // Sélection du mode de paiement (Mangoo Pay+ ou Solde client).
+    // Sélection du mode de paiement (Mangoo Pay+).
     var payOptions = document.querySelectorAll('.checkout-pay-option');
     payOptions.forEach(function (opt) {
       opt.addEventListener('click', function () {
@@ -1502,26 +1484,6 @@ window.__mgtInitBoutique = function () {
         pendingAddress = (cart.fulfillment === 'livraison' && addr && addr.value) ? addr.value.trim() : '';
         renderCheckout('success');
       };
-
-      // Paiement par « Solde client » : débit du portefeuille local du client.
-      if (pendingPaymentMethod === 'wallet') {
-        var bal = clientWalletBalance();
-        if (bal < total()) {
-          showToast('Solde client insuffisant (' + formatFCFA(bal) + '). Rechargez ou choisissez un autre moyen de paiement.');
-          confirmBtn.disabled = false;
-          return;
-        }
-        var debited = window.MangooClient && typeof window.MangooClient.debitWallet === 'function'
-          ? window.MangooClient.debitWallet(total())
-          : false;
-        if (!debited) {
-          showToast('Impossible de débiter le solde client.');
-          confirmBtn.disabled = false;
-          return;
-        }
-        confirmOrder('Solde client');
-        return;
-      }
 
       // Paiement via Mangoo Pay+ (mobile money) : opérateur → numéro → OTP.
       if (window.MangooPayment && typeof window.MangooPayment.collect === 'function') {

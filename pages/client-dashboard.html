@@ -422,19 +422,6 @@ html.dark {
           <!-- KPI Row -->
           <section style="margin-bottom: 40px;">
             <div class="kpi-grid">
-              <!-- KPI 0: Solde client -->
-              <div style="background: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); padding: 20px; box-shadow: var(--mgt-shadow-sm); transition: transform 0.15s, box-shadow 0.15s;">
-                <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px;">
-                  <div style="width: 42px; height: 42px; border-radius: var(--mgt-radius-sm); background: rgba(var(--mgt-success), 0.12); display: flex; align-items: center; justify-content: center; color: rgb(var(--mgt-success));">
-                    <i data-lucide="wallet" style="width: 22px; height: 22px;"></i>
-                  </div>
-                  <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: rgb(var(--mgt-success)); background: rgba(var(--mgt-success), 0.12); padding: 3px 8px; border-radius: var(--mgt-radius-sm);">Disponible</span>
-                </div>
-                <div class="tabular-nums" style="font-size: 32px; font-weight: 700; color: rgb(var(--mgt-foreground)); line-height: 1.1; margin-bottom: 4px;"><span id="kpi-solde">0</span> <span id="kpi-devise" style="font-size: 16px; font-weight: 500; color: rgb(var(--mgt-muted-foreground));">XOF</span></div>
-                <div class="caption" style="color: rgb(var(--mgt-muted-foreground));">Solde client</div>
-                <button id="kpi-recharge-btn" type="button" style="margin-top: 14px; width: 100%; padding: 9px 0; background: rgb(var(--mgt-primary)); color: #fff; border: none; border-radius: var(--mgt-radius-md); font-size: 13px; font-weight: 600; font-family: var(--mgt-font-sans); cursor: pointer; transition: opacity 0.15s, transform 0.15s;">Recharger le portefeuille</button>
-              </div>
-
               <!-- KPI 1: Commandes en cours -->
               <div style="background: rgb(var(--mgt-card)); border: 1px solid rgb(var(--mgt-border)); border-radius: var(--mgt-radius-md); padding: 20px; box-shadow: var(--mgt-shadow-sm); transition: transform 0.15s, box-shadow 0.15s;">
                 <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px;">
@@ -531,47 +518,6 @@ html.dark {
       </div>
     </div>
     <!-- ===== END DASHBOARD LAYOUT ===== -->
-
-    <!-- ===== MODAL RECHARGE PORTEFEUILLE ===== -->
-    <div id="recharge-overlay" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,.5); z-index:1200; align-items:center; justify-content:center; padding:16px;">
-      <div style="width:100%; max-width:420px; background:rgb(var(--mgt-card)); border:1px solid rgb(var(--mgt-border)); border-radius:var(--mgt-radius-lg); box-shadow:var(--mgt-shadow-lg); overflow:hidden; max-height:90vh; overflow-y:auto;">
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid rgb(var(--mgt-border));">
-          <div>
-            <p style="margin:0; font-size:16px; font-weight:700; color:rgb(var(--mgt-foreground)); font-family:var(--mgt-font-sans);">Recharger le portefeuille</p>
-            <p class="caption" style="margin:2px 0 0; color:rgb(var(--mgt-muted-foreground));">Créditez votre solde via Mobile Money</p>
-          </div>
-          <button id="recharge-close" type="button" style="width:32px; height:32px; border:none; background:rgb(var(--mgt-muted)); border-radius:8px; cursor:pointer; color:rgb(var(--mgt-muted-foreground)); font-size:16px; line-height:1;">&times;</button>
-        </div>
-        <div style="padding:20px;">
-          <p class="caption" style="margin:0 0 8px; color:rgb(var(--mgt-muted-foreground));">Montant</p>
-          <div id="recharge-presets" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px;">
-            <button type="button" data-amount="5000" class="recharge-preset" style="padding:10px 0; border:1px solid rgb(var(--mgt-border)); border-radius:var(--mgt-radius-md); background:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground)); font-size:13px; font-weight:600; font-family:var(--mgt-font-sans); cursor:pointer;">5 000</button>
-            <button type="button" data-amount="10000" class="recharge-preset" style="padding:10px 0; border:1px solid rgb(var(--mgt-border)); border-radius:var(--mgt-radius-md); background:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground)); font-size:13px; font-weight:600; font-family:var(--mgt-font-sans); cursor:pointer;">10 000</button>
-            <button type="button" data-amount="25000" class="recharge-preset" style="padding:10px 0; border:1px solid rgb(var(--mgt-border)); border-radius:var(--mgt-radius-md); background:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground)); font-size:13px; font-weight:600; font-family:var(--mgt-font-sans); cursor:pointer;">25 000</button>
-            <button type="button" data-amount="50000" class="recharge-preset" style="padding:10px 0; border:1px solid rgb(var(--mgt-border)); border-radius:var(--mgt-radius-md); background:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground)); font-size:13px; font-weight:600; font-family:var(--mgt-font-sans); cursor:pointer;">50 000</button>
-          </div>
-          <input id="recharge-amount" type="number" inputmode="numeric" min="1" step="1" placeholder="Montant personnalisé" style="width:100%; box-sizing:border-box; height:42px; padding:0 12px; border:1px solid rgb(var(--mgt-input)); border-radius:var(--mgt-radius-md); background:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground)); font-size:14px; font-family:var(--mgt-font-sans); margin-bottom:16px;">
-
-          <label class="caption" style="display:block; margin:0 0 8px; color:rgb(var(--mgt-muted-foreground));">Opérateur</label>
-          <select id="recharge-operator" style="width:100%; box-sizing:border-box; height:42px; padding:0 12px; border:1px solid rgb(var(--mgt-input)); border-radius:var(--mgt-radius-md); background:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground)); font-size:14px; font-family:var(--mgt-font-sans); margin-bottom:16px; appearance:none;">
-            <option value="wave" selected>Wave</option>
-            <option value="orange">Orange Money</option>
-            <option value="mtn">MTN Mobile Money</option>
-            <option value="moov">Moov Money</option>
-            <option value="free">Free Mobile Sénégal</option>
-          </select>
-
-          <label class="caption" style="display:block; margin:0 0 8px; color:rgb(var(--mgt-muted-foreground));">Numéro Mobile Money</label>
-          <input id="recharge-phone" type="tel" placeholder="+221 77 000 00 00" style="width:100%; box-sizing:border-box; height:42px; padding:0 12px; border:1px solid rgb(var(--mgt-input)); border-radius:var(--mgt-radius-md); background:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground)); font-size:14px; font-family:var(--mgt-font-sans); margin-bottom:16px;">
-
-          <label class="caption" style="display:block; margin:0 0 8px; color:rgb(var(--mgt-muted-foreground));">Code de confirmation</label>
-          <input id="recharge-otp" type="text" inputmode="numeric" maxlength="6" placeholder="Code reçu par SMS" style="width:100%; box-sizing:border-box; height:42px; padding:0 12px; border:1px solid rgb(var(--mgt-input)); border-radius:var(--mgt-radius-md); background:rgb(var(--mgt-background)); color:rgb(var(--mgt-foreground)); font-size:14px; font-family:var(--mgt-font-sans); text-align:center; letter-spacing:0.4em; margin-bottom:6px;">
-          <p id="recharge-message" class="caption" style="margin:0 0 12px; min-height:16px; color:rgb(var(--mgt-error));"></p>
-
-          <button id="recharge-submit" type="button" style="width:100%; padding:12px 0; background:rgb(var(--mgt-primary)); color:#fff; border:none; border-radius:var(--mgt-radius-md); font-size:14px; font-weight:600; font-family:var(--mgt-font-sans); cursor:pointer;">Confirmer la recharge</button>
-        </div>
-      </div>
-    </div>
 
     <script>lucide.createIcons();</script>
 <!-- Mobile responsive navigation & layout -->
@@ -762,124 +708,8 @@ html.dark {
     set('topbar-greeting', first || '');
     applyAvatar('topbar-avatar', u.logo);
   }
-  // Branche le KPI « Solde client » sur le vrai portefeuille serveur.
-  function syncWallet() {
-    var soldeEl = document.getElementById('kpi-solde');
-    var deviseEl = document.getElementById('kpi-devise');
-    if (!soldeEl || !window.MangooClient) return;
-    function apply(balance, currency) {
-      soldeEl.textContent = fmtNum(balance);
-      if (deviseEl) deviseEl.textContent = currency || 'XOF';
-    }
-    function localWallet() {
-      var w = window.MangooClient.getWallet ? window.MangooClient.getWallet() : null;
-      return { balance: w && typeof w.balance === 'number' ? w.balance : window.MangooClient.getBalance(), currency: (w && w.currency) || 'XOF' };
-    }
-    if (typeof window.MangooClient.fetchServerWallet === 'function') {
-      window.MangooClient.fetchServerWallet(function (res) {
-        if (res && res.ok && typeof res.balance === 'number') {
-          apply(res.balance, (res.wallet && res.wallet.currency) || res.devise || 'XOF');
-        } else {
-          var lw = localWallet();
-          apply(lw.balance, lw.currency);
-        }
-      });
-    } else {
-      var lw = localWallet();
-      apply(lw.balance, lw.currency);
-    }
-  }
-
-  // ---- Recharge du portefeuille (modal) ----
-  function rechargeEl(id) { return document.getElementById(id); }
-  var rechargeOverlay = rechargeEl('recharge-overlay');
-  var rechargeOpen = rechargeEl('kpi-recharge-btn');
-  var rechargeCloseBtn = rechargeEl('recharge-close');
-  var rechargeAmount = rechargeEl('recharge-amount');
-  var rechargeOperator = rechargeEl('recharge-operator');
-  var rechargePhone = rechargeEl('recharge-phone');
-  var rechargeOtp = rechargeEl('recharge-otp');
-  var rechargeMsg = rechargeEl('recharge-message');
-  var rechargeSubmit = rechargeEl('recharge-submit');
-  var rechargePresets = document.querySelectorAll('.recharge-preset');
-
-  function openRecharge() {
-    if (!rechargeOverlay) return;
-    if (rechargeMsg) rechargeMsg.textContent = '';
-    if (rechargePhone && !rechargePhone.value && window.MangooClient) {
-      var u = window.MangooClient.getUser();
-      if (u && u.phone) rechargePhone.value = u.phone;
-    }
-    rechargeOverlay.style.display = 'flex';
-  }
-  function closeRecharge() {
-    if (rechargeOverlay) rechargeOverlay.style.display = 'none';
-  }
-  function rechargeFail(msg) { if (rechargeMsg) rechargeMsg.textContent = msg; }
-
-  if (rechargeOpen) rechargeOpen.addEventListener('click', openRecharge);
-  if (rechargeCloseBtn) rechargeCloseBtn.addEventListener('click', closeRecharge);
-  if (rechargeOverlay) rechargeOverlay.addEventListener('click', function (e) { if (e.target === rechargeOverlay) closeRecharge(); });
-
-  rechargePresets.forEach(function (p) {
-    p.addEventListener('click', function () {
-      var amt = p.getAttribute('data-amount');
-      if (rechargeAmount) rechargeAmount.value = amt;
-      rechargePresets.forEach(function (x) {
-        x.style.borderColor = 'rgb(var(--mgt-border))';
-        x.style.background = 'rgb(var(--mgt-background))';
-        x.style.color = 'rgb(var(--mgt-foreground))';
-      });
-      p.style.borderColor = 'rgb(var(--mgt-primary))';
-      p.style.background = 'rgba(var(--mgt-primary), 0.08)';
-      p.style.color = 'rgb(var(--mgt-primary-700))';
-    });
-  });
-
-  if (rechargeSubmit) rechargeSubmit.addEventListener('click', function () {
-    var amount = Math.round(Number(rechargeAmount && rechargeAmount.value) || 0);
-    var operator = (rechargeOperator && rechargeOperator.value) || 'wave';
-    var phone = String(rechargePhone && rechargePhone.value || '').trim();
-    var otp = String(rechargeOtp && rechargeOtp.value || '').trim();
-
-    if (amount <= 0) { rechargeFail('Saisissez un montant valide.'); return; }
-    if (!phone) { rechargeFail('Saisissez votre numéro Mobile Money.'); return; }
-    if (!otp) { rechargeFail('Saisissez le code de confirmation reçu par SMS.'); return; }
-
-    var token = null;
-    try { token = localStorage.getItem('mgt_token'); } catch (e) {}
-    if (!token) { rechargeFail('Session expirée. Reconnectez-vous.'); return; }
-
-    rechargeSubmit.disabled = true;
-    rechargeSubmit.style.opacity = '0.6';
-    fetch('/api/wallet/topup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ amount: amount, operator: operator, phone: phone, otp: otp })
-    }).then(function (r) {
-      return r.json().catch(function () { return { ok: false, error: 'Réponse invalide (HTTP ' + r.status + ').' }; });
-    }).then(function (res) {
-      rechargeSubmit.disabled = false;
-      rechargeSubmit.style.opacity = '';
-      if (res && res.ok && res.wallet) {
-        var bal = Math.round(Number(res.wallet.balance) || 0);
-        var cur = res.wallet.currency || 'XOF';
-        var soldeEl = rechargeEl('kpi-solde');
-        var deviseEl = rechargeEl('kpi-devise');
-        if (soldeEl) soldeEl.textContent = fmtNum(bal);
-        if (deviseEl) deviseEl.textContent = cur;
-        closeRecharge();
-        showToast('Portefeuille rechargé : +' + fmtNum(amount) + ' ' + cur);
-      } else {
-        var err = (res && res.error) || (res && res.transaction && res.transaction.failedReason) || 'Recharge impossible. Réessayez.';
-        rechargeFail(err);
-      }
-    }).catch(function (err) {
-      rechargeSubmit.disabled = false;
-      rechargeSubmit.style.opacity = '';
-      rechargeFail((err && err.message) || 'Erreur réseau.');
-    });
-  });
+  // (Portefeuille retiré — conformité BCEAO : aucun solde stocké, aucun
+  //  affichage de solde ni recharge côté client.)
 
   // ---- Commerces en accès direct (section « Boutiques à proximité ») ----
   // Charge les profils réels depuis /api/carte et affiche boutiques ET
@@ -963,7 +793,6 @@ html.dark {
 
   syncStoreKpis();
   syncIdentity();
-  syncWallet();
   renderCommerces();
 })();
 </script>

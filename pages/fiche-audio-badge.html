@@ -884,9 +884,6 @@ html.dark {
   function priceLabel(service) {
     return (window.MangooPrestations ? MangooPrestations.formatPrice(service.price) : service.price) + ' FCFA';
   }
-  function clientWalletBalance() {
-    return (window.MangooClient && typeof window.MangooClient.getBalance === 'function') ? window.MangooClient.getBalance() : 0;
-  }
 
   function bookService(service) {
     var vendor = window._mcpVendor;
@@ -901,7 +898,6 @@ html.dark {
 
     var price = priceLabel(service);
     var duration = window.MangooPrestations ? MangooPrestations.formatDuration(service.duration) : (service.duration ? service.duration + ' min' : '');
-    var balance = clientWalletBalance();
 
     var modal = document.createElement('div');
     modal.id = 'booking-modal';
@@ -925,7 +921,6 @@ html.dark {
         '<p style="font-size:12px;font-weight:600;color:rgb(var(--mgt-muted-foreground));margin-bottom:6px;">Mode de paiement</p>' +
         '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">' +
           '<label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgb(var(--mgt-border));border-radius:10px;cursor:pointer;"><input type="radio" name="booking-pay" value="surplace" checked style="accent-color:rgb(var(--mgt-primary));"><span style="font-size:13px;color:rgb(var(--mgt-foreground));">Payer sur place</span></label>' +
-          '<label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgb(var(--mgt-border));border-radius:10px;cursor:pointer;"><input type="radio" name="booking-pay" value="wallet" style="accent-color:rgb(var(--mgt-primary));"><span style="font-size:13px;color:rgb(var(--mgt-foreground));">Solde client</span><span style="margin-left:auto;font-size:12px;color:rgb(var(--mgt-muted-foreground));">' + balance.toLocaleString('fr-FR').replace(/\u202f/g, ' ') + ' FCFA</span></label>' +
         '</div>' +
         '<p id="booking-error" style="font-size:12px;color:rgb(var(--mgt-error));min-height:16px;margin:0 0 8px;"></p>' +
         '<div style="display:flex;gap:10px;">' +
@@ -952,21 +947,7 @@ html.dark {
       var t = modal.querySelector('#booking-time').value;
       if (!d) { err.textContent = 'Veuillez choisir une date.'; return; }
       if (!t) { err.textContent = 'Veuillez choisir une heure.'; return; }
-      var payMode = (modal.querySelector('input[name="booking-pay"]:checked') || {}).value || 'surplace';
-      var paymentLabel = payMode === 'wallet' ? 'Solde client' : 'Sur place';
-      var numericPrice = Number(service.price) || 0;
-
-      if (payMode === 'wallet') {
-        if (!window.MangooClient || typeof window.MangooClient.debitWallet !== 'function') {
-          err.textContent = 'Portefeuille client indisponible.'; return;
-        }
-        if (clientWalletBalance() < numericPrice) {
-          err.textContent = 'Solde client insuffisant.'; return;
-        }
-        if (!window.MangooClient.debitWallet(numericPrice)) {
-          err.textContent = 'Impossible de débiter le solde.'; return;
-        }
-      }
+      var paymentLabel = 'Sur place';
 
       createBookingOrder(service, d, t, paymentLabel);
       close();
@@ -1000,12 +981,6 @@ html.dark {
       clientName: user.fullName || user.name || 'Client',
       clientPhone: user.phone || ''
     });
-
-    // Crédite le prestataire (DAN Boutique) uniquement si le client a réglé via
-    // le solde client (paiement en ligne). « Sur place » reste un paiement hors-ligne.
-    if (paymentLabel === 'Solde client' && window.MangooVendor && window.MangooVendor.creditVendor) {
-      window.MangooVendor.creditVendor(vendor.vendorId || 'pro-41cafa4bcb31', price, 'Réservation ' + orderId);
-    }
   }
 
   function showBookingToast(msg) {
